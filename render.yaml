@@ -8,7 +8,7 @@ services:
     name: grand-line-rpg
     runtime: node
     plan: free
-    buildCommand: npm install && npm run db:prod-schema && npx prisma generate --schema=prisma/schema.production.prisma && npm run build
+    buildCommand: npm install --include=dev && npm run db:prod-schema && npx prisma generate --schema=prisma/schema.production.prisma && npm run build
     startCommand: npm run start
     envVars:
       - key: DATABASE_URL

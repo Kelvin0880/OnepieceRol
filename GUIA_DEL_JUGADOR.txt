@@ -1,0 +1,219 @@
+===========================================================
+GRAND LINE RPG — GUÍA DEL JUGADOR
+===========================================================
+
+Bienvenido al Grand Line. Esto no es un rol narrado a mano: es un juego de
+rol de texto con reglas reales, dados de verdad, y un mundo que sigue
+girando aunque tú no estés conectado. Todo lo que lees aquí puede pasarte
+a ti. No hay finales escritos de antemano.
+
+-----------------------------------------------------------
+1. QUÉ ES ESTO
+-----------------------------------------------------------
+
+Un RPG de texto multijugador ambientado en el universo de One Piece.
+Creas un personaje, eliges bando y estilo de combate, y sales al mundo a
+explorar islas, luchar, hacer fortuna (o no), formar tripulación con
+otros jugadores reales, y perseguir el objetivo más difícil del juego:
+los Poneglifos de Ruta, la llave hacia Laugh Tale.
+
+Todo se resuelve con tiradas aleatorias reales (nunca resultados
+prefabricados) y la muerte es permanente. Si tu personaje cae, cae de
+verdad — no hay revivir, no hay "vuelve a intentarlo". Eso es intencional:
+las decisiones importan porque cuestan algo.
+
+-----------------------------------------------------------
+2. CREAR PERSONAJE
+-----------------------------------------------------------
+
+Al registrarte eliges dos cosas:
+
+FACCIÓN (define tu punto de partida y tu camino de reputación):
+  - PIRATA — persigues tu propia leyenda. Tu progreso se mide en
+    RECOMPENSA (berries sobre tu cabeza). Empiezas en Pueblo Foosha.
+  - MARINE — sirves a la Justicia (Absoluta o no, tú decides en la
+    práctica). Tu progreso se mide en tu RANGO. Empiezas en el
+    Cuartel Marine G-5.
+  - REVOLUCIONARIO — trabajas para derribar al Gobierno Mundial desde
+    dentro. Empiezas en Isla Baltigo.
+  - CAZARRECOMPENSAS — nadie es tu enemigo por ideología, solo por
+    precio. Empiezas en Isla Gecko.
+
+ARQUETIPO (define tus estadísticas base y tu arma inicial):
+  - Espadachín — ágil y letal, empieza con una espada de acero.
+  - Luchador Cuerpo a Cuerpo — resistente y contundente, empieza con
+    nudillos de hierro.
+  - Tirador — frío y preciso a distancia, empieza con una pistola de
+    chispa.
+  - Fuerza Bruta — lento pero devastador, empieza con un hacha de
+    leñador.
+
+Cada arquetipo reparte distinto: fuerza, agilidad, resistencia, voluntad
+e intelecto. No hay una combinación "correcta" — cada una juega distinto.
+
+-----------------------------------------------------------
+3. EL BUCLE PRINCIPAL: QUÉ HACES CADA DÍA
+-----------------------------------------------------------
+
+Desde la pantalla de tu personaje puedes:
+
+  EXPLORAR — el corazón del juego. Cada exploración es un evento
+  aleatorio: puede ser un hallazgo, una pelea, un encuentro social, un
+  entrenamiento improvisado, o directamente un desastre. El resultado
+  depende de una tirada contra el peligro de la isla y tus propias
+  estadísticas.
+
+  ENTRENAR — sube estadísticas de forma más predecible que explorar,
+  a cambio de menos recompensa inmediata.
+
+  DESCANSAR — recupera vida. No puedes actuar con un combate pendiente
+  sin resolver, así que a veces descansar es la única salida.
+
+  VIAJAR — te mueves entre islas conectadas. Cada isla tiene un nivel
+  mínimo de entrada: el Grand Line no te deja pasar de nivel si no estás
+  listo, punto. Al llegar por primera vez a una isla nueva, se te cuenta
+  su conflicto local — la primera vez, y nunca más.
+
+-----------------------------------------------------------
+4. COMBATE: PELEAR, HUIR, PERDONAR O REMATAR
+-----------------------------------------------------------
+
+Cuando un evento desemboca en combate, el juego se detiene antes de
+tirar un solo dado y te da la decisión:
+
+  LUCHAR — te comprometes al combate. Se resuelve por rondas reales
+  basadas en ataque, defensa y velocidad de ambos lados.
+  HUIR — intentas escapar. Puede salir mal: si fallas, el enemigo te
+  alcanza y no queda más remedio que pelear, con daño ya encima.
+
+Si ganas el combate, tienes una segunda decisión, esta vez moral:
+  PERDONAR — dejas vivir al enemigo.
+  REMATAR — lo derrotas por completo.
+
+Ninguna de las dos es "la buena". Ambas generan noticias y consecuencias
+distintas en el mundo — este es tu historial, y el mundo lo recuerda.
+
+Si pierdes un combate, tu personaje puede morir de verdad. Hay un chequeo
+de muerte que depende de cuánta vida te queda y de tu nivel — cuanta más
+diferencia de poder, más riesgo real corres. No hay red de seguridad.
+
+-----------------------------------------------------------
+5. FRUTAS DEL DIABLO, ARMAS Y HAKI
+-----------------------------------------------------------
+
+Explorando puedes encontrar una Fruta del Diablo (drop aleatorio, nunca
+garantizado). Solo puedes tener una a la vez — así funciona el mundo real
+de One Piece, y aquí también.
+
+Las armas van desde equipo común (una por arquetipo, cualquiera puede
+tener la suya sin pisarse con otro jugador) hasta espadas Saijo O
+Wazamono legendarias y únicas — Wado Ichimonji, Shusui, Enma, Sandai
+Kitetsu, Yubashiri — de las que solo existe una unidad en todo el mundo.
+Si otro jugador la tiene, tú no puedes tenerla. Cómprala, gánala, o
+quítasela a quien la lleve.
+
+El Haki se entrena como una estadística más, con su propio progreso.
+
+-----------------------------------------------------------
+6. REPUTACIÓN: EL MUNDO TE RECONOCE
+-----------------------------------------------------------
+
+Cada facción sube su propia escalera, y subir de escalón cambia
+literalmente cómo te trata el mundo:
+
+  PIRATA (recompensa): Sin recompensa -> Novato de la Grand Line ->
+  Pirata de interés -> Superrookie -> Amenaza reconocida -> Objetivo
+  prioritario -> Candidato a Shichibukai -> Rango de Emperador ->
+  Leyenda viviente -> Rey Pirata en ciernes.
+
+  MARINE (rango): Recluta -> Marine Raso -> Cabo -> Sargento ->
+  Teniente -> Capitán -> Comodoro -> Contraalmirante -> Vicealmirante
+  -> Almirante.
+
+  REVOLUCIONARIO: Simpatizante -> Célula activa -> Agente de campo ->
+  Organizador regional -> Comandante de brigada -> Jefe de ejército ->
+  Mano derecha del líder -> Núcleo revolucionario.
+
+  CAZARRECOMPENSAS: Cazador novato -> Cazador de gremio -> Rastreador
+  temido -> Verdugo independiente -> Cazador de leyenda -> Rival de la
+  Marina -> Azote de los mares.
+
+Cruzar un escalón importante sale en las noticias del mundo. Todo el
+servidor se entera de quién estás empezando a ser.
+
+-----------------------------------------------------------
+7. MULTIJUGADOR: TRIPULACIONES
+-----------------------------------------------------------
+
+Puedes fundar una tripulación o unirte a una con un código de invitación.
+Ves a otros aventureros presentes en tu misma isla en tiempo real. Y lo
+importante: dos tripulaciones pueden desafiarse en una batalla de grupo
+N-contra-N.
+
+Cómo funciona una batalla de tripulaciones:
+  - Se eligen los enfrentamientos uno a uno (tú decides contra quién
+    de la tripulación rival luchas cada uno de los tuyos).
+  - El combate se resuelve por oleadas. Si terminas tu duelo con más
+    de la mitad de tu vida intacta, puedes REFORZAR a un compañero que
+    todavía esté peleando — así una tripulación coordinada puede
+    remontar un enfrentamiento difícil.
+  - Perder de verdad tiene consecuencias reales (ver Prisión, abajo).
+
+-----------------------------------------------------------
+8. SI TE CAPTURAN: PRISIÓN Y RESCATE
+-----------------------------------------------------------
+
+Perder un combate contra la Marina no siempre significa la muerte —
+a veces significa la cárcel. Una vez capturado:
+
+  - No puedes actuar hasta salir.
+  - PAGAR FIANZA te libera al instante si tienes los berries.
+  - Un ALIADO en tu misma isla puede intentar RESCATARTE. Esto no es
+    gratis: se tira una comprobación real contra el poder de quien te
+    capturó. Si sale mal del todo, el propio rescatador puede acabar
+    capturado también. Rescatar a alguien es un riesgo, no un favor
+    automático.
+
+-----------------------------------------------------------
+9. EL MUNDO VIVE SIN TI
+-----------------------------------------------------------
+
+Aunque no estés conectado, el mundo se mueve: los Emperadores, los
+Almirantes, el Ejército Revolucionario y demás potencias actúan por su
+cuenta y generan NOTICIAS reales — despliegues, guerras territoriales,
+motines, capturas, e incluso, en los momentos más intensos, algo cercano
+a un Buster Call. Revisa la sección de Noticias para ver qué se está
+cociendo en el mundo mientras no mirabas.
+
+Un actor del mundo (un Yonko, un Almirante) no puede estar en dos sitios
+a la vez. Si está ocupado en otra parte, su territorio queda, durante
+ese tiempo, un poco más vulnerable. Presta atención.
+
+-----------------------------------------------------------
+10. LOS PONEGLIFOS DE RUTA: EL VERDADERO ENDGAME
+-----------------------------------------------------------
+
+Existen 4 Poneglifos de Ruta en el mundo. Son la única forma de llegar a
+Laugh Tale. No están en un cofre en cualquier isla — cada uno lo guarda
+una de las grandes potencias del mundo (un Emperador, el propio Gobierno
+Mundial...), y llegar hasta ellos significa enfrentarte a fuerzas de
+nivel muy alto, no a un enemigo cualquiera.
+
+Y conseguir uno no es el final de esa historia, es el principio de otra:
+en cuanto lees un Poneglifo, quien lo perdió se entera y no se queda de
+brazos cruzados. Tu "calor de persecución" sube, y a partir de ahí cada
+vez que exploras corres el riesgo real de que un cazador enviado a
+silenciarte te encuentre primero. Ese riesgo baja solo con el tiempo,
+pero mientras esté alto, cada paso que das es más peligroso.
+
+Reunir los 4 Poneglifos, llegar a Laugh Tale, y lo que eso desate contra
+el Gobierno Mundial — eso es el horizonte final del juego. Nadie lo va a
+lograr en solitario.
+
+-----------------------------------------------------------
+11. UNA COSA MÁS
+-----------------------------------------------------------
+
+No hay resultados guionizados. No hay "tranquilo, seguro que sobrevives".
+Cada tirada es real, cada muerte es real, y cada título que ganas te lo
+ganaste de verdad. Bienvenido a bordo.
