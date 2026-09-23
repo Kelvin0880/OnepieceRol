@@ -10,6 +10,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "db:seed": "tsx prisma/seed.ts",
+    "db:prod-schema": "node scripts/gen-prod-schema.mjs",
     "e2e:smoke": "node scripts/e2e-smoke.mjs",
     "e2e:crew": "node scripts/crew-smoke.mjs",
     "e2e:battle": "node scripts/battle-smoke.mjs",

@@ -37,6 +37,10 @@ yarn-error.log*
 /prisma/*.db
 /prisma/*.db-journal
 
+# generated production (postgresql) schema — derived from schema.prisma at
+# build time by scripts/gen-prod-schema.mjs, never hand-edited or committed
+/prisma/schema.production.prisma
+
 # Claude Code harness internals
 /.claude/
 
