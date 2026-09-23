@@ -311,12 +311,37 @@ start command `npm run start`, plan `free`, region `oregon`.
    that complaint (rich round-by-round combat, pure-roleplay scenes with
    no forced turn cost); deeper branching questlines with actual
    persistent consequences are still a separate, unaddressed ask.
-6. OpenRouter free-tier rate-limit ceiling under sustained rapid play
-   (see the free-roam pivot's last "Done" note below) — not urgent, but
-   if narration quality starts visibly degrading to the dry fallback text
-   during normal play (not just heavy testing), the fix is either a
-   paid/higher-limit OpenRouter key or further reducing AI calls per
-   action.
+6. **Mitigated (2026-09-23), not eliminated**: OpenRouter free-tier rate
+   limits hitting during normal play, not just heavy testing — the user
+   reported the dry "(La IA no respondió a tiempo)" fallback live in
+   production. Diagnosed with real data, not guessed at: the account's
+   OpenRouter key status (`GET /api/v1/auth/key`) showed the earlier
+   $10 top-up had already worked exactly as expected
+   (`is_free_tier: false`, `free_model_daily_requests` 61/1000 used) — the
+   daily cap was never the problem. Production `ErrorLog` rows for
+   `ai/narrate-scene` showed a real `429` and two request-aborted
+   timeouts: the 4 free `:free`-suffixed models in `models.ts` share
+   OpenRouter-wide capacity across *all* users of that model, so they can
+   all be briefly saturated together even on a paid, nowhere-near-quota
+   account — no amount of this account's own credit fixes that specific
+   moment. Fix: `models.ts`'s `DEFAULT_MODELS` gained a 5th, paid,
+   last-resort entry (`openai/gpt-4o-mini`, sub-$0.001/call) so that rare
+   simultaneous-failure moment degrades to a slightly-paid real narration
+   instead of the static fallback text. `openrouter-client.ts`'s
+   `callOpenRouter` also now collects and logs *every* model's failure
+   reason instead of only the last one, so a future investigation doesn't
+   need production credentials pasted fresh into a session to diagnose —
+   the old single "Last error" message was hiding which of the earlier
+   free models actually failed and why. New `scripts/check-errors.ts`
+   (dump the N most recent `ErrorLog` rows) added as a standing debug
+   helper alongside `check-character.ts`. Verified: full suite (205
+   tests) + `tsc --noEmit` stayed clean, deployed to Render, confirmed
+   `live` via the deploy-status API and a `curl` 200 on the production
+   URL. **Still not eliminated**: if the free models are saturated
+   *and* the paid fallback also fails/is removed, the dry text can still
+   appear — this is graceful degradation of a shared external capacity
+   constraint, not a guarantee. Revisit if the paid fallback itself starts
+   firing often enough to matter cost-wise (unlikely at current usage).
 
 ### The endgame — explicitly discussed, NOT designed or built yet
 
