@@ -86,6 +86,7 @@ model Character {
   companions   NPCCompanion[]
   logs         GameLogEntry[]
   bountyLogs   BountyLogEntry[]
+  sceneMessages SceneMessage[]
   battleParticipations GroupBattleParticipant[]
 
   poneglyphsRead String @default("[]") // JSON string array of Poneglyph ids read
@@ -96,6 +97,12 @@ model Character {
   islandsVisited String @default("[]") // JSON string array of Island ids — gates the once-per-island arc-hook intro
 
   lastTrainedAt DateTime? // null = never trained under this rule yet, so always eligible
+
+  // Bounded, AI-maintained long-term memory — a compact prose digest the
+  // narration/classification prompts feed back in, refreshed only on
+  // significant beats (combat, mercy choice), never on every action. null =
+  // no memorable events yet.
+  memorySummary String?
 
   imprisonment     Imprisonment?
   pendingEncounter PendingEncounter?
@@ -197,11 +204,13 @@ model PendingEncounter {
   id          String    @id @default(cuid())
   characterId String    @unique
   character   Character @relation(fields: [characterId], references: [id])
-  enemyJson   String // { name, hp, atk, def, spd, isBoss }
+  enemyJson   String // { name, hp, atk, def, spd, isBoss } — hp here is the enemy's MAX hp, never mutated
   rewardsJson String // { berries, xp, bounty, hpLoss, islandDanger, isBoss }
   narrative   String
   assessment  String // "weaker" | "even" | "superior" — a read from Observation Haki + level gap, not a guarantee
-  phase       String   @default("threat") // "threat" (fight-or-flee pending) | "victory" (mercy choice pending)
+  phase       String   @default("threat") // "threat" (fight-or-flee pending) | "fighting" (round-by-round exchanges) | "victory" (mercy choice pending)
+  enemyHp     Int? // live remaining HP once fighting has started; null before the first exchange
+  roundNumber Int      @default(0) // how many exchanges have happened so far, for the same MAX_ROUNDS cutoff runCombat used
   createdAt   DateTime @default(now())
 }
 
@@ -368,6 +377,21 @@ model BountyLogEntry {
   character   Character @relation(fields: [characterId], references: [id])
   delta       Int
   reason      String
+  createdAt   DateTime  @default(now())
+}
+
+// The full back-and-forth roleplay transcript for a character — every free-text
+// line the player sent and every AI narration reply, in order. Distinct from
+// GameLogEntry (the terse mechanical Bitácora ticker: "explored, +150 berries")
+// so a long freeform scene doesn't have to fight for space with that summary
+// view. Also the source of narration prompts' short-term memory — richer than
+// GameLogEntry since it includes pure-roleplay turns that never touch a stat.
+model SceneMessage {
+  id          String    @id @default(cuid())
+  characterId String
+  character   Character @relation(fields: [characterId], references: [id])
+  role        String // "player" | "narrator"
+  text        String
   createdAt   DateTime  @default(now())
 }
 

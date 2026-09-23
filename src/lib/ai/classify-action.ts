@@ -4,7 +4,8 @@ import { OPENROUTER_MODELS } from "./models";
 /**
  * Free text now decides which mechanical action fires — in a game with
  * real permadeath, a wrong guess is a real-state-changing mistake, not a
- * cosmetic one. So this classifier is deliberately conservative:
+ * cosmetic one. So this classifier is deliberately conservative where it
+ * matters and deliberately generous everywhere else:
  *
  *  - The model is only ever offered the actions that are actually valid
  *    for the character's current state (e.g. only "engage"/"flee" during
@@ -12,59 +13,116 @@ import { OPENROUTER_MODELS } from "./models";
  *    sense right now.
  *  - Whatever it returns is re-validated against that same set in code;
  *    anything else becomes "unclear".
- *  - "unclear" (the model genuinely can't tell) is NEVER guessed at via
- *    keywords — it's a real no-op, the player is asked to rephrase.
- *  - The keyword fallback below fires ONLY when the OpenRouter call
- *    itself fails outright (network/timeout/all models down) — it's a
- *    last-resort "keep the game playable during an outage" path, not a
- *    substitute for the model's judgment on ambiguous phrasing it did
- *    manage to see.
+ *  - During a pending threat/mercy choice (a real binary, permadeath-
+ *    adjacent decision), "unclear" stays a genuine no-op — the player is
+ *    asked to rephrase rather than have the game guess fight-or-flee.
+ *  - Outside combat there are two non-mechanical-vs-mechanical buckets:
+ *    "narrate" (default) is pure roleplay/chat — the AI just reacts in
+ *    character, no engine call, no stat change, zero risk of a wrong
+ *    numeric outcome because there isn't one. "explore" is reserved for
+ *    text that reads as a real decisive commitment — pushing forward,
+ *    investigating something risky, seeking out danger or opportunity —
+ *    which does call the engine and can cost HP/grant rewards. This split
+ *    exists because two different asks converged on it: (a) a live bug
+ *    where a bar/social scene got rejected outright for not matching a
+ *    narrow "explore" keyword set, and (b) the user explicitly wanting
+ *    mechanical resolution to happen only when THEY commit to it, not on
+ *    every conversational beat. "narrate" being the default (not
+ *    "explore") solves both: free-roam text always gets a reply instead
+ *    of "no entendí", and it no longer silently spends a game turn/roll
+ *    just because the player was making small talk.
+ *  - The keyword fallback fires ONLY when the OpenRouter call itself
+ *    fails outright (network/timeout/all models down) — a last-resort
+ *    "keep the game playable during an outage" path, not a substitute
+ *    for the model's judgment on phrasing it did manage to see.
  */
-export type ActionId = "explore" | "train" | "rest" | "travel" | "engage" | "flee" | "mercy_spare" | "mercy_finish";
+export type ActionId = "narrate" | "explore" | "train" | "rest" | "travel" | "engage" | "flee" | "mercy_spare" | "mercy_finish";
 
 export interface ClassifyResult {
   action: ActionId | "unclear";
   source: "ai" | "keyword_fallback";
+  /**
+   * Only meaningful when action is "engage": how clever/well-suited the
+   * described tactic is, bounded [MIN_TACTIC_MODIFIER, MAX_TACTIC_MODIFIER].
+   * Folded into this same classification call (rather than a second AI
+   * call) after live testing showed combat rounds firing 3 separate AI
+   * calls (classify + tactic + narrate) tripped OpenRouter's free-tier
+   * rate limit almost every round, silently degrading every fight to dry
+   * fallback text. 0 whenever no tactic info is available (defaults,
+   * keyword fallback, non-engage actions).
+   */
+  tacticModifier: number;
+}
+
+export const MIN_TACTIC_MODIFIER = -15;
+export const MAX_TACTIC_MODIFIER = 20;
+
+function clampTacticModifier(n: number): number {
+  return Math.max(MIN_TACTIC_MODIFIER, Math.min(MAX_TACTIC_MODIFIER, Math.round(n)));
 }
 
 const KEYWORD_RULES: Array<{ action: ActionId; pattern: RegExp }> = [
   { action: "flee", pattern: /huy|corr|escap|retroced/i },
-  { action: "engage", pattern: /atac|luch|pele|golpe|desenfund|ataco/i },
+  { action: "engage", pattern: /atac|luch|pele|golpe|desenfund|embist|arremet|presion|contraataq|bloque|esquiv|defiend/i },
   { action: "mercy_spare", pattern: /perdon|deja.*vivir|suelt|no lo mat/i },
   { action: "mercy_finish", pattern: /remat|acaba con|elimin|termina con|\bmata\b/i },
   { action: "train", pattern: /entrena|practic/i },
   { action: "rest", pattern: /descans|duerm/i },
   { action: "travel", pattern: /viaj|zarp|navega|parte hacia/i },
-  { action: "explore", pattern: /explor|camin|voy a|investiga|busca|recorr/i },
+  { action: "explore", pattern: /explor|investig|me interno|me adentro|busco pelea|me arriesgo/i },
 ];
 
 function keywordClassify(freeText: string, validActions: ActionId[]): ActionId | "unclear" {
   for (const rule of KEYWORD_RULES) {
     if (validActions.includes(rule.action) && rule.pattern.test(freeText)) return rule.action;
   }
+  // Nothing specific matched — outside combat that just means ordinary
+  // roleplay/chat, which "narrate" covers with zero mechanical risk.
+  if (validActions.includes("narrate")) return "narrate";
+  // Once already in a fight-or-flee/ongoing-exchange choice (never true
+  // during the mercy_spare/mercy_finish choice, which stays strict), text
+  // with no clear "flee" signal defaults to continuing the fight — the
+  // engine's roll still decides what actually happens either way, this
+  // just picks which button it's equivalent to pressing.
+  if (validActions.includes("engage")) return "engage";
   return "unclear";
 }
 
 function buildClassifyPrompt(freeText: string, validActions: ActionId[]): { system: string; user: string } {
+  const narrateIsDefault = validActions.includes("narrate");
+  const isCombatChoice = validActions.includes("engage");
+  const guidance = narrateIsDefault
+    ? "Esto es un rol libre de verdad: el jugador puede escribir cualquier cosa — caminar, hablar con alguien, coquetear, comprar, beber, merodear, pensar, lo que sea. " +
+      "Usa 'narrate' (pura interacción de rol, sin dados) para CUALQUIER texto que no sea claramente entrenar físicamente/técnicas, descansar/dormir, " +
+      "ni una decisión arriesgada y decisiva de avanzar la trama (como 'exploro la isla a fondo', 'me interno en la jungla a buscar algo', 'busco pelea con quien sea', 'me arriesgo a robar esto'). " +
+      "Esas decisiones arriesgadas y decisivas van en 'explore'. Ante la duda, o si es solo conversación/ambiente, usa siempre 'narrate' — nunca respondas unclear solo porque la acción sea social, graciosa, atrevida o no encaje perfecto en una categoría."
+    : isCombatChoice
+    ? "Es un combate en curso: el jugador está describiendo su movimiento (atacar, esquivar, bloquear, una táctica, cualquier acción física de pelea) — todo eso es engage. " +
+      "Usa 'flee' solo si el texto describe claramente intentar escapar, huir o retirarse. Ante cualquier duda, o si el texto describe seguir peleando de cualquier forma, usa 'engage' — " +
+      "en un combate ya empezado casi nunca debería quedar sin clasificar. " +
+      `Cuando action sea "engage", incluye también "tactic_modifier": un entero entre ${MIN_TACTIC_MODIFIER} y ${MAX_TACTIC_MODIFIER} que indique qué tan inteligente y bien adaptada es la táctica descrita ` +
+      "(0 = un ataque normal/directo; positivo = inteligente, aprovecha una debilidad del enemigo o el entorno; negativo = torpe, imprudente, ignora un peligro obvio). No lo decides tú quién gana — solo qué tan buena es la idea."
+    : "Sé generoso: cualquier texto de piedad o dejar con vida cuenta como mercy_spare; cualquier texto de rematar/acabar cuenta como mercy_finish.";
   const system =
-    "Clasificas la acción de un jugador de un rol de texto en una de las acciones válidas. " +
-    `Responde EXCLUSIVAMENTE con un objeto JSON como {"action": "..."} usando uno de estos valores exactos: ${validActions.join(", ")}, ` +
-    'o {"action": "unclear"} solo si el texto realmente no tiene relación con ninguna. ' +
-    "Sé generoso interpretando: cualquier texto que describa moverse, buscar, investigar o merodear cuenta como explore; " +
-    "cualquier texto agresivo o de combate cuenta como engage; cualquier texto de escapar/correr cuenta como flee. " +
-    "No añadas explicación, ni markdown, ni texto extra: responde solo el JSON, nada más.";
+    "Clasificas la acción de un jugador de un rol de texto libre en una de las acciones válidas. " +
+    `Responde EXCLUSIVAMENTE con un objeto JSON como {"action": "..."}${isCombatChoice ? ' (y "tactic_modifier" cuando aplique, ver abajo)' : ""} usando uno de estos valores exactos para "action": ${validActions.join(", ")}, ` +
+    `o {"action": "unclear"} ${narrateIsDefault || isCombatChoice ? "SOLO si el texto es literalmente ininteligible o no dice nada" : "si el texto realmente no tiene relación con ninguna"}. ` +
+    guidance +
+    " No añadas explicación, ni markdown, ni texto extra: responde solo el JSON, nada más.";
   const user = `Acciones válidas ahora mismo: ${validActions.join(", ")}.\nTexto del jugador: "${freeText}"`;
   return { system, user };
 }
 
-function parseClassifyResponse(raw: string, validActions: ActionId[]): ActionId | "unclear" {
+function parseClassifyResponse(raw: string, validActions: ActionId[]): { action: ActionId | "unclear"; tacticModifier: number } {
   try {
     const parsed = JSON.parse(raw);
     const action = parsed?.action;
-    if (typeof action === "string" && validActions.includes(action as ActionId)) return action as ActionId;
-    return "unclear";
+    if (typeof action !== "string" || !validActions.includes(action as ActionId)) return { action: "unclear", tacticModifier: 0 };
+    const rawModifier = Number(parsed?.tactic_modifier);
+    const tacticModifier = action === "engage" && Number.isFinite(rawModifier) ? clampTacticModifier(rawModifier) : 0;
+    return { action: action as ActionId, tacticModifier };
   } catch {
-    return "unclear";
+    return { action: "unclear", tacticModifier: 0 };
   }
 }
 
@@ -78,19 +136,29 @@ function parseClassifyResponse(raw: string, validActions: ActionId[]): ActionId 
 const MAX_ATTEMPTS = 2;
 
 export async function classifyPlayerAction(freeText: string, validActions: ActionId[]): Promise<ClassifyResult> {
-  if (validActions.length === 0) return { action: "unclear", source: "ai" };
+  if (validActions.length === 0) return { action: "unclear", source: "ai", tacticModifier: 0 };
 
   const { system, user } = buildClassifyPrompt(freeText, validActions);
   try {
     for (let attempt = 0; attempt < MAX_ATTEMPTS; attempt++) {
       const raw = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, jsonMode: true, temperature: 0.1, timeoutMs: 8_000 });
-      const action = parseClassifyResponse(raw, validActions);
-      if (action !== "unclear") return { action, source: "ai" };
+      const { action, tacticModifier } = parseClassifyResponse(raw, validActions);
+      if (action !== "unclear") return { action, source: "ai", tacticModifier };
     }
-    return { action: "unclear", source: "ai" };
+    // Even a weak free-tier model couldn't pin it down twice — outside combat
+    // that's still not a reason to block the player. Prefer "narrate" (zero
+    // mechanical stakes, always safe) over "explore" (spends a real roll) as
+    // the fallback, since a genuinely ambiguous read shouldn't cost a turn.
+    if (validActions.includes("narrate")) return { action: "narrate", source: "ai", tacticModifier: 0 };
+    if (validActions.includes("explore")) return { action: "explore", source: "ai", tacticModifier: 0 };
+    // An ongoing fight (never the mercy_spare/mercy_finish choice, which has
+    // no "engage" in its set) shouldn't stall on two weak-model misses either
+    // — default to continuing the fight, same reasoning as the keyword fallback.
+    if (validActions.includes("engage")) return { action: "engage", source: "ai", tacticModifier: 0 };
+    return { action: "unclear", source: "ai", tacticModifier: 0 };
   } catch {
     // The OpenRouter call itself failed (network/timeout/all models down) —
     // this is the only case the keyword fallback exists for.
-    return { action: keywordClassify(freeText, validActions), source: "keyword_fallback" };
+    return { action: keywordClassify(freeText, validActions), source: "keyword_fallback", tacticModifier: 0 };
   }
 }

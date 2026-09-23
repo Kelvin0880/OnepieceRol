@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useCallback, use } from "react";
+import { useEffect, useState, useCallback, useRef, use } from "react";
 import Link from "next/link";
 import { characterCondition, conditionLabel } from "@/lib/engine/condition";
 import { factionTitle } from "@/lib/engine/progression";
@@ -45,6 +45,13 @@ interface LogEntry {
   id: string;
   text: string;
   kind: string;
+  createdAt: string;
+}
+
+interface SceneMsg {
+  id: string;
+  role: "player" | "narrator";
+  text: string;
   createdAt: string;
 }
 
@@ -139,8 +146,15 @@ interface Character {
   ownedWeapons: Weapon[];
   companions: Companion[];
   logs: LogEntry[];
+  sceneMessages: SceneMsg[];
   deathCause: string | null;
-  pendingEncounter: { phase: "threat" | "victory"; assessment: "weaker" | "even" | "superior"; enemyName: string } | null;
+  pendingEncounter: {
+    phase: "threat" | "fighting" | "victory";
+    assessment: "weaker" | "even" | "superior";
+    enemyName: string;
+    enemyHp: number;
+    enemyMaxHp: number;
+  } | null;
   crew: Crew | null;
   imprisonment: Imprisonment | null;
 }
@@ -210,6 +224,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [battleError, setBattleError] = useState<string | null>(null);
   const [battleBusy, setBattleBusy] = useState(false);
   const [freeText, setFreeText] = useState("");
+  const sceneEndRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/characters/${id}`);
@@ -231,6 +246,10 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     const interval = setInterval(load, 10_000);
     return () => clearInterval(interval);
   }, [load]);
+
+  useEffect(() => {
+    sceneEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+  }, [data?.character.sceneMessages.length, busy]);
 
   async function doCrewAction(body: Record<string, unknown>) {
     setCrewBusy(true);
@@ -435,7 +454,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                       ? "Ej: Desenfundo mi espada y cargo contra él sin dudar."
                       : character.pendingEncounter?.phase === "victory"
                       ? "Ej: Le perdono la vida y le advierto que no vuelva."
-                      : "Ej: Camino por el muelle preguntando por trabajo."
+                      : "Ej: Entro al bar y me fijo si alguien interesante anda por ahí."
                   }
                   value={freeText}
                   disabled={busy}
@@ -447,55 +466,49 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                     }
                   }}
                 />
-                <button className="btn-gold px-4 py-2 text-sm mt-2" disabled={busy || !freeText.trim()} onClick={submitFreeText}>
-                  Actuar
-                </button>
+                <div className="flex items-center gap-2 mt-2">
+                  <button className="btn-gold px-4 py-2 text-sm" disabled={busy || !freeText.trim()} onClick={submitFreeText}>
+                    Actuar
+                  </button>
+                  {busy && (
+                    <span className="flex items-center gap-1.5 text-xs text-ink-dim">
+                      <span className="inline-block w-3.5 h-3.5 rounded-full border-2 border-gold/30 border-t-gold animate-spin" />
+                      Pensando...
+                    </span>
+                  )}
+                </div>
               </div>
             )}
 
-            {!isDead && !isImprisoned && character.pendingEncounter?.phase === "threat" && (
+            {!isDead && !isImprisoned && (character.pendingEncounter?.phase === "threat" || character.pendingEncounter?.phase === "fighting") && (
               <div className="panel p-3 mb-3" style={{ borderColor: "var(--blood)" }}>
                 <p className="text-sm mb-1">
-                  Te enfrentas a <span className="text-gold-bright">{character.pendingEncounter.enemyName}</span>.
+                  {character.pendingEncounter.phase === "threat" ? "Te enfrentas a" : "Sigues luchando contra"}{" "}
+                  <span className="text-gold-bright">{character.pendingEncounter.enemyName}</span>.
                 </p>
-                <p className={`text-xs mb-3 ${ASSESSMENT_LABEL[character.pendingEncounter.assessment].color}`}>
+                <p className={`text-xs mb-2 ${ASSESSMENT_LABEL[character.pendingEncounter.assessment].color}`}>
                   {ASSESSMENT_LABEL[character.pendingEncounter.assessment].text}
                 </p>
-                <p className="text-xs text-ink-dim mb-2">O usa los botones:</p>
-                <div className="flex gap-2">
-                  <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "engage" })}>
-                    Luchar
-                  </button>
-                  <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "flee" })}>
-                    Huir
-                  </button>
-                </div>
+                <StatBar
+                  label={character.pendingEncounter.enemyName}
+                  value={character.pendingEncounter.enemyHp}
+                  max={character.pendingEncounter.enemyMaxHp}
+                  color="var(--blood)"
+                />
               </div>
             )}
 
             {!isDead && !isImprisoned && character.pendingEncounter?.phase === "victory" && (
               <div className="panel p-3 mb-3">
-                <p className="text-sm mb-3">
+                <p className="text-sm">
                   <span className="text-gold-bright">{character.pendingEncounter.enemyName}</span> está derrotado y a tu merced. ¿Qué haces?
                 </p>
-                <p className="text-xs text-ink-dim mb-2">O usa los botones:</p>
-                <div className="flex gap-2">
-                  <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "mercy", spare: true })}>
-                    Perdonar
-                  </button>
-                  <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "mercy", spare: false })}>
-                    Rematar
-                  </button>
-                </div>
               </div>
             )}
 
             {!isDead && !isImprisoned && !character.pendingEncounter && (
               <div className="flex flex-wrap items-center gap-2">
-                <span className="text-xs text-ink-dim">O usa los botones:</span>
-                <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "explore" })}>
-                  Explorar
-                </button>
+                <span className="text-xs text-ink-dim">O, para lo simple:</span>
                 <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "train" })}>
                   Entrenar
                 </button>
@@ -523,6 +536,35 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               </div>
             )}
           </div>
+
+          {!isDead && (
+            <div className="panel p-4">
+              <h3 className="font-display text-sm text-ink-dim mb-2">Escena</h3>
+              <div className="flex flex-col gap-3 max-h-[520px] overflow-y-auto scrollbar-thin pr-1">
+                {character.sceneMessages.length === 0 && (
+                  <p className="text-sm text-ink-dim italic">Escribe qué haces arriba para empezar a rolear.</p>
+                )}
+                {character.sceneMessages.map((m) =>
+                  m.role === "player" ? (
+                    <div key={m.id} className="self-end max-w-[85%] rounded-lg px-3 py-2 text-sm" style={{ background: "var(--gold)", color: "var(--sea-deep)" }}>
+                      {m.text}
+                    </div>
+                  ) : (
+                    <div key={m.id} className="self-start max-w-[85%] rounded-lg px-3 py-2 text-sm bg-black/25 whitespace-pre-line">
+                      {m.text}
+                    </div>
+                  )
+                )}
+                {busy && (
+                  <div className="self-start max-w-[85%] rounded-lg px-3 py-2 text-sm bg-black/25 flex items-center gap-1.5 text-ink-dim italic">
+                    <span className="inline-block w-3 h-3 rounded-full border-2 border-gold/30 border-t-gold animate-spin" />
+                    narrando...
+                  </div>
+                )}
+                <div ref={sceneEndRef} />
+              </div>
+            </div>
+          )}
 
           {data.othersHere.length > 0 && (
             <div className="panel p-4">
@@ -681,8 +723,9 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           {error && <p className="text-blood text-sm">{error}</p>}
 
           <div className="panel p-4 flex-1">
-            <h3 className="font-display text-sm text-ink-dim mb-2">Bitácora</h3>
-            <div className="flex flex-col gap-2 max-h-[420px] overflow-y-auto scrollbar-thin pr-1">
+            <h3 className="font-display text-sm text-ink-dim mb-0.5">Bitácora</h3>
+            <p className="text-xs text-ink-dim/70 mb-2">Resumen mecánico rápido — la escena completa está arriba.</p>
+            <div className="flex flex-col gap-2 max-h-[240px] overflow-y-auto scrollbar-thin pr-1">
               {feed.length === 0 &&
                 character.logs.map((l) => (
                   <p key={l.id} className="text-sm border-b border-[--line] pb-2">

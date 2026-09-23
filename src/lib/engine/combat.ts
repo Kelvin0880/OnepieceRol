@@ -27,7 +27,7 @@ export interface CombatResult {
   enemyHpLeft: number;
 }
 
-const MAX_ROUNDS = 8;
+export const MAX_ROUNDS = 8;
 
 function attackOnce(rng: Rng, attacker: Combatant, defender: Combatant): { damage: number; outcome: CombatRoundLog["outcome"]; roll: number } {
   const defenderDifficulty = 40 + defender.def;

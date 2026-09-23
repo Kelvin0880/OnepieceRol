@@ -2,7 +2,7 @@ import { prisma } from "../db";
 import { liveRng } from "../engine/rng";
 import { runWorldTick } from "../engine/world";
 
-const TICK_INTERVAL_MS = 5 * 60 * 1000; // a new world beat roughly every 5 real minutes
+const TICK_INTERVAL_MS = 30 * 60 * 1000; // a new world beat roughly every 30 real minutes — the user found 5 too fast/noisy for a "living but calm" world
 
 /**
  * Lazily advances the background world simulation. Called opportunistically

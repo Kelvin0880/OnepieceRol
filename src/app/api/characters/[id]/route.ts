@@ -20,6 +20,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         pendingEncounter: true,
         imprisonment: true,
         logs: { orderBy: { createdAt: "desc" }, take: 30 },
+        sceneMessages: { orderBy: { createdAt: "asc" }, take: 60 },
       },
     });
     if (!character || character.userId !== userId) {
@@ -66,11 +67,16 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     const { pendingEncounter, imprisonment, ...rest } = character;
     const shapedPending = pendingEncounter
-      ? {
-          phase: pendingEncounter.phase,
-          assessment: pendingEncounter.assessment,
-          enemyName: (JSON.parse(pendingEncounter.enemyJson) as { name: string }).name,
-        }
+      ? (() => {
+          const enemySpec = JSON.parse(pendingEncounter.enemyJson) as { name: string; hp: number };
+          return {
+            phase: pendingEncounter.phase,
+            assessment: pendingEncounter.assessment,
+            enemyName: enemySpec.name,
+            enemyMaxHp: enemySpec.hp,
+            enemyHp: pendingEncounter.enemyHp ?? enemySpec.hp,
+          };
+        })()
       : null;
     const shapedImprisonment = imprisonment
       ? { reason: imprisonment.reason, bailBerries: imprisonment.bailBerries, minRescueLevel: imprisonment.minRescueLevel, capturedAt: imprisonment.capturedAt }

@@ -12,9 +12,28 @@ export interface CallOpenRouterOptions {
   timeoutMs?: number;
   jsonMode?: boolean;
   temperature?: number;
+  maxTokens?: number;
+  /**
+   * Optional sanity check on the model's raw content — e.g. rejecting a
+   * moderation/safety-classifier artifact a free-tier model occasionally
+   * returns instead of following the prompt (found live: one model's
+   * "response" was literally the string "User Safety: safe"). A failed
+   * check is treated exactly like a non-2xx response: move to the next
+   * model in the fallback list, never surface the bad content.
+   */
+  validate?: (text: string) => boolean;
 }
 
-async function callOnce(model: string, system: string, user: string, jsonMode: boolean, temperature: number, timeoutMs: number): Promise<string> {
+async function callOnce(
+  model: string,
+  system: string,
+  user: string,
+  jsonMode: boolean,
+  temperature: number,
+  timeoutMs: number,
+  maxTokens?: number,
+  validate?: (text: string) => boolean
+): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new AiUnavailableError("OPENROUTER_API_KEY is not set.");
 
@@ -32,6 +51,7 @@ async function callOnce(model: string, system: string, user: string, jsonMode: b
         ],
         temperature,
         ...(jsonMode ? { response_format: { type: "json_object" } } : {}),
+        ...(maxTokens ? { max_tokens: maxTokens } : {}),
       }),
       signal: controller.signal,
     });
@@ -40,6 +60,9 @@ async function callOnce(model: string, system: string, user: string, jsonMode: b
     const content = data?.choices?.[0]?.message?.content;
     if (typeof content !== "string" || content.trim().length === 0) {
       throw new AiUnavailableError(`OpenRouter ${model} returned an empty response.`);
+    }
+    if (validate && !validate(content)) {
+      throw new AiUnavailableError(`OpenRouter ${model} returned content that failed validation: ${content.slice(0, 80)}`);
     }
     return content;
   } finally {
@@ -54,13 +77,13 @@ async function callOnce(model: string, system: string, user: string, jsonMode: b
  * fall back to non-AI behavior, never to propagate it to the player.
  */
 export async function callOpenRouter(system: string, user: string, options: CallOpenRouterOptions): Promise<string> {
-  const { models, timeoutMs = 10_000, jsonMode = false, temperature = 0.9 } = options;
+  const { models, timeoutMs = 10_000, jsonMode = false, temperature = 0.9, maxTokens, validate } = options;
   if (models.length === 0) throw new AiUnavailableError("No models configured.");
 
   let lastError: unknown;
   for (const model of models) {
     try {
-      return await callOnce(model, system, user, jsonMode, temperature, timeoutMs);
+      return await callOnce(model, system, user, jsonMode, temperature, timeoutMs, maxTokens, validate);
     } catch (err) {
       lastError = err;
     }

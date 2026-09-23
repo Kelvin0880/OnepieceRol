@@ -1,7 +1,7 @@
 import { prisma } from "../db";
 import { liveRng } from "../engine/rng";
 import { pickEventTemplate, resolveEvent, parseEventBody, EventBody } from "../engine/events";
-import { runCombat, Combatant } from "../engine/combat";
+import { resolveExchange, MAX_ROUNDS, Combatant } from "../engine/combat";
 import { trainHaki, rollConquerorsHakiAwakening } from "../engine/haki";
 import { bountyReward, berryReward, xpToNextLevel } from "../engine/economy";
 import { assessThreat, attemptFlee, ThreatAssessment } from "../engine/encounter";
@@ -11,7 +11,7 @@ import { toCombatant, generalSkillModifier } from "./derive";
 import { tickWorldIfDue } from "./world-tick";
 import { postNews, handleDeathCheck } from "./death-resolution";
 import { applyBountyOrNotoriety } from "./reputation";
-import { narrateExplore, narrateCombat, getRecentMemory } from "../ai/narrate";
+import { narrateExplore, narrateCombat, narrateScene, getRecentScene, updateCharacterMemory } from "../ai/narrate";
 import { classifyPlayerAction, ActionId } from "../ai/classify-action";
 import { CharacterStatus } from "@prisma/client";
 
@@ -216,7 +216,7 @@ export async function exploreCharacter(characterId: string, userId: string, inte
   }
 
   // Non-combat narrative beat: apply everything immediately.
-  const memory = await getRecentMemory(character.id, 8);
+  const memory = await getRecentScene(character.id, 10);
   const log: string[] = await narrateExplore(
     {
       characterName: character.name,
@@ -233,6 +233,7 @@ export async function exploreCharacter(characterId: string, userId: string, inte
       hpLoss: resolution.hpLoss,
       intentText,
       recentMemory: memory,
+      memorySummary: character.memorySummary ?? undefined,
     },
     { characterId: character.id }
   );
@@ -299,11 +300,29 @@ function rollCompanionAssist(character: LoadedCharacter, rng: () => number): str
   return rng() < chance ? candidate.name : null;
 }
 
-export async function engageCharacter(characterId: string, userId: string, intentText?: string): Promise<ActionResult> {
+/**
+ * Combat plays out one exchange (engine/combat.ts's resolveExchange) per
+ * call, driven by the player's free text each time — "poco a poco ir
+ * peleando, la IA respondiendo a mi ataque", the user's own words. Phase
+ * "threat" is the very first fight-or-flee commitment; once the player
+ * commits, phase flips to "fighting" and each further call resolves one
+ * more exchange until someone's HP hits 0, exactly like runCombat used to
+ * do internally in one shot — the only thing that changed is *when* each
+ * round happens (one per message) and that the player's described tactic
+ * for that exchange feeds a real modifier (`tacticModifier`, judged by the
+ * classifier in the same call as the action itself — see classify-action.ts,
+ * merged there after live testing showed a separate tactic-assessment call
+ * tripling AI calls per round and exhausting OpenRouter's free-tier rate
+ * limit) before the engine rolls. The roll itself, and who wins, is still
+ * 100% the engine's call — the AI never decides a fight's outcome directly.
+ */
+export async function engageCharacter(characterId: string, userId: string, intentText?: string, tacticModifier = 0): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
   const pending = character.pendingEncounter;
   if (!pending) throw new GameActionError("No tienes ningún enfrentamiento pendiente.");
-  if (pending.phase !== "threat") throw new GameActionError("Ya resolviste el combate; solo falta decidir su destino.");
+  if (pending.phase !== "threat" && pending.phase !== "fighting") {
+    throw new GameActionError("Ya resolviste el combate; solo falta decidir su destino.");
+  }
   const rng = liveRng();
 
   const enemy = JSON.parse(pending.enemyJson) as StoredEnemy;
@@ -312,61 +331,118 @@ export async function engageCharacter(characterId: string, userId: string, inten
   const newsLog: string[] = [];
 
   let playerCombatant = toCombatant(character);
-  const assistName = enemy.isBoss ? rollCompanionAssist(character, rng) : null;
+  const assistName = pending.phase === "threat" && enemy.isBoss ? rollCompanionAssist(character, rng) : null;
   if (assistName) {
     playerCombatant = { ...playerCombatant, atk: Math.round(playerCombatant.atk * 1.15) };
     log.push(`${assistName} se lanza a tu lado para ayudarte contra ${enemy.name}.`);
   }
 
-  const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
-  const combatResult = runCombat(rng, { ...playerCombatant, hp: character.hp, maxHp: character.maxHp }, enemyCombatant);
+  if (tacticModifier !== 0) {
+    playerCombatant = {
+      ...playerCombatant,
+      atk: playerCombatant.atk + tacticModifier,
+      def: playerCombatant.def + Math.round(tacticModifier / 2),
+    };
+  }
 
-  const memory = await getRecentMemory(character.id, 8);
+  const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
+  const enemyHpBefore = pending.enemyHp ?? enemy.hp;
+  const roundNumber = pending.roundNumber + 1;
+
+  const { aHpAfter: playerHpAfter, bHpAfter: enemyHpAfter, log: roundLog } = resolveExchange(
+    rng,
+    roundNumber,
+    { ...playerCombatant, hp: character.hp, maxHp: character.maxHp },
+    character.hp,
+    enemyCombatant,
+    enemyHpBefore
+  );
+
+  const concluded = playerHpAfter <= 0 || enemyHpAfter <= 0 || roundNumber >= MAX_ROUNDS;
+  // Same tie-break runCombat always used when rounds ran out with both still standing.
+  const victor: "player" | "enemy" | undefined = !concluded
+    ? undefined
+    : enemyHpAfter <= 0 && playerHpAfter > 0
+    ? "player"
+    : playerHpAfter <= 0 && enemyHpAfter > 0
+    ? "enemy"
+    : enemyHpAfter < playerHpAfter
+    ? "player"
+    : "enemy"; // draw or ran out of rounds evenly: same "healthier side wins" rule runCombat used, loss-leaning on an exact tie
+
+  const scene = await getRecentScene(character.id, 10);
   const narrated = await narrateCombat(
     {
       characterName: character.name,
       enemyName: enemy.name,
       enemyPersonality: enemy.personality,
       isBoss: enemy.isBoss,
-      rounds: combatResult.rounds,
-      victor: combatResult.victor === "player" ? "player" : "enemy", // a "draw" is treated as a loss below, same as the existing logic
-      playerHpLeft: Math.max(0, combatResult.playerHpLeft),
+      rounds: roundLog,
+      concluded,
+      victor,
+      playerHpLeft: Math.max(0, playerHpAfter),
       playerMaxHp: character.maxHp,
+      enemyHpLeft: Math.max(0, enemyHpAfter),
+      enemyMaxHp: enemy.hp,
       intentText,
-      recentMemory: memory,
+      recentMemory: scene,
+      memorySummary: character.memorySummary ?? undefined,
     },
     { characterId: character.id }
   );
   log.push(...narrated);
 
-  if (combatResult.victor === "player") {
+  if (concluded && victor === "player") {
     log.push(`¡${enemy.name} queda derrotado y a tu merced!`);
-    await prisma.character.update({ where: { id: character.id }, data: { hp: Math.max(1, combatResult.playerHpLeft) } });
+    await prisma.character.update({ where: { id: character.id }, data: { hp: Math.max(1, playerHpAfter) } });
     // Keep the pending encounter around, now representing "awaiting mercy choice".
-    await prisma.pendingEncounter.update({ where: { characterId: character.id }, data: { phase: "victory" } });
+    await prisma.pendingEncounter.update({ where: { characterId: character.id }, data: { phase: "victory", enemyHp: Math.max(0, enemyHpAfter), roundNumber } });
     await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
+    // Fire-and-forget: Render runs a persistent Node process (not per-request
+    // serverless), so this keeps running after the response is sent, and
+    // updateCharacterMemory never throws — a slow/failed summary never
+    // delays or breaks the player's actual turn.
+    void updateCharacterMemory(character.id, character.memorySummary, `${character.name} venció a ${enemy.name} en combate${enemy.isBoss ? " (un enemigo formidable)" : ""}.`);
     return { ...emptyResult(log, character.level), awaitingMercyChoice: { enemyName: enemy.name } };
   }
 
-  log.push(`${enemy.name} te derrota.`);
-  const deathCheck = await handleDeathCheck(character, combatResult.playerHpLeft, `Cayó en combate contra ${enemy.name}.`, newsLog);
-  await prisma.pendingEncounter.delete({ where: { characterId: character.id } });
-  if (!deathCheck.died) {
-    await prisma.character.update({ where: { id: character.id }, data: { hp: deathCheck.finalHp } });
-  }
-  await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
+  if (concluded && victor === "enemy") {
+    log.push(`${enemy.name} te derrota.`);
+    const deathCheck = await handleDeathCheck(character, playerHpAfter, `Cayó en combate contra ${enemy.name}.`, newsLog);
+    await prisma.pendingEncounter.delete({ where: { characterId: character.id } });
+    if (!deathCheck.died) {
+      await prisma.character.update({ where: { id: character.id }, data: { hp: deathCheck.finalHp } });
+    }
+    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
+    if (!deathCheck.died) {
+      void updateCharacterMemory(character.id, character.memorySummary, `${character.name} perdió un combate contra ${enemy.name} y sobrevivió malherido.`);
+    }
 
+    return {
+      log,
+      berriesDelta: 0,
+      xpDelta: 0,
+      bountyDelta: 0,
+      hpDelta: deathCheck.finalHp - character.hp,
+      leveledUp: false,
+      newLevel: character.level,
+      died: deathCheck.died,
+      deathCause: deathCheck.died ? `Cayó en combate contra ${enemy.name}.` : undefined,
+      newsPosted: newsLog,
+    };
+  }
+
+  // Neither side down yet — persist the round state and wait for the player's next move.
+  await prisma.character.update({ where: { id: character.id }, data: { hp: Math.max(0, playerHpAfter) } });
+  await prisma.pendingEncounter.update({
+    where: { characterId: character.id },
+    data: { phase: "fighting", enemyHp: Math.max(0, enemyHpAfter), roundNumber },
+  });
+  await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
   return {
-    log,
-    berriesDelta: 0,
-    xpDelta: 0,
-    bountyDelta: 0,
-    hpDelta: deathCheck.finalHp - character.hp,
-    leveledUp: false,
-    newLevel: character.level,
-    died: deathCheck.died,
-    deathCause: deathCheck.died ? `Cayó en combate contra ${enemy.name}.` : undefined,
-    newsPosted: newsLog,
+    ...emptyResult(log, character.level),
+    hpDelta: playerHpAfter - character.hp,
+    pendingCombat: { enemyName: enemy.name, assessment: pending.assessment as ThreatAssessment, isBoss: enemy.isBoss },
   };
 }
 
@@ -374,7 +450,9 @@ export async function fleeCharacter(characterId: string, userId: string): Promis
   const character = await loadCharacterOrThrow(characterId, userId);
   const pending = character.pendingEncounter;
   if (!pending) throw new GameActionError("No tienes ningún enfrentamiento pendiente.");
-  if (pending.phase !== "threat") throw new GameActionError("Ya derrotaste a tu enemigo; ahora decide su destino, no puedes huir.");
+  if (pending.phase !== "threat" && pending.phase !== "fighting") {
+    throw new GameActionError("Ya derrotaste a tu enemigo; ahora decide su destino, no puedes huir.");
+  }
   const rng = liveRng();
 
   const enemy = JSON.parse(pending.enemyJson) as StoredEnemy;
@@ -497,6 +575,11 @@ export async function resolveMercyChoice(characterId: string, userId: string, sp
   await prisma.pendingEncounter.delete({ where: { characterId: character.id } });
   await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
 
+  const mercyEvent =
+    `${character.name} ${spare ? "perdonó" : "remató"} a ${enemy.name} tras vencerlo.` +
+    (poneglyphGained ? ` Además descifró el ${poneglyphGained}.` : "");
+  void updateCharacterMemory(character.id, character.memorySummary, mercyEvent);
+
   return { log, berriesDelta, xpDelta, bountyDelta, hpDelta: 0, leveledUp, newLevel, died: false, newsPosted: newsLog, poneglyphGained };
 }
 
@@ -580,7 +663,38 @@ export async function restCharacter(characterId: string, userId: string): Promis
   return { ...emptyResult(log, character.level), hpDelta: healed - character.hp };
 }
 
+/**
+ * Pure roleplay: no engine call, no stat changes. This is the default for
+ * free text outside combat (see classify-action.ts) — a conversation, a
+ * drink, a scene the player wants painted — with mechanical resolution
+ * saved for when the player actually commits to something risky (explore,
+ * engage, flee). Never fails outright — narrateScene has its own
+ * never-throws contract with a safe fallback line.
+ */
+export async function narrateSceneAction(characterId: string, userId: string, freeText: string): Promise<ActionResult> {
+  const character = await loadCharacterOrThrow(characterId, userId);
+  if (character.pendingEncounter) throw new GameActionError("Tienes un enfrentamiento sin resolver. Decide si luchar o huir primero.");
+
+  const scene = await getRecentScene(character.id, 12);
+  const text = await narrateScene(
+    {
+      characterName: character.name,
+      faction: character.faction,
+      level: character.level,
+      islandName: character.currentIsland.name,
+      islandDescription: character.currentIsland.description,
+      playerText: freeText,
+      recentScene: scene,
+      memorySummary: character.memorySummary ?? undefined,
+    },
+    { characterId: character.id }
+  );
+
+  return emptyResult([text], character.level);
+}
+
 const FREE_TEXT_ACTION_LABELS: Record<ActionId, string> = {
+  narrate: "",
   explore: "Explorar",
   train: "Entrenar",
   rest: "Descansar",
@@ -611,18 +725,21 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
   const character = await loadCharacterOrThrow(characterId, userId);
 
   const validActions: ActionId[] = character.pendingEncounter
-    ? character.pendingEncounter.phase === "threat"
-      ? ["engage", "flee"]
-      : ["mercy_spare", "mercy_finish"]
-    : ["explore", "train", "rest"];
+    ? character.pendingEncounter.phase === "victory"
+      ? ["mercy_spare", "mercy_finish"]
+      : ["engage", "flee"] // both "threat" (first commit) and "fighting" (ongoing exchanges) share this set
+    : ["narrate", "explore", "train", "rest"];
 
-  const { action } = await classifyPlayerAction(freeText, validActions);
+  const { action, tacticModifier } = await classifyPlayerAction(freeText, validActions);
   if (action === "unclear") {
     throw new GameActionError("No logro entender qué quieres hacer. Prueba a describirlo de otra forma, o usa los botones de abajo.");
   }
 
   let result: ActionResult;
   switch (action) {
+    case "narrate":
+      result = await narrateSceneAction(characterId, userId, freeText);
+      break;
     case "explore":
       result = await exploreCharacter(characterId, userId, freeText);
       break;
@@ -633,7 +750,7 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
       result = await restCharacter(characterId, userId);
       break;
     case "engage":
-      result = await engageCharacter(characterId, userId, freeText);
+      result = await engageCharacter(characterId, userId, freeText, tacticModifier);
       break;
     case "flee":
       result = await fleeCharacter(characterId, userId);
@@ -649,5 +766,20 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
       throw new GameActionError("Esa acción todavía no se puede hacer por texto libre — usa los botones.");
   }
 
-  return { ...result, log: [`(interpretado como: ${FREE_TEXT_ACTION_LABELS[action]})`, ...result.log] };
+  // "narrate" is the expected default for free-roam text, not a special
+  // read worth flagging — the interpreted-as line is only useful for the
+  // mechanical actions, where a wrong read has real (stat-changing) stakes.
+  const finalLog = action === "narrate" ? result.log : [`(interpretado como: ${FREE_TEXT_ACTION_LABELS[action]})`, ...result.log];
+
+  // The full chat transcript — every free-text action, mechanical or pure
+  // roleplay alike — so the scene panel and future narration prompts see
+  // the whole conversation, not just the mechanical summary (Bitácora).
+  await prisma.sceneMessage.createMany({
+    data: [
+      { characterId, role: "player", text: freeText },
+      { characterId, role: "narrator", text: finalLog.join("\n\n") },
+    ],
+  });
+
+  return { ...result, log: finalLog };
 }
