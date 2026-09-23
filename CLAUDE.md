@@ -275,16 +275,19 @@ start command `npm run start`, plan `free`, region `oregon`.
 ## Roadmap (what's explicitly NOT done yet, roughly in likely priority order)
 
 1. **AI Game Master, Phase 2: multiplayer orchestration.** Phase 1
-   (single-player AI narration + free-text actions, see "Done since the
-   first session" below) is live. The user's original ask also included
-   a multiplayer layer — turn order (AI narrates first, then whoever
-   invited the world), a live panel of who's in your world, same-crew
-   presence sharing actions/narration in real time, and free-text
-   detection of "separating from the crew" (with an explicit confirm
-   prompt) vs. staying together — **explicitly deferred**, not designed
-   yet. Needs its own dedicated design pass before touching it (turn
-   sync model, what "same room" visibility actually means server-side,
-   how AI narration coordinates across multiple players' actions).
+   (single-player AI narration + free-text actions, then the free-roam
+   roleplay pivot — narrate/explore split, round-by-round combat, see
+   "Done since the first session" below) is live. The user's original ask
+   also included a multiplayer layer — turn order (AI narrates first,
+   then whoever invited the world), a live panel of who's in your world,
+   same-crew presence sharing actions/narration in real time, and
+   free-text detection of "separating from the crew" (with an explicit
+   confirm prompt) vs. staying together — **explicitly deferred**, not
+   designed yet. Needs its own dedicated design pass before touching it
+   (turn sync model, what "same room" visibility actually means
+   server-side, how AI narration coordinates across multiple players'
+   actions, and how round-by-round combat works when more than one
+   player/NPC can act in the same fight).
 2. Expanding Grand Line/New World further (14 islands now — see "World
    content" below).
 3. Placing the remaining 2 Road Poneglyphs (Fragmento del Alba and
@@ -298,9 +301,17 @@ start command `npm run start`, plan `free`, region `oregon`.
 5. Kill-vs-spare consequence questlines deeper than the current one-off
    news-flavor hooks (`resolveMercyChoice` in `perform-action.ts`) — the
    user flagged (2026-09-23) that island lore in general should feel
-   slower/richer, not just a first-visit blurb. AI narration (Phase 1)
-   addresses the *prose quality* half of that complaint; deeper branching
-   questlines are still a separate, unaddressed ask.
+   slower/richer, not just a first-visit blurb. AI narration + the
+   free-roam pivot address the *prose quality* and *pacing* halves of
+   that complaint (rich round-by-round combat, pure-roleplay scenes with
+   no forced turn cost); deeper branching questlines with actual
+   persistent consequences are still a separate, unaddressed ask.
+6. OpenRouter free-tier rate-limit ceiling under sustained rapid play
+   (see the free-roam pivot's last "Done" note below) — not urgent, but
+   if narration quality starts visibly degrading to the dry fallback text
+   during normal play (not just heavy testing), the fix is either a
+   paid/higher-limit OpenRouter key or further reducing AI calls per
+   action.
 
 ### The endgame — explicitly discussed, NOT designed or built yet
 
@@ -617,6 +628,128 @@ pre-constrained valid-action set; it never invents an outcome.
   order, crew presence panel, same-crew narration sharing, free-text
   separation detection) was part of the user's original ask but
   explicitly deferred to its own phase — see Roadmap item 1.
+
+**Free-roam roleplay pivot — narrate/explore split, round-by-round combat**
+(2026-09-24, directly after Phase 1 shipped): live play surfaced two real
+gaps in Phase 1's design, both from the user actually using it, not
+guessed at. First, ordinary roleplay text that wasn't a clean button
+equivalent (e.g. a bar/social scene) got rejected outright with "no
+entendí" because the classifier only had `explore`/`train`/`rest` to
+offer and `explore`'s keyword set was narrow. Second, the user was
+explicit: they want to roleplay a fight gradually — describe one move,
+see the AI/enemy respond, describe the next — not get an entire combat
+dumped as one resolved paragraph. They also explicitly rejected pure
+narrative combat ("nada de dados... derrotarnos entre sí") once shown the
+risk it implied for a permadeath game, and picked the safer option: a
+real roll still decides every exchange, but the player's described
+tactic *biases* that roll.
+- **`narrate` is now a first-class action** (`classify-action.ts`):
+  pure roleplay/chat, zero engine call, zero stat change. It's the new
+  default classification outside combat/training/rest — `explore` is
+  reserved for text that reads as a genuine decisive commitment ("me
+  interno en la jungla a buscar problemas", "me arriesgo a robar esto"),
+  which is the one that still calls the engine and can cost HP/grant
+  rewards. This means mechanical resolution only happens when the player
+  actually commits to it, not on every conversational beat — matches the
+  user's explicit "los datos... es el usuario quien diga después."
+  `narrateSceneAction` (`perform-action.ts`) is the pure-roleplay handler;
+  `buildSceneNarrationPrompt`/`narrateScene` (`ai/narrate-prompt.ts`,
+  `ai/narrate.ts`) is its prompt/caller, with an explicit system rule that
+  the AI may never grant/remove berries, XP, items, fruits, or cause
+  damage/death in a narrate turn — only the engine can.
+- **Combat is round-by-round now**, not resolved in one shot.
+  `PendingEncounter` gained a `"fighting"` phase between `"threat"` (the
+  original fight-or-flee commitment) and `"victory"`: once the player
+  commits to fighting, each further free-text message resolves exactly
+  one exchange via `engine/combat.ts`'s `resolveExchange` (exported
+  `MAX_ROUNDS` reused as the same termination/tie-break rule `runCombat`
+  always had), narrates it, and waits for the next message — continuing
+  until someone's HP hits 0. `PendingEncounter` also gained `enemyHp`
+  (live remaining HP, separate from the static max in `enemyJson`) and
+  `roundNumber` to persist state between messages. `fleeCharacter` now
+  accepts phase `"fighting"` too (escape mid-fight), not just the initial
+  `"threat"` choice.
+- **Tactic quality biases the roll, never decides it** — the answer to
+  "nada de dados": the SAME classification call that reads the player's
+  combat text also judges (when the action is `engage`) a bounded
+  `tactic_modifier` (`MIN_TACTIC_MODIFIER`/`MAX_TACTIC_MODIFIER` = -15/20
+  in `classify-action.ts`) reflecting how clever/well-suited the
+  described move is, applied to the player's effective atk (full) and def
+  (half) for that one exchange before `resolveExchange` rolls. The engine
+  still 100% decides who actually lands a hit and who wins — the AI only
+  ever shifts the odds, never picks a winner. This was originally a
+  separate `assess-tactic.ts` AI call; merged into the same classify call
+  after live testing showed 3 AI calls per combat round (classify +
+  tactic + narrate) exhausting OpenRouter's free-tier rate limit almost
+  every round — cut to 2 calls per round.
+- **Combat/mercy-phase classification defaults changed too**: since
+  `engage`/`flee` no longer decide a whole fight's *outcome* (just this
+  round's roll bias), ambiguous text during an active fight now defaults
+  to `"engage"` (keep fighting) instead of a real `"unclear"` no-op, both
+  in the keyword fallback and the AI-path give-up-after-two-attempts
+  case — reasoning: the engine's dice still protect fairness, so there's
+  no reason to block the player mid-fight over phrasing. The
+  `mercy_spare`/`mercy_finish` choice (a real, permanent, non-random
+  decision) deliberately kept its strict no-default behavior — that one
+  still requires an unambiguous read.
+- **New `SceneMessage` model + "Escena" chat panel**
+  (`play/[id]/page.tsx`): the full back-and-forth transcript (every
+  player free-text line + every AI narration reply, in order) as its own
+  prominent chat-bubble panel, instead of crammed into the existing
+  `GameLogEntry`-backed "Bitácora" (which stays, now relabeled as a
+  quick mechanical-summary ticker — "la escena completa está arriba").
+  `getRecentScene` (`ai/narrate.ts`) reads this transcript as richer
+  short-term context for narration prompts than the old raw
+  `GameLogEntry` lines were (includes pure-roleplay turns, not just
+  mechanical ones) — `getRecentMemory`/`GameLogEntry`-as-AI-context was
+  removed, fully superseded.
+- **UI**: the `Explorar`/`Luchar`/`Huir`/`Perdonar`/`Rematar` buttons are
+  gone — free text is now the only way to do any of those, per the
+  user's explicit "quita esos botones ya." Only `Entrenar`/`Descansar`
+  remain as quick buttons (the user's own words: "yo dejaría lo típico de
+  entrenar y descansar"), since those aren't roleplay moments. A
+  "Pensando..."/"narrando..." spinner shows while an AI call is in
+  flight, and the enemy's live HP bar renders during `"threat"`/
+  `"fighting"` phases (`pendingEncounter.enemyHp`/`enemyMaxHp`, exposed
+  by `api/characters/[id]/route.ts`).
+- **Narration output validation** (`openrouter-client.ts`'s new
+  `validate` option, `narrate.ts`'s `isValidNarration`): found live — a
+  free-tier model's "narration" was literally the string `"User Safety:
+  safe"`, a leaked moderation-classifier artifact, shown to the player
+  as if it were real prose. Now every narration call rejects
+  empty/too-short/refusal/moderation-shaped content and treats it exactly
+  like a non-2xx response, moving to the next model in the fallback list
+  instead of surfacing garbage.
+- **Verified**: `classify-action.test.ts` (23, incl. the full
+  narrate-vs-explore default split, the engage-default-during-combat
+  behavior, and tactic_modifier extraction/clamping),
+  `narrate-prompt.test.ts` (additions for the ongoing-vs-concluded combat
+  framing and `buildSceneNarrationPrompt`), `narrate.test.ts` (new,
+  `isValidNarration` cases including the exact leaked-artifact string) —
+  188 tests total, full suite green, `tsc --noEmit` clean. Live:
+  `scripts/ai-e2e-smoke.mjs` (rewritten for the new flow — free-roam bar
+  text gets a narrator reply instead of "no entendí", no
+  interpreted-as noise on a plain narrate turn, the old action buttons
+  are gone) and new `scripts/combat-rounds-check.mjs` (uses new
+  `scripts/force-threat-encounter.ts` to force a deterministic
+  `"threat"`-phase fight so round-by-round resolution doesn't depend on
+  random explore rolls — confirms the enemy HP bar starts full, changes
+  after round 1, and combat concludes within `MAX_ROUNDS`), both against
+  real `npm run dev` + a real OpenRouter key. Schema changes
+  (`PendingEncounter.enemyHp`/`roundNumber`, `SceneMessage`) pushed to
+  Neon production the same way as prior schema changes; code deployed to
+  Render and confirmed live. Local dev DB reset to clean-seeded state
+  afterward.
+- **Known real-world constraint, not a bug**: heavy back-to-back testing
+  in this session hit OpenRouter's free-tier rate limit outright (`429`
+  across all 4 fallback models at once) during the round-by-round combat
+  verification — every narration call correctly fell back to the dry
+  static line rather than crashing or hanging, so the safety contract
+  held, but it's a real reminder that the free tier has a ceiling under
+  sustained rapid play (e.g. several fast combat rounds in a row). Not
+  addressed further this session (would mean either a paid/higher-limit
+  key or further cutting AI-call volume) — worth knowing if narration
+  quality seems to degrade during a long play session.
 
 ## Conventions to keep matching
 

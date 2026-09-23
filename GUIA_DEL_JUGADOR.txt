@@ -3,9 +3,10 @@ GRAND LINE RPG — GUÍA DEL JUGADOR
 ===========================================================
 
 Bienvenido al Grand Line. Esto no es un rol narrado a mano: es un juego de
-rol de texto con reglas reales, dados de verdad, y un mundo que sigue
-girando aunque tú no estés conectado. Todo lo que lees aquí puede pasarte
-a ti. No hay finales escritos de antemano.
+rol de texto libre con una IA como narradora, reglas reales por debajo,
+dados de verdad, y un mundo que sigue girando aunque tú no estés
+conectado. Todo lo que lees aquí puede pasarte a ti. No hay finales
+escritos de antemano.
 
 -----------------------------------------------------------
 1. QUÉ ES ESTO
@@ -20,7 +21,8 @@ los Poneglifos de Ruta, la llave hacia Laugh Tale.
 Todo se resuelve con tiradas aleatorias reales (nunca resultados
 prefabricados) y la muerte es permanente. Si tu personaje cae, cae de
 verdad — no hay revivir, no hay "vuelve a intentarlo". Eso es intencional:
-las decisiones importan porque cuestan algo.
+las decisiones importan porque cuestan algo. Una IA narra todo lo que
+pasa, pero nunca decide los números — eso siempre lo hacen los dados.
 
 -----------------------------------------------------------
 2. CREAR PERSONAJE
@@ -52,19 +54,63 @@ Cada arquetipo reparte distinto: fuerza, agilidad, resistencia, voluntad
 e intelecto. No hay una combinación "correcta" — cada una juega distinto.
 
 -----------------------------------------------------------
-3. EL BUCLE PRINCIPAL: QUÉ HACES CADA DÍA
+3. CÓMO SE JUEGA: TÚ ESCRIBES, LA IA NARRA
 -----------------------------------------------------------
 
-Desde la pantalla de tu personaje puedes:
+Olvídate de menús de botones para casi todo. En la pantalla de tu
+personaje hay un cuadro de texto: "¿Qué haces?". Ahí escribes tu acción
+como en cualquier rol de mesa — con tus propias palabras:
 
-  EXPLORAR — el corazón del juego. Cada exploración es un evento
-  aleatorio: puede ser un hallazgo, una pelea, un encuentro social, un
-  entrenamiento improvisado, o directamente un desastre. El resultado
-  depende de una tirada contra el peligro de la isla y tus propias
-  estadísticas.
+    "Entro al bar y me fijo si hay alguien buscando tripulación."
+    "Desenfundo mi espada y cargo directo contra él, sin dudar."
+    "Le perdono la vida y le advierto que no vuelva a cruzarse conmigo."
 
-  ENTRENAR — sube estadísticas de forma más predecible que explorar,
-  a cambio de menos recompensa inmediata.
+Una IA lee lo que escribiste y hace dos cosas: decide qué tipo de acción
+es (¿estás solo conversando/explorando la escena, o comprometiéndote a
+algo arriesgado y decisivo?) y narra lo que pasa. Los NÚMEROS — quién
+gana un golpe, cuánto daño, si algo sale bien o mal, si encuentras algo
+— los decide siempre el motor de dados del juego, nunca la IA a su
+antojo. La IA solo le pone palabras a lo que los dados ya decidieron.
+
+DOS TIPOS DE RESPUESTA A TU TEXTO:
+  - CONVERSACIÓN / ESCENA — si lo que describes es hablar con alguien,
+    mirar alrededor, curiosear, tontear, pensar en voz alta... la IA
+    simplemente narra la escena y sigue la conversación contigo. No
+    cuesta ningún recurso ni tira ningún dado: es rol puro.
+  - ACCIÓN DECISIVA — si tu texto es claramente arriesgado o decisivo
+    ("me interno en la isla a explorar a fondo", "busco pelea", "me
+    arriesgo a robar esto"), ahí sí se activa el motor del juego: se
+    tira contra el peligro de la isla y tus estadísticas, y puede pasar
+    cualquier cosa — desde un hallazgo hasta un combate.
+
+Debajo de cada respuesta de la IA verás "(interpretado como: X)" cuando
+fue una acción decisiva — así siempre sabes qué entendió el juego de lo
+que escribiste. Si el texto es realmente incomprensible, el juego te lo
+dice y no gasta tu turno en adivinar.
+
+Toda la conversación —lo que escribes tú y lo que narra la IA— queda en
+el panel "Escena", como un chat, para que puedas seguir el hilo de tu
+propia historia. La "Bitácora" de al lado es solo un resumen rápido y
+mecánico (recompensas, daño, subidas de nivel) para un vistazo veloz.
+
+ENTRENAR y DESCANSAR siguen siendo botones simples — no son momentos de
+rol, son acciones mecánicas directas. Entrenar tiene un límite: una vez
+cada 30 minutos reales, así que no puedes subir estadísticas sin parar.
+VIAJAR entre islas también es un botón (eliges destino de una lista).
+
+-----------------------------------------------------------
+4. EL BUCLE PRINCIPAL: QUÉ HACES CADA DÍA
+-----------------------------------------------------------
+
+  EXPLORAR (vía texto libre) — el corazón del juego. Cada acción decisiva
+  desencadena un evento aleatorio: puede ser un hallazgo, una pelea, un
+  encuentro social, un entrenamiento improvisado, o directamente un
+  desastre. El resultado depende de una tirada contra el peligro de la
+  isla y tus propias estadísticas — y la IA lo narra incorporando lo que
+  tú describiste que hacías.
+
+  ENTRENAR — sube estadísticas de forma más predecible que explorar, a
+  cambio de menos recompensa inmediata. Cooldown de 30 minutos reales.
 
   DESCANSAR — recupera vida. No puedes actuar con un combate pendiente
   sin resolver, así que a veces descansar es la única salida.
@@ -75,18 +121,44 @@ Desde la pantalla de tu personaje puedes:
   su conflicto local — la primera vez, y nunca más.
 
 -----------------------------------------------------------
-4. COMBATE: PELEAR, HUIR, PERDONAR O REMATAR
+5. COMBATE: PELEA DE VERDAD, RONDA A RONDA
 -----------------------------------------------------------
 
-Cuando un evento desemboca en combate, el juego se detiene antes de
-tirar un solo dado y te da la decisión:
+El combate ya no se resuelve de golpe en un solo párrafo: se juega como
+una pelea real, un intercambio a la vez, y tú decides tu siguiente
+movimiento cada vez.
 
-  LUCHAR — te comprometes al combate. Se resuelve por rondas reales
-  basadas en ataque, defensa y velocidad de ambos lados.
-  HUIR — intentas escapar. Puede salir mal: si fallas, el enemigo te
-  alcanza y no queda más remedio que pelear, con daño ya encima.
+CUANDO APARECE UNA AMENAZA, decides con texto libre si luchar o huir:
 
-Si ganas el combate, tienes una segunda decisión, esta vez moral:
+    "Desenfundo mi espada y lo miro con mirada desafiante."   -> luchar
+    "Intento escabullirme antes de que me vea."               -> huir
+
+  LUCHAR — te comprometes al combate. Se resuelve una RONDA por vez: tú
+  describes tu movimiento, el motor de dados decide qué tan bien te sale
+  (basado en ataque, defensa y velocidad de ambos lados, y en cuánto
+  daño te hacen a ti), y la IA narra ese intercambio — incluyendo cómo
+  reacciona el enemigo, con algo de diálogo suyo si tiene personalidad
+  propia. Después escribes tu siguiente movimiento, y así hasta que
+  alguien cae.
+
+  TU ASTUCIA IMPORTA DE VERDAD — pero los dados siguen decidiendo. La IA
+  lee qué tan inteligente es la táctica que describes (aprovechar una
+  debilidad, una finta, el entorno...) y eso mejora de verdad tus
+  probabilidades en esa ronda. Una idea torpe o imprudente las empeora.
+  Pero nunca es la IA quien decide directamente si ganas o pierdes esa
+  ronda — eso lo sigue tirando el motor del juego. Ningún combate se
+  gana o se pierde solo porque "sonó bien" lo que escribiste.
+
+  HUIR — puedes intentarlo tanto al principio como en medio de una pelea
+  ya empezada. Puede salir mal: si fallas, el enemigo te alcanza y
+  recibes daño de todos modos.
+
+Si ganas el combate, tienes una segunda decisión, esta vez moral —
+también por texto libre:
+
+    "Le perdono la vida y le advierto que no vuelva."   -> perdonar
+    "Acabo con él sin darle tregua."                    -> rematar
+
   PERDONAR — dejas vivir al enemigo.
   REMATAR — lo derrotas por completo.
 
@@ -98,12 +170,17 @@ de muerte que depende de cuánta vida te queda y de tu nivel — cuanta más
 diferencia de poder, más riesgo real corres. No hay red de seguridad.
 
 -----------------------------------------------------------
-5. FRUTAS DEL DIABLO, ARMAS Y HAKI
+6. FRUTAS DEL DIABLO, ARMAS Y HAKI
 -----------------------------------------------------------
 
 Explorando puedes encontrar una Fruta del Diablo (drop aleatorio, nunca
 garantizado). Solo puedes tener una a la vez — así funciona el mundo real
-de One Piece, y aquí también.
+de One Piece, y aquí también. Y como en el canon: en el momento en que
+comes una fruta, pierdes para siempre la capacidad de nadar. No es solo
+sabor — si el mar te alcanza (hay eventos de exploración donde pasa),
+tus probabilidades de salir bien parado caen en picado. Un no-usuario de
+fruta nada sin problema en ese mismo evento; para ti, el mismo mar puede
+ser mortal.
 
 Las armas van desde equipo común (una por arquetipo, cualquiera puede
 tener la suya sin pisarse con otro jugador) hasta espadas Saijo O
@@ -115,7 +192,7 @@ quítasela a quien la lleve.
 El Haki se entrena como una estadística más, con su propio progreso.
 
 -----------------------------------------------------------
-6. REPUTACIÓN: EL MUNDO TE RECONOCE
+7. REPUTACIÓN: EL MUNDO TE RECONOCE
 -----------------------------------------------------------
 
 Cada facción sube su propia escalera, y subir de escalón cambia
@@ -142,7 +219,7 @@ Cruzar un escalón importante sale en las noticias del mundo. Todo el
 servidor se entera de quién estás empezando a ser.
 
 -----------------------------------------------------------
-7. MULTIJUGADOR: TRIPULACIONES
+8. MULTIJUGADOR: TRIPULACIONES
 -----------------------------------------------------------
 
 Puedes fundar una tripulación o unirte a una con un código de invitación.
@@ -159,23 +236,31 @@ Cómo funciona una batalla de tripulaciones:
     remontar un enfrentamiento difícil.
   - Perder de verdad tiene consecuencias reales (ver Prisión, abajo).
 
+(Nota: esto es distinto del combate por rondas cuerpo a cuerpo de la
+sección 5 — las batallas de tripulación siguen resolviéndose por oleadas
+de una vez. Rolear una batalla de tripulaciones ronda a ronda, en
+conjunto con otros jugadores reales, es algo que todavía no existe y
+está en el horizonte del juego, no disponible aún.)
+
 -----------------------------------------------------------
-8. SI TE CAPTURAN: PRISIÓN Y RESCATE
+9. SI TE CAPTURAN: PRISIÓN Y RESCATE
 -----------------------------------------------------------
 
 Perder un combate contra la Marina no siempre significa la muerte —
 a veces significa la cárcel. Una vez capturado:
 
   - No puedes actuar hasta salir.
-  - PAGAR FIANZA te libera al instante si tienes los berries.
+  - PAGAR FIANZA te libera al instante si tienes los berries (si tienes
+    una fruta del diablo, la fianza cuesta más — te vigilan con
+    Kairoseki).
   - Un ALIADO en tu misma isla puede intentar RESCATARTE. Esto no es
     gratis: se tira una comprobación real contra el poder de quien te
-    capturó. Si sale mal del todo, el propio rescatador puede acabar
-    capturado también. Rescatar a alguien es un riesgo, no un favor
-    automático.
+    capturó (más difícil todavía si tienes una fruta del diablo). Si
+    sale mal del todo, el propio rescatador puede acabar capturado
+    también. Rescatar a alguien es un riesgo, no un favor automático.
 
 -----------------------------------------------------------
-9. EL MUNDO VIVE SIN TI
+10. EL MUNDO VIVE SIN TI
 -----------------------------------------------------------
 
 Aunque no estés conectado, el mundo se mueve: los Emperadores, los
@@ -183,14 +268,15 @@ Almirantes, el Ejército Revolucionario y demás potencias actúan por su
 cuenta y generan NOTICIAS reales — despliegues, guerras territoriales,
 motines, capturas, e incluso, en los momentos más intensos, algo cercano
 a un Buster Call. Revisa la sección de Noticias para ver qué se está
-cociendo en el mundo mientras no mirabas.
+cociendo en el mundo mientras no mirabas. El ritmo es deliberadamente
+calmado — el mundo avanza, pero no a un ritmo agobiante.
 
 Un actor del mundo (un Yonko, un Almirante) no puede estar en dos sitios
 a la vez. Si está ocupado en otra parte, su territorio queda, durante
 ese tiempo, un poco más vulnerable. Presta atención.
 
 -----------------------------------------------------------
-10. LOS PONEGLIFOS DE RUTA: EL VERDADERO ENDGAME
+11. LOS PONEGLIFOS DE RUTA: EL VERDADERO ENDGAME
 -----------------------------------------------------------
 
 Existen 4 Poneglifos de Ruta en el mundo. Son la única forma de llegar a
@@ -211,9 +297,11 @@ el Gobierno Mundial — eso es el horizonte final del juego. Nadie lo va a
 lograr en solitario.
 
 -----------------------------------------------------------
-11. UNA COSA MÁS
+12. UNA COSA MÁS
 -----------------------------------------------------------
 
 No hay resultados guionizados. No hay "tranquilo, seguro que sobrevives".
 Cada tirada es real, cada muerte es real, y cada título que ganas te lo
-ganaste de verdad. Bienvenido a bordo.
+ganaste de verdad. La IA le pone voz al mundo, pero nunca te hace
+trampa ni a tu favor ni en tu contra — los dados mandan. Bienvenido a
+bordo.
