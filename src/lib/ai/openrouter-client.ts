@@ -80,13 +80,16 @@ export async function callOpenRouter(system: string, user: string, options: Call
   const { models, timeoutMs = 10_000, jsonMode = false, temperature = 0.9, maxTokens, validate } = options;
   if (models.length === 0) throw new AiUnavailableError("No models configured.");
 
-  let lastError: unknown;
+  // Collect every model's failure, not just the last — a single "Last error"
+  // hid which of the earlier models 429'd vs. timed out vs. returned junk,
+  // found live (2026-09-23) trying to diagnose a production fallback spike.
+  const errors: string[] = [];
   for (const model of models) {
     try {
       return await callOnce(model, system, user, jsonMode, temperature, timeoutMs, maxTokens, validate);
     } catch (err) {
-      lastError = err;
+      errors.push(`${model}: ${err instanceof Error ? err.message : String(err)}`);
     }
   }
-  throw new AiUnavailableError(`All ${models.length} model(s) failed. Last error: ${lastError instanceof Error ? lastError.message : String(lastError)}`);
+  throw new AiUnavailableError(`All ${models.length} model(s) failed. [${errors.join(" | ")}]`);
 }
