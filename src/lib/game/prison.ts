@@ -10,11 +10,20 @@ import { CharacterStatus } from "@prisma/client";
 export class PrisonError extends Error {}
 
 export async function captureCharacter(
-  character: { id: string; name: string; maxHp: number; currentIslandId: string; currentIsland: { name: string; dangerLevel: number }; level: number },
+  character: {
+    id: string;
+    name: string;
+    maxHp: number;
+    currentIslandId: string;
+    currentIsland: { name: string; dangerLevel: number };
+    level: number;
+    devilFruitId?: string | null;
+  },
   capturedByPower: number,
   reason: string,
   newsLog: string[]
 ) {
+  const hasDevilFruit = !!character.devilFruitId;
   await prisma.character.update({
     where: { id: character.id },
     data: { status: CharacterStatus.IMPRISONED, hp: Math.max(1, Math.round(character.maxHp * 0.15)) },
@@ -25,11 +34,17 @@ export async function captureCharacter(
       islandId: character.currentIslandId,
       reason,
       minRescueLevel: Math.round(capturedByPower),
-      bailBerries: computeBailBerries(character.currentIsland.dangerLevel, character.level),
+      bailBerries: computeBailBerries(character.currentIsland.dangerLevel, character.level, hasDevilFruit),
     },
   });
   const headline = `${character.name} ha sido capturado en ${character.currentIsland.name}`;
-  await postNews(headline, `${reason} Ahora espera tras las rejas: alguien deberá pagar su fianza o venir a rescatarlo.`, "Gobierno Mundial", character.id);
+  const kairosekiNote = hasDevilFruit ? " Le colocan grilletes de Kairoseki: su fruta no le servirá de nada mientras siga preso." : "";
+  await postNews(
+    headline,
+    `${reason} Ahora espera tras las rejas: alguien deberá pagar su fianza o venir a rescatarlo.${kairosekiNote}`,
+    "Gobierno Mundial",
+    character.id
+  );
   newsLog.push(headline);
 }
 
@@ -84,7 +99,7 @@ export async function attemptRescue(rescuerCharacterId: string, userId: string, 
   }
 
   const rescuerPower = combatPower(toCombatant(rescuer));
-  const check = attemptPrisonRescue(liveRng(), rescuerPower, prisoner.imprisonment.minRescueLevel);
+  const check = attemptPrisonRescue(liveRng(), rescuerPower, prisoner.imprisonment.minRescueLevel, !!prisoner.devilFruitId);
   const newsLog: string[] = [];
 
   if (rescueSucceeded(check)) {

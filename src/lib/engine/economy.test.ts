@@ -81,4 +81,12 @@ describe("computeBailBerries", () => {
   it("is always positive, even at the lowest danger/level", () => {
     expect(computeBailBerries(1, 1)).toBeGreaterThan(0);
   });
+
+  it("charges a Kairoseki premium for a devil fruit user", () => {
+    expect(computeBailBerries(5, 10, true)).toBeGreaterThan(computeBailBerries(5, 10, false));
+  });
+
+  it("defaults to no premium when hasDevilFruit is omitted", () => {
+    expect(computeBailBerries(5, 10)).toBe(computeBailBerries(5, 10, false));
+  });
 });

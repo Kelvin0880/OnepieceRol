@@ -716,6 +716,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               <div className="mb-3">
                 <p className="text-sm text-gold-bright">{character.devilFruit.name}</p>
                 <p className="text-xs text-ink-dim">{character.devilFruit.description}</p>
+                <p className="text-xs text-blood mt-1">✦ No puede nadar — el mar es su debilidad de por vida.</p>
               </div>
             ) : (
               <p className="text-xs text-ink-dim mb-3">Sin fruta del diablo.</p>

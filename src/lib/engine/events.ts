@@ -28,7 +28,17 @@ export interface EventBody {
   enemy?: EnemySpec;
   fruitDropChance?: number; // 0-1, rolled only on success/critical_success
   poneglyphId?: string; // granted on victory against this event's boss, if the character doesn't already have it
+  waterHazard?: boolean; // devil fruit users can't swim at all (canon) — see DEVIL_FRUIT_WATER_PENALTY
 }
+
+/**
+ * Devil fruit users physically cannot swim — this is absolute in canon, not
+ * a skill issue. We don't hard-fail the check (the engine's own critical
+ * roll rule already guarantees no outcome is ever 100% certain either way),
+ * but this penalty is large enough that only a lucky roll saves them; a
+ * non-user resolves the same event on their real modifier.
+ */
+export const DEVIL_FRUIT_WATER_PENALTY = 60;
 
 export interface EventResolutionResult {
   flavorText: string;
@@ -67,10 +77,12 @@ export function resolveEvent(
   body: EventBody,
   modifier: number,
   islandDanger: number,
-  characterLevel: number
+  characterLevel: number,
+  hasDevilFruit: boolean = false
 ): EventResolutionResult {
   const difficulty = body.difficultyOverride ?? encounterDifficulty(islandDanger, characterLevel);
-  const check = skillCheck(rng, modifier, difficulty);
+  const effectiveModifier = body.waterHazard && hasDevilFruit ? modifier - DEVIL_FRUIT_WATER_PENALTY : modifier;
+  const check = skillCheck(rng, effectiveModifier, difficulty);
 
   const spec =
     check.outcome === "critical_success"

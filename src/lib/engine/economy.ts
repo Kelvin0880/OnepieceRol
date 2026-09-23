@@ -46,11 +46,17 @@ export function xpToNextLevel(level: number): number {
   return Math.round(100 * Math.pow(1.35, level - 1));
 }
 
+/** A devil fruit user is a far more valuable — and dangerous — catch to let go of. */
+const KAIROSEKI_BAIL_PREMIUM = 1.6;
+
 /**
  * Bail scales with how dangerous the capture was — walking free from a
  * scuffle costs little, buying your way out after a failed crew battle on
- * a dangerous island costs real money.
+ * a dangerous island costs real money. A devil fruit user held in Kairoseki
+ * (seastone) costs extra: their captor knows exactly what they're letting
+ * walk free.
  */
-export function computeBailBerries(islandDanger: number, level: number): number {
-  return Math.round((500 + islandDanger * 400) * (1 + level * 0.15));
+export function computeBailBerries(islandDanger: number, level: number, hasDevilFruit: boolean = false): number {
+  const base = Math.round((500 + islandDanger * 400) * (1 + level * 0.15));
+  return hasDevilFruit ? Math.round(base * KAIROSEKI_BAIL_PREMIUM) : base;
 }

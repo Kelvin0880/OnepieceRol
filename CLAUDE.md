@@ -438,6 +438,54 @@ mechanic for someone joining to actually play; keep it in sync with new
 player-visible systems the way this file stays in sync with the
 architecture.
 
+**Devil fruit weaknesses — can't swim + Kairoseki** (2026-09-23): the user
+asked directly whether the canon "devil fruit users can't swim" rule was
+implemented. It wasn't — flagged and fixed same session, both pieces:
+- **Can't swim**: `EventBody.waterHazard` (`src/lib/engine/events.ts`) —
+  when true, `resolveEvent`'s new `hasDevilFruit` param (6th, defaults
+  `false`, so every old call site kept compiling) subtracts
+  `DEVIL_FRUIT_WATER_PENALTY` (60) from the character's effective
+  modifier before the skill check. The engine's own critical-roll rule
+  (rolls 1-5/96-100 always crit regardless of modifier) means it's never
+  a 100% wall either way — a DF user can still get lucky, a swimmer can
+  still drown, just at wildly different odds. `perform-action.ts`'s
+  `exploreCharacter` passes `!!character.devilFruitId`. One live event
+  template, "El mar no perdona" (global, weight 6, `waterHazard: true`),
+  shares its onSuccess/onFail/onCriticalFail text between DF and non-DF
+  characters on purpose — the *same* ocean, nothing to a swimmer,
+  everything to a fruit user; the asymmetry is entirely the probability
+  shift, not different text. Gaining a fruit now also logs "el mar te
+  rechaza para siempre" in `exploreCharacter`, and the equipment panel in
+  `play/[id]/page.tsx` shows a permanent "No puede nadar" line whenever
+  `character.devilFruit` is set.
+- **Kairoseki (seastone) neutralizes it during imprisonment**:
+  `computeBailBerries` (`economy.ts`) takes an optional `hasDevilFruit`
+  param applying a 1.6x premium; `attemptPrisonRescue` (`rescue.ts`)
+  takes an optional `prisonerHasDevilFruit` param subtracting
+  `KAIROSEKI_RESCUE_PENALTY` (15) from the rescuer's effective modifier —
+  a fruit-using prisoner is guarded more heavily. `captureCharacter`
+  (`src/lib/game/prison.ts`) now takes an optional `devilFruitId` on the
+  captured character and threads `hasDevilFruit` into both the bail
+  calculation and the capture news post ("Le colocan grilletes de
+  Kairoseki..."). Both existing callers (`group-battle.ts`'s
+  `resolveDuelLoss`, and `prison.ts`'s own critical-fail-rescue path)
+  updated to pass it through from the already-loaded Character row —
+  no new query needed, the scalar was always there.
+- NPCs (`WorldActor`) don't have a `devilFruitId` field at all — their
+  fruits are flavor text only in `description`, never a tracked game
+  object — and `NPCCompanion` never gets a fruit either. So there's
+  nothing to enforce on the NPC side yet; if `WorldActor` ever gets a
+  real devil fruit field, it should feed the same `waterHazard`/Kairoseki
+  logic rather than growing a parallel system.
+- Verified: 9 new engine tests (`events.test.ts`, `economy.test.ts`,
+  `rescue.test.ts` — 131 total now), plus two live runs against
+  `npm run dev`: granted a fruit via the new `scripts/grant-fruit.ts`,
+  looped real `explore`/`engage`/`mercy` API calls
+  (`scripts/verify-water-hazard.mjs`) until "El mar no perdona" actually
+  fired and cost real HP; force-captured the same character and confirmed
+  `bailBerries` was exactly the expected ×1.6 and the news post named the
+  Kairoseki shackles. Local dev DB reset to clean-seeded state afterward.
+
 ## Conventions to keep matching
 
 - All player-facing text is in Spanish (the user writes in Spanish).

@@ -159,7 +159,7 @@ export async function exploreCharacter(characterId: string, userId: string): Pro
   const body: EventBody = parseEventBody(full.bodyJson);
 
   const modifier = generalSkillModifier(character);
-  const resolution = resolveEvent(rng, body, modifier, character.currentIsland.dangerLevel, character.level);
+  const resolution = resolveEvent(rng, body, modifier, character.currentIsland.dangerLevel, character.level, !!character.devilFruitId);
 
   const log: string[] = [resolution.flavorText, resolution.narrative];
   const newsLog: string[] = [];
@@ -222,7 +222,10 @@ export async function exploreCharacter(characterId: string, userId: string): Pro
   let fruitGained: string | undefined;
   if (!died && resolution.fruitDropRolled && !character.devilFruitId) {
     fruitGained = await tryDropFruit(character.id, newsLog);
-    if (fruitGained) log.push(`Sientes un poder extraño recorrer tu cuerpo: has obtenido la ${fruitGained}.`);
+    if (fruitGained) {
+      log.push(`Sientes un poder extraño recorrer tu cuerpo: has obtenido la ${fruitGained}.`);
+      log.push("Pero el mar te rechaza para siempre: nunca más podrás nadar.");
+    }
   }
 
   let leveledUp = false;

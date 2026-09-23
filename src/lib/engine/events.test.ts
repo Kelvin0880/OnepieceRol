@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mulberry32 } from "./rng";
-import { resolveEvent, parseEventBody, pickEventTemplate, EventBody } from "./events";
+import { resolveEvent, parseEventBody, pickEventTemplate, EventBody, DEVIL_FRUIT_WATER_PENALTY } from "./events";
 
 const sampleBody: EventBody = {
   flavorTexts: ["El viento sopla sobre la costa."],
@@ -92,6 +92,45 @@ describe("resolveEvent", () => {
     const withoutEnemy = resolveEvent(mulberry32(1), sampleBody, 0, 1, 1);
     expect(withEnemy.triggersCombat).toBe(true);
     expect(withoutEnemy.triggersCombat).toBe(false);
+  });
+});
+
+describe("resolveEvent — devil fruit water hazard", () => {
+  const waterBody: EventBody = { ...sampleBody, waterHazard: true };
+
+  it("does not penalize a character without a devil fruit", () => {
+    let successCount = 0;
+    for (let seed = 0; seed < 300; seed++) {
+      const withFruit = resolveEvent(mulberry32(seed), waterBody, 20, 5, 20, true);
+      const withoutFruit = resolveEvent(mulberry32(seed), waterBody, 20, 5, 20, false);
+      if (withoutFruit.outcome === "success" || withoutFruit.outcome === "critical_success") successCount++;
+      // Same roll, same difficulty: the devil fruit user's effective modifier is
+      // always <= the non-user's, so they can never succeed where the non-user fails.
+      const rank = (o: string) => ["critical_fail", "fail", "success", "critical_success"].indexOf(o);
+      expect(rank(withFruit.outcome)).toBeLessThanOrEqual(rank(withoutFruit.outcome));
+    }
+    expect(successCount).toBeGreaterThan(0);
+  });
+
+  it("ignores waterHazard entirely when the event body doesn't opt in", () => {
+    const rng1 = mulberry32(7);
+    const rng2 = mulberry32(7);
+    const withFruit = resolveEvent(rng1, sampleBody, 20, 5, 20, true);
+    const withoutFruit = resolveEvent(rng2, sampleBody, 20, 5, 20, false);
+    expect(withFruit.outcome).toBe(withoutFruit.outcome);
+  });
+
+  it("a large enough penalty still allows the guaranteed 5% critical success through", () => {
+    let found = false;
+    for (let seed = 0; seed < 3000 && !found; seed++) {
+      const result = resolveEvent(mulberry32(seed), waterBody, 0, 10, 1, true);
+      if (result.outcome === "critical_success") found = true;
+    }
+    expect(found).toBe(true);
+  });
+
+  it("DEVIL_FRUIT_WATER_PENALTY is large enough to matter at any realistic modifier", () => {
+    expect(DEVIL_FRUIT_WATER_PENALTY).toBeGreaterThanOrEqual(40);
   });
 });
 

@@ -740,6 +740,28 @@ async function main() {
       },
     },
     {
+      kind: EventKind.EXPLORATION,
+      minDanger: 1,
+      maxDanger: 10,
+      weight: 6,
+      title: "El mar no perdona",
+      body: {
+        flavorTexts: [
+          "Un tablón podrido cede bajo tus pies junto al muelle y el agua se cierra sobre ti.",
+          "Una ola te arrastra mar adentro antes de que puedas reaccionar.",
+          "En el forcejeo por subir al bote, alguien te empuja por la borda.",
+        ],
+        onCriticalSuccess: { text: ["Logras aferrarte a un cabo justo a tiempo, apenas mojado."], xp: [5, 10] },
+        onSuccess: { text: ["Consigues salir del agua por tus propios medios, empapado pero ileso."], hpLoss: [0, 6] },
+        onFail: { text: ["El agua se cierra sobre ti. A duras penas alguien logra sacarte a tiempo, con los pulmones ardiendo."], hpLoss: [15, 28] },
+        onCriticalFail: {
+          text: ["Te hundes como una piedra. Para cuando por fin te sacan del agua, apenas respiras."],
+          hpLoss: [38, 50],
+        },
+        waterHazard: true,
+      },
+    },
+    {
       kind: EventKind.TREASURE,
       minDanger: 1,
       maxDanger: 6,
