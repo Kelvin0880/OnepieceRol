@@ -136,7 +136,7 @@ creative license on lore/content specifics.
    go to `./shots/` (gitignored) — actually look at them, don't just
    check for zero console errors.
 4. Existing smoke scripts to copy/extend rather than rewrite from
-   scratch: `scripts/e2e-smoke.mjs` (register → create character →
+   scratch: `scripts/ai-e2e-smoke.mjs` (register → create character →
    explore → fight → mercy choice → news), `scripts/crew-smoke.mjs` (two
    accounts, found/join a crew, verify mutual presence),
    `scripts/battle-smoke.mjs` (four accounts, two crews of two, full
@@ -1362,7 +1362,7 @@ is in `Reglasrol.txt` and is injected into every narrator prompt as
   returns the mock, which vitest then CALLS as a cleanup hook — use braces.
 - Verified: 259 unit tests, `tsc` clean; live (real browser + real OpenRouter):
   `scripts/roleplay-attack-check.mjs`, `scripts/duel-smoke.mjs`,
-  `scripts/party-attack-check.mjs`, plus the older combat/e2e/party smokes.
+  plus the older combat/e2e/party smokes.
 - NOT deployed at the time of writing: needs the usual schema push to Neon
   (new `Faction.CP0` enum value, `Character` stamina/fruit columns, `Duel`/`DuelMessage`).
 
@@ -1397,7 +1397,7 @@ absolutely everything: **`APLICACION_COMPLETA.md`** — keep it in sync.
 - Routes under `api/characters/[id]/`: `territory`, `buster-call`, `raid`, `black-market`, `stream`, and `prison` op "escape". `GET` returns `jointFight`, `territory`, `busterCall`, `raid`, `blackMarket`, `missions`.
 - Wrappers: `exploreCharacter`/`resolveMercyChoice`/`trainCharacter`/`travelCharacter` wrap `*Inner` functions to feed mission progress (`withMissions`).
 - Schema additions (all additive): JointFight*, Territory, BusterCall, Raid, Alliance, Consequence, Mission, IslandBriefing; `Character.title/knowsTruth`, `Island.tidal/requiresRoadPoneglyphs`, `WorldClock.era`, `Imprisonment.escape*`, `ActorRole.GOROSEI/HIDDEN_RULER`. Production needs the documented Neon push before deploying.
-- Verification scripts: `joint-fight-check`, `guardian-check`, `territory-check`, `escape-buster-check`, `raid-check`, `consequence-check`, `black-market-check`, `missions-check`, `verify-world-expansion` (DB) and `*-ui-check.mjs` / `missions-ui-check.mjs` / `realtime-check.mjs` (browser). `e2e-smoke.mjs` and `party-attack-check.mjs` are stale (battle-smoke.mjs works but only on a freshly reset DB; the island briefing is collapsed by default) (they predate the free-text pivot); use `ai-e2e-smoke.mjs` and `roleplay-attack-check.mjs`.
+- Verification scripts: `joint-fight-check`, `guardian-check`, `territory-check`, `escape-buster-check`, `raid-check`, `consequence-check`, `black-market-check`, `missions-check`, `verify-world-expansion` (DB) and `*-ui-check.mjs` / `missions-ui-check.mjs` / `realtime-check.mjs` (browser).mjs` and `roleplay-attack-check.mjs`.
 - Keep `docs/mapa.html` in sync via `npx tsx scripts/gen-map-islands.ts` (prints ISLANDS entries from the seeded DB).
 
 ## Conventions to keep matching
