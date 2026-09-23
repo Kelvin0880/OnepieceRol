@@ -24,6 +24,7 @@ export interface CallOpenRouterOptions {
   validate?: (text: string) => boolean;
 }
 
+/** Accepts a caller-supplied AbortController (instead of always making its own) so a race between two calls can cancel the loser. */
 async function callOnce(
   model: string,
   system: string,
@@ -32,12 +33,12 @@ async function callOnce(
   temperature: number,
   timeoutMs: number,
   maxTokens?: number,
-  validate?: (text: string) => boolean
+  validate?: (text: string) => boolean,
+  controller: AbortController = new AbortController()
 ): Promise<string> {
   const apiKey = process.env.OPENROUTER_API_KEY;
   if (!apiKey) throw new AiUnavailableError("OPENROUTER_API_KEY is not set.");
 
-  const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
     const res = await fetch(ENDPOINT, {
@@ -70,33 +71,76 @@ async function callOnce(
   }
 }
 
+/** Fires the first `raceModels.length` models at once; resolves with the first success, or null once every one of them has failed. Failures are pushed onto `errors` as they land. */
+function raceModels(
+  raceModels: string[],
+  system: string,
+  user: string,
+  jsonMode: boolean,
+  temperature: number,
+  timeoutMs: number,
+  maxTokens: number | undefined,
+  validate: ((text: string) => boolean) | undefined,
+  errors: string[]
+): Promise<string | null> {
+  if (raceModels.length === 0) return Promise.resolve(null);
+  const controllers = raceModels.map(() => new AbortController());
+
+  return new Promise((resolve) => {
+    let remaining = raceModels.length;
+    raceModels.forEach((model, i) => {
+      callOnce(model, system, user, jsonMode, temperature, timeoutMs, maxTokens, validate, controllers[i])
+        .then((text) => {
+          controllers.forEach((c, j) => j !== i && c.abort());
+          resolve(text);
+        })
+        .catch((err) => {
+          errors.push(`${model}: ${err instanceof Error ? err.message : String(err)}`);
+          remaining--;
+          if (remaining === 0) resolve(null);
+        });
+    });
+  });
+}
+
 /**
- * Tries each model in order, moving to the next on any failure (timeout,
- * non-2xx, empty content). Only throws once every model has failed (or the
+ * Tries the model list, only throwing once every model has failed (or the
  * overall time budget below runs out) — callers (narrate.ts,
  * classify-action.ts) are expected to catch this and fall back to non-AI
  * behavior, never to propagate it to the player.
+ *
+ * The first two models are fired in parallel and raced, not queued one
+ * after another. Found live (2026-09-23): with the free router
+ * (`openrouter/free`) and the paid backup (`openai/gpt-4o-mini`) tried
+ * strictly in sequence, a hanging free-router call meant the paid model
+ * didn't even *start* trying until the free one had already burned its
+ * full timeout — so a single slow upstream call fully negated having a
+ * reliable paid fallback at all. Racing them means neither's latency can
+ * block the other's start; whichever answers first wins, and the loser is
+ * aborted immediately (aborted requests generate essentially no tokens,
+ * so this doesn't meaningfully change the paid model's usual near-zero
+ * cost). Any models beyond the first two are still tried sequentially
+ * afterward, only if both raced attempts failed, with the same shared
+ * time-budget skip rule as before.
  */
 export async function callOpenRouter(system: string, user: string, options: CallOpenRouterOptions): Promise<string> {
   const { models, timeoutMs = 10_000, jsonMode = false, temperature = 0.9, maxTokens, validate } = options;
   if (models.length === 0) throw new AiUnavailableError("No models configured.");
 
-  // Each attempt used to get its own full fresh timeoutMs, so a run of
-  // several slow/hanging models in a row (found live 2026-09-23: 4 of 5
-  // models timed out on the same request) could make the player wait
-  // models.length * timeoutMs — up to 50s for the 5-model list — before
-  // ever seeing the static fallback line. Cap the whole fallback chain's
-  // wall-clock budget instead of letting each attempt spend its full
-  // allowance regardless of how many already have; later attempts get
-  // whatever time is left, and one that has no meaningful time left is
-  // skipped outright rather than fired with a near-zero timeout.
-  const deadline = Date.now() + timeoutMs * 2;
-
   // Collect every model's failure, not just the last — a single "Last error"
   // hid which of the earlier models 429'd vs. timed out vs. returned junk,
   // found live (2026-09-23) trying to diagnose a production fallback spike.
   const errors: string[] = [];
-  for (const model of models) {
+
+  const raceCount = Math.min(2, models.length);
+  const raced = await raceModels(models.slice(0, raceCount), system, user, jsonMode, temperature, timeoutMs, maxTokens, validate, errors);
+  if (raced !== null) return raced;
+
+  // Both raced attempts failed — fall through to any remaining models
+  // sequentially, sharing one more timeout's worth of total patience so a
+  // run of slow ones still can't make the player wait indefinitely.
+  const deadline = Date.now() + timeoutMs;
+  for (const model of models.slice(raceCount)) {
     const remaining = deadline - Date.now();
     if (remaining < 1000) {
       errors.push(`${model}: skipped, narration time budget exhausted`);
