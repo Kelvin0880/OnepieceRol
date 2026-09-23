@@ -480,7 +480,11 @@ export async function trainCharacter(characterId: string, userId: string): Promi
   return emptyResult(log, character.level);
 }
 
-export async function travelCharacter(characterId: string, userId: string, targetIslandId: string): Promise<{ log: string[] }> {
+export async function travelCharacter(
+  characterId: string,
+  userId: string,
+  targetIslandId: string
+): Promise<{ log: string[]; arcIntro?: { islandName: string; hook: string } }> {
   const character = await loadCharacterOrThrow(characterId, userId);
   if (character.pendingEncounter) throw new GameActionError("No puedes zarpar con un enfrentamiento sin resolver.");
   const connections = JSON.parse(character.currentIsland.connections) as string[];
@@ -493,11 +497,17 @@ export async function travelCharacter(characterId: string, userId: string, targe
     throw new GameActionError(`${target.name} es demasiado peligrosa todavía. Necesitas al menos nivel ${target.minLevelToEnter} para sobrevivir allí.`);
   }
 
-  await prisma.character.update({ where: { id: character.id }, data: { currentIslandId: target.id } });
+  const visited = JSON.parse(character.islandsVisited) as string[];
+  const firstVisit = !visited.includes(target.id);
+
+  await prisma.character.update({
+    where: { id: character.id },
+    data: { currentIslandId: target.id, islandsVisited: firstVisit ? JSON.stringify([...visited, target.id]) : character.islandsVisited },
+  });
   const line = `Zarpas de ${character.currentIsland.name} y desembarcas en ${target.name}.`;
   await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "travel", text: line } });
 
-  return { log: [line] };
+  return { log: [line], arcIntro: firstVisit && target.arcHook ? { islandName: target.name, hook: target.arcHook } : undefined };
 }
 
 export async function restCharacter(characterId: string, userId: string): Promise<ActionResult> {

@@ -198,6 +198,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
   const [feed, setFeed] = useState<string[]>([]);
+  const [arcIntro, setArcIntro] = useState<{ islandName: string; hook: string } | null>(null);
   const [crewName, setCrewName] = useState("");
   const [crewFlag, setCrewFlag] = useState("");
   const [crewShip, setCrewShip] = useState("");
@@ -312,6 +313,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
         return;
       }
       if (result.log) setFeed((f) => [...result.log, ...f].slice(0, 60));
+      if (result.arcIntro) setArcIntro(result.arcIntro);
       await load();
     } finally {
       setBusy(false);
@@ -359,6 +361,17 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           </Link>
         </div>
       </div>
+
+      {arcIntro && (
+        <div className="panel p-5" style={{ borderColor: "var(--gold)" }}>
+          <p className="text-xs text-gold-bright uppercase tracking-wide mb-1">Llegas por primera vez a</p>
+          <h2 className="font-display text-xl text-gold-bright mb-2">{arcIntro.islandName}</h2>
+          <p className="text-sm text-ink italic mb-4">{arcIntro.hook}</p>
+          <button className="btn-gold px-4 py-2 text-sm" onClick={() => setArcIntro(null)}>
+            Continuar
+          </button>
+        </div>
+      )}
 
       {isDead && (
         <div className="panel p-4 border-blood text-blood" style={{ borderColor: "var(--blood)" }}>

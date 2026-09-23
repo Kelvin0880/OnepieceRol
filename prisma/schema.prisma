@@ -93,6 +93,7 @@ model Character {
   // are stone, not loot; nobody steals them back, they silence the reader.
   // Spikes hard on each new Poneglyph, decays slowly with time.
   poneglyphHeat  Int    @default(0)
+  islandsVisited String @default("[]") // JSON string array of Island ids — gates the once-per-island arc-hook intro
 
   imprisonment     Imprisonment?
   pendingEncounter PendingEncounter?
@@ -297,6 +298,7 @@ model Island {
   name        String @unique
   sea         Sea
   description String
+  arcHook     String? // the island's current conflict, told once on first arrival — separate from the ambient `description` shown every visit
   dangerLevel Int    @default(1) // 1-10, gates which events/enemies can roll
   minLevelToEnter Int @default(1) // travel to this island is refused below this level — the Grand Line doesn't ease you in
   factionControl String? // "Marina", "Yonko Kaido", "Sin gobierno", ...

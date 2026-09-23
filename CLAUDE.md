@@ -242,6 +242,51 @@ down for now, not implemented:
   (c) the NPC-ally recruitment system, as their own conversation — this
   is bigger than a normal feature-sized session.
 
+### Poneglyph holders fight back — detailed design brief from the user (2026-09-23)
+
+Directly connects to the endgame above and extends what's already built
+(`WorldActor.busyUntil`, the pursuit system, group battles). Still NOT
+built — this is the user's own explanation, captured close to verbatim
+so nothing gets lost:
+
+- **A Poneglyph holder's home turf has real weak points.** The "Lugarteniente
+  de Barbanegra" fight already placed on Isla Cementerio is intentionally
+  *not* a watered-down Yonko fight — it's a subordinate, because
+  Blackbeard and his real crew aren't there. That's the pattern to
+  generalize: whether a Poneglyph raid meets a lieutenant or the full
+  crew should depend on where the `WorldActor` actually is right now
+  (`currentFocus`/`busyUntil`), the same mechanic the background world-tick
+  already uses. Characters (NPC or player) can't be everywhere at once —
+  that's a deliberate constraint, not a limitation to work around.
+- **Facing the real thing is lethal if you're not ready.** If the Yonko
+  and their full crew are actually home, an unprepared raid should be
+  able to get the player killed for real — not auto-balanced down to a
+  fair fight.
+- **A stealth option should exist**: sneak in, read the Poneglyph, get
+  out without ever triggering a fight, for a player who plays it
+  cautious instead of strong.
+- **Escape should be its own mechanic, not a coin flip.** If discovered,
+  the holder doesn't let go easily — but if the player does escape, it
+  has to matter: it makes news, raises their bounty, and — this is the
+  key new piece — earns them **that specific NPC's personal grudge**,
+  not just generic increased danger. Something like a per-`WorldActor`
+  "has a vendetta against character X" flag that then biases future
+  world-tick events or ambushes toward actually targeting that character.
+- **Defeating a beaten subordinate is not the same as defeating the
+  Yonko** — right now there's no distinction in consequence between
+  the two; there should be (a subordinate's death shouldn't carry the
+  same weight/notoriety as toppling the actual power).
+- **Territory conquest**: beat the Yonko, their commanders, AND their
+  army (very plausibly requiring multiple players cooperating), and
+  their islands should become conquerable — the player (or players)
+  can take over and effectively become the new Yonko. When multiple
+  players contributed, who actually keeps the territory/title becomes
+  a real in-fiction dispute between them, not something auto-resolved.
+  This needs actual design: how ownership transfers, what "being a
+  Yonko" mechanically grants, and some fair way to arbitrate a
+  multiplayer claim dispute (voting among contributors? whoever dealt
+  the final blow? crew reputation split?) — all open questions.
+
 ### Done since the first session
 
 **Prison/rescue system** (`src/lib/game/prison.ts`, engine bits in

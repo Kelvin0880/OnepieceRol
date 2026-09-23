@@ -16,6 +16,8 @@ async function main() {
       factionControl: null as string | null,
       description:
         "Un pueblo costero tranquilo de tejados rojos, donde los barcos pesqueros zarpan cada mañana y los niños sueñan con el mar. El punto de partida clásico de todo pirata novato.",
+      arcHook:
+        "Un mensajero de la Marina pasó ayer preguntando por \"cualquier joven con ambiciones de zarpar\". Nadie sabe muy bien qué anda buscando, pero todo el mundo lo comenta en susurros.",
     },
     {
       key: "marineG5",
@@ -26,6 +28,8 @@ async function main() {
       factionControl: "Marina",
       description:
         "Una base de entrenamiento gris y disciplinada en el límite del East Blue, donde los reclutas aprenden que la justicia absoluta empieza por obedecer órdenes.",
+      arcHook:
+        "Los rumores en el cuartel hablan de una tripulación novata que ya ha empezado a dar problemas en el East Blue. Tu comandante quiere resultados, no excusas.",
     },
     {
       key: "baltigo",
@@ -36,6 +40,8 @@ async function main() {
       factionControl: "Ejército Revolucionario",
       description:
         "Oculta tras corrientes que confunden a los Log Pose corrientes, esta isla alberga un cuartel secreto donde se planifica la caída del Gobierno Mundial.",
+      arcHook:
+        "Una célula ha dejado de reportar. El Ejército Revolucionario necesita saber si fueron descubiertos, capturados, o algo peor — y confía en que tú lo averigües.",
     },
     {
       key: "gecko",
@@ -46,6 +52,8 @@ async function main() {
       factionControl: null,
       description:
         "Un puerto polvoriento dominado por tablones de recompensas y tabernas donde los cazarrecompensas comparan cicatrices y cuentan mentiras sobre sus capturas.",
+      arcHook:
+        "El tablón de recompensas está más lleno que de costumbre esta semana. Alguien nuevo se está haciendo notar en los mares, y eso significa dinero fácil para quien lo encuentre primero.",
     },
     {
       key: "shimotsuki",
@@ -56,6 +64,8 @@ async function main() {
       factionControl: null,
       description:
         "Famosa por su dojo centenario y sus herreros que aún forjan katanas siguiendo tradiciones perdidas. El acero que sale de aquí puede cortar el destino.",
+      arcHook:
+        "El maestro del dojo lleva días sin abrir las puertas. Los rumores dicen que un antiguo alumno ha vuelto a la isla — y no en son de paz.",
     },
     {
       key: "baratie",
@@ -66,6 +76,8 @@ async function main() {
       factionControl: null,
       description:
         "Un galeón reconvertido en el restaurante flotante más famoso de los mares, donde cocineros pelean tan bien como cocinan y ningún hambriento se va sin comer.",
+      arcHook:
+        "El dueño del restaurante ha triplicado la seguridad esta semana. Algo — o alguien — tiene a todo el personal nervioso, aunque nadie quiere decir el nombre en voz alta.",
     },
     {
       key: "conomi",
@@ -76,6 +88,8 @@ async function main() {
       factionControl: "Arlong",
       description:
         "Un archipiélago de aldeas pesqueras bajo el yugo de un hombre-pez tirano que extorsiona a los humanos con impuestos imposibles de pagar.",
+      arcHook:
+        "Arlong ha subido de nuevo los \"impuestos\" a las aldeas humanas. Los pescadores locales ya no tienen nada más que dar, y todos saben lo que pasa cuando no pueden pagar.",
     },
     {
       key: "loguetown",
@@ -86,6 +100,8 @@ async function main() {
       factionControl: "Marina",
       description:
         'La "Ciudad del Comienzo y el Final", donde el Rey de los Piratas fue ejecutado. La plataforma de ejecución todavía domina la plaza, y la Marina vigila cada muelle.',
+      arcHook:
+        "La Marina ha reforzado la vigilancia en cada muelle desde que corrió el rumor de que un pirata con recompensa alta pasó por aquí la semana pasada. Nadie entra o sale sin ser observado.",
     },
     {
       key: "reverseMountain",
@@ -96,6 +112,8 @@ async function main() {
       factionControl: null,
       description:
         "La única entrada segura al Grand Line: una montaña donde cuatro corrientes oceánicas ascienden en vez de descender. Más allá, el mundo se vuelve mucho más peligroso.",
+      arcHook:
+        "Las cuatro corrientes rugen más fuerte de lo habitual este año. Los marineros veteranos dicen que es un mal augurio para quien esté a punto de cruzar al Grand Line por primera vez.",
     },
     {
       key: "whiskyPeak",
@@ -106,6 +124,7 @@ async function main() {
       factionControl: "Baroque Works",
       description:
         "Un pueblo de fiesta perpetua que recibe a cada recién llegado como a un héroe... hasta que baja la guardia. Nada en el Grand Line es lo que parece.",
+      arcHook: "La isla entera parece demasiado feliz de verte. En el Grand Line, esa clase de bienvenida nunca es gratuita.",
     },
     {
       key: "littleGarden",
@@ -116,6 +135,8 @@ async function main() {
       factionControl: null,
       description:
         "Una isla prehistórica congelada en el tiempo, hogar de bestias colosales y de dos gigantes que llevan cien años duelando por una promesa de honor.",
+      arcHook:
+        "El duelo centenario entre los dos gigantes de la isla sigue sin ganador — pero algo en la jungla ha empezado a cazar a ambos bandos por igual, y ninguno de los dos parece dispuesto a admitirlo.",
     },
     {
       key: "alabasta",
@@ -126,6 +147,7 @@ async function main() {
       factionControl: null,
       description:
         "Un reino desértico al borde de la guerra civil, donde la arena guarda secretos más viejos que el propio Gobierno Mundial.",
+      arcHook: "El desierto susurra sobre una rebelión que crece más rápido de lo que la corona puede contener. Quien elija un bando aquí, lo hará para siempre.",
     },
     {
       key: "graveyardIsland",
@@ -136,6 +158,8 @@ async function main() {
       factionControl: "Marshall D. Teach",
       description:
         "Una fortaleza natural de rocas negras y niebla permanente, dominio absoluto de Barbanegra. Los rumores dicen que aquí guarda mucho más que su tripulación de criminales fugados de Impel Down.",
+      arcHook:
+        "No hay mapas que marquen bien esta isla, y los pocos que se acercan sin ser convocados no suelen volver a salir. Si Barbanegra guarda algo aquí, no lo comparte con nadie vivo.",
     },
   ];
 
@@ -151,6 +175,7 @@ async function main() {
         minLevelToEnter: def.minLevel,
         factionControl: def.factionControl,
         description: def.description,
+        arcHook: def.arcHook,
         connections: "[]",
       },
     });

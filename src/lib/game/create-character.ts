@@ -67,6 +67,7 @@ export async function createCharacter(userId: string, name: string, faction: Fac
       ...archetype.stats,
       currentIslandId: island.id,
       isCaptain: true,
+      islandsVisited: JSON.stringify([island.id]),
     },
   });
 
