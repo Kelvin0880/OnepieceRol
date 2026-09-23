@@ -53,3 +53,6 @@ next-env.d.ts
 
 # e2e smoke-test screenshots (scripts/e2e-smoke.mjs output)
 /shots/
+
+# contains live API keys pasted by the user — never commit this
+/Sugerencias.txt

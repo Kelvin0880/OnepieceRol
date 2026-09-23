@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface NewsItem {
   id: string;
@@ -22,6 +22,7 @@ const CATEGORY_COLOR: Record<string, string> = {
 };
 
 export default function NewsPage() {
+  const router = useRouter();
   const [news, setNews] = useState<NewsItem[] | null>(null);
 
   useEffect(() => {
@@ -34,9 +35,9 @@ export default function NewsPage() {
     <main className="flex-1 max-w-2xl w-full mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl text-gold-bright">El Heraldo del Mundo</h1>
-        <Link href="/" className="btn-ghost px-3 py-1.5 text-sm">
+        <button onClick={() => router.back()} className="btn-ghost px-3 py-1.5 text-sm">
           Volver
-        </Link>
+        </button>
       </div>
       <p className="text-ink-dim text-sm mb-6">
         El mundo se mueve incluso cuando tú no lo haces. Estas son las noticias que corren de isla en isla.
