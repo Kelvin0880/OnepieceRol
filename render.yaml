@@ -1,0 +1,19 @@
+# Render Blueprint — https://render.com/docs/blueprint-spec
+# Deploy: connect this repo in the Render dashboard and it reads this file
+# automatically ("New +" -> "Blueprint"). See CLAUDE.md's Deployment
+# section for the manual steps this doesn't automate (Postgres provider
+# swap, first-boot seed).
+services:
+  - type: web
+    name: grand-line-rpg
+    runtime: node
+    plan: free
+    buildCommand: npm install && npx prisma generate && npm run build
+    startCommand: npm run start
+    envVars:
+      - key: DATABASE_URL
+        sync: false # set manually to your Postgres connection string
+      - key: SESSION_SECRET
+        generateValue: true
+      - key: NODE_ENV
+        value: production
