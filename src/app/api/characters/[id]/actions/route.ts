@@ -14,6 +14,7 @@ import {
   rejoinParty,
   GameActionError,
 } from "@/lib/game/perform-action";
+import { DuelError } from "@/lib/game/duel";
 import { logError } from "@/lib/log-error";
 
 const actionSchema = z.discriminatedUnion("action", [
@@ -30,7 +31,7 @@ const actionSchema = z.discriminatedUnion("action", [
 
 // Free text is the primary input path (see resolveFreeTextAction) — the
 // explicit `action` shapes above stay as the reliable button fallback.
-const freeTextSchema = z.object({ freeText: z.string().min(1).max(500) });
+const freeTextSchema = z.object({ freeText: z.string().min(1).max(2000) });
 
 const schema = z.union([actionSchema, freeTextSchema]);
 
@@ -67,6 +68,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
   } catch (err) {
     if (err instanceof UnauthorizedError) return NextResponse.json({ error: err.message }, { status: 401 });
+    if (err instanceof DuelError) return NextResponse.json({ error: err.message }, { status: 400 });
     if (err instanceof GameActionError) return NextResponse.json({ error: err.message }, { status: 400 });
     await logError("api/characters/[id]/actions", err);
     return NextResponse.json({ error: "Error inesperado ejecutando la acción." }, { status: 500 });

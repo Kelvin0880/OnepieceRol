@@ -1329,6 +1329,43 @@ news system. Summary of what changed:
   Render and confirmed live. Local dev DB reset to clean-seeded state
   afterward.
 
+**Roleplay-first combat, stamina, fruit evolution, CP-0, 1v1 duels**
+(2026-09-23): triggered by a live bug — a player attacked a bar patron in
+free text and the classifier read it as `explore`, which ignores the text and
+rolled an unrelated random encounter. Full brief, status per item and an
+implementation map live in **`ROLEPLAY_DESIGN.md`** (read it before touching
+combat/narration); the user's roleplay etiquette (Mano Negra / Mano Blanca)
+is in `Reglasrol.txt` and is injected into every narrator prompt as
+`ROLE_RULES`. Summary:
+- New `attack` action: classifier returns target/tier/technique/tactic;
+  `attackCharacter` builds the named target as a real enemy from the player's
+  own stats (`engine/scene-enemy.ts`) and resolves round 1 with the player's
+  move. Combat narration now gets every roll (misses/blocks too) in order.
+  `narrateEncounterIntro` ties explore-triggered threats to what the player wrote.
+- Stamina/fatigue (`engine/stamina.ts`), techniques (haki/fruit, cost, silent
+  downgrade, growth from use: `engine/techniques.ts`), fruit phases +
+  Awakening (`engine/fruit-mastery.ts`, replaces "awakened at level 40"),
+  Conqueror's Haki now actually rolls after a breaking-point win. Glue in
+  `game/combat-prep.ts`. Passive bonuses were halved in `character-stats.ts`;
+  the other half is earned by describing the technique.
+- New player faction **CP-0** (`Faction.CP0`, Loguetown start, CP10→Gorosei ladder, captures like Marines).
+- **1v1 duels** (`Duel`, `game/duel.ts`): simultaneous moves, engine resolves,
+  AI narrates; non-lethal, copy-of-maxHp. While a duel is ACTIVE the free-text
+  box IS the duel move. Race-safe round claim (`updateMany` clears actions).
+- No bail for highly wanted prisoners / Impel Down (`isBailAllowed`).
+- UI: Enter = newline (send = button or Ctrl+Enter), `freeText` max 2000,
+  stamina bar, fruit-mastery bar, duel panel, `whitespace-pre-line` bubbles.
+- Party: a crewmate's personal fight is echoed round by round to the shared feed.
+- Gotchas found while building it: a `python` heredoc turned `` into a raw
+  backspace byte inside a regex (keyword fallback silently dead — grep for
+  control chars after scripted edits); `beforeEach(() => mock.mockReset())`
+  returns the mock, which vitest then CALLS as a cleanup hook — use braces.
+- Verified: 259 unit tests, `tsc` clean; live (real browser + real OpenRouter):
+  `scripts/roleplay-attack-check.mjs`, `scripts/duel-smoke.mjs`,
+  `scripts/party-attack-check.mjs`, plus the older combat/e2e/party smokes.
+- NOT deployed at the time of writing: needs the usual schema push to Neon
+  (new `Faction.CP0` enum value, `Character` stamina/fruit columns, `Duel`/`DuelMessage`).
+
 ## Conventions to keep matching
 
 - All player-facing text is in Spanish (the user writes in Spanish).

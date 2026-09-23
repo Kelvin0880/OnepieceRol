@@ -3,6 +3,10 @@ import { prisma } from "@/lib/db";
 import { requireUserId, UnauthorizedError } from "@/lib/require-user";
 import { logError } from "@/lib/log-error";
 import { syncPartyForCharacter, getPartyStateForCharacter } from "@/lib/game/party";
+import { currentStamina } from "@/lib/game/combat-prep";
+import { fatigueLevel, FATIGUE_LABELS } from "@/lib/engine/stamina";
+import { fruitPhase, FRUIT_PHASE_LABELS } from "@/lib/engine/fruit-mastery";
+import { getDuelStateForCharacter } from "@/lib/game/duel";
 import { deleteCharacter, DeleteCharacterError } from "@/lib/game/delete-character";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -41,6 +45,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     }
 
     const party = await getPartyStateForCharacter(id);
+    const duel = await getDuelStateForCharacter(id);
     const connections = JSON.parse(character.currentIsland.connections) as string[];
     const connectedIslands = await prisma.island.findMany({ where: { id: { in: connections } } });
 
@@ -97,13 +102,23 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       ? { reason: imprisonment.reason, bailBerries: imprisonment.bailBerries, minRescueLevel: imprisonment.minRescueLevel, capturedAt: imprisonment.capturedAt }
       : null;
 
+    const staminaNow = currentStamina(character);
+    const phase = fruitPhase(character.fruitMastery, character.fruitAwakened);
     return NextResponse.json({
-      character: { ...rest, pendingEncounter: shapedPending, imprisonment: shapedImprisonment },
+      character: {
+        ...rest,
+        stamina: staminaNow,
+        fatigue: FATIGUE_LABELS[fatigueLevel(staminaNow, character.maxStamina)],
+        fruitPhase: character.devilFruit ? FRUIT_PHASE_LABELS[phase] : null,
+        pendingEncounter: shapedPending,
+        imprisonment: shapedImprisonment,
+      },
       connectedIslands,
       othersHere,
       prisonersHere,
       crewBattles: shapedBattles,
       party,
+      duel,
     });
   } catch (err) {
     if (err instanceof UnauthorizedError) return NextResponse.json({ error: err.message }, { status: 401 });

@@ -2,9 +2,9 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { factionTitle } from "@/lib/engine/progression";
+import { factionTitle, type FactionKey } from "@/lib/engine/progression";
 
-type FactionId = "PIRATE" | "MARINE" | "REVOLUTIONARY" | "BOUNTY_HUNTER";
+type FactionId = FactionKey;
 
 interface MeCharacter {
   id: string;
@@ -27,6 +27,7 @@ const FACTION_LABEL: Record<string, string> = {
   MARINE: "Marine",
   REVOLUTIONARY: "Revolucionario",
   BOUNTY_HUNTER: "Cazarrecompensas",
+  CP0: "CP-0",
 };
 
 export default function HomePage() {

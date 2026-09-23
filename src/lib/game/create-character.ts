@@ -40,6 +40,7 @@ const STARTING_ISLAND_BY_FACTION: Record<Faction, string> = {
   MARINE: "Cuartel Marine G-5",
   REVOLUTIONARY: "Isla Baltigo",
   BOUNTY_HUNTER: "Isla Gecko",
+  CP0: "Loguetown",
 };
 
 export class CharacterCreationError extends Error {}

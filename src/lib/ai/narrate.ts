@@ -8,6 +8,10 @@ import {
   buildPartySceneNarrationPrompt,
   buildNewsNarrationPrompt,
   buildBountyDigestPrompt,
+  buildEncounterIntroPrompt,
+  buildDuelNarrationPrompt,
+  EncounterIntroInput,
+  DuelNarrationInput,
   ExploreNarrationInput,
   CombatNarrationInput,
   SceneNarrationInput,
@@ -72,13 +76,42 @@ export async function narrateExplore(input: ExploreNarrationInput, meta: { chara
 
 /** Same never-throws contract as narrateExplore, falling back to the existing per-round dry lines. */
 export async function narrateCombat(input: CombatNarrationInput, meta: { characterId: string }): Promise<string[]> {
-  const fallback = input.rounds.filter((r) => r.damage > 0).map((r) => `${r.attacker} golpea a ${r.defender} (${r.damage} de daño).`);
+  const fallback = input.rounds.map((r) =>
+    r.damage > 0 ? `${r.attacker} golpea a ${r.defender} (${r.damage} de daño).` : `${r.attacker} ataca a ${r.defender}, pero no logra hacerle daño.`
+  );
   try {
     const { system, user } = buildCombatNarrationPrompt(input);
     const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 900, validate: isValidNarration });
     return [text.trim()];
   } catch (err) {
     await logError("ai/narrate-combat", err, meta);
+    return fallback;
+  }
+}
+
+/** Narrates a threat appearing (before combat starts). Falls back to the template's static text. */
+export async function narrateEncounterIntro(input: EncounterIntroInput, fallback: string[], meta: { characterId: string }): Promise<string[]> {
+  try {
+    const { system, user } = buildEncounterIntroPrompt(input);
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 600, validate: isValidNarration });
+    return [text.trim()];
+  } catch (err) {
+    await logError("ai/narrate-encounter-intro", err, meta);
+    return fallback;
+  }
+}
+
+/** 1-vs-1 duel narration; never throws, falls back to plain per-round lines. */
+export async function narrateDuel(input: DuelNarrationInput, meta: { duelId: string }): Promise<string> {
+  const fallback = input.rounds
+    .map((r) => (r.damage > 0 ? `${r.attacker} golpea a ${r.defender} (${r.damage} de daño).` : `${r.attacker} ataca a ${r.defender}, pero no le hace daño.`))
+    .join(" ");
+  try {
+    const { system, user } = buildDuelNarrationPrompt(input);
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 800, validate: isValidNarration });
+    return text.trim();
+  } catch (err) {
+    await logError("ai/narrate-duel", err, meta);
     return fallback;
   }
 }

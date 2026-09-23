@@ -60,3 +60,19 @@ export function computeBailBerries(islandDanger: number, level: number, hasDevil
   const base = Math.round((500 + islandDanger * 400) * (1 + level * 0.15));
   return hasDevilFruit ? Math.round(base * KAIROSEKI_BAIL_PREMIUM) : base;
 }
+
+export const NO_BAIL_PIRATE_BOUNTY = 10_000_000;
+export const NO_BAIL_REVOLUTIONARY_NOTORIETY = 150;
+
+/**
+ * Bail is only for small fish held in an ordinary brig. Impel Down never
+ * takes bail, and anyone the Government genuinely wants (a pirate/hunter with
+ * a real bounty, a revolutionary of any standing) can't buy their way out —
+ * they have to be rescued or break out.
+ */
+export function isBailAllowed(p: { faction: string; bounty: number; notoriety: number; facility?: "brig" | "impel_down" }): boolean {
+  if (p.facility === "impel_down") return false;
+  if ((p.faction === "PIRATE" || p.faction === "BOUNTY_HUNTER") && p.bounty >= NO_BAIL_PIRATE_BOUNTY) return false;
+  if (p.faction === "REVOLUTIONARY" && p.notoriety >= NO_BAIL_REVOLUTIONARY_NOTORIETY) return false;
+  return true;
+}

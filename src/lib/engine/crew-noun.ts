@@ -1,9 +1,10 @@
 /** What a "crew" is called narratively depends on the faction that formed it. */
-const CREW_NOUN: Record<"PIRATE" | "MARINE" | "REVOLUTIONARY" | "BOUNTY_HUNTER", string> = {
+const CREW_NOUN: Record<"PIRATE" | "MARINE" | "REVOLUTIONARY" | "BOUNTY_HUNTER" | "CP0", string> = {
   PIRATE: "Tripulación",
   MARINE: "Escuadrón",
   REVOLUTIONARY: "Célula",
   BOUNTY_HUNTER: "Gremio",
+  CP0: "Unidad",
 };
 
 export function crewNounForFaction(faction: keyof typeof CREW_NOUN): string {

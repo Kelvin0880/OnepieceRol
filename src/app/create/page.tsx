@@ -15,6 +15,7 @@ const FACTIONS = [
   { id: "MARINE", name: "Marine", description: "Justicia y disciplina. Ascender en la jerarquía exige méritos, no suerte.", island: "Cuartel Marine G-5" },
   { id: "REVOLUTIONARY", name: "Revolucionario", description: "Derrocar al Gobierno Mundial desde las sombras, célula a célula.", island: "Isla Baltigo" },
   { id: "BOUNTY_HUNTER", name: "Cazarrecompensas", description: "Ni ley ni bandera: solo el mejor postor y la cabeza correcta.", island: "Isla Gecko" },
+  { id: "CP0", name: "CP-0 (Gobierno Mundial)", description: "Las manos invisibles de los Nobles Mundiales: espionaje, censura y operaciones negras. Se asciende de CP10 hasta CP0 sin que nadie sepa tu nombre.", island: "Loguetown" },
 ] as const;
 
 export default function CreateCharacterPage() {

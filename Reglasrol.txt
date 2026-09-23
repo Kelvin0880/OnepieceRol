@@ -1,0 +1,58 @@
+En el rol por escrito (text-roleplay), **Mano Negra** y **Mano Blanca** son dos infracciones graves contra la narrativa compartida. Ambas rompen el principio básico del rol: cada jugador tiene el control exclusivo de su propio personaje y debe dejar margen de reacción a los demás.
+
+---
+
+## 1. Mano Negra (Imposición forzada)
+
+Ocurre cuando un jugador describe que su acción impacta, daña o afecta al personaje rival **sin darle la oportunidad de reaccionar, esquivar, bloquear o mitigar el daño**. Es, en esencia, controlar el destino o el cuerpo del personaje ajeno.
+
+* **El problema técnico:** El atacante decide tanto el intento de ataque como el resultado final en el mismo turno, anulando el turno del defensor.
+* **En combate de One Piece:** Significa asumir que tu velocidad o fuerza es absoluta, ignorando el Haki de observación, la resistencia o los reflejos del rival.
+
+### Ejemplos
+
+* **Con Mano Negra:**
+> *"Luffy corre hacia Rob Lucci a toda velocidad, le conecta un golpe cargado con Haki directamente en la mandíbula, rompiéndole tres dientes y estrellándolo contra la pared del edificio."*
+> *(Infracción: Da por hecho que conectó el golpe, calculó el daño exacto y decidió la trayectoria del rival).*
+
+
+* **Forma correcta (Intención de acción):**
+> *"Luffy se impulsa con fuerza hacia Rob Lucci, lanzando un puñetazo impregnado en Haki directo hacia su mandíbula con la intención de estrellarlo contra la pared contigua si el impacto llega a conectar."*
+> *(Correcto: Describe la intención, la trayectoria y la fuerza, dejando que el rival decida si esquiva con Soru, bloquea con Tekkai o recibe el golpe).*
+
+
+
+---
+
+## 2. Mano Blanca (Aprovechar la falta de detalle ajeno)
+
+Ocurre cuando un jugador **se aprovecha de que el rival no especificó un detalle obvio o menor** en su turno para manipular la escena a su favor de forma ventajista y poco realista.
+
+* **El problema técnico:** Castiga la omisión involuntaria de detalles cotidianos o lógicos en lugar de rolear con buena fe.
+* **En combate de One Piece:** Suele darse cuando alguien asume que, porque el rival no escribió "estoy respirando" o "tengo los ojos abiertos", el personaje está completamente indefenso o ciego.
+
+### Ejemplos
+
+* **Turno previo del rival:**
+> *"Zoro desenvaina a Shusui y se coloca en guardia frontal, esperando el movimiento del enemigo."*
+
+
+* **Con Mano Blanca:**
+> *"Como nunca dijiste hacia dónde estabas mirando ni que tenías los ojos abiertos, asumo que estás de espaldas con los ojos cerrados, así que camino silenciosamente frente a ti y te corto el cuello sin que te des cuenta."*
+> *(Infracción: Manipula el vacío descriptivo para forzar una ventaja absurda que desafía el sentido común del combate).*
+
+
+* **Forma correcta:**
+> *"Aprovechando que Zoro adopta una guardia frontal estática, rodeo su posición desplazándome por su punto ciego lateral para obligarlo a girar la guardia o exponer su flanco."*
+> *(Correcto: Reacciona tácticamente a lo que el oponente planteó sin inventar absurdos sobre su estado físico).*
+
+
+
+---
+
+## Comparativa directa
+
+| Concepto | Qué hace el jugador | Efecto en la partida | Cómo solucionarlo |
+| --- | --- | --- | --- |
+| **Mano Negra** | Decide el impacto y las consecuencias sobre el rival en su propio turno. | Le quita la libertad de acción y reacción al otro jugador. | Redactar en **grado de tentativa** ("intenta golpear", "dirige su hoja hacia"). |
+| **Mano Blanca** | Utiliza vacíos u omisiones lógicas del texto rival para sacar ventajas irreales. | Genera discusiones innecesarias y destruye la fluidez narrativa. | Asumir el **sentido común** del contexto y pedir aclaraciones breves si algo es ambiguo. |

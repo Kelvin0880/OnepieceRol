@@ -1,5 +1,5 @@
 import { prisma } from "../db";
-import { crossedPirateTier, crossedMarineTier } from "../engine/progression";
+import { crossedPirateTier, crossedMarineTier, crossedTier, CP0_TIERS } from "../engine/progression";
 import { postNews } from "./death-resolution";
 import { Faction } from "@prisma/client";
 
@@ -42,6 +42,13 @@ export async function applyBountyOrNotoriety(character: ReputationCharacter, del
         const headline = `${character.name} asciende a ${crossed.title}`;
         await postNews(headline, `La Marina confirma el ascenso de ${character.name} tras sus méritos recientes.`, "Gobierno Mundial", character.id);
         newsLog.push(headline);
+      }
+    }
+    if (character.faction === "CP0") {
+      const crossed = crossedTier(before, after, CP0_TIERS);
+      if (crossed) {
+        // Cipher Pol works in the shadows: promotions never make public news, only the ledger records them.
+        newsLog.push(`${character.name} asciende a ${crossed.title} (informe interno de CP-0)`);
       }
     }
   }

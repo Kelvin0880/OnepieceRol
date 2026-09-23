@@ -124,6 +124,10 @@
                     <h4 class="text-xl font-bold mb-2 flex items-center gap-2 text-green-800"><i class="fas fa-crosshairs"></i> CAZARRECOMPENSAS</h4>
                     <p class="text-sm">Nadie es tu enemigo por ideología, solo por precio. Empiezas en <em>Isla Gecko</em>.</p>
                 </div>
+                <div class="paper-card p-6 faction-card border-t-4 border-t-gray-500">
+                    <h4 class="text-xl font-bold mb-2 flex items-center gap-2 text-gray-700"><i class="fas fa-user-secret"></i> CP-0 (GOBIERNO MUNDIAL)</h4>
+                    <p class="text-sm">Las manos invisibles de los Nobles Mundiales: espionaje, censura y operaciones negras. Subes de <strong>CP10 a CP0</strong> sin que nadie sepa tu nombre (tus ascensos no salen en las noticias). Al vencer en combate, capturas en vez de matar, igual que la Marina. Empiezas en <em>Loguetown</em>.</p>
+                </div>
             </div>
 
             <h3 class="text-2xl font-bold mb-4 title-font">Arquetipos</h3>
@@ -154,6 +158,8 @@
                     > "Le perdono la vida y le advierto que no vuelva a cruzarse conmigo."
                 </div>
 
+                <p class="mb-4 text-sm bg-yellow-50 p-3 rounded border border-yellow-200"><i class="fas fa-level-down-alt text-yellow-600"></i> <strong>Enter = salto de línea</strong> (no envía). Así puedes separar <em>lo que dices</em> (entre comillas) de <em>lo que haces</em>. Envías con el botón "Actuar" o con Ctrl+Enter. Cabe un mensaje largo (hasta 2000 caracteres).</p>
+
                 <p class="mb-6">Una IA lee lo que escribiste y decide qué tipo de acción es. <strong>Los números los decide siempre el motor de dados</strong>, la IA solo le pone palabras a lo que los dados decidieron.</p>
 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
@@ -163,8 +169,14 @@
                     </div>
                     <div class="bg-red-50 p-5 rounded border border-red-200">
                         <h4 class="font-bold text-red-900 mb-2"><i class="fas fa-dice-d20"></i> Acción Decisiva</h4>
-                        <p class="text-sm">Arriesgarse, explorar a fondo, buscar pelea, robar. Se activa el motor del juego: se tira contra el peligro de la isla y tus estadísticas. Debajo de la respuesta verás "(interpretado como: X)".</p>
+                        <p class="text-sm"><strong>Atacar a alguien de la escena</strong> (el del bar, un guardia) abre una pelea real contra <em>esa</em> persona: tu movimiento es la primera ronda y el narrador responde a lo que hiciste. Explorar a fondo, buscar pelea sin objetivo, robar. Se activa el motor del juego: se tira contra el peligro de la isla y tus estadísticas. Debajo de la respuesta verás "(interpretado como: X)".</p>
                     </div>
+                </div>
+
+                <div class="bg-gray-800 text-white p-5 rounded mb-6">
+                    <h4 class="font-bold text-[#c5a059] mb-2 title-font"><i class="fas fa-hand-paper"></i> Reglas de rol: Mano Negra y Mano Blanca</h4>
+                    <p class="text-sm mb-2"><strong>Mano Negra:</strong> nadie decide por otro. Lo que tú escribes es tu <em>intención</em> ("intento cortarle el pecho"), nunca el resultado ("le corto el pecho"). El motor de dados decide si conecta, y el narrador nunca da por hecho un golpe tuyo ni te hace sentir, decir o pensar cosas que no escribiste. Los enemigos tampoco: su ataque es un intento cuyo resultado decide el motor.</p>
+                    <p class="text-sm"><strong>Mano Blanca:</strong> el narrador no se aprovecha de lo que no especificaste. Se asume sentido común: estás despierto, alerta, con los ojos abiertos y con tu equipo — nadie te "encuentra de espaldas" porque no escribiste hacia dónde mirabas.</p>
                 </div>
 
                 <p class="text-sm bg-yellow-50 p-3 rounded border border-yellow-200">
@@ -185,11 +197,11 @@
                 </div>
                 <div class="paper-card p-5">
                     <h4 class="font-bold text-lg mb-2 text-[#8b0000]"><i class="fas fa-dumbbell"></i> ENTRENAR</h4>
-                    <p class="text-sm">Sube tu Haki de forma predecible. <em>No sube tu nivel de personaje</em> — solo Haki. Cooldown: 30 minutos reales.</p>
+                    <p class="text-sm">Sube tu Haki de Armadura, tu Haki de Observación o el dominio de tu fruta (dilo en el texto: "entreno con mi fruta"; si no dices, entrena lo que más atrasado tengas). <em>No sube tu nivel de personaje.</em> Cuesta 20 de estamina. Cooldown: 30 minutos reales.</p>
                 </div>
                 <div class="paper-card p-5">
                     <h4 class="font-bold text-lg mb-2 text-[#8b0000]"><i class="fas fa-bed"></i> DESCANSAR</h4>
-                    <p class="text-sm">Recupera vida. No puedes actuar con un combate pendiente sin resolver, a veces es tu única salida.</p>
+                    <p class="text-sm">Recupera vida <strong>y estamina</strong>. Con la estamina casi a cero explorar te queda vetado: estás exhausto y debes descansar. No puedes descansar con un combate pendiente.</p>
                 </div>
                 <div class="paper-card p-5">
                     <h4 class="font-bold text-lg mb-2 text-[#8b0000]"><i class="fas fa-ship"></i> VIAJAR</h4>
@@ -224,6 +236,17 @@
                     <p class="text-sm">La IA lee qué tan inteligente es tu táctica (fintas, entorno, debilidades) y eso <strong>mejora tus probabilidades reales</strong> en los dados. Una idea torpe las empeora. Pero los dados tienen la última palabra.</p>
                 </div>
 
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                    <div class="bg-blue-50 p-4 rounded border border-blue-200">
+                        <h4 class="font-bold text-blue-900 mb-1"><i class="fas fa-wind"></i> Estamina y fatiga</h4>
+                        <p class="text-sm">Cada ronda cuesta estamina (una técnica de Haki o de fruta cuesta más que un golpe normal). Por debajo del 25% estás <strong>fatigado</strong> (golpeas y te defiendes peor); a 0, <strong>exhausto</strong>. Se recupera descansando y, despacio, con el tiempo. Sin aliento suficiente, la técnica que querías no sale.</p>
+                    </div>
+                    <div class="bg-purple-50 p-4 rounded border border-purple-200">
+                        <h4 class="font-bold text-purple-900 mb-1"><i class="fas fa-fire"></i> Usa tu Haki y tu fruta en la pelea</h4>
+                        <p class="text-sm">Descríbelo: "endurezco mi hoja con Haki de Armadura", "leo sus movimientos con Observación", "libero el poder de mi fruta". Cada uno da un bono real (según lo entrenado), cuesta estamina, y usarlos <strong>también los hace crecer</strong>. Si no tienes ese poder, el intento se queda en un golpe normal.</p>
+                    </div>
+                </div>
+
                 <h4 class="font-bold text-xl mb-3 title-font">Decisión Moral (Si Ganas)</h4>
                 <div class="flex flex-col sm:flex-row gap-4 mb-6">
                     <div class="flex-1 border border-green-300 bg-green-50 p-4 rounded text-center">
@@ -251,7 +274,14 @@
                 <div class="paper-card p-6">
                     <h4 class="font-bold text-xl mb-3 title-font text-purple-900"><i class="fas fa-apple-alt"></i> Frutas del Diablo</h4>
                     <p class="text-sm mb-2">Drop aleatorio, nunca garantizado. Solo puedes tener una. Al comerla, <strong>pierdes para siempre la capacidad de nadar</strong>.</p>
-                    <p class="text-sm bg-purple-50 p-2 rounded">Si el mar te alcanza en un evento, tus probabilidades de sobrevivir caen en picado. Para ti, el mar es mortal.</p>
+                    <p class="text-sm bg-purple-50 p-2 rounded mb-2">Si el mar te alcanza en un evento, tus probabilidades de sobrevivir caen en picado. Para ti, el mar es mortal.</p>
+                    <p class="text-sm mb-1"><strong>La fruta evoluciona en 3 fases:</strong></p>
+                    <ul class="text-sm list-disc pl-5 space-y-1">
+                        <li><strong>Inicial:</strong> poder limitado (60%) y técnicas caras en estamina.</li>
+                        <li><strong>Avanzada</strong> (dominio 35+): poder completo y menos desgaste.</li>
+                        <li><strong>Despertar:</strong> con dominio al 100%, solo un momento límite lo provoca — ganar contra un jefe, o ganar con menos del 25% de vida. Poder total y aún menos desgaste.</li>
+                    </ul>
+                    <p class="text-xs mt-2 text-gray-600">Subes el dominio usando la fruta en combate o entrenando con ella. Las frutas comunes pueden repetirse entre jugadores; las míticas o de personajes canon son únicas.</p>
                 </div>
                 <div class="paper-card p-6">
                     <h4 class="font-bold text-xl mb-3 title-font text-gray-800"><i class="fas fa-khanda"></i> Armas Únicas y Haki</h4>
@@ -284,6 +314,9 @@
                 <div class="bg-white p-4 rounded shadow border-l-4 border-green-600">
                     <strong class="text-lg text-green-800">Cazarrecompensas:</strong> <span class="text-sm text-gray-600">Novato → Gremio → Rastreador → Verdugo → Leyenda → Rival de Marina → Azote de los mares</span>
                 </div>
+                <div class="bg-white p-4 rounded shadow border-l-4 border-gray-500">
+                    <strong class="text-lg text-gray-700">CP-0:</strong> <span class="text-sm text-gray-600">Aspirante → CP10 → CP9 → CP8 → CP7 → CP5 → CP3 → CP1 → CP0 → Caballero Divino → Gorosei</span>
+                </div>
             </div>
         </section>
 
@@ -297,13 +330,17 @@
                     <p class="text-sm mb-4">Funda o únete a una tripulación con un código de invitación. Ves a otros en tu isla en tiempo real, y pueden desafiarse en batallas N-contra-N.</p>
                     <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
                         <h4 class="font-bold text-blue-900 text-sm mb-1"><i class="fas fa-comments"></i> Escena compartida</h4>
-                        <p class="text-xs text-blue-900">Si estás en la misma isla que un compañero de tripulación real, dejan de tener cada uno su escena privada: comparten <strong>una sola escena con turnos claros</strong> (el capitán va primero). Si te topas un combate durante tu turno, esa pelea sigue siendo tuya y tuya sola, resuelta a tu propio ritmo — el grupo ve un resumen de una línea, pero no puede intervenir directamente en ella. Separarte del grupo pide confirmación explícita, y puedes reunirte de nuevo cuando quieras mientras sigas en la misma isla.</p>
+                        <p class="text-xs text-blue-900">Si estás en la misma isla que un compañero de tripulación real, dejan de tener cada uno su escena privada: comparten <strong>una sola escena con turnos claros</strong> (el capitán va primero). Si te topas un combate durante tu turno (o atacas a alguien), esa pelea sigue siendo tuya y tuya sola, resuelta a tu propio ritmo — el grupo <strong>lee cada ronda</strong> en la escena compartida, pero no puede intervenir directamente en ella. Separarte del grupo pide confirmación explícita, y puedes reunirte de nuevo cuando quieras mientras sigas en la misma isla.</p>
                     </div>
                     <ul class="text-sm list-disc pl-4 space-y-2">
                         <li>Se eligen enfrentamientos uno a uno.</li>
                         <li>Se resuelve por oleadas.</li>
                         <li>Si terminas con más de 50% de vida, puedes <strong>REFORZAR</strong> a un compañero que siga peleando.</li>
                     </ul>
+                    <div class="bg-red-50 border border-red-200 rounded p-3 mt-4">
+                        <h4 class="font-bold text-red-900 text-sm mb-1"><i class="fas fa-user-friends"></i> Duelo 1 contra 1 (jugador vs jugador)</h4>
+                        <p class="text-xs text-red-900">En "Aventureros en esta isla" pulsa <strong>Retar a duelo</strong>. Si el rival acepta, cada ronda <strong>ambos describís vuestro movimiento</strong> (lo que intentáis) y, cuando los dos habéis movido, el motor lo resuelve a la vez y el narrador cuenta el resultado. El duelo <strong>no es a muerte</strong>: usa una copia de tu vida, no te deja heridas ni te mata; quien cae, queda fuera de combate. Puedes rendirte escribiéndolo. Sí gasta estamina y hace crecer tu Haki/fruta.</p>
+                    </div>
                     <p class="text-xs italic mt-4 text-gray-500">*Rolear estas batallas masivas ronda a ronda, con varios jugadores actuando dentro de la misma pelea, aún no está disponible.</p>
                 </div>
             </section>
@@ -315,7 +352,7 @@
                 <div class="paper-card p-5 h-full bg-gray-100">
                     <p class="text-sm mb-4">Perder contra la Marina puede significar la cárcel. No puedes actuar hasta salir.</p>
                     <ul class="text-sm list-disc pl-4 space-y-2">
-                        <li><strong>PAGAR FIANZA:</strong> Te libera al instante (cuesta más si tienes fruta, te vigilan con Kairoseki).</li>
+                        <li><strong>PAGAR FIANZA:</strong> Solo para peces pequeños: te libera al instante (cuesta más si tienes fruta, te vigilan con Kairoseki). <strong>Un pirata con recompensa de 10.000.000 o más, o un revolucionario de peso, no puede comprar su libertad</strong>, y en Impel Down nadie puede: solo un rescate o una fuga te sacan.</li>
                         <li><strong>RESCATE:</strong> Un aliado en la isla puede intentar sacarte. Se tira comprobación real contra el captor. Si falla, el rescatador acaba preso también. <em>Es un riesgo, no un favor automático.</em></li>
                     </ul>
                 </div>

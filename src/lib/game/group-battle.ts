@@ -14,7 +14,7 @@ import { CharacterStatus, Faction } from "@prisma/client";
 const MARINE_CAPTURE_CHANCE = 0.55;
 
 async function resolveDuelLoss(
-  loser: DeathCheckCharacter & { faction: Faction; maxHp: number; currentIslandId: string; level: number; devilFruitId?: string | null },
+  loser: DeathCheckCharacter & { faction: Faction; maxHp: number; currentIslandId: string; level: number; devilFruitId?: string | null; bounty?: number; notoriety?: number },
   winner: { faction: Faction; combatant: Combatant },
   reason: string,
   newsLog: string[]
@@ -22,7 +22,7 @@ async function resolveDuelLoss(
   const death = await handleDeathCheck(loser, 0, reason, newsLog);
   if (death.died) return { died: true, captured: false, finalHp: 0 };
 
-  const capturable = winner.faction === "MARINE" && loser.faction !== "MARINE";
+  const capturable = (winner.faction === "MARINE" || winner.faction === "CP0") && loser.faction !== "MARINE" && loser.faction !== "CP0";
   if (capturable && Math.random() < MARINE_CAPTURE_CHANCE) {
     await captureCharacter(
       {
@@ -33,6 +33,9 @@ async function resolveDuelLoss(
         currentIsland: loser.currentIsland,
         level: loser.level,
         devilFruitId: loser.devilFruitId,
+        faction: loser.faction,
+        bounty: loser.bounty,
+        notoriety: loser.notoriety,
       },
       combatPower(winner.combatant),
       `Cayó en batalla y fue apresado por la Marina en ${loser.currentIsland.name}.`,

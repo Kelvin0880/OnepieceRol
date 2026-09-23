@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { fruitBlackMarketPrice, weaponPrice, bountyReward, berryReward, xpToNextLevel, computeBailBerries } from "./economy";
+import { fruitBlackMarketPrice, weaponPrice, bountyReward, berryReward, xpToNextLevel, computeBailBerries, isBailAllowed } from "./economy";
 
 describe("fruitBlackMarketPrice", () => {
   it("scales up strictly with rarity tier", () => {
@@ -88,5 +88,19 @@ describe("computeBailBerries", () => {
 
   it("defaults to no premium when hasDevilFruit is omitted", () => {
     expect(computeBailBerries(5, 10)).toBe(computeBailBerries(5, 10, false));
+  });
+});
+
+describe("isBailAllowed", () => {
+  it("allows bail for small fish in an ordinary brig", () => {
+    expect(isBailAllowed({ faction: "PIRATE", bounty: 500_000, notoriety: 0 })).toBe(true);
+    expect(isBailAllowed({ faction: "REVOLUTIONARY", bounty: 0, notoriety: 20 })).toBe(true);
+  });
+  it("refuses bail for highly wanted pirates and established revolutionaries", () => {
+    expect(isBailAllowed({ faction: "PIRATE", bounty: 10_000_000, notoriety: 0 })).toBe(false);
+    expect(isBailAllowed({ faction: "REVOLUTIONARY", bounty: 0, notoriety: 150 })).toBe(false);
+  });
+  it("never allows bail in Impel Down, whoever the prisoner is", () => {
+    expect(isBailAllowed({ faction: "PIRATE", bounty: 0, notoriety: 0, facility: "impel_down" })).toBe(false);
   });
 });

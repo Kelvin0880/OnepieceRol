@@ -2,15 +2,15 @@ import { Character, DevilFruit, Weapon } from "@prisma/client";
 import { deriveCombatant, CharacterStatsInput } from "../engine/character-stats";
 import { parseFruitEffects } from "../engine/fruits";
 import { Combatant } from "../engine/combat";
+import { fruitPhase, fruitPowerMultiplier, FruitPhase } from "../engine/fruit-mastery";
 
 export type CharacterWithGear = Character & {
   devilFruit: DevilFruit | null;
   equippedWeapon: Weapon | null;
 };
 
-/** How awakened a character's fruit is — v1 ties it directly to level, a cheap proxy until a dedicated awakening quest exists. */
-export function isFruitAwakened(character: Character): boolean {
-  return character.level >= 40;
+export function characterFruitPhase(character: Character): FruitPhase {
+  return fruitPhase(character.fruitMastery, character.fruitAwakened);
 }
 
 export function toCombatant(character: CharacterWithGear): Combatant {
@@ -26,7 +26,8 @@ export function toCombatant(character: CharacterWithGear): Combatant {
     conquerorsHaki: character.conquerorsHaki,
     weaponAtkBonus: character.equippedWeapon?.atkBonus ?? 0,
     fruitEffects: character.devilFruit ? parseFruitEffects(character.devilFruit.effectsJson) : null,
-    fruitAwakened: isFruitAwakened(character),
+    fruitAwakened: character.fruitAwakened,
+    fruitPower: fruitPowerMultiplier(characterFruitPhase(character)),
   };
   return deriveCombatant(input);
 }

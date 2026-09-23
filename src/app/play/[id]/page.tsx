@@ -3,7 +3,7 @@
 import { useEffect, useState, useCallback, useRef, use } from "react";
 import Link from "next/link";
 import { characterCondition, conditionLabel } from "@/lib/engine/condition";
-import { factionTitle } from "@/lib/engine/progression";
+import { factionTitle, type FactionKey } from "@/lib/engine/progression";
 import { crewNounForFaction } from "@/lib/engine/crew-noun";
 
 interface Island {
@@ -157,6 +157,12 @@ interface Character {
   observationHaki: number;
   armamentHaki: number;
   conquerorsHaki: boolean;
+  stamina: number;
+  maxStamina: number;
+  fatigue: string;
+  fruitMastery: number;
+  fruitAwakened: boolean;
+  fruitPhase: string | null;
   poneglyphsRead: string;
   poneglyphHeat: number;
   currentIsland: Island;
@@ -180,6 +186,18 @@ interface Character {
   isSeparatedFromParty: boolean;
 }
 
+interface DuelState {
+  id: string;
+  status: "PROPOSED" | "ACTIVE" | "FINISHED";
+  round: number;
+  isChallenger: boolean;
+  opponentName: string;
+  me: { hp: number; maxHp: number; submitted: boolean };
+  opponent: { hp: number; maxHp: number; submitted: boolean };
+  winnerId: string | null;
+  messages: { id: string; authorName: string; isNarrator: boolean; mine: boolean; text: string }[];
+}
+
 interface StateResponse {
   character: Character;
   connectedIslands: Island[];
@@ -187,6 +205,7 @@ interface StateResponse {
   prisonersHere: PrisonerHere[];
   crewBattles: BattleSummary[];
   party: PartyState | null;
+  duel: DuelState | null;
   error?: string;
 }
 
@@ -209,6 +228,7 @@ const FACTION_LABEL: Record<string, string> = {
   MARINE: "Marine",
   REVOLUTIONARY: "Revolucionario",
   BOUNTY_HUNTER: "Cazarrecompensas",
+  CP0: "CP-0",
 };
 
 function StatBar({ label, value, max, color }: { label: string; value: number; max: number; color: string }) {
@@ -249,6 +269,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const sceneEndRef = useRef<HTMLDivElement>(null);
+  const duelBoxRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/characters/${id}`);
@@ -270,6 +291,12 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     const interval = setInterval(load, 10_000);
     return () => clearInterval(interval);
   }, [load]);
+
+  useEffect(() => {
+    // Scroll only the duel transcript box, not the whole page.
+    const box = duelBoxRef.current;
+    if (box) box.scrollTop = box.scrollHeight;
+  }, [data?.duel?.messages.length]);
 
   useEffect(() => {
     sceneEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -366,6 +393,23 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     }
   }
 
+  async function doDuelOp(body: Record<string, unknown>) {
+    setBusy(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/characters/${id}/duel`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      const result = await res.json();
+      if (!res.ok) setError(result.error ?? "No se pudo completar la acción del duelo.");
+      await load();
+    } finally {
+      setBusy(false);
+    }
+  }
+
   async function submitFreeText() {
     const text = freeText.trim();
     if (!text || busy) return;
@@ -389,7 +433,8 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     );
   }
 
-  const { character, connectedIslands, party } = data;
+  const { character, connectedIslands, party, duel } = data;
+  const duelActive = duel?.status === "ACTIVE";
   const isDead = character.status === "DEAD";
   const isImprisoned = character.status === "IMPRISONED";
 
@@ -397,7 +442,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   // can't be blocked from fighting for your life by whose turn it is in
   // the group scene (see resolvePartyFreeTextAction in perform-action.ts).
   const isMyPartyTurn = party ? party.turnOrder[party.turnIndex] === character.id : true;
-  const partyBlocksInput = !!party && !character.pendingEncounter && (party.awaitingNarrator || !isMyPartyTurn);
+  const partyBlocksInput = !!party && !character.pendingEncounter && !duelActive && (party.awaitingNarrator || !isMyPartyTurn);
   const partyTurnLabel = !party || character.pendingEncounter
     ? null
     : party.awaitingNarrator
@@ -412,7 +457,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
         <div>
           <h1 className="font-display text-2xl text-gold-bright">{character.name}</h1>
           <p className="text-sm text-gold">
-            {factionTitle(character.faction as "PIRATE" | "MARINE" | "REVOLUTIONARY" | "BOUNTY_HUNTER", character.bounty, character.notoriety)}
+            {factionTitle(character.faction as FactionKey, character.bounty, character.notoriety)}
           </p>
           <p className="text-sm text-ink-dim">
             {FACTION_LABEL[character.faction]} · Nv. {character.level} · {character.currentIsland.name}
@@ -514,6 +559,65 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
       <div className="grid grid-cols-1 lg:grid-cols-[2fr_1fr] gap-4">
         {/* Main column */}
         <div className="flex flex-col gap-4">
+          {duel && (
+            <div className="panel p-4" style={{ borderColor: "var(--gold)" }}>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-display text-lg text-gold-bright">Duelo contra {duel.opponentName}</h3>
+                <span className="text-xs text-ink-dim">
+                  {duel.status === "PROPOSED" ? "Reto pendiente" : duel.status === "ACTIVE" ? `Ronda ${duel.round}` : "Terminado"}
+                </span>
+              </div>
+              {duel.status !== "PROPOSED" && (
+                <div className="grid grid-cols-2 gap-3 mb-3">
+                  <div>
+                    <StatBar label="Tú" value={duel.me.hp} max={duel.me.maxHp} color="var(--blood)" />
+                    {duel.status === "ACTIVE" && <p className="text-[11px] text-ink-dim mt-0.5">{duel.me.submitted ? "Movimiento enviado" : "Falta tu movimiento"}</p>}
+                  </div>
+                  <div>
+                    <StatBar label={duel.opponentName} value={duel.opponent.hp} max={duel.opponent.maxHp} color="var(--blood)" />
+                    {duel.status === "ACTIVE" && <p className="text-[11px] text-ink-dim mt-0.5">{duel.opponent.submitted ? "Ya movió" : "Pensando su movimiento..."}</p>}
+                  </div>
+                </div>
+              )}
+              <div ref={duelBoxRef} className="flex flex-col gap-2 max-h-72 overflow-y-auto mb-3">
+                {duel.messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`max-w-[92%] rounded-lg px-3 py-2 text-sm whitespace-pre-line ${m.mine ? "self-end" : "self-start"} ${
+                      m.isNarrator ? "bg-black/25" : m.mine ? "" : "bg-black/10 border border-[--line]"
+                    }`}
+                    style={m.mine ? { background: "var(--gold)", color: "var(--sea-deep)" } : undefined}
+                  >
+                    {!m.mine && <div className="text-[10px] uppercase tracking-wide text-ink-dim mb-0.5">{m.authorName}</div>}
+                    {m.text}
+                  </div>
+                ))}
+              </div>
+              {duel.status === "PROPOSED" && !duel.isChallenger && (
+                <div className="flex gap-2">
+                  <button className="btn-gold px-4 py-2 text-sm" disabled={busy} onClick={() => doDuelOp({ op: "respond", duelId: duel.id, accept: true })}>
+                    Aceptar duelo
+                  </button>
+                  <button className="btn-ghost px-4 py-2 text-sm" disabled={busy} onClick={() => doDuelOp({ op: "respond", duelId: duel.id, accept: false })}>
+                    Rechazar
+                  </button>
+                </div>
+              )}
+              {duel.status === "PROPOSED" && duel.isChallenger && (
+                <button className="btn-ghost px-4 py-2 text-sm" disabled={busy} onClick={() => doDuelOp({ op: "cancel", duelId: duel.id })}>
+                  Cancelar reto
+                </button>
+              )}
+              {duel.status === "ACTIVE" && (
+                <p className="text-xs text-ink-dim">
+                  Describe tu movimiento abajo (lo que intentas, no lo que consigues). Cuando ambos hayáis movido, el motor lo resuelve a la vez. Para rendirte, escríbelo. El duelo no es a muerte.
+                </p>
+              )}
+              {duel.status === "FINISHED" && (
+                <p className="text-sm text-gold-bright">{duel.winnerId === character.id ? "¡Has ganado el duelo!" : "Has perdido el duelo — sales vivo, con el orgullo herido."}</p>
+              )}
+            </div>
+          )}
           <div className="panel p-4">
             <div className="flex items-center justify-between mb-2">
               <h2 className="font-display text-lg">{character.currentIsland.name}</h2>
@@ -548,9 +652,11 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                 )}
                 <textarea
                   className="w-full bg-sea-deep border border-[--line] rounded px-3 py-2 text-sm outline-none focus:border-gold resize-none"
-                  rows={2}
+                  rows={4}
                   placeholder={
-                    character.pendingEncounter?.phase === "threat"
+                    duelActive
+                      ? "Ej: Giro sobre mi pie y intento un tajo ascendente a su guardia, rodeando su flanco."
+                      : character.pendingEncounter?.phase === "threat"
                       ? "Ej: Desenfundo mi espada y cargo contra él sin dudar."
                       : character.pendingEncounter?.phase === "victory"
                       ? "Ej: Le perdono la vida y le advierto que no vuelva."
@@ -561,13 +667,19 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                   value={freeText}
                   disabled={busy || partyBlocksInput}
                   onChange={(e) => setFreeText(e.target.value)}
+                  maxLength={2000}
                   onKeyDown={(e) => {
-                    if (e.key === "Enter" && !e.shiftKey) {
+                    // Plain Enter is a line break (needed on mobile to separate what
+                    // you say from what you do); sending is the button or Ctrl/Cmd+Enter.
+                    if (e.key === "Enter" && (e.ctrlKey || e.metaKey)) {
                       e.preventDefault();
                       submitFreeText();
                     }
                   }}
                 />
+                <p className="text-[11px] text-ink-dim mt-1">
+                  Enter = salto de línea. Escribe lo que <em>dices</em> entre comillas y lo que <em>haces</em> aparte; lo que escribes es tu intención — el resultado lo decide el juego. Envía con el botón o Ctrl+Enter.
+                </p>
                 <div className="flex items-center gap-2 mt-2">
                   <button className="btn-gold px-4 py-2 text-sm" disabled={busy || partyBlocksInput || !freeText.trim()} onClick={submitFreeText}>
                     Actuar
@@ -665,7 +777,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                       return (
                         <div
                           key={m.id}
-                          className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${mine ? "self-end" : "self-start"} ${
+                          className={`max-w-[85%] rounded-lg px-3 py-2 text-sm whitespace-pre-line ${mine ? "self-end" : "self-start"} ${
                             isNarrator ? "bg-black/25 whitespace-pre-line" : mine ? "" : "bg-black/10 border border-[--line]"
                           }`}
                           style={mine ? { background: "var(--gold)", color: "var(--sea-deep)" } : undefined}
@@ -714,7 +826,14 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                     <span>
                       {o.name} <span className="text-ink-dim text-xs">· Nv. {o.level} · {FACTION_LABEL[o.faction]}</span>
                     </span>
-                    {o.crew && <span className="text-xs text-gold">{o.crew.name}</span>}
+                    <span className="flex items-center gap-2">
+                      {o.crew && <span className="text-xs text-gold">{o.crew.name}</span>}
+                      {!isDead && !isImprisoned && !duel && !character.pendingEncounter && (
+                        <button className="btn-ghost px-2 py-0.5 text-xs" disabled={busy} onClick={() => doDuelOp({ op: "challenge", opponentId: o.id })}>
+                          Retar a duelo
+                        </button>
+                      )}
+                    </span>
                   </div>
                 ))}
               </div>
@@ -890,6 +1009,12 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               </span>
             </div>
             <StatBar label="Vida" value={character.hp} max={character.maxHp} color="var(--blood)" />
+            <div>
+              <StatBar label={`Estamina (${character.fatigue})`} value={character.stamina} max={character.maxStamina} color="#4a90c2" />
+              {character.stamina < character.maxStamina * 0.25 && (
+                <p className="text-xs text-orange-400 mt-1">Tu cuerpo flaquea: golpeas y te defiendes peor. Descansa para recuperar el aliento.</p>
+              )}
+            </div>
             <div className="flex justify-between text-sm">
               <span className="text-ink-dim">Berries</span>
               <span className="text-gold-bright">฿ {character.berries.toLocaleString("es-ES")}</span>
@@ -940,6 +1065,16 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                 <p className="text-sm text-gold-bright">{character.devilFruit.name}</p>
                 <p className="text-xs text-ink-dim">{character.devilFruit.description}</p>
                 <p className="text-xs text-blood mt-1">✦ No puede nadar — el mar es su debilidad de por vida.</p>
+                <div className="mt-2">
+                  <StatBar label={`Dominio: ${character.fruitPhase ?? ""}`} value={character.fruitMastery} max={100} color="#9b6fd6" />
+                  <p className="text-[11px] text-ink-dim mt-1">
+                    {character.fruitAwakened
+                      ? "Tu fruta ha despertado: su poder es total."
+                      : character.fruitMastery >= 100
+                      ? "Dominio máximo. Solo un combate al límite (un jefe, o ganar al borde de la muerte) puede provocar el Despertar."
+                      : "Úsala en combate (descríbelo) o entrena con ella para dominarla y desbloquear sus fases."}
+                  </p>
+                </div>
               </div>
             ) : (
               <p className="text-xs text-ink-dim mb-3">Sin fruta del diablo.</p>
@@ -983,7 +1118,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           )}
 
           <div className="panel p-4">
-            <h3 className="font-display text-sm text-ink-dim mb-2">{crewNounForFaction(character.faction as "PIRATE" | "MARINE" | "REVOLUTIONARY" | "BOUNTY_HUNTER")}</h3>
+            <h3 className="font-display text-sm text-ink-dim mb-2">{crewNounForFaction(character.faction as FactionKey)}</h3>
             {character.crew ? (
               <div className="flex flex-col gap-2">
                 <p className="text-sm text-gold-bright">{character.crew.name}</p>

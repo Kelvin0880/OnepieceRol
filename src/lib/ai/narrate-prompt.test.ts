@@ -72,8 +72,8 @@ const combatBase: CombatNarrationInput = {
   enemyName: "Bandido",
   isBoss: false,
   rounds: [
-    { attacker: "Kaze", defender: "Bandido", damage: 12 },
-    { attacker: "Bandido", defender: "Kaze", damage: 0 },
+    { attacker: "Kaze", defender: "Bandido", damage: 12, outcome: "success" },
+    { attacker: "Bandido", defender: "Kaze", damage: 0, outcome: "fail" },
   ],
   concluded: true,
   victor: "player",
@@ -95,10 +95,28 @@ describe("buildCombatNarrationPrompt", () => {
     expect(user).toContain("38/50");
   });
 
-  it("only lists rounds with actual damage", () => {
+  it("lists every engine result in order, misses and blocks included", () => {
     const { user } = buildCombatNarrationPrompt(combatBase);
-    expect(user).toContain("Kaze golpea a Bandido (12 de daño)");
-    expect(user).not.toContain("Bandido golpea a Kaze (0 de daño)");
+    expect(user).toContain("1. Kaze impacta a Bandido (12 de daño)");
+    expect(user).toContain("2. Bandido falla: Kaze lo bloquea");
+  });
+
+  it("carries the mano negra / mano blanca rules into every narrator prompt", () => {
+    for (const { system } of [buildCombatNarrationPrompt(combatBase), buildExploreNarrationPrompt(exploreBase)]) {
+      expect(system).toMatch(/MANO NEGRA/);
+      expect(system).toMatch(/MANO BLANCA/);
+    }
+  });
+
+  it("tells the narrator a requested technique failed when the engine downgraded it", () => {
+    const { user } = buildCombatNarrationPrompt({ ...combatBase, technique: { label: "Haki de Armadura", downgradedReason: "no le queda aliento" } });
+    expect(user).toContain("no le queda aliento");
+    expect(user).toMatch(/sin darle ningún bono/);
+  });
+
+  it("frames a player-initiated attack as an opening strike against someone in the scene", () => {
+    const { user } = buildCombatNarrationPrompt({ ...combatBase, openingStrike: true });
+    expect(user).toMatch(/acaba de iniciar la agresión/);
   });
 
   it("includes enemy personality when present", () => {
@@ -133,7 +151,7 @@ describe("buildCombatNarrationPrompt", () => {
   it("invites the player's next move instead of deciding how the fight continues", () => {
     const ongoing: CombatNarrationInput = { ...combatBase, concluded: false, victor: undefined, enemyHpLeft: 28 };
     const { user } = buildCombatNarrationPrompt(ongoing);
-    expect(user).toMatch(/siguiente movimiento/);
+    expect(user).toMatch(/iniciativa al jugador/);
   });
 });
 

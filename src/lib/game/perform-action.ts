@@ -3,6 +3,11 @@ import { liveRng } from "../engine/rng";
 import { pickEventTemplate, resolveEvent, parseEventBody, EventBody } from "../engine/events";
 import { resolveExchange, MAX_ROUNDS, Combatant } from "../engine/combat";
 import { trainHaki, rollConquerorsHakiAwakening } from "../engine/haki";
+import { trainFruitMastery, canAwaken, FRUIT_PHASE_LABELS, fruitPhase } from "../engine/fruit-mastery";
+import { TechniqueId, TECHNIQUE_LABELS } from "../engine/techniques";
+import { buildSceneEnemy, tierXp, EnemyTier } from "../engine/scene-enemy";
+import { FATIGUE_LABELS, restStamina, spendStamina } from "../engine/stamina";
+import { prepareFighter, combatProgressData, currentStamina } from "./combat-prep";
 import { bountyReward, berryReward, xpToNextLevel } from "../engine/economy";
 import { assessThreat, attemptFlee, ThreatAssessment } from "../engine/encounter";
 import { canEnterIsland } from "../engine/travel";
@@ -16,10 +21,11 @@ import {
 } from "./grudges";
 import { toCombatant, generalSkillModifier } from "./derive";
 import { tickWorldIfDue } from "./world-tick";
+import { getOpenDuelFor, submitDuelAction } from "./duel";
 import { postNews, handleDeathCheck } from "./death-resolution";
 import { DEVIL_FRUIT_CATALOG } from "./devil-fruit-catalog";
 import { applyBountyOrNotoriety } from "./reputation";
-import { narrateExplore, narrateCombat, narrateScene, narratePartyScene, getRecentScene, updateCharacterMemory } from "../ai/narrate";
+import { narrateExplore, narrateEncounterIntro, narrateCombat, narrateScene, narratePartyScene, getRecentScene, updateCharacterMemory } from "../ai/narrate";
 import { classifyPlayerAction, ActionId } from "../ai/classify-action";
 import {
   beginPartyTurn,
@@ -33,6 +39,9 @@ import {
 import { CharacterStatus } from "@prisma/client";
 
 const TRAINING_COOLDOWN_MS = 30 * 60 * 1000;
+const EXPLORE_STAMINA_COST = 8;
+const TRAIN_STAMINA_COST = 20;
+const MIN_STAMINA_TO_ADVENTURE = 8;
 
 export class GameActionError extends Error {}
 
@@ -146,6 +155,14 @@ export async function exploreCharacter(characterId: string, userId: string, inte
     throw new GameActionError("Tienes un enfrentamiento sin resolver. Decide si luchar o huir primero.");
   }
   const rng = liveRng();
+
+  // Peaceful phases restore you; adventuring while spent does not — that is
+  // the "días inhábiles" rule: exhausted characters must rest first.
+  const staminaNow = currentStamina(character);
+  if (staminaNow < MIN_STAMINA_TO_ADVENTURE) {
+    throw new GameActionError("Estás exhausto: tu cuerpo no da para más aventuras por ahora. Descansa antes de volver a salir.");
+  }
+  await prisma.character.update({ where: { id: character.id }, data: { stamina: spendStamina(staminaNow, EXPLORE_STAMINA_COST), staminaUpdatedAt: new Date() } });
 
   // Holding a Poneglyph's secret makes you a target — before anything
   // else, roll whether whoever lost that secret has finally caught up.
@@ -262,6 +279,27 @@ export async function exploreCharacter(characterId: string, userId: string, inte
     };
     const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
     const assessment = assessThreat(playerCombatant, enemyCombatant);
+    // The threat is introduced by the narrator in the context of what the
+    // player was actually doing — never a disconnected canned line.
+    const introScene = await getRecentScene(character.id, 8);
+    const introNarrated = await narrateEncounterIntro(
+      {
+        characterName: character.name,
+        faction: character.faction,
+        islandName: character.currentIsland.name,
+        islandDescription: character.currentIsland.description,
+        intentText,
+        enemyName: enemy.name,
+        enemyPersonality: enemy.personality,
+        situation: introLog.join(" "),
+        threat: assessment,
+        recentScene: introScene,
+        memorySummary: character.memorySummary ?? undefined,
+      },
+      introLog,
+      { characterId: character.id }
+    );
+    introLog.splice(0, introLog.length, ...introNarrated);
 
     const rewards: StoredRewards = {
       berries: resolution.berries,
@@ -390,7 +428,13 @@ function rollCompanionAssist(character: LoadedCharacter, rng: () => number): str
  * limit) before the engine rolls. The roll itself, and who wins, is still
  * 100% the engine's call — the AI never decides a fight's outcome directly.
  */
-export async function engageCharacter(characterId: string, userId: string, intentText?: string, tacticModifier = 0): Promise<ActionResult> {
+export async function engageCharacter(
+  characterId: string,
+  userId: string,
+  intentText?: string,
+  tacticModifier = 0,
+  opts: { technique?: TechniqueId; openingStrike?: boolean } = {}
+): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
   const pending = character.pendingEncounter;
   if (!pending) throw new GameActionError("No tienes ningún enfrentamiento pendiente.");
@@ -404,19 +448,14 @@ export async function engageCharacter(characterId: string, userId: string, inten
   const log: string[] = [];
   const newsLog: string[] = [];
 
-  let playerCombatant = toCombatant(character);
+  // Technique (haki/fruit), tactic and fatigue are folded into one Combatant
+  // by the engine layer — the classifier only proposed them, code decided.
+  const prepared = prepareFighter(character, opts.technique ?? "none", tacticModifier);
+  let playerCombatant = prepared.combatant;
   const assistName = pending.phase === "threat" && enemy.isBoss ? rollCompanionAssist(character, rng) : null;
   if (assistName) {
     playerCombatant = { ...playerCombatant, atk: Math.round(playerCombatant.atk * 1.15) };
     log.push(`${assistName} se lanza a tu lado para ayudarte contra ${enemy.name}.`);
-  }
-
-  if (tacticModifier !== 0) {
-    playerCombatant = {
-      ...playerCombatant,
-      atk: playerCombatant.atk + tacticModifier,
-      def: playerCombatant.def + Math.round(tacticModifier / 2),
-    };
   }
 
   const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
@@ -462,6 +501,12 @@ export async function engageCharacter(characterId: string, userId: string, inten
       intentText,
       recentMemory: scene,
       memorySummary: character.memorySummary ?? undefined,
+      openingStrike: opts.openingStrike,
+      technique:
+        opts.technique && opts.technique !== "none"
+          ? { label: TECHNIQUE_LABELS[opts.technique], downgradedReason: prepared.effect.downgraded ? prepared.effect.downgradeReason : undefined }
+          : undefined,
+      fatigue: prepared.fatigue !== "fresh" ? FATIGUE_LABELS[prepared.fatigue] : undefined,
       grudgeContext: grudgeContext
         ? `${enemy.name} ya se enfrentó a este personaje antes y no lo olvida: ${grudgeContext.text}.` +
           (grudgeContext.critical ? " La situación se ha vuelto crítica para ellos — podrían amenazar con pedir refuerzos." : "")
@@ -473,7 +518,30 @@ export async function engageCharacter(characterId: string, userId: string, inten
 
   if (concluded && victor === "player") {
     log.push(`¡${enemy.name} queda derrotado y a tu merced!`);
-    await prisma.character.update({ where: { id: character.id }, data: { hp: Math.max(1, playerHpAfter) } });
+    const progress = combatProgressData(character, prepared, rng);
+    const growth: Record<string, unknown> = {};
+    const mastery = progress.fruitMastery ?? character.fruitMastery;
+    if (progress.fruitMastery !== undefined && fruitPhase(character.fruitMastery, false) !== fruitPhase(mastery, false)) {
+      log.push(`Sientes que dominas mejor tu fruta: entras en la ${FRUIT_PHASE_LABELS[fruitPhase(mastery, false)]}.`);
+    }
+    const hpRatio = playerHpAfter / character.maxHp;
+    // A fight that pushed you to the edge is the breaking point both an
+    // Awakening and (rarely) Conqueror's Haki wait for.
+    if (character.devilFruitId && canAwaken(mastery, character.fruitAwakened, { enemyIsBoss: enemy.isBoss, playerHpRatio: hpRatio })) {
+      growth.fruitAwakened = true;
+      log.push("En el límite de tus fuerzas, algo se rompe y despierta: tu fruta alcanza el Despertar.");
+      const headline = `${character.name} logra el Despertar de su Akuma no Mi`;
+      await postNews(headline, `Quienes presenciaron el combate aseguran que el poder de ${character.name} cambió por completo en mitad de la pelea.`, "Frutas", character.id, "major");
+      newsLog.push(headline);
+    }
+    if (!character.conquerorsHaki && (enemy.isBoss || hpRatio <= 0.25) && rollConquerorsHakiAwakening(rng, character.willpower)) {
+      growth.conquerorsHaki = true;
+      log.push("Un estremecimiento recorre el lugar: has despertado el Haki del Rey.");
+      const headline = `${character.name} despierta el Haki del Rey`;
+      await postNews(headline, `Los presentes juran haber sentido una presión aplastante emanar de ${character.name}.`, "Frutas", character.id, "major");
+      newsLog.push(headline);
+    }
+    await prisma.character.update({ where: { id: character.id }, data: { hp: Math.max(1, playerHpAfter), ...progress, ...growth } });
     // Keep the pending encounter around, now representing "awaiting mercy choice".
     await prisma.pendingEncounter.update({ where: { characterId: character.id }, data: { phase: "victory", enemyHp: Math.max(0, enemyHpAfter), roundNumber } });
     await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
@@ -490,7 +558,7 @@ export async function engageCharacter(characterId: string, userId: string, inten
     const deathCheck = await handleDeathCheck(character, playerHpAfter, `Cayó en combate contra ${enemy.name}.`, newsLog);
     await prisma.pendingEncounter.delete({ where: { characterId: character.id } });
     if (!deathCheck.died) {
-      await prisma.character.update({ where: { id: character.id }, data: { hp: deathCheck.finalHp } });
+      await prisma.character.update({ where: { id: character.id }, data: { hp: deathCheck.finalHp, ...combatProgressData(character, prepared, rng) } });
     }
     await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
     if (!deathCheck.died) {
@@ -512,7 +580,7 @@ export async function engageCharacter(characterId: string, userId: string, inten
   }
 
   // Neither side down yet — persist the round state and wait for the player's next move.
-  await prisma.character.update({ where: { id: character.id }, data: { hp: Math.max(0, playerHpAfter) } });
+  await prisma.character.update({ where: { id: character.id }, data: { hp: Math.max(0, playerHpAfter), ...combatProgressData(character, prepared, rng) } });
   await prisma.pendingEncounter.update({
     where: { characterId: character.id },
     data: { phase: "fighting", enemyHp: Math.max(0, enemyHpAfter), roundNumber },
@@ -523,6 +591,52 @@ export async function engageCharacter(characterId: string, userId: string, inten
     hpDelta: playerHpAfter - character.hp,
     pendingCombat: { enemyName: enemy.name, assessment: pending.assessment as ThreatAssessment, isBoss: enemy.isBoss },
   };
+}
+
+function cleanTargetName(target?: string): string {
+  const t = (target ?? "").trim().replace(/^["'“”]+|["'“”.]+$/g, "");
+  if (!t) return "Un rival del lugar";
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+/**
+ * The player went for someone in the scene (a bar patron, a guard). Whoever
+ * they named becomes a real enemy sized from the player's own numbers (see
+ * engine/scene-enemy.ts) and the player's own move is resolved as round 1 of
+ * the fight — narrated as a direct answer to what they wrote, not a random
+ * template that has nothing to do with it. The classifier only picked who and
+ * how tough; hit or miss is the engine's roll.
+ */
+export async function attackCharacter(
+  characterId: string,
+  userId: string,
+  freeText: string,
+  opts: { target?: string; tier?: EnemyTier; technique?: TechniqueId; tacticModifier?: number } = {}
+): Promise<ActionResult> {
+  const character = await loadCharacterOrThrow(characterId, userId);
+  if (character.pendingEncounter) throw new GameActionError("Ya estás en medio de un enfrentamiento.");
+
+  const tier = opts.tier ?? "average";
+  const name = cleanTargetName(opts.target);
+  const playerBase = toCombatant(character);
+  const built = buildSceneEnemy(name, { ...playerBase, hp: character.maxHp, maxHp: character.maxHp }, tier);
+  const enemy: StoredEnemy = { name, hp: built.maxHp, atk: built.atk, def: built.def, spd: built.spd, isBoss: tier === "elite" };
+  const assessment = assessThreat(playerBase, built);
+
+  await prisma.pendingEncounter.create({
+    data: {
+      characterId: character.id,
+      enemyJson: JSON.stringify(enemy),
+      rewardsJson: JSON.stringify({ berries: 0, xp: tierXp(tier), bounty: 0, islandDanger: character.currentIsland.dangerLevel } satisfies StoredRewards),
+      narrative: `${character.name} ataca a ${name}.`,
+      assessment,
+      phase: "fighting",
+      enemyHp: enemy.hp,
+      roundNumber: 0,
+    },
+  });
+
+  return engageCharacter(characterId, userId, freeText, opts.tacticModifier ?? 0, { technique: opts.technique, openingStrike: true });
 }
 
 export async function fleeCharacter(characterId: string, userId: string): Promise<ActionResult> {
@@ -705,9 +819,10 @@ export async function resolveMercyChoice(characterId: string, userId: string, sp
   return { log, berriesDelta, xpDelta, bountyDelta, hpDelta: 0, leveledUp, newLevel, died: false, newsPosted: newsLog, poneglyphGained };
 }
 
-export async function trainCharacter(characterId: string, userId: string): Promise<ActionResult> {
+export async function trainCharacter(characterId: string, userId: string, focus: "armament" | "observation" | "fruit" | "auto" = "auto"): Promise<ActionResult> {
   await tickWorldIfDue();
   const character = await loadCharacterOrThrow(characterId, userId);
+  if (character.pendingEncounter) throw new GameActionError("No puedes entrenar con un enfrentamiento sin resolver.");
 
   if (character.lastTrainedAt) {
     const readyAt = character.lastTrainedAt.getTime() + TRAINING_COOLDOWN_MS;
@@ -718,28 +833,58 @@ export async function trainCharacter(characterId: string, userId: string): Promi
     }
   }
 
-  const rng = liveRng();
-
-  const trainArmament = character.armamentHaki <= character.observationHaki;
-  const result = trainHaki(rng, trainArmament ? character.armamentHaki : character.observationHaki, character.willpower);
-
-  const log: string[] = [];
-  if (result.gained === 0) {
-    log.push("Entrenas duro, pero hoy no notas ningún avance real.");
-  } else if (result.breakthrough) {
-    log.push(`¡Un gran avance! Tu dominio de ${trainArmament ? "Haki de Armadura" : "Haki de Observación"} crece notablemente (+${result.gained}).`);
-  } else {
-    log.push(`Terminas la sesión con tu ${trainArmament ? "Haki de Armadura" : "Haki de Observación"} un poco más afilado (+${result.gained}).`);
+  const staminaNow = currentStamina(character);
+  if (staminaNow < TRAIN_STAMINA_COST) {
+    throw new GameActionError("Estás demasiado agotado para entrenar en serio. Descansa primero.");
   }
 
-  await prisma.character.update({
-    where: { id: character.id },
-    data: {
-      ...(trainArmament ? { armamentHaki: character.armamentHaki + result.gained } : { observationHaki: character.observationHaki + result.gained }),
-      lastTrainedAt: new Date(),
-    },
-  });
+  const rng = liveRng();
+  const hasFruit = !!character.devilFruitId;
+  // "auto" trains whatever is furthest behind, so a fruit user's mastery
+  // isn't neglected in favour of haki (and vice versa).
+  let chosen: "armament" | "observation" | "fruit";
+  if (focus === "fruit" && !hasFruit) {
+    chosen = character.armamentHaki <= character.observationHaki ? "armament" : "observation";
+  } else if (focus !== "auto") {
+    chosen = focus;
+  } else if (hasFruit && character.fruitMastery < Math.min(character.armamentHaki, character.observationHaki)) {
+    chosen = "fruit";
+  } else {
+    chosen = character.armamentHaki <= character.observationHaki ? "armament" : "observation";
+  }
 
+  const log: string[] = [];
+  const data: { armamentHaki?: number; observationHaki?: number; fruitMastery?: number; lastTrainedAt: Date; stamina: number; staminaUpdatedAt: Date } = {
+    lastTrainedAt: new Date(),
+    stamina: spendStamina(staminaNow, TRAIN_STAMINA_COST),
+    staminaUpdatedAt: new Date(),
+  };
+
+  if (chosen === "fruit") {
+    const result = trainFruitMastery(rng, character.fruitMastery, character.intellect);
+    if (result.gained === 0) {
+      log.push(character.fruitMastery >= 100 ? "Tu dominio de la fruta ya no puede crecer con simple práctica: solo un momento límite lo llevará más allá." : "Practicas con tu fruta hasta el agotamiento, pero hoy no notas ningún avance real.");
+    } else {
+      const before = fruitPhase(character.fruitMastery, character.fruitAwakened);
+      data.fruitMastery = character.fruitMastery + result.gained;
+      const after = fruitPhase(data.fruitMastery, character.fruitAwakened);
+      log.push(result.breakthrough ? `¡Un gran avance! Comprendes tu fruta como nunca (+${result.gained} de dominio).` : `Afinas el control de tu fruta (+${result.gained} de dominio).`);
+      if (before !== after) log.push(`Tu dominio entra en la ${FRUIT_PHASE_LABELS[after]}: nuevas variantes y menos desgaste.`);
+    }
+  } else {
+    const level = chosen === "armament" ? character.armamentHaki : character.observationHaki;
+    const label = chosen === "armament" ? "Haki de Armadura" : "Haki de Observación";
+    const result = trainHaki(rng, level, character.willpower);
+    if (result.gained === 0) {
+      log.push("Entrenas duro, pero hoy no notas ningún avance real.");
+    } else {
+      if (chosen === "armament") data.armamentHaki = level + result.gained;
+      else data.observationHaki = level + result.gained;
+      log.push(result.breakthrough ? `¡Un gran avance! Tu dominio de ${label} crece notablemente (+${result.gained}).` : `Terminas la sesión con tu ${label} un poco más afilado (+${result.gained}).`);
+    }
+  }
+
+  await prisma.character.update({ where: { id: character.id }, data });
   await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "training", text: log.join(" ") } });
 
   return emptyResult(log, character.level);
@@ -752,6 +897,7 @@ export async function travelCharacter(
 ): Promise<{ log: string[]; arcIntro?: { islandName: string; hook: string } }> {
   const character = await loadCharacterOrThrow(characterId, userId);
   if (character.pendingEncounter) throw new GameActionError("No puedes zarpar con un enfrentamiento sin resolver.");
+  if (await getOpenDuelFor(character.id)) throw new GameActionError("No puedes zarpar en mitad de un duelo.");
   const connections = JSON.parse(character.currentIsland.connections) as string[];
   if (!connections.includes(targetIslandId)) {
     throw new GameActionError("Esa isla no es alcanzable directamente desde tu posición actual.");
@@ -779,8 +925,11 @@ export async function restCharacter(characterId: string, userId: string): Promis
   const character = await loadCharacterOrThrow(characterId, userId);
   if (character.pendingEncounter) throw new GameActionError("No puedes descansar con un enfrentamiento sin resolver.");
   const healed = Math.min(character.maxHp, character.hp + Math.round(character.maxHp * 0.4));
-  await prisma.character.update({ where: { id: character.id }, data: { hp: healed } });
-  const log = ["Descansas y recuperas fuerzas antes de tu próxima aventura."];
+  await prisma.character.update({
+    where: { id: character.id },
+    data: { hp: healed, stamina: restStamina(currentStamina(character), character.maxStamina), staminaUpdatedAt: new Date() },
+  });
+  const log = ["Descansas y recuperas fuerzas y aliento antes de tu próxima aventura."];
   await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "rest", text: log[0] } });
   return { ...emptyResult(log, character.level), hpDelta: healed - character.hp };
 }
@@ -817,6 +966,7 @@ export async function narrateSceneAction(characterId: string, userId: string, fr
 
 const FREE_TEXT_ACTION_LABELS: Record<ActionId, string> = {
   narrate: "",
+  attack: "Atacar",
   explore: "Explorar",
   train: "Entrenar",
   rest: "Descansar",
@@ -884,8 +1034,9 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
   const begin = await beginPartyTurn(character.id);
   if (!begin.ok) throw new GameActionError(begin.reason);
 
-  const validActions: ActionId[] = ["narrate", "explore", "train", "rest", "leave_party"];
-  const { action } = await classifyPlayerAction(freeText, validActions);
+  const validActions: ActionId[] = ["narrate", "explore", "attack", "train", "rest", "leave_party"];
+  const partyClassified = await classifyPlayerAction(freeText, validActions, { sceneContext: begin.recentLines.slice(-2).join(" ").slice(-700) });
+  const { action } = partyClassified;
 
   if (action === "unclear") {
     await releasePartyTurnLock(begin.partyId);
@@ -933,8 +1084,17 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
         ? `${character.name} se topa con problemas mientras exploraba por su cuenta — ¡combate!`
         : `${character.name} explora por su cuenta y vuelve con algo que contar.`;
       break;
+    case "attack":
+      result = await attackCharacter(character.id, character.userId, freeText, {
+        target: partyClassified.target,
+        tier: partyClassified.targetTier,
+        technique: partyClassified.technique,
+        tacticModifier: partyClassified.tacticModifier,
+      });
+      sharedLine = `${character.name} se lanza a la pelea contra ${partyClassified.target ?? "alguien de la escena"}: ${result.log.join(" ").slice(0, 600)}`;
+      break;
     case "train":
-      result = await trainCharacter(character.id, character.userId);
+      result = await trainCharacter(character.id, character.userId, partyClassified.trainFocus);
       sharedLine = `${character.name} se aparta un momento a entrenar.`;
       break;
     case "rest":
@@ -958,8 +1118,21 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
   return { ...result, log: finalLog };
 }
 
+/** The narrator's most recent message — lets the classifier work out who "el primero que se me acerque" refers to. */
+async function lastNarratorLine(characterId: string): Promise<string | undefined> {
+  const last = await prisma.sceneMessage.findFirst({ where: { characterId, role: "narrator" }, orderBy: { createdAt: "desc" } });
+  return last?.text.slice(-700);
+}
+
 export async function resolveFreeTextAction(characterId: string, userId: string, freeText: string): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
+
+  // A live duel takes over the input: your text IS your move for the round.
+  const openDuel = await getOpenDuelFor(character.id);
+  if (openDuel?.status === "ACTIVE") {
+    const outcome = await submitDuelAction(character.id, userId, freeText);
+    return emptyResult(outcome.log, character.level);
+  }
 
   if (character.partyId && !character.isSeparatedFromParty && !character.pendingEncounter) {
     return resolvePartyFreeTextAction(character, freeText);
@@ -969,9 +1142,10 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
     ? character.pendingEncounter.phase === "victory"
       ? ["mercy_spare", "mercy_finish"]
       : ["engage", "flee"] // both "threat" (first commit) and "fighting" (ongoing exchanges) share this set
-    : ["narrate", "explore", "train", "rest"];
+    : ["narrate", "explore", "attack", "train", "rest"];
 
-  const { action, tacticModifier } = await classifyPlayerAction(freeText, validActions);
+  const classified = await classifyPlayerAction(freeText, validActions, { sceneContext: await lastNarratorLine(character.id) });
+  const { action, tacticModifier } = classified;
   if (action === "unclear") {
     throw new GameActionError("No logro entender qué quieres hacer. Prueba a describirlo de otra forma, o usa los botones de abajo.");
   }
@@ -984,14 +1158,22 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
     case "explore":
       result = await exploreCharacter(characterId, userId, freeText);
       break;
+    case "attack":
+      result = await attackCharacter(characterId, userId, freeText, {
+        target: classified.target,
+        tier: classified.targetTier,
+        technique: classified.technique,
+        tacticModifier,
+      });
+      break;
     case "train":
-      result = await trainCharacter(characterId, userId);
+      result = await trainCharacter(characterId, userId, classified.trainFocus);
       break;
     case "rest":
       result = await restCharacter(characterId, userId);
       break;
     case "engage":
-      result = await engageCharacter(characterId, userId, freeText, tacticModifier);
+      result = await engageCharacter(characterId, userId, freeText, tacticModifier, { technique: classified.technique });
       break;
     case "flee":
       result = await fleeCharacter(characterId, userId);
@@ -1026,8 +1208,12 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
   // (see the branch above) — their own combat always resolves immediately,
   // never gated by party turn order, but once it's no longer "still
   // fighting" the group should see the headline.
-  if (character.partyId && !result.pendingCombat) {
-    await echoToParty(character.partyId, summarizeCombatForParty(action, character.name, result));
+  if (character.partyId) {
+    // Crewmates should be able to read a fight as it happens, not just its verdict.
+    const line = result.pendingCombat
+      ? `${character.name} sigue en combate: ${result.log.join(" ").slice(0, 500)}`
+      : summarizeCombatForParty(action, character.name, result);
+    await echoToParty(character.partyId, line);
   }
 
   return { ...result, log: finalLog };

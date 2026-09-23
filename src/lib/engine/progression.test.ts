@@ -62,6 +62,9 @@ describe("factionTitle", () => {
     expect(factionTitle("MARINE", 999_999_999, 50)).toBe("Marine Raso"); // bounty ignored for marines
     expect(factionTitle("REVOLUTIONARY", 0, 150)).toBe("Agente de campo");
     expect(factionTitle("BOUNTY_HUNTER", 0, 350)).toBe("Verdugo independiente");
+    expect(factionTitle("CP0", 999_999_999, 280)).toBe("Agente CP8"); // bounty ignored for Cipher Pol
+    expect(factionTitle("CP0", 0, 0)).toBe("Aspirante");
+    expect(factionTitle("CP0", 0, 50_000)).toBe("Gorosei"); // caps at the top tier
   });
 });
 

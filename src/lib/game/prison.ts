@@ -2,7 +2,7 @@ import { prisma } from "../db";
 import { liveRng } from "../engine/rng";
 import { attemptPrisonRescue, rescueSucceeded } from "../engine/rescue";
 import { combatPower } from "../engine/encounter";
-import { computeBailBerries } from "../engine/economy";
+import { computeBailBerries, isBailAllowed } from "../engine/economy";
 import { toCombatant } from "./derive";
 import { postNews } from "./death-resolution";
 import { CharacterStatus } from "@prisma/client";
@@ -18,12 +18,16 @@ export async function captureCharacter(
     currentIsland: { name: string; dangerLevel: number };
     level: number;
     devilFruitId?: string | null;
+    faction?: string;
+    bounty?: number;
+    notoriety?: number;
   },
   capturedByPower: number,
   reason: string,
   newsLog: string[]
 ) {
   const hasDevilFruit = !!character.devilFruitId;
+  const bailAllowed = isBailAllowed({ faction: character.faction ?? "", bounty: character.bounty ?? 0, notoriety: character.notoriety ?? 0 });
   await prisma.character.update({
     where: { id: character.id },
     data: { status: CharacterStatus.IMPRISONED, hp: Math.max(1, Math.round(character.maxHp * 0.15)) },
@@ -34,14 +38,16 @@ export async function captureCharacter(
       islandId: character.currentIslandId,
       reason,
       minRescueLevel: Math.round(capturedByPower),
-      bailBerries: computeBailBerries(character.currentIsland.dangerLevel, character.level, hasDevilFruit),
+      bailBerries: isBailAllowed({ faction: character.faction ?? "", bounty: character.bounty ?? 0, notoriety: character.notoriety ?? 0 })
+        ? computeBailBerries(character.currentIsland.dangerLevel, character.level, hasDevilFruit)
+        : null,
     },
   });
   const headline = `${character.name} ha sido capturado en ${character.currentIsland.name}`;
   const kairosekiNote = hasDevilFruit ? " Le colocan grilletes de Kairoseki: su fruta no le servirá de nada mientras siga preso." : "";
   await postNews(
     headline,
-    `${reason} Ahora espera tras las rejas: alguien deberá pagar su fianza o venir a rescatarlo.${kairosekiNote}`,
+    `${reason} ${bailAllowed ? "Ahora espera tras las rejas: alguien deberá pagar su fianza o venir a rescatarlo." : "Es demasiado peligroso para admitir fianza: solo un rescate o una fuga lo sacará de allí."}${kairosekiNote}`,
     "Gobierno Mundial",
     character.id,
     "major"

@@ -40,6 +40,11 @@ FACCIÓN (define tu punto de partida y tu camino de reputación):
     dentro. Empiezas en Isla Baltigo.
   - CAZARRECOMPENSAS — nadie es tu enemigo por ideología, solo por
     precio. Empiezas en Isla Gecko.
+  - CP-0 (GOBIERNO MUNDIAL) — las manos invisibles de los Nobles
+    Mundiales: espionaje, censura y operaciones negras. Subes de CP10 a
+    CP0 sin que nadie sepa tu nombre (tus ascensos no salen en las
+    noticias). Al vencer capturas en vez de matar, como la Marina.
+    Empiezas en Loguetown.
 
 ARQUETIPO (define tus estadísticas base y tu arma inicial):
   - Espadachín — ágil y letal, empieza con una espada de acero.
@@ -325,6 +330,55 @@ pero mientras esté alto, cada paso que das es más peligroso.
 Reunir los 4 Poneglifos, llegar a Laugh Tale, y lo que eso desate contra
 el Gobierno Mundial — eso es el horizonte final del juego. Nadie lo va a
 lograr en solitario.
+
+-----------------------------------------------------------
+11B. CÓMO SE ROLEA (LEE ESTO)
+-----------------------------------------------------------
+
+ESCRIBIR. Enter = salto de línea (NO envía; en el móvil te deja separar lo
+que dices de lo que haces). Envías con el botón "Actuar" o con Ctrl+Enter.
+Lo que dices, entre comillas; lo que haces, aparte. Caben mensajes largos.
+
+INTENCIÓN, NO RESULTADO (Mano Negra). Lo que escribes es lo que INTENTAS:
+"intento cortarle el pecho con un tajo horizontal", nunca "le corto el
+pecho". El motor tira los dados y decide si conecta, se bloquea o falla. El
+narrador nunca da por hecho un golpe tuyo ni te hace sentir, decir o pensar
+lo que no escribiste. Los enemigos tampoco imponen: su ataque también es un
+intento con resultado decidido por el motor.
+
+SENTIDO COMÚN (Mano Blanca). El narrador no se aprovecha de lo que no
+especificaste: se asume que estás despierto, alerta, con los ojos abiertos
+y tu equipo encima. Nadie te encuentra "de espaldas" por omisión.
+
+ATACAR A ALGUIEN DE LA ESCENA abre una pelea real contra ESA persona (el del
+bar, un guardia...). Tu movimiento es la primera ronda; el narrador responde a
+lo que hiciste y luego actúa el enemigo por iniciativa propia. Después
+sigues describiendo tu siguiente movimiento, ronda a ronda. Si solo insultas
+o amenazas de palabra, sigue siendo rol.
+
+ESTAMINA Y FATIGA. Cada ronda gasta estamina; una técnica de Haki o de
+fruta gasta más. Por debajo del 25% estás fatigado (peor ataque y defensa);
+a 0, exhausto. Descansar la recupera, y también vuelve sola, despacio.
+Exhausto no puedes explorar. Sin aliento, la técnica que querías no sale.
+
+HAKI EN COMBATE. Descríbelo ("endurezco mi hoja con Haki de Armadura", "leo
+sus movimientos"): da un bono real según lo entrenado, cuesta estamina, y
+usarlo bajo presión lo hace crecer. Sin ese poder, se queda en un golpe normal.
+
+EVOLUCIÓN DE LA FRUTA. Tres fases: INICIAL (60% de poder, técnicas caras),
+AVANZADA (dominio 35+: poder completo, menos desgaste) y DESPERTAR (dominio
+100 + ganar un combate al límite: contra un jefe, o con menos del 25% de
+vida). Subes el dominio usándola en combate o entrenando con ella.
+
+DUELOS 1 CONTRA 1. En "Aventureros en esta isla" pulsa "Retar a duelo". Cada
+ronda ambos describís vuestro movimiento; cuando los dos habéis movido, el
+motor lo resuelve a la vez y el narrador cuenta el resultado. No es a
+muerte: usa una copia de tu vida y no te deja heridas. Puedes rendirte
+escribiéndolo.
+
+FIANZA. Solo para peces pequeños. Un pirata con recompensa de 10.000.000 o
+más, o un revolucionario de peso, no puede comprar su libertad; en Impel Down
+nadie puede. Solo un rescate o una fuga.
 
 -----------------------------------------------------------
 12. UNA COSA MÁS

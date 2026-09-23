@@ -60,6 +60,22 @@ const BOUNTY_HUNTER_TIERS: Tier[] = [
   { threshold: 2_400, title: "Azote de los mares" },
 ];
 
+export const CP0_TIERS: Tier[] = [
+  { threshold: 0, title: "Aspirante" },
+  { threshold: 40, title: "Agente CP10" },
+  { threshold: 120, title: "Agente CP9" },
+  { threshold: 280, title: "Agente CP8" },
+  { threshold: 550, title: "Agente CP7" },
+  { threshold: 950, title: "Agente CP5" },
+  { threshold: 1_500, title: "Agente CP3" },
+  { threshold: 2_300, title: "Agente CP1" },
+  { threshold: 3_500, title: "Agente CP0" },
+  { threshold: 6_000, title: "Caballero Divino" },
+  { threshold: 12_000, title: "Gorosei" },
+];
+
+export type FactionKey = "PIRATE" | "MARINE" | "REVOLUTIONARY" | "BOUNTY_HUNTER" | "CP0";
+
 function tierFor(value: number, tiers: Tier[]): Tier {
   let current = tiers[0];
   for (const tier of tiers) {
@@ -85,8 +101,12 @@ export function bountyHunterTitle(notoriety: number): string {
   return tierFor(notoriety, BOUNTY_HUNTER_TIERS).title;
 }
 
+export function cp0Title(notoriety: number): string {
+  return tierFor(notoriety, CP0_TIERS).title;
+}
+
 export function factionTitle(
-  faction: "PIRATE" | "MARINE" | "REVOLUTIONARY" | "BOUNTY_HUNTER",
+  faction: FactionKey,
   bounty: number,
   notoriety: number
 ): string {
@@ -99,6 +119,8 @@ export function factionTitle(
       return revolutionaryTitle(notoriety);
     case "BOUNTY_HUNTER":
       return bountyHunterTitle(notoriety);
+    case "CP0":
+      return cp0Title(notoriety);
   }
 }
 

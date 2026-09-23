@@ -28,6 +28,7 @@ enum Faction {
   MARINE
   REVOLUTIONARY
   BOUNTY_HUNTER
+  CP0
 }
 
 enum CharacterStatus {
@@ -97,6 +98,18 @@ model Character {
   islandsVisited String @default("[]") // JSON string array of Island ids — gates the once-per-island arc-hook intro
 
   lastTrainedAt DateTime? // null = never trained under this rule yet, so always eligible
+
+  // Stamina (see engine/stamina.ts): spent by techniques, regenerated lazily
+  // from staminaUpdatedAt on read — null reads as "fully rested since now".
+  stamina          Int       @default(100)
+  maxStamina       Int       @default(100)
+  staminaUpdatedAt DateTime?
+
+  // Devil fruit progression (see engine/fruit-mastery.ts): 0-100 mastery,
+  // plus an explicit awakening flag that needs a breaking-point event, not
+  // just a number — replaces the old "awakened at level 40" proxy.
+  fruitMastery  Int     @default(0)
+  fruitAwakened Boolean @default(false)
 
   // Multiplayer party presence — see Party below. null = not currently
   // sharing a live scene with crewmates. isSeparatedFromParty is an
@@ -267,6 +280,54 @@ model PendingEncounter {
   enemyHp     Int? // live remaining HP once fighting has started; null before the first exchange
   roundNumber Int       @default(0) // how many exchanges have happened so far, for the same MAX_ROUNDS cutoff runCombat used
   createdAt   DateTime  @default(now())
+}
+
+// ---------- 1-vs-1 player duels ----------
+
+// Both fighters submit a move each round; the engine resolves both at once
+// and the AI only narrates the result. Non-lethal by design: duel HP is a
+// copy of maxHp, Character.hp is never touched, and the loser is simply
+// "knocked out" — no permadeath. characterId columns are plain strings, not
+// FKs (same convention as Crew.captainId / Grudge).
+enum DuelStatus {
+  PROPOSED
+  ACTIVE
+  FINISHED
+  DECLINED
+  CANCELLED
+}
+
+model Duel {
+  id                  String        @id @default(cuid())
+  islandId            String
+  challengerId        String
+  opponentId          String
+  status              DuelStatus    @default(PROPOSED)
+  round               Int           @default(0)
+  challengerHp        Int
+  opponentHp          Int
+  challengerMaxHp     Int
+  opponentMaxHp       Int
+  challengerAction    String?
+  challengerTactic    Int           @default(0)
+  challengerTechnique String        @default("none")
+  opponentAction      String?
+  opponentTactic      Int           @default(0)
+  opponentTechnique   String        @default("none")
+  winnerId            String?
+  createdAt           DateTime      @default(now())
+  updatedAt           DateTime      @updatedAt
+  messages            DuelMessage[]
+}
+
+model DuelMessage {
+  id                String   @id @default(cuid())
+  duelId            String
+  duel              Duel     @relation(fields: [duelId], references: [id], onDelete: Cascade)
+  authorCharacterId String? // null = the narrator
+  authorName        String
+  text              String
+  createdAt         DateTime @default(now())
 }
 
 // ---------- Capture & rescue ----------
