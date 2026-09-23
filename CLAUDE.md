@@ -342,6 +342,28 @@ start command `npm run start`, plan `free`, region `oregon`.
    appear — this is graceful degradation of a shared external capacity
    constraint, not a guarantee. Revisit if the paid fallback itself starts
    firing often enough to matter cost-wise (unlikely at current usage).
+   **Follow-up found the same day, 34 minutes after that fix went live**:
+   a real request hit 4-of-5 models failing in a row (three timeouts, one
+   429) — caught live by re-checking `ErrorLog` right after deploying,
+   not assumed fixed just because the deploy succeeded. The bug wasn't
+   the model list itself; it was that `callOpenRouter` gave *every*
+   attempt its own full fresh `timeoutMs` regardless of how many earlier
+   ones had already burned theirs — a run of slow/hanging models could
+   make the player wait `models.length * timeoutMs` (up to ~50s for the
+   5-model list) before ever seeing the fallback line. Fixed by giving
+   the whole fallback loop one overall wall-clock budget (2x the
+   per-model timeout) instead: each attempt gets whatever's left, and one
+   with under a second left is skipped outright rather than fired with a
+   doomed near-zero timeout. Caps the worst case at ~20s instead of ~50s.
+   New `openrouter-client.test.ts` (4 tests, mocks `fetch` directly —
+   first file in `ai/` to do this) covers the fallthrough-on-failure
+   behavior and, with a simulated hang, asserts the budget actually cuts
+   the loop short instead of trying all 5 models to completion.
+   `check-errors.ts` gained an optional `[count]` arg and stopped
+   truncating the message to 250 chars — that truncation is exactly what
+   hid this bug's real shape (`openai/gpt-4o-mini: This operation was
+   aborted`) on the first read. 223 tests total, `tsc --noEmit` clean,
+   deployed and confirmed live the same way as every other change here.
 
 ### The endgame — explicitly discussed, NOT designed or built yet
 
