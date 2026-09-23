@@ -5,22 +5,26 @@
  *
  * `openrouter/free` goes first: it's OpenRouter's own router that picks a
  * free model at random from whatever's currently available, so it already
- * does most of the fallback work for us. The rest are named backups in
- * case the router itself is unavailable.
+ * does most of the fallback work for us at zero cost.
  *
- * `openai/gpt-4o-mini` is last on purpose: it's a paid model (fractions of
- * a cent per narration call), only ever reached if all 4 free models fail
- * at once — found live (2026-09-23) that free-tier `:free` models share
- * OpenRouter-wide capacity and do occasionally 429/timeout together even
- * with a paid account well under its daily quota. This turns that rare
- * event into a slightly-paid response instead of the dry static fallback.
+ * `openai/gpt-4o-mini` goes SECOND, not last — it used to be last, on the
+ * reasoning that a paid model should only be reached as a rare last resort.
+ * Found live (2026-09-23) why that backfired once `callOpenRouter` gained
+ * an overall time budget for the whole fallback chain (instead of a full
+ * fresh timeout per model): with 3 free named models still ahead of it,
+ * a bad stretch where those are all slow/overloaded can burn the *entire*
+ * budget before gpt-4o-mini is even attempted — logged as "skipped,
+ * narration time budget exhausted" even though the account has ample paid
+ * credit sitting unused. Putting it 2nd means it's one of only two attempts
+ * that reliably get a real timeout slice; the 3 free named models stay as
+ * extra (free) tries afterward if it also somehow fails.
  */
 const DEFAULT_MODELS = [
   "openrouter/free",
+  "openai/gpt-4o-mini",
   "google/gemma-4-31b-it:free",
   "qwen/qwen3.8-27b:free",
   "nvidia/nemotron-3-super-120b-a12b:free",
-  "openai/gpt-4o-mini",
 ];
 
 export const OPENROUTER_MODELS: string[] = (() => {
