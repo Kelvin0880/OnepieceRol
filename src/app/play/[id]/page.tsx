@@ -809,8 +809,8 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
             <div className="panel p-4" style={{ borderColor: "var(--gold)" }} data-testid="missions-panel">
               <h3 className="font-display text-lg text-gold-bright">Panorama y misiones de {missions.islandName}</h3>
               {missions.briefing && (
-                <details className="mt-2" open={missions.briefing.ready}>
-                  <summary className="text-sm text-gold cursor-pointer">Lo que debes saber de esta isla</summary>
+                <details className="mt-2">
+                  <summary className="text-sm text-gold cursor-pointer">Lo que debes saber de esta isla (toca para leer)</summary>
                   <p className="text-sm mt-2 whitespace-pre-line" data-testid="island-briefing">
                     {missions.briefing.ready ? missions.briefing.text : "El narrador está reuniendo el panorama de la isla..."}
                   </p>
