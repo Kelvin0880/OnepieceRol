@@ -409,7 +409,7 @@ start command `npm run start`, plan `free`, region `oregon`.
    224 tests total, `tsc --noEmit` clean, deployed and confirmed live.
    This is the actual structural fix; the previous two entries were real
    but incomplete steps toward it.
-7. **Silent auto-compaction of scene/AI context** (flagged by the user
+7. **DONE 2026-09-23 (see "Second pass" above).** ~~Silent auto-compaction of scene/AI context~~ (flagged by the user
    2026-09-23, explicitly deferred — "esto lo harás después"). Right now
    `getRecentScene`/`memorySummary` bound context by a fixed recent-message
    count (see `narrate.ts`), not by actually summarizing older history —
@@ -421,7 +421,7 @@ start command `npm run start`, plan `free`, region `oregon`.
    AI-driven compaction on combat/mercy beats) rather than a new system —
    probably needs it to also fire for long pure-`narrate` scene stretches,
    which today never touch `memorySummary` at all.
-8. **Travel needs real limitations, not unlimited free hops.** Flagged by
+8. **DONE 2026-09-23 (see "Second pass" above).** ~~Travel needs real limitations, not unlimited free hops.~~ Flagged by
    the user in the same message as #7, same "later" status. Today
    `travelCharacter` (`src/lib/game/perform-action.ts`) has zero rate
    limiting — a character can hop island to island as many times as they
@@ -1365,6 +1365,31 @@ is in `Reglasrol.txt` and is injected into every narrator prompt as
   `scripts/party-attack-check.mjs`, plus the older combat/e2e/party smokes.
 - NOT deployed at the time of writing: needs the usual schema push to Neon
   (new `Faction.CP0` enum value, `Character` stamina/fruit columns, `Duel`/`DuelMessage`).
+
+**Second pass, same day: real PvP, Impel Down, silent compaction, travel
+limits, longer scenes** (2026-09-23): the user asked for (1) real to-the-death
+PvP so Marine players can hunt pirate/revolutionary players, (2) much longer
+input and AI output, (3) a truly hard Impel Down, (4) the two previously
+deferred items (roadmap 7 & 8 below are now DONE), and (5) one document with
+absolutely everything: **`APLICACION_COMPLETA.md`** — keep it in sync.
+- **Lethal duels/hunts** (`engine/hostility.ts`, `game/duel.ts`, `Duel.lethal/hostile`,
+  `Character.lastSeenAt`): hostile faction pairs need no consent; the hunted may
+  flee (speed check) instead of accepting; only online (`lastSeenAt` < 3 min),
+  level >= 3 targets; 30-min repeat cooldown; 5-min response window. Loser goes
+  through the SAME `resolveDuelLoss` (death roll / Marine-CP0 capture) as group
+  battles (exported from `group-battle.ts`); in lethal duels "yield" = flee attempt.
+- **Impel Down** is a real island (level 45, only via Enies Lobby). `impelDownCell`
+  (`engine/impel-down.ts`) sends pirate bounty >= 100M / revolutionary or hunter
+  notoriety >= 700 there; `Imprisonment.cellLevel`; no bail; rescue wall
+  `captorPower*(1+0.3*cell)+15*cell`; a plain failed rescue costs 40% HP; freed
+  prisoners are moved to Loguetown. Needs a reseed (new island + adjacency).
+- **Silent compaction** (`game/scene-compaction.ts`): fire-and-forget after each turn,
+  folds messages older than the last 12 into `memorySummary` / `Party.memorySummary`
+  once >= 22 are uncompacted. **Travel** (`engine/travel.ts`): cooldown 6+2*danger min,
+  10 stamina, crew can't sail with a crewmate mid-fight/duel.
+- **Length:** freeText max 6000; narrator max_tokens up to 2500, per-model timeout 30s,
+  `LENGTH_RULE` asks for 5-8 paragraphs when the scene deserves it.
+- Verified with `scripts/hunt-check.ts`, `impel-check.ts`, `compaction-travel-check.ts`.
 
 ## Conventions to keep matching
 

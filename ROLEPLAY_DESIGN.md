@@ -86,7 +86,7 @@ territories, sabotage Celestial Dragon tribute, unify cells; Bounty hunter king
   so CP-0 also captures).
 - DONE: **no bail for the highly wanted** — pirates/hunters with a bounty >= 10M and
   established revolutionaries cannot buy their freedom; Impel Down never allows bail.
-- PLANNED: Impel Down cell level 1-6 derived from bounty/danger.
+- DONE: **Impel Down** as a real island (level 45, via Enies Lobby) with cell level 1-6 from bounty/notoriety, no bail, and a rescue wall that grows with depth (`engine/impel-down.ts`).
 - PLANNED: rescue by crew triggering a large siege / Buster Call / Marineford-
   style war. Individual escape by stealth or inner rebellion.
 
@@ -109,8 +109,9 @@ territories, sabotage Celestial Dragon tribute, unify cells; Bounty hunter king
   Loguetown) where opposing factions can negotiate, spare or fight.
 - PLANNED: crew cannot sail until every member has finished pending
   interactions/fights.
-- PLANNED (user said "later"): silent auto-compaction of scene context; travel
-  cooldown/limits (see CLAUDE.md roadmap 7 & 8).
+- DONE: silent auto-compaction of scene context (`game/scene-compaction.ts`); travel
+  cooldown + crew-busy rule (`engine/travel.ts`).
+- DONE: **real PvP to the death / hunts** — Marines and CP-0 hunt pirates and revolutionaries etc. (`engine/hostility.ts`, lethal `Duel`). Consent-free between enemy factions, with online/novice/repeat protections and an escape attempt for the hunted.
 
 ## 7. Narration style the user expects
 

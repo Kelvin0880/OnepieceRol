@@ -32,12 +32,17 @@ const HARD_RULE =
 
 const STYLE_RULE =
   "Escribe en español, con un tono oscuro de piratas de One Piece, evocador pero directo. " +
-  "Responde solo con la narración en prosa (2-4 frases o un párrafo corto), sin JSON, sin encabezados, sin listas, sin markdown.";
+  "Responde solo con la narración en prosa (2-4 párrafos; más si la escena es interesante), sin JSON, sin encabezados, sin listas, sin markdown.";
+
+const LENGTH_RULE =
+  "EXTENSIÓN: no seas escueto. Cuando la escena sea intensa, emocionante o dé pie a inspirarse (una pelea, un giro, un encuentro importante), extiéndete todo lo que haga falta — " +
+  "de 5 a 8 párrafos si la ocasión lo merece —: ambiente, detalles sensoriales, diálogos de los NPC con voz propia, reacciones del entorno. Deja siempre margen para que el jugador responda.";
 
 const COMBAT_STYLE_RULE =
   "Escribe en español, con un tono oscuro de piratas de One Piece, evocador y con tensión real. " +
   "Narra el combate como una escena EXTENSA y viva (varios párrafos), no como una lista de golpes: movimiento, terreno, respiración, lo que arriesga cada bando. " +
-  "Si el enemigo tiene una personalidad definida, dale una o dos líneas de diálogo breves en su propia voz durante la pelea. " +
+  "Si el enemigo tiene una personalidad definida, dale diálogo en su propia voz durante la pelea. " +
+  LENGTH_RULE + " " +
   "Responde solo con la narración en prosa, sin JSON, sin encabezados, sin listas, sin markdown.";
 
 function memoryBlock(memorySummary?: string, recentMemory?: string[]): string {
@@ -224,13 +229,20 @@ export interface DuelNarrationInput {
   bMax: number;
   finished: boolean;
   winnerName?: string;
+  /** Set when someone slipped away from a fight instead of being beaten — nobody wins, nobody dies. */
+  escapedName?: string;
+  /** A duel to the death (a hunt or an agreed fight to the finish) — real stakes, vs. a friendly bout. */
+  lethal?: boolean;
+  /** Fighters who tried to flee this round and failed — narrate the failed attempt. */
+  failedFlight?: string[];
 }
 
 /** 1-vs-1 player duel: the AI only narrates what the engine resolved for BOTH fighters' simultaneous moves. */
 export function buildDuelNarrationPrompt(input: DuelNarrationInput): { system: string; user: string } {
   const system =
     "Eres el narrador de un duelo 1 contra 1 entre dos jugadores en un rol de piratas de One Piece. Ambos actuaron a la vez; el motor ya resolvió el resultado. " +
-    "Tu único trabajo es narrar ese resultado con justicia hacia ambos, sin favorecer a nadie ni cambiar quién golpea o falla. El duelo no es a muerte: nadie muere, quien cae queda fuera de combate. " +
+    "Tu único trabajo es narrar ese resultado con justicia hacia ambos, sin favorecer a nadie ni cambiar quién golpea o falla. " +
+    "Si el duelo es amistoso, nadie muere: quien cae queda fuera de combate. Si es a muerte, las heridas son graves y letales, pero NO decidas tú quién muere: el motor lo decide después; narra al perdedor caído y al borde del final. " +
     "No decidas nada del siguiente turno. No reveles que eres una IA. " +
     ROLE_RULES +
     " " +
@@ -241,8 +253,13 @@ export function buildDuelNarrationPrompt(input: DuelNarrationInput): { system: s
     `${input.bName} intentó: "${input.bAction}"${input.bTechnique ? ` (usando ${input.bTechnique})` : ""}.\n` +
     `Resultado, en orden, ya decidido (definitivo):\n${roundLines || "(ningún golpe)"}\n` +
     `Vida: ${input.aName} ${input.aHp}/${input.aMax}; ${input.bName} ${input.bHp}/${input.bMax}.\n` +
-    (input.finished
-      ? `El duelo termina aquí: gana ${input.winnerName}. Narra el desenlace y cómo queda el perdedor (fuera de combate, vivo).`
+    (input.lethal ? "Es un duelo A MUERTE: tono grave, sin contemplaciones.\n" : "") +
+    (input.failedFlight && input.failedFlight.length > 0 ? `Intentó huir y NO lo logró: ${input.failedFlight.join(", ")}.
+` : "") +
+    (input.escapedName
+      ? `${input.escapedName} logra escapar del duelo: nadie gana ni muere. Narra la huida con verosimilitud.`
+      : input.finished
+      ? `El duelo termina aquí: gana ${input.winnerName}. Narra el desenlace y cómo queda el perdedor (${input.lethal ? "abatido, a merced del vencedor" : "fuera de combate, vivo"}).`
       : "El duelo continúa: termina la narración dejando a ambos listos para su siguiente movimiento.");
   return { system, user };
 }
@@ -267,7 +284,8 @@ const SCENE_HARD_RULE =
   ROLE_RULES;
 
 const SCENE_STYLE_RULE =
-  "Escribe en español, con un tono de piratas de One Piece, vívido e inmersivo — varios párrafos si la escena lo pide. " +
+  "Escribe en español, con un tono de piratas de One Piece, vívido e inmersivo. " +
+  LENGTH_RULE + " " +
   "Responde solo con la narración en prosa, sin JSON, sin encabezados, sin listas, sin markdown.";
 
 /** Pure roleplay turns — no engine call, no stat changes, just the AI acting as game master and reacting to the player. */
@@ -298,6 +316,7 @@ export interface PartySceneNarrationInput {
   actingCharacterName: string; // whose turn produced this beat
   playerText: string;
   recentParty?: string[]; // recent PartySceneMessage rows, formatted "Nombre: texto" / "Narrador: texto", oldest first
+  memorySummary?: string; // compacted older shared-scene history (game/scene-compaction.ts)
 }
 
 const PARTY_SCENE_HARD_RULE =
@@ -325,6 +344,7 @@ export function buildPartySceneNarrationPrompt(input: PartySceneNarrationInput):
   const user =
     `Grupo presente: ${rosterLine}.\n` +
     `Isla: ${input.islandName} — ${input.islandDescription}` +
+    (input.memorySummary ? `\n\nLo ocurrido antes en esta escena (resumen): ${input.memorySummary}` : "") +
     transcriptBlock +
     `\n\n${input.actingCharacterName} hace/dice: "${input.playerText}"` +
     "\n\nContinúa la escena como narrador, dirigiéndote al grupo cuando tenga sentido.";

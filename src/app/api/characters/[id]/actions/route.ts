@@ -31,7 +31,7 @@ const actionSchema = z.discriminatedUnion("action", [
 
 // Free text is the primary input path (see resolveFreeTextAction) — the
 // explicit `action` shapes above stay as the reliable button fallback.
-const freeTextSchema = z.object({ freeText: z.string().min(1).max(2000) });
+const freeTextSchema = z.object({ freeText: z.string().min(1).max(6000) });
 
 const schema = z.union([actionSchema, freeTextSchema]);
 

@@ -22,7 +22,8 @@ import {
 import { callOpenRouter } from "./openrouter-client";
 import { OPENROUTER_MODELS } from "./models";
 
-const NARRATION_TIMEOUT_MS = 10_000;
+// Long, inspiring scenes need real time to write: a 6+ paragraph reply is normal now.
+const NARRATION_TIMEOUT_MS = 30_000;
 const MEMORY_TIMEOUT_MS = 8_000;
 const MEMORY_SUMMARY_MAX_CHARS = 1_500;
 
@@ -54,7 +55,9 @@ export async function getRecentScene(characterId: string, take = 12): Promise<st
     orderBy: { createdAt: "desc" },
     take,
   });
-  return entries.reverse().map((e) => (e.role === "player" ? `[Jugador]: ${e.text}` : e.text));
+  // Long posts stay complete on screen, but only their tail rides along as prompt context.
+  const clip = (t: string) => (t.length > 1800 ? `…${t.slice(-1800)}` : t);
+  return entries.reverse().map((e) => (e.role === "player" ? `[Jugador]: ${clip(e.text)}` : clip(e.text)));
 }
 
 /**
@@ -66,7 +69,7 @@ export async function narrateExplore(input: ExploreNarrationInput, meta: { chara
   const fallback = [input.baseFlavorText, input.baseNarrative];
   try {
     const { system, user } = buildExploreNarrationPrompt(input);
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 500, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 1400, validate: isValidNarration });
     return [text.trim()];
   } catch (err) {
     await logError("ai/narrate-explore", err, meta);
@@ -81,7 +84,7 @@ export async function narrateCombat(input: CombatNarrationInput, meta: { charact
   );
   try {
     const { system, user } = buildCombatNarrationPrompt(input);
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 900, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2500, validate: isValidNarration });
     return [text.trim()];
   } catch (err) {
     await logError("ai/narrate-combat", err, meta);
@@ -93,7 +96,7 @@ export async function narrateCombat(input: CombatNarrationInput, meta: { charact
 export async function narrateEncounterIntro(input: EncounterIntroInput, fallback: string[], meta: { characterId: string }): Promise<string[]> {
   try {
     const { system, user } = buildEncounterIntroPrompt(input);
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 600, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 1500, validate: isValidNarration });
     return [text.trim()];
   } catch (err) {
     await logError("ai/narrate-encounter-intro", err, meta);
@@ -108,7 +111,7 @@ export async function narrateDuel(input: DuelNarrationInput, meta: { duelId: str
     .join(" ");
   try {
     const { system, user } = buildDuelNarrationPrompt(input);
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 800, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2500, validate: isValidNarration });
     return text.trim();
   } catch (err) {
     await logError("ai/narrate-duel", err, meta);
@@ -125,7 +128,7 @@ export async function narrateDuel(input: DuelNarrationInput, meta: { duelId: str
 export async function narrateScene(input: SceneNarrationInput, meta: { characterId: string }): Promise<string> {
   try {
     const { system, user } = buildSceneNarrationPrompt(input);
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 700, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2500, validate: isValidNarration });
     return text.trim();
   } catch (err) {
     await logError("ai/narrate-scene", err, meta);
@@ -137,7 +140,7 @@ export async function narrateScene(input: SceneNarrationInput, meta: { character
 export async function narratePartyScene(input: PartySceneNarrationInput, meta: { partyId: string }): Promise<string> {
   try {
     const { system, user } = buildPartySceneNarrationPrompt(input);
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 700, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2500, validate: isValidNarration });
     return text.trim();
   } catch (err) {
     await logError("ai/narrate-party-scene", err, meta);
@@ -202,6 +205,29 @@ export async function narrateBountyDigest(
   } catch (err) {
     await logError("ai/narrate-bounty-digest", err, {});
     return fallback;
+  }
+}
+
+/**
+ * Folds an older stretch of scene transcript into the bounded memory summary
+ * (silent context compaction — see game/scene-compaction.ts). Returns null on
+ * any failure so the caller simply leaves the old summary and tries later.
+ */
+export async function summarizeTranscript(currentSummary: string | null, lines: string[], meta: Record<string, string>): Promise<string | null> {
+  try {
+    const { system, user } = buildMemoryUpdatePrompt(
+      currentSummary ?? undefined,
+      "Esta parte de la escena en curso ya no cabe en la memoria reciente; incorpórala al resumen conservando lo que importe para seguir la historia " +
+        "(nombres de NPC y lo que quieren, promesas, deudas, conflictos abiertos, lugares, decisiones del jugador):\n" +
+        lines.join("\n")
+    );
+    const raw = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, jsonMode: true, temperature: 0.3, timeoutMs: 20_000, maxTokens: 700 });
+    const parsed = JSON.parse(raw);
+    const summary = typeof parsed?.summary === "string" ? parsed.summary.trim() : "";
+    return summary ? summary.slice(0, MEMORY_SUMMARY_MAX_CHARS) : null;
+  } catch (err) {
+    await logError("ai/summarize-transcript", err, meta);
+    return null;
   }
 }
 

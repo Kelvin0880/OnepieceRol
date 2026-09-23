@@ -337,7 +337,8 @@ lograr en solitario.
 
 ESCRIBIR. Enter = salto de línea (NO envía; en el móvil te deja separar lo
 que dices de lo que haces). Envías con el botón "Actuar" o con Ctrl+Enter.
-Lo que dices, entre comillas; lo que haces, aparte. Caben mensajes largos.
+Lo que dices, entre comillas; lo que haces, aparte. Caben mensajes larguísimos (hasta 6000 caracteres) y el narrador responde con
+la misma amplitud cuando la escena lo merece.
 
 INTENCIÓN, NO RESULTADO (Mano Negra). Lo que escribes es lo que INTENTAS:
 "intento cortarle el pecho con un tajo horizontal", nunca "le corto el
@@ -375,6 +376,26 @@ ronda ambos describís vuestro movimiento; cuando los dos habéis movido, el
 motor lo resuelve a la vez y el narrador cuenta el resultado. No es a
 muerte: usa una copia de tu vida y no te deja heridas. Puedes rendirte
 escribiéndolo.
+
+PVP A MUERTE Y CACERÍAS. Junto a "Retar a duelo" hay un botón rojo. Entre
+facciones enemigas es una CACERÍA sin consentimiento: la Marina y CP-0 cazan a
+piratas y revolucionarios; los piratas atacan a cualquier otra bandera;
+Revolucionarios y Gobierno son enemigos jurados. El cazado puede plantar cara o
+intentar huir (velocidad; si falla, toca pelear). Es letal: la vida empieza donde
+estés, y quien cae pasa la tirada de muerte real — o es capturado si el
+vencedor es de la Marina/CP-0. Misma bandera: solo si ambos aceptan.
+Protecciones: nivel menor de 3 intocable, solo a los conectados, y no repetir
+contra la misma persona en 30 min.
+
+VIAJAR. Zarpar tiene enfriamiento (8 a 26 min según el peligro del destino) y
+cuesta 10 de estamina. Una tripulación no zarpa mientras un compañero tenga
+una pelea o duelo sin resolver.
+
+IMPEL DOWN. Los muy buscados (pirata desde 100 M de recompensa, revolucionario
+de peso) son enviados a la isla de Impel Down, a uno de sus 6 niveles (más hondo
+cuanto más buscado). Sin fianza. Rescatarlos exige llegar a la isla (nivel 45+,
+solo a través de Enies Lobby) y superar carceleros cada vez más fuertes; un
+fallo simple cuesta el 40% de tu vida, uno grave te encierra a ti también.
 
 FIANZA. Solo para peces pequeños. Un pirata con recompensa de 10.000.000 o
 más, o un revolucionario de peso, no puede comprar su libertad; en Impel Down

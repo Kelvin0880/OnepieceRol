@@ -163,6 +163,18 @@ async function main() {
         "No hay mapas que marquen bien esta isla, y los pocos que se acercan sin ser convocados no suelen volver a salir. Si Barbanegra guarda algo aquí, no lo comparte con nadie vivo.",
     },
     {
+      key: "impelDown",
+      name: "Impel Down",
+      sea: Sea.NEW_WORLD,
+      danger: 10,
+      minLevel: 45,
+      factionControl: "Gobierno Mundial (Impel Down)",
+      description:
+        "La gran prisión submarina del Gobierno Mundial, seis niveles de infierno bajo el mar custodiados por Magellan y un ejército de carceleros. Quien entra por la puerta grande no sale sin permiso; quien intenta sacar a alguien, menos aún.",
+      arcHook:
+        "Los guardias han doblado las rondas desde la última fuga. Los presos de los niveles más profundos son de esos que el Gobierno prefiere no volver a ver el sol.",
+    },
+    {
       key: "eniesLobby",
       name: "Enies Lobby",
       sea: Sea.NEW_WORLD,
@@ -209,7 +221,8 @@ async function main() {
     littleGarden: ["whiskyPeak", "alabasta"],
     alabasta: ["littleGarden", "graveyardIsland", "eniesLobby"],
     graveyardIsland: ["alabasta"],
-    eniesLobby: ["alabasta"],
+    eniesLobby: ["alabasta", "impelDown"],
+    impelDown: ["eniesLobby"],
   };
 
   for (const [key, neighborKeys] of Object.entries(adjacency)) {

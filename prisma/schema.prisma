@@ -105,6 +105,18 @@ model Character {
   maxStamina       Int       @default(100)
   staminaUpdatedAt DateTime?
 
+  // Travel is a decision, not a free hop: cooldown scaled by the destination's
+  // danger (engine/travel.ts). null = never traveled, always eligible.
+  lastTravelAt DateTime?
+
+  // Refreshed by the character poll (throttled) — real PvP hunts only land on
+  // people who are actually online (engine/hostility.ts).
+  lastSeenAt DateTime?
+
+  // Silent context compaction (game/scene-compaction.ts): scene messages up to
+  // this instant have already been folded into memorySummary.
+  sceneCompactedUntil DateTime?
+
   // Devil fruit progression (see engine/fruit-mastery.ts): 0-100 mastery,
   // plus an explicit awakening flag that needs a breaking-point event, not
   // just a number — replaces the old "awakened at level 40" proxy.
@@ -164,6 +176,8 @@ model Party {
   crewId           String              @unique // not FK-enforced, same convention as Crew.captainId
   turnOrder        String // JSON array of characterIds, captain first
   turnIndex        Int                 @default(0)
+  memorySummary    String? // silent compaction of older shared-scene messages (game/scene-compaction.ts)
+  compactedUntil   DateTime?
   awaitingNarrator Boolean             @default(false) // true right after a human posts, until the AI reply lands — locks out other submits meanwhile; false on creation, since nobody has spoken yet and it's simply turnIndex 0's turn
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
@@ -315,6 +329,11 @@ model Duel {
   opponentTactic      Int           @default(0)
   opponentTechnique   String        @default("none")
   winnerId            String?
+  // lethal: real permadeath rules (death roll / Marine capture), duel HP starts from
+  // current HP. hostile: a non-consensual hunt between enemy factions — the target
+  // may try to escape instead of accepting.
+  lethal              Boolean       @default(false)
+  hostile             Boolean       @default(false)
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
   messages            DuelMessage[]
@@ -345,6 +364,7 @@ model Imprisonment {
   // risk the rescuer getting captured too.
   minRescueLevel Int
   bailBerries    Int? // an alternative: buy your way out if you can afford it
+  cellLevel      Int       @default(0) // 0 = ordinary brig; 1-6 = Impel Down level (engine/impel-down.ts)
   rescuedById    String?
   releasedAt     DateTime?
 }

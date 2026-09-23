@@ -5,6 +5,7 @@ import Link from "next/link";
 import { characterCondition, conditionLabel } from "@/lib/engine/condition";
 import { factionTitle, type FactionKey } from "@/lib/engine/progression";
 import { crewNounForFaction } from "@/lib/engine/crew-noun";
+import { CELL_LABELS } from "@/lib/engine/impel-down";
 
 interface Island {
   id: string;
@@ -102,6 +103,7 @@ interface OtherHere {
   level: number;
   bounty: number;
   notoriety: number;
+  hostile: boolean;
   crew: { id: string; name: string } | null;
 }
 
@@ -115,6 +117,7 @@ interface PrisonerHere {
 interface Imprisonment {
   reason: string;
   bailBerries: number | null;
+  cellLevel: number;
   minRescueLevel: number;
   capturedAt: string;
 }
@@ -188,6 +191,8 @@ interface Character {
 
 interface DuelState {
   id: string;
+  lethal: boolean;
+  hostile: boolean;
   status: "PROPOSED" | "ACTIVE" | "FINISHED";
   round: number;
   isChallenger: boolean;
@@ -536,6 +541,9 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           <p className="font-display text-gold-bright">Encarcelado en {character.currentIsland.name}</p>
           <p className="text-sm mt-1 text-ink-dim">{character.imprisonment.reason}</p>
           <p className="text-xs mt-2 text-ink-dim">
+            {character.imprisonment.cellLevel > 0 && (
+              <span className="block text-blood mb-1">Recluido en Impel Down — {CELL_LABELS[character.imprisonment.cellLevel]}. Sin fianza posible.</span>
+            )}
             Nivel de poder necesario para rescatarte: <span className="text-gold">{character.imprisonment.minRescueLevel}</span>
           </p>
           {battleError && <p className="text-blood text-xs mt-2">{battleError}</p>}
@@ -562,7 +570,10 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           {duel && (
             <div className="panel p-4" style={{ borderColor: "var(--gold)" }}>
               <div className="flex items-center justify-between mb-2">
-                <h3 className="font-display text-lg text-gold-bright">Duelo contra {duel.opponentName}</h3>
+                <h3 className="font-display text-lg text-gold-bright">
+                  {duel.hostile ? "Caza" : "Duelo"} contra {duel.opponentName}
+                  {duel.lethal && <span className="ml-2 text-xs px-2 py-0.5 rounded bg-blood text-white align-middle">A MUERTE</span>}
+                </h3>
                 <span className="text-xs text-ink-dim">
                   {duel.status === "PROPOSED" ? "Reto pendiente" : duel.status === "ACTIVE" ? `Ronda ${duel.round}` : "Terminado"}
                 </span>
@@ -594,13 +605,16 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                 ))}
               </div>
               {duel.status === "PROPOSED" && !duel.isChallenger && (
-                <div className="flex gap-2">
-                  <button className="btn-gold px-4 py-2 text-sm" disabled={busy} onClick={() => doDuelOp({ op: "respond", duelId: duel.id, accept: true })}>
-                    Aceptar duelo
-                  </button>
-                  <button className="btn-ghost px-4 py-2 text-sm" disabled={busy} onClick={() => doDuelOp({ op: "respond", duelId: duel.id, accept: false })}>
-                    Rechazar
-                  </button>
+                <div>
+                  {duel.hostile && <p className="text-sm text-blood mb-2">¡Te están dando caza! Si huyes, se decide por velocidad: puedes escapar… o que te alcancen.</p>}
+                  <div className="flex gap-2">
+                    <button className="btn-gold px-4 py-2 text-sm" disabled={busy} onClick={() => doDuelOp({ op: "respond", duelId: duel.id, accept: true })}>
+                      {duel.hostile ? "Plantar cara" : duel.lethal ? "Aceptar duelo a muerte" : "Aceptar duelo"}
+                    </button>
+                    <button className="btn-ghost px-4 py-2 text-sm" disabled={busy} onClick={() => doDuelOp({ op: "respond", duelId: duel.id, accept: false })}>
+                      {duel.hostile ? "Intentar huir" : "Rechazar"}
+                    </button>
+                  </div>
                 </div>
               )}
               {duel.status === "PROPOSED" && duel.isChallenger && (
@@ -610,7 +624,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               )}
               {duel.status === "ACTIVE" && (
                 <p className="text-xs text-ink-dim">
-                  Describe tu movimiento abajo (lo que intentas, no lo que consigues). Cuando ambos hayáis movido, el motor lo resuelve a la vez. Para rendirte, escríbelo. El duelo no es a muerte.
+                  Describe tu movimiento abajo (lo que intentas, no lo que consigues). Cuando ambos hayáis movido, el motor lo resuelve a la vez. {duel.lethal ? "Es a muerte: rendirte no existe, solo intentar huir (se decide por velocidad; si fallas pierdes la ronda). Si caes, tirada de muerte real — o te capturan si tu rival es de la Marina/CP-0." : "Para rendirte, escríbelo. El duelo no es a muerte."}
                 </p>
               )}
               {duel.status === "FINISHED" && (
@@ -667,7 +681,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                   value={freeText}
                   disabled={busy || partyBlocksInput}
                   onChange={(e) => setFreeText(e.target.value)}
-                  maxLength={2000}
+                  maxLength={6000}
                   onKeyDown={(e) => {
                     // Plain Enter is a line break (needed on mobile to separate what
                     // you say from what you do); sending is the button or Ctrl/Cmd+Enter.
@@ -829,9 +843,18 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                     <span className="flex items-center gap-2">
                       {o.crew && <span className="text-xs text-gold">{o.crew.name}</span>}
                       {!isDead && !isImprisoned && !duel && !character.pendingEncounter && (
-                        <button className="btn-ghost px-2 py-0.5 text-xs" disabled={busy} onClick={() => doDuelOp({ op: "challenge", opponentId: o.id })}>
-                          Retar a duelo
-                        </button>
+                        <>
+                          <button className="btn-ghost px-2 py-0.5 text-xs" disabled={busy} onClick={() => doDuelOp({ op: "challenge", opponentId: o.id })}>
+                            Retar a duelo
+                          </button>
+                          <button
+                            className="px-2 py-0.5 text-xs rounded border border-[--blood] text-blood hover:bg-blood hover:text-white"
+                            disabled={busy}
+                            onClick={() => doDuelOp({ op: "challenge", opponentId: o.id, lethal: true })}
+                          >
+                            {o.hostile ? "Cazar a muerte" : "Duelo a muerte"}
+                          </button>
+                        </>
                       )}
                     </span>
                   </div>

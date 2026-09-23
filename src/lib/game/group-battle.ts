@@ -13,7 +13,7 @@ import { CharacterStatus, Faction } from "@prisma/client";
 /** 30% base chance to be arrested instead of just limping away, only when the winner is Marine and the loser isn't. */
 const MARINE_CAPTURE_CHANCE = 0.55;
 
-async function resolveDuelLoss(
+export async function resolveDuelLoss(
   loser: DeathCheckCharacter & { faction: Faction; maxHp: number; currentIslandId: string; level: number; devilFruitId?: string | null; bounty?: number; notoriety?: number },
   winner: { faction: Faction; combatant: Combatant },
   reason: string,
@@ -213,7 +213,7 @@ export async function respondToBattle(defendingCharacterId: string, userId: stri
   return { status: "RESOLVED" as const, result, newsPosted: newsLog };
 }
 
-async function grantVictorSpoils(character: ReputationCharacter & { berries: number; level: number }, islandDanger: number, newsLog: string[]) {
+export async function grantVictorSpoils(character: ReputationCharacter & { berries: number; level: number }, islandDanger: number, newsLog: string[]) {
   const berries = berryReward(islandDanger, false);
   const bountyOrNotorietyDelta =
     character.faction === "PIRATE" || character.faction === "BOUNTY_HUNTER"

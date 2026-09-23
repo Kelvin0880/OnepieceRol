@@ -5,7 +5,7 @@ import { challengeDuel, respondToDuel, cancelDuel, DuelError } from "@/lib/game/
 import { logError } from "@/lib/log-error";
 
 const schema = z.discriminatedUnion("op", [
-  z.object({ op: z.literal("challenge"), opponentId: z.string() }),
+  z.object({ op: z.literal("challenge"), opponentId: z.string(), lethal: z.boolean().optional() }),
   z.object({ op: z.literal("respond"), duelId: z.string(), accept: z.boolean() }),
   z.object({ op: z.literal("cancel"), duelId: z.string() }),
 ]);
@@ -19,7 +19,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     switch (parsed.data.op) {
       case "challenge":
-        return NextResponse.json(await challengeDuel(id, userId, parsed.data.opponentId));
+        return NextResponse.json(await challengeDuel(id, userId, parsed.data.opponentId, parsed.data.lethal ?? false));
       case "respond":
         return NextResponse.json(await respondToDuel(id, userId, parsed.data.duelId, parsed.data.accept));
       case "cancel":

@@ -3,6 +3,7 @@ import { liveRng } from "../engine/rng";
 import { attemptPrisonRescue, rescueSucceeded } from "../engine/rescue";
 import { combatPower } from "../engine/encounter";
 import { computeBailBerries, isBailAllowed } from "../engine/economy";
+import { impelDownCell, impelDownRescueLevel, CELL_LABELS, IMPEL_FAILED_RESCUE_HP_FRACTION } from "../engine/impel-down";
 import { toCombatant } from "./derive";
 import { postNews } from "./death-resolution";
 import { CharacterStatus } from "@prisma/client";
@@ -27,27 +28,43 @@ export async function captureCharacter(
   newsLog: string[]
 ) {
   const hasDevilFruit = !!character.devilFruitId;
-  const bailAllowed = isBailAllowed({ faction: character.faction ?? "", bounty: character.bounty ?? 0, notoriety: character.notoriety ?? 0 });
+  const cell = impelDownCell(character.faction ?? "", character.bounty ?? 0, character.notoriety ?? 0);
+  const impel = cell > 0 ? await prisma.island.findUnique({ where: { name: "Impel Down" } }) : null;
+  const inImpelDown = !!impel;
+  const bailAllowed = !inImpelDown && isBailAllowed({ faction: character.faction ?? "", bounty: character.bounty ?? 0, notoriety: character.notoriety ?? 0 });
+  // The very wanted are shipped to Impel Down itself: the prisoner is now on
+  // that island, so whoever wants them back has to get there first.
   await prisma.character.update({
     where: { id: character.id },
-    data: { status: CharacterStatus.IMPRISONED, hp: Math.max(1, Math.round(character.maxHp * 0.15)) },
+    data: {
+      status: CharacterStatus.IMPRISONED,
+      hp: Math.max(1, Math.round(character.maxHp * 0.15)),
+      ...(impel ? { currentIslandId: impel.id } : {}),
+    },
   });
   await prisma.imprisonment.create({
     data: {
       characterId: character.id,
-      islandId: character.currentIslandId,
+      islandId: impel ? impel.id : character.currentIslandId,
       reason,
-      minRescueLevel: Math.round(capturedByPower),
-      bailBerries: isBailAllowed({ faction: character.faction ?? "", bounty: character.bounty ?? 0, notoriety: character.notoriety ?? 0 })
-        ? computeBailBerries(character.currentIsland.dangerLevel, character.level, hasDevilFruit)
-        : null,
+      cellLevel: inImpelDown ? cell : 0,
+      minRescueLevel: inImpelDown ? impelDownRescueLevel(capturedByPower, cell) : Math.round(capturedByPower),
+      bailBerries: bailAllowed ? computeBailBerries(character.currentIsland.dangerLevel, character.level, hasDevilFruit) : null,
     },
   });
-  const headline = `${character.name} ha sido capturado en ${character.currentIsland.name}`;
+  const headline = inImpelDown
+    ? `${character.name} es enviado a Impel Down (${CELL_LABELS[cell]})`
+    : `${character.name} ha sido capturado en ${character.currentIsland.name}`;
   const kairosekiNote = hasDevilFruit ? " Le colocan grilletes de Kairoseki: su fruta no le servirá de nada mientras siga preso." : "";
   await postNews(
     headline,
-    `${reason} ${bailAllowed ? "Ahora espera tras las rejas: alguien deberá pagar su fianza o venir a rescatarlo." : "Es demasiado peligroso para admitir fianza: solo un rescate o una fuga lo sacará de allí."}${kairosekiNote}`,
+    `${reason} ${
+      inImpelDown
+        ? "Es demasiado peligroso para cualquier fianza: lo trasladan a Impel Down, donde solo un rescate de proporciones épicas lo sacaría."
+        : bailAllowed
+        ? "Ahora espera tras las rejas: alguien deberá pagar su fianza o venir a rescatarlo."
+        : "Es demasiado peligroso para admitir fianza: solo un rescate o una fuga lo sacará de allí."
+    }${kairosekiNote}`,
     "Gobierno Mundial",
     character.id,
     "major"
@@ -110,9 +127,14 @@ export async function attemptRescue(rescuerCharacterId: string, userId: string, 
   const newsLog: string[] = [];
 
   if (rescueSucceeded(check)) {
+    let escapeIsland: { id: string } | null = null;
+    if (prisoner.imprisonment.cellLevel > 0) {
+      // Freed prisoners are smuggled off the island — they can't be left stranded somewhere their level can't even enter.
+      escapeIsland = await prisma.island.findUnique({ where: { name: "Loguetown" } });
+    }
     await prisma.character.update({
       where: { id: prisoner.id },
-      data: { status: CharacterStatus.ALIVE, hp: Math.max(5, Math.round(prisoner.maxHp * 0.3)) },
+      data: { status: CharacterStatus.ALIVE, hp: Math.max(5, Math.round(prisoner.maxHp * 0.3)), ...(escapeIsland ? { currentIslandId: escapeIsland.id } : {}) },
     });
     await prisma.imprisonment.update({ where: { id: prisoner.imprisonment.id }, data: { rescuedById: rescuer.id, releasedAt: new Date() } });
     await prisma.imprisonment.delete({ where: { id: prisoner.imprisonment.id } });
@@ -136,6 +158,15 @@ export async function attemptRescue(rescuerCharacterId: string, userId: string, 
     const log = [`El rescate fracasa por completo: ${rescuer.name} también es capturado.`];
     await prisma.gameLogEntry.create({ data: { characterId: rescuer.id, kind: "prison", text: log[0] } });
     return { success: false, rescuerCaptured: true, log, newsPosted: newsLog };
+  }
+
+  if (prisoner.imprisonment.cellLevel > 0) {
+    // Impel Down's guards don't let a failed intruder leave unscathed.
+    const wound = Math.round(rescuer.maxHp * IMPEL_FAILED_RESCUE_HP_FRACTION);
+    await prisma.character.update({ where: { id: rescuer.id }, data: { hp: Math.max(1, rescuer.hp - wound) } });
+    const log = [`El intento de rescate fracasa. Los carceleros de Impel Down te hieren gravemente (-${wound} de vida) antes de que logres retirarte.`];
+    await prisma.gameLogEntry.create({ data: { characterId: rescuer.id, kind: "prison", text: log[0] } });
+    return { success: false, rescuerCaptured: false, log, newsPosted: newsLog };
   }
 
   const log = [`El intento de rescate fracasa. ${rescuer.name} logra retirarse antes de ser descubierto.`];

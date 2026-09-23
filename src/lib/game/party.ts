@@ -115,7 +115,7 @@ export async function rejoinParty(characterId: string, userId: string): Promise<
 }
 
 export type BeginPartyTurnResult =
-  | { ok: true; partyId: string; roster: { name: string; faction: string; level: number }[]; recentLines: string[] }
+  | { ok: true; partyId: string; roster: { name: string; faction: string; level: number }[]; recentLines: string[]; memorySummary?: string }
   | { ok: false; reason: string };
 
 /**
@@ -151,7 +151,8 @@ export async function beginPartyTurn(characterId: string): Promise<BeginPartyTur
       ok: true as const,
       partyId: party.id,
       roster: party.members.map((m) => ({ name: m.name, faction: m.faction, level: m.level })),
-      recentLines: [...party.messages].reverse().map((m) => `${m.authorName}: ${m.text}`),
+      recentLines: [...party.messages].reverse().map((m) => `${m.authorName}: ${m.text.length > 1800 ? m.text.slice(-1800) : m.text}`),
+      memorySummary: party.memorySummary ?? undefined,
     };
   });
 }

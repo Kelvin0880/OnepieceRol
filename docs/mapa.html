@@ -231,6 +231,9 @@ const ISLANDS = [
     poneglyphName: "Fragmento del Ocaso", x: 1430, y: 470,
     desc: "La sede judicial del Gobierno Mundial en persona: torres de mármol blanco, un Árbol del Conocimiento marchito, y un Portal de la Justicia que ha visto entrar a más piratas de los que ha visto salir.",
     hook: "CP-0 ha sellado el archivo sobre un Poneglifo confiscado hace décadas." },
+  { key: "impelDown", name: "Impel Down", sea: "New World", danger: 10, minLevel: 45, faction: "Gobierno Mundial (Impel Down)", poneglyph: false, x: 1430, y: 570,
+    desc: "La gran prisión submarina del Gobierno Mundial: seis niveles de infierno bajo el mar. Los muy buscados cumplen aquí su condena sin fianza posible; sacar a alguien exige un nivel altísimo y vencer a los carceleros de cada nivel.",
+    hook: "Los guardias han doblado las rondas desde la última fuga." },
 ];
 
 const EDGES = [
@@ -239,7 +242,7 @@ const EDGES = [
   ["shimotsuki","baratie"], ["baratie","conomi"], ["conomi","loguetown"],
   ["loguetown","reverseMountain"], ["reverseMountain","whiskyPeak"],
   ["whiskyPeak","littleGarden"], ["littleGarden","alabasta"],
-  ["alabasta","graveyardIsland"], ["alabasta","eniesLobby"],
+  ["alabasta","graveyardIsland"], ["alabasta","eniesLobby"], ["eniesLobby","impelDown"],
 ];
 
 function dangerColor(d) {

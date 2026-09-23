@@ -7,6 +7,7 @@ import { currentStamina } from "@/lib/game/combat-prep";
 import { fatigueLevel, FATIGUE_LABELS } from "@/lib/engine/stamina";
 import { fruitPhase, FRUIT_PHASE_LABELS } from "@/lib/engine/fruit-mastery";
 import { getDuelStateForCharacter } from "@/lib/game/duel";
+import { areHostile, PlayerFaction } from "@/lib/engine/hostility";
 import { deleteCharacter, DeleteCharacterError } from "@/lib/game/delete-character";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -44,6 +45,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json({ error: "Personaje no encontrado." }, { status: 404 });
     }
 
+    // Presence heartbeat (throttled to once a minute): real PvP hunts only land on online players.
+    if (!character.lastSeenAt || Date.now() - character.lastSeenAt.getTime() > 60_000) {
+      await prisma.character.update({ where: { id }, data: { lastSeenAt: new Date() } });
+    }
     const party = await getPartyStateForCharacter(id);
     const duel = await getDuelStateForCharacter(id);
     const connections = JSON.parse(character.currentIsland.connections) as string[];
@@ -99,7 +104,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         })()
       : null;
     const shapedImprisonment = imprisonment
-      ? { reason: imprisonment.reason, bailBerries: imprisonment.bailBerries, minRescueLevel: imprisonment.minRescueLevel, capturedAt: imprisonment.capturedAt }
+      ? { reason: imprisonment.reason, bailBerries: imprisonment.bailBerries, cellLevel: imprisonment.cellLevel, minRescueLevel: imprisonment.minRescueLevel, capturedAt: imprisonment.capturedAt }
       : null;
 
     const staminaNow = currentStamina(character);
@@ -114,7 +119,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         imprisonment: shapedImprisonment,
       },
       connectedIslands,
-      othersHere,
+      othersHere: othersHere.map((o) => ({ ...o, hostile: areHostile(character.faction as PlayerFaction, o.faction as PlayerFaction) })),
       prisonersHere,
       crewBattles: shapedBattles,
       party,

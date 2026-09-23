@@ -10,7 +10,7 @@ import { FATIGUE_LABELS, restStamina, spendStamina } from "../engine/stamina";
 import { prepareFighter, combatProgressData, currentStamina } from "./combat-prep";
 import { bountyReward, berryReward, xpToNextLevel } from "../engine/economy";
 import { assessThreat, attemptFlee, ThreatAssessment } from "../engine/encounter";
-import { canEnterIsland } from "../engine/travel";
+import { canEnterIsland, travelWaitMs, TRAVEL_STAMINA_COST } from "../engine/travel";
 import { rollHunterAmbush, decayPursuitHeat, heatAfterReadingPoneglyph } from "../engine/pursuit";
 import {
   recordGrudgeIncident,
@@ -22,6 +22,7 @@ import {
 import { toCombatant, generalSkillModifier } from "./derive";
 import { tickWorldIfDue } from "./world-tick";
 import { getOpenDuelFor, submitDuelAction } from "./duel";
+import { maybeCompactCharacterScene, maybeCompactPartyScene } from "./scene-compaction";
 import { postNews, handleDeathCheck } from "./death-resolution";
 import { DEVIL_FRUIT_CATALOG } from "./devil-fruit-catalog";
 import { applyBountyOrNotoriety } from "./reputation";
@@ -908,12 +909,39 @@ export async function travelCharacter(
     throw new GameActionError(`${target.name} es demasiado peligrosa todavía. Necesitas al menos nivel ${target.minLevelToEnter} para sobrevivir allí.`);
   }
 
+  // Sailing is a real decision: a crew moves together (nobody leaves with a
+  // fight or duel still open), the ship needs time between crossings, and the
+  // crossing itself wears you down.
+  if (character.crewId) {
+    const mates = await prisma.character.findMany({
+      where: { crewId: character.crewId, id: { not: character.id }, status: "ALIVE", currentIslandId: character.currentIslandId },
+      select: { id: true, name: true, pendingEncounter: { select: { id: true } } },
+    });
+    const busyMate = mates.find((m) => m.pendingEncounter) ?? (await (async () => {
+      for (const m of mates) if (await getOpenDuelFor(m.id)) return m;
+      return undefined;
+    })());
+    if (busyMate) throw new GameActionError(`No puedes zarpar todavía: ${busyMate.name} sigue con un enfrentamiento sin resolver y la tripulación no se separa así.`);
+  }
+  const waitMs = travelWaitMs(character.lastTravelAt, target.dangerLevel);
+  if (waitMs > 0) {
+    throw new GameActionError(`El barco aún no está listo para volver a zarpar. Podrás hacerlo de nuevo en ${Math.ceil(waitMs / 60_000)} min.`);
+  }
+  const staminaNow = currentStamina(character);
+  if (staminaNow < TRAVEL_STAMINA_COST) throw new GameActionError("Estás demasiado exhausto para gobernar el barco. Descansa antes de zarpar.");
+
   const visited = JSON.parse(character.islandsVisited) as string[];
   const firstVisit = !visited.includes(target.id);
 
   await prisma.character.update({
     where: { id: character.id },
-    data: { currentIslandId: target.id, islandsVisited: firstVisit ? JSON.stringify([...visited, target.id]) : character.islandsVisited },
+    data: {
+      currentIslandId: target.id,
+      islandsVisited: firstVisit ? JSON.stringify([...visited, target.id]) : character.islandsVisited,
+      lastTravelAt: new Date(),
+      stamina: spendStamina(staminaNow, TRAVEL_STAMINA_COST),
+      staminaUpdatedAt: new Date(),
+    },
   });
   const line = `Zarpas de ${character.currentIsland.name} y desembarcas en ${target.name}.`;
   await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "travel", text: line } });
@@ -1060,6 +1088,7 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
         actingCharacterName: character.name,
         playerText: freeText,
         recentParty: begin.recentLines,
+        memorySummary: begin.memorySummary,
       },
       { partyId: begin.partyId }
     );
@@ -1072,6 +1101,7 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
         { characterId: character.id, role: "narrator", text },
       ],
     });
+    void maybeCompactPartyScene(begin.partyId);
     return emptyResult([text], character.level);
   }
 
@@ -1203,6 +1233,9 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
       { characterId, role: "narrator", text: finalLog.join("\n\n") },
     ],
   });
+
+  // Silent, background, never awaited: keeps long sessions in context without a token blow-up.
+  void maybeCompactCharacterScene(characterId);
 
   // Reaching here with a partyId set means this character was mid-fight
   // (see the branch above) — their own combat always resolves immediately,
