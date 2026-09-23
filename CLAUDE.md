@@ -1356,7 +1356,7 @@ is in `Reglasrol.txt` and is injected into every narrator prompt as
 - UI: Enter = newline (send = button or Ctrl+Enter), `freeText` max 2000,
   stamina bar, fruit-mastery bar, duel panel, `whitespace-pre-line` bubbles.
 - Party: a crewmate's personal fight is echoed round by round to the shared feed.
-- Gotchas found while building it: a `python` heredoc turned `` into a raw
+- Gotchas found while building it: a `python` heredoc turned `\b` into a raw
   backspace byte inside a regex (keyword fallback silently dead — grep for
   control chars after scripted edits); `beforeEach(() => mock.mockReset())`
   returns the mock, which vitest then CALLS as a cleanup hook — use braces.
