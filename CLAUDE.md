@@ -30,9 +30,14 @@ creative license on lore/content specifics.
 - `prisma.config.ts` needs `import "dotenv/config"` at the very top, or
   `DATABASE_URL` won't load and every command fails with
   `Environment variable not found`.
-- SQLite in dev (`prisma/dev.db`, gitignored). Swap `provider` in
-  `prisma/schema.prisma` to `"postgresql"` + a real `DATABASE_URL` for
-  production (Supabase/Neon free tier both work).
+- SQLite in dev (`prisma/dev.db`, gitignored). **Production is live on
+  Neon Postgres** (free tier, permanent — not Render's own Postgres,
+  which auto-deletes after 30 days). `prisma/schema.prisma` stays sqlite
+  for local dev; `scripts/gen-prod-schema.mjs` derives
+  `prisma/schema.production.prisma` (postgresql datasource, otherwise
+  identical, one source of truth for models) at Render build time —
+  never hand-edit the generated file, it's gitignored. See "Deployment"
+  below for the full picture.
 - **Windows file lock gotcha**: the dev server holds a lock on both the
   Prisma query engine `.dll` and the SQLite file itself. Any
   `prisma db push` while `npm run dev` is running fails with
@@ -166,53 +171,124 @@ stronghold). `Island.minLevelToEnter` (checked in `travelCharacter`,
 `src/lib/engine/travel.ts`'s `canEnterIsland`) refuses travel outright
 below the requirement — the Grand Line doesn't ease you in.
 
+14 islands: the original 9-island East Blue set (Pueblo Foosha/pirate
+start, Cuartel Marine G-5/marine start, Isla Baltigo/revolutionary start,
+Isla Gecko/bounty-hunter start, Villa Shimotsuki, Restaurante Baratie,
+Isla Conomi/Arlong, Loguetown, Reverse Mountain as the Grand Line
+gateway), plus a 5-island Paradise/New World spread hanging off Reverse
+Mountain: Whisky Peak (danger 6, `minLevelToEnter` 8, Baroque Works
+ambush flavor) → Little Garden (7, 10) → Alabasta (8, 12), which branches
+into **two separate level-30+ endgame destinations** — Isla Cementerio
+(10, **30**, Marshall D. Teach's stronghold) and **Enies Lobby** (10,
+**35**, the World Government's own judicial fortress, `factionControl`
+"Gobierno Mundial (CP-0)") — deliberately two different major powers, not
+a single linear gate. `Island.minLevelToEnter` (checked in
+`travelCharacter`, `src/lib/engine/travel.ts`'s `canEnterIsland`) refuses
+travel outright below the requirement — the Grand Line doesn't ease you
+in.
+
 27 devil fruits across every rarity tier, 6 named meito + 5 common
 starter weapons, 10 world actors (3 Yonko, 3 Admirals, 1 Warlord, 1
 Revolutionary commander, 1 Cipher Pol agent) who act independently via
-the lazy world-tick, 4 Road Poneglyphs — **one placed** (Fragmento del
-Alba: the boss loot of "La guardia personal de Barbanegra" on Isla
-Cementerio, `EventBody.poneglyphId` → granted via `resolveMercyChoice` in
+the lazy world-tick, 4 Road Poneglyphs — **two placed**:
+
+- Fragmento del Alba: boss loot of "La guardia personal de Barbanegra" on
+  Isla Cementerio.
+- Fragmento del Ocaso: boss loot of "El escuadrón de CP-0" on Enies
+  Lobby — flavor text is explicit that the real CP-0 leadership (Rob
+  Lucci) is elsewhere on assignment, so what's actually fought is the
+  squad left behind, not the true power. Same "subordinate, not the real
+  thing" pattern as Blackbeard's lieutenant, now established twice on
+  purpose — this is the pattern the "Poneglyph holders fight back" design
+  brief below wants generalized properly.
+
+Both grant via `EventBody.poneglyphId` → `resolveMercyChoice` in
 `perform-action.ts` regardless of spare-or-finish, appended to
-`Character.poneglyphsRead`), the other 3 stay lore-only/unplaced per the
-user's explicit request that they be scattered and genuinely
-hard — canonically held by other major powers (another Yonko, the World
-Government directly, Cipher Pol), not just sitting in a dungeon.
-`prisma/seed.ts` is the single source of truth for all of this — extend
-it, don't hand-write data elsewhere.
+`Character.poneglyphsRead`, spiking `Character.poneglyphHeat` through the
+pursuit system. The other 2 stay lore-only/unplaced per the user's
+explicit request that they be scattered and genuinely hard — one is
+still literally unplaced lore (Fragmento del Abismo), the other
+(Fragmento Final) has a `guardedBy` hint pointing at Cipher Pol but no
+island yet. `prisma/seed.ts` is the single source of truth for all of
+this — extend it, don't hand-write data elsewhere.
+
+## Deployment — DONE, live in production
+
+Live at **<https://grand-line-rpg-qgkv.onrender.com>** (Render web service
+`grand-line-rpg`, `srv-daplt08473hc73c6i8lg`, owner `tea-d17g45ndiees73e6p89g`).
+Database is Neon Postgres (free tier, permanent — chosen specifically
+*because* Render's own free Postgres auto-deletes after 30 days, which
+would have violated the user's "never wipe progress" rule). The whole
+setup was scripted end-to-end via Render's REST API using a user-supplied
+API token (used only for direct `curl` calls, never written to a file or
+committed) rather than the dashboard, since interactive OAuth/login flows
+(Neon CLI `neon login`, `npm i -g`) are blocked by this environment's auto
+mode classifier — that's a hard wall, don't try to route around it if it
+recurs; ask the user to do the login step in their own browser instead,
+or use whatever's reachable non-interactively (a REST API + token is
+usually fine).
+
+**Gotcha that actually broke the first deploy attempt**: `render.yaml`
+originally set `NODE_ENV=production` as a service env var. Since Render
+uses the *same* env for the build step, `npm install` interpreted
+`NODE_ENV=production` as "skip devDependencies" — silently installing
+only 65 packages instead of the full tree, missing `dotenv` (which
+`prisma.config.ts` imports), `typescript`, `tailwindcss`, `tsx`. Build
+failed on `Cannot find module 'dotenv/config'`. Fixed with
+`npm install --include=dev` in the build command, which forces
+devDependencies in regardless of `NODE_ENV`. Found via an actual deploy
+attempt and its build logs (`GET /v1/logs?...&type=build`), not inferred
+— a reminder that "should work" config still needs a real run.
+
+**How production schema/seed updates work now**: `prisma/schema.prisma`
+stays sqlite (local dev never changes). `npm run db:prod-schema` (=
+`node scripts/gen-prod-schema.mjs`) derives `prisma/schema.production.prisma`
+(same file, `provider = "postgresql"`) — this runs automatically in
+Render's build command before `prisma generate`, so it's always fresh
+and never hand-maintained/gitignored. To push a schema change or reseed
+production content directly from a local shell:
+
+```bash
+node scripts/gen-prod-schema.mjs
+npx prisma generate --schema=prisma/schema.production.prisma   # swaps local @prisma/client to the postgres build
+DATABASE_URL="<neon connection string>" npx prisma db push --schema=prisma/schema.production.prisma --skip-generate
+DATABASE_URL="<neon connection string>" npx tsx prisma/seed.ts
+npx prisma generate   # IMPORTANT: swap the local client back to sqlite when done, or local `npm run dev` breaks
+```
+
+Re-running `prisma/seed.ts` against production is safe and idempotent —
+every table it touches (islands, fruits, weapons, world actors, event
+templates, poneglyphs) is upserted or fully owned by the seed, never
+touches `User`/`Character` rows, so it can't destroy anyone's progress.
+`scripts/delete-test-account.ts <username>` is the safe way to clean up
+a smoke-test account from production afterward (never a blanket
+`db:reset` there — that script is dev-only, SQLite-only).
+
+Render service config that matters (set once, don't need to repeat):
+`DATABASE_URL` (Neon connection string), `SESSION_SECRET` (random 64-hex,
+generated once — rotating it logs everyone out), `NODE_ENV=production`
+(fine at *runtime*, only dangerous combined with `npm install` in the
+build step), build command
+`npm install --include=dev && npm run db:prod-schema && npx prisma generate --schema=prisma/schema.production.prisma && npm run build`,
+start command `npm run start`, plan `free`, region `oregon`.
 
 ## Roadmap (what's explicitly NOT done yet, roughly in likely priority order)
 
-1. Deploying to Render + a real Postgres instance. `render.yaml` and
-   `.env.example` already exist — this needs the user's own accounts, so
-   walk them through it rather than doing it unattended:
-   1. Create a free Postgres instance (Supabase or Neon both work) and
-      copy its connection string.
-   2. In `prisma/schema.prisma`, change `provider = "sqlite"` to
-      `provider = "postgresql"` in the `datasource db` block.
-   3. `git push` this repo somewhere Render can see it (a GitHub repo —
-      there's no git remote configured yet, this hasn't been pushed
-      anywhere).
-   4. In the Render dashboard: "New +" → "Blueprint", point it at the
-      repo — it reads `render.yaml`. Set the real `DATABASE_URL` env var
-      to the Postgres connection string from step 1 (`render.yaml` leaves
-      it `sync: false` on purpose, so it's not committed).
-   5. Once the first deploy is live, run `npx prisma db push` and
-      `npx tsx prisma/seed.ts` **against the production `DATABASE_URL`**
-      (e.g. from a local shell with that env var set) to create the
-      schema and seed the world content — the app has no auto-migrate
-      step.
-2. Expanding Grand Line/New World past the current 4-island chain (see
-   "World content" below).
-3. Placing the remaining 3 Road Poneglyphs (Fragmento del Alba is placed;
-   see "World content" below) — stays hard/scattered on purpose, each
-   ideally held by a different major power (another Yonko, the World
-   Government directly, possibly the Revolutionary Army).
-4. More canon devil fruits/characters/weapons.
-5. Island lore/conflict intro shown before a player first enters (the
-   island `description` fields already carry some of this narratively,
-   but there's no dedicated "intro" UI moment).
-6. Kill-vs-spare consequence questlines deeper than the current one-off
-   news-flavor hooks (`resolveMercyChoice` in `perform-action.ts`).
+1. Expanding Grand Line/New World further (14 islands now — see "World
+   content" below).
+2. Placing the remaining 2 Road Poneglyphs (Fragmento del Alba and
+   Fragmento del Ocaso are placed; see "World content" below) — stays
+   hard/scattered on purpose. Natural next holders per the existing
+   lore hints: Fragmento Final has a `guardedBy` hint already pointing at
+   Cipher Pol (a different island/power than Enies Lobby's CP-0 squad —
+   maybe Mary Geoise itself, or a third Yonko); Fragmento del Abismo is
+   still a pure mystery, open to invent freely.
+3. More canon devil fruits/characters/weapons.
+4. Kill-vs-spare consequence questlines deeper than the current one-off
+   news-flavor hooks (`resolveMercyChoice` in `perform-action.ts`) — the
+   user flagged (2026-09-23) that island lore in general should feel
+   slower/richer, not just a first-visit blurb; this is the concrete way
+   to act on that.
 
 ### The endgame — explicitly discussed, NOT designed or built yet
 
@@ -339,9 +415,28 @@ not a permanent debuff. UI: a "Perseguido" meter in the stats panel and a
 `play/[id]/page.tsx`. Verified live via curl (force `poneglyphHeat` to
 150 with `scripts/set-poneglyph-heat.ts`, explore until the ambush fires,
 fight it, confirm heat decayed and boss rewards applied) — not just
-typechecked. Only wired to the one placed Poneglyph so far; when the
-other 3 get placed, granting them already runs through this same path
-for free.
+typechecked. Only wired to the one placed Poneglyph so far when this was
+written; now wired to two (see below) for free, since the grant path is
+shared regardless of which Poneglyph it is.
+
+**Second Poneglyph placement (Enies Lobby / CP-0) + production deploy**
+(2026-09-23): see "World content" and "Deployment" above for the full
+detail. Verified with the same rigor as the first placement, plus one
+step further — forced a real character through `POST .../actions
+{action:"mercy",spare:true}` (the exact real API route, not a direct
+function call) against a manufactured `PendingEncounter` for "El
+escuadrón de CP-0" (`scripts/force-poneglyph-encounter.ts` +
+`scripts/set-character-island.ts`), confirmed `poneglyphsRead` and
+`poneglyphHeat` updated correctly, then repeated the same
+register → create → explore flow for real against the live production
+URL over Neon Postgres before deleting the smoke-test account
+(`scripts/delete-test-account.ts`). Full local Vitest suite (122 tests)
+stayed green throughout; local dev DB was reset to clean-seeded state
+afterward. Also added `GUIA_DEL_JUGADOR.txt` at the project root — a
+Spanish, player-facing (not dev-facing) onboarding doc covering every
+mechanic for someone joining to actually play; keep it in sync with new
+player-visible systems the way this file stays in sync with the
+architecture.
 
 ## Conventions to keep matching
 

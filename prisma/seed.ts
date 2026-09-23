@@ -161,6 +161,18 @@ async function main() {
       arcHook:
         "No hay mapas que marquen bien esta isla, y los pocos que se acercan sin ser convocados no suelen volver a salir. Si Barbanegra guarda algo aquí, no lo comparte con nadie vivo.",
     },
+    {
+      key: "eniesLobby",
+      name: "Enies Lobby",
+      sea: Sea.NEW_WORLD,
+      danger: 10,
+      minLevel: 35,
+      factionControl: "Gobierno Mundial (CP-0)",
+      description:
+        "La sede judicial del Gobierno Mundial en persona: torres de mármol blanco, un Árbol del Conocimiento marchito, y un Portal de la Justicia que ha visto entrar a más piratas de los que ha visto salir.",
+      arcHook:
+        "CP-0 ha sellado el archivo sobre un Poneglifo confiscado hace décadas. Nadie entra sin autorización directa del Gobierno Mundial, y nadie que lo intente sin ella ha vuelto a ser visto.",
+    },
   ];
 
   const islands: Record<string, { id: string }> = {};
@@ -194,8 +206,9 @@ async function main() {
     reverseMountain: ["loguetown", "whiskyPeak"],
     whiskyPeak: ["reverseMountain", "littleGarden"],
     littleGarden: ["whiskyPeak", "alabasta"],
-    alabasta: ["littleGarden", "graveyardIsland"],
+    alabasta: ["littleGarden", "graveyardIsland", "eniesLobby"],
     graveyardIsland: ["alabasta"],
+    eniesLobby: ["alabasta"],
   };
 
   for (const [key, neighborKeys] of Object.entries(adjacency)) {
@@ -935,8 +948,9 @@ async function main() {
     {
       codeName: "Poneglifo de Ruta — Fragmento del Ocaso",
       kind: "Road",
-      loreText: "Referenciado solo de forma indirecta en registros de Ohara que sobrevivieron a la purga. Su paradero es, oficialmente, un mito.",
-      guardedBy: null,
+      loreText: "Referenciado solo de forma indirecta en registros de Ohara que sobrevivieron a la purga. Durante décadas se lo dio por mito.",
+      guardedBy:
+        "Confiscado hace décadas por el propio Gobierno Mundial y trasladado a la bóveda judicial de Enies Lobby, donde CP-0 lo vigila bajo sello directo. Nadie sin autorización imperial se acerca a esa bóveda dos veces.",
     },
     {
       codeName: "Poneglifo de Ruta — Fragmento del Abismo",
@@ -969,6 +983,18 @@ async function main() {
   await prisma.island.update({
     where: { id: islands.graveyardIsland.id },
     data: { hasPoneglyph: true, poneglyphId: albaPoneglyph.id },
+  });
+
+  // The Fragmento del Ocaso is the second placed Poneglyph — the World
+  // Government's own custody, not a Yonko's. Enies Lobby, level 35+,
+  // danger 10: the real CP-0 leadership is deliberately elsewhere (see the
+  // event's flavor text below), so what a raider actually meets is the
+  // squad left behind, not the full force. Same pattern as Blackbeard's
+  // lieutenant on Isla Cementerio, generalized to a second power.
+  const ocasoPoneglyph = createdPoneglyphs["Poneglifo de Ruta — Fragmento del Ocaso"];
+  await prisma.island.update({
+    where: { id: islands.eniesLobby.id },
+    data: { hasPoneglyph: true, poneglyphId: ocasoPoneglyph.id },
   });
 
   await prisma.eventTemplate.create({
@@ -1018,6 +1044,36 @@ async function main() {
         onCriticalFail: { text: ["Ni siquiera lo ves venir: el golpe te deja al borde de la inconsciencia."] },
         enemy: { name: "Lugarteniente de Barbanegra", hp: 320, atk: 78, def: 55, spd: 42, isBoss: true },
         poneglyphId: albaPoneglyph.id,
+      }),
+    },
+  });
+
+  await prisma.eventTemplate.create({
+    data: {
+      islandId: islands.eniesLobby.id,
+      kind: EventKind.BOSS,
+      minDanger: 10,
+      maxDanger: 10,
+      weight: 3,
+      title: "El escuadrón de CP-0",
+      bodyJson: JSON.stringify({
+        flavorTexts: [
+          "Cruzas el Portal de la Justicia bajo la mirada de gárgolas de piedra caliza. Un agente de CP-0 se despega de una columna sin hacer el menor ruido — el resto de la célula, con su líder al frente, está desplegado en una misión que el Gobierno Mundial aún no ha hecho pública.",
+        ],
+        onCriticalSuccess: {
+          text: ["El agente cae sin un solo grito. Tras él, una bóveda sellada con el emblema del Gobierno Mundial queda expuesta."],
+          berries: [50_000, 110_000],
+          bounty: [20_000_000, 38_000_000],
+        },
+        onSuccess: {
+          text: ["Tras un combate silencioso y brutal, el agente de CP-0 cae. La bóveda se abre ante ti."],
+          berries: [25_000, 55_000],
+          bounty: [10_000_000, 20_000_000],
+        },
+        onFail: { text: ["El Rokushiki del agente te supera con una precisión inhumana."] },
+        onCriticalFail: { text: ["Ni siquiera lo ves moverse. El golpe te deja al borde de la inconsciencia."] },
+        enemy: { name: "Agente de CP-0", hp: 300, atk: 82, def: 50, spd: 60, isBoss: true },
+        poneglyphId: ocasoPoneglyph.id,
       }),
     },
   });
