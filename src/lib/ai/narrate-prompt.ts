@@ -88,6 +88,8 @@ export interface CombatNarrationInput {
   intentText?: string;
   recentMemory?: string[];
   memorySummary?: string;
+  /** Set only when this enemy is a WorldActor's tracked grudge-holder with a prior incident against this character — see engine/grudge.ts. Omitted entirely on a first meeting. */
+  grudgeContext?: string;
 }
 
 /**
@@ -110,6 +112,7 @@ export function buildCombatNarrationPrompt(input: CombatNarrationInput): { syste
   const user =
     `Personaje del jugador: ${input.characterName}.\n` +
     `Enemigo: ${input.enemyName}${input.enemyPersonality ? ` — personalidad: ${input.enemyPersonality}` : ""}.\n` +
+    (input.grudgeContext ? `${input.grudgeContext}\n` : "") +
     `Este intercambio, ya resuelto (definitivo, no lo alteres): ${roundLines || "ningún golpe efectivo"}.\n` +
     `Vida de ${input.characterName}: ${input.playerHpLeft}/${input.playerMaxHp}. Vida de ${input.enemyName}: ${input.enemyHpLeft}/${input.enemyMaxHp}.\n` +
     outcomeLine +

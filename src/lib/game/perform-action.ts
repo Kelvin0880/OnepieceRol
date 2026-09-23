@@ -7,6 +7,13 @@ import { bountyReward, berryReward, xpToNextLevel } from "../engine/economy";
 import { assessThreat, attemptFlee, ThreatAssessment } from "../engine/encounter";
 import { canEnterIsland } from "../engine/travel";
 import { rollHunterAmbush, decayPursuitHeat, heatAfterReadingPoneglyph } from "../engine/pursuit";
+import {
+  recordGrudgeIncident,
+  recordMercyIncident,
+  decayGrudgesForCharacter,
+  rollGrudgeAmbushForCharacter,
+  getGrudgeContextForNarration,
+} from "./grudges";
 import { toCombatant, generalSkillModifier } from "./derive";
 import { tickWorldIfDue } from "./world-tick";
 import { postNews, handleDeathCheck } from "./death-resolution";
@@ -92,6 +99,7 @@ interface StoredEnemy {
   spd: number;
   isBoss: boolean;
   personality?: string;
+  worldActorId?: string;
 }
 
 interface StoredRewards {
@@ -158,6 +166,43 @@ export async function exploreCharacter(characterId: string, userId: string, inte
     await prisma.character.update({ where: { id: character.id }, data: { poneglyphHeat: decayPursuitHeat(character.poneglyphHeat) } });
   }
 
+  // A grudge-holder's own subordinate may come looking for you, independent
+  // of the poneglyph pursuit above — same lazy per-explore check (and same
+  // "at most one ambush per explore" rule, since we've already returned by
+  // now if the poneglyph one fired), just keyed to a specific WorldActor
+  // instead of one global "how hunted are you."
+  const grudgeAmbush = await rollGrudgeAmbushForCharacter(character.id, rng);
+  await decayGrudgesForCharacter(character.id);
+  if (grudgeAmbush) {
+    const playerCombatant = toCombatant(character);
+    const enemy: StoredEnemy = {
+      name: grudgeAmbush.enemyName,
+      hp: grudgeAmbush.enemySnapshot.hp,
+      atk: grudgeAmbush.enemySnapshot.atk,
+      def: grudgeAmbush.enemySnapshot.def,
+      spd: grudgeAmbush.enemySnapshot.spd,
+      isBoss: true,
+      personality: grudgeAmbush.worldActorPersonality ?? undefined,
+      worldActorId: grudgeAmbush.worldActorId,
+    };
+    const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
+    const assessment = assessThreat(playerCombatant, enemyCombatant);
+    const log = [`${grudgeAmbush.worldActorName} no olvidó lo ocurrido: ${grudgeAmbush.lastIncidentNote}. Uno de sus hombres te encuentra de nuevo.`];
+
+    await prisma.pendingEncounter.create({
+      data: {
+        characterId: character.id,
+        enemyJson: JSON.stringify(enemy),
+        rewardsJson: JSON.stringify({ berries: 0, xp: 25, bounty: 0, islandDanger: character.currentIsland.dangerLevel } satisfies StoredRewards),
+        narrative: log.join(" "),
+        assessment,
+      },
+    });
+    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "grudge", text: log.join(" ") } });
+
+    return { ...emptyResult(log, character.level), pendingCombat: { enemyName: enemy.name, assessment, isBoss: true } };
+  }
+
   const templates = await prisma.eventTemplate.findMany({
     where: {
       OR: [{ islandId: character.currentIslandId }, { islandId: null }],
@@ -196,6 +241,7 @@ export async function exploreCharacter(characterId: string, userId: string, inte
       spd: resolution.enemy.spd,
       isBoss: !!resolution.enemy.isBoss,
       personality: resolution.enemy.personality,
+      worldActorId: resolution.enemy.worldActorId,
     };
     const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
     const assessment = assessThreat(playerCombatant, enemyCombatant);
@@ -382,6 +428,7 @@ export async function engageCharacter(characterId: string, userId: string, inten
     : "enemy"; // draw or ran out of rounds evenly: same "healthier side wins" rule runCombat used, loss-leaning on an exact tie
 
   const scene = await getRecentScene(character.id, 10);
+  const grudgeContext = enemy.worldActorId ? await getGrudgeContextForNarration(enemy.worldActorId, character.id) : null;
   const narrated = await narrateCombat(
     {
       characterName: character.name,
@@ -398,6 +445,10 @@ export async function engageCharacter(characterId: string, userId: string, inten
       intentText,
       recentMemory: scene,
       memorySummary: character.memorySummary ?? undefined,
+      grudgeContext: grudgeContext
+        ? `${enemy.name} ya se enfrentó a este personaje antes y no lo olvida: ${grudgeContext.text}.` +
+          (grudgeContext.critical ? " La situación se ha vuelto crítica para ellos — podrían amenazar con pedir refuerzos." : "")
+        : undefined,
     },
     { characterId: character.id }
   );
@@ -474,8 +525,35 @@ export async function fleeCharacter(characterId: string, userId: string): Promis
   if (flee.success) {
     await prisma.pendingEncounter.delete({ where: { characterId: character.id } });
     const log = [`Logras escabullirte de ${enemy.name} sin que te alcance.`];
+    const newsLog: string[] = [];
+    let bountyDelta = 0;
+
+    // A grudge-holder doesn't let go easily — escaping still has to matter,
+    // not be a free action: it makes news, moves the needle on reputation,
+    // and (the durable part) the actor now personally holds this against
+    // this character, biasing future explores toward another run-in.
+    if (enemy.worldActorId) {
+      const note = `escapó de ${enemy.name} en ${character.currentIsland.name}`;
+      await recordGrudgeIncident(enemy.worldActorId, character.id, "escape", note, enemy.name, {
+        hp: enemy.hp,
+        atk: enemy.atk,
+        def: enemy.def,
+        spd: enemy.spd,
+      });
+      bountyDelta = Math.round(bountyReward(character.currentIsland.dangerLevel, character.level, true) * 0.25);
+      const headline = `${character.name} escapa de ${enemy.name}`;
+      await postNews(
+        headline,
+        `${character.name} logró escabullirse de ${enemy.name} tras un enfrentamiento tenso. No parece ser algo que se olvide fácilmente.`,
+        "Tripulaciones",
+        character.id
+      );
+      newsLog.push(headline);
+      if (bountyDelta > 0) await applyBountyOrNotoriety(character, bountyDelta, newsLog, `Escapó de ${enemy.name}`);
+    }
+
     await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "flee", text: log[0] } });
-    return emptyResult(log, character.level);
+    return { ...emptyResult(log, character.level), bountyDelta, newsPosted: newsLog };
   }
 
   const log = [`No logras escapar de ${enemy.name}, que te alcanza mientras huyes. No queda más remedio que luchar.`];
@@ -532,6 +610,10 @@ export async function resolveMercyChoice(characterId: string, userId: string, sp
   if (spare) {
     log.push(`Decides perdonar a ${enemy.name} y lo dejas ir con vida.`);
     if (character.faction === "MARINE") log.push("La justicia también puede mostrar clemencia — aunque tus superiores lo cuestionen.");
+    if (enemy.worldActorId) {
+      // The durable memory always updates; whether it makes the news stays a coin flip, same feel as before.
+      await recordMercyIncident(enemy.worldActorId, character.id, `perdonó a ${enemy.name} en ${character.currentIsland.name}`);
+    }
     if (Math.random() < 0.1) {
       const headline = `${enemy.name} jura no olvidar la piedad de ${character.name}`;
       await postNews(headline, `Testigos aseguran que ${enemy.name}, perdonado en pleno combate, se ha marchado jurando devolver el favor algún día.`, "Tripulaciones", character.id);
@@ -539,6 +621,17 @@ export async function resolveMercyChoice(characterId: string, userId: string, sp
     }
   } else {
     log.push(`Acabas el combate contra ${enemy.name} sin darle tregua.`);
+    // Beating a lieutenant isn't the same as beating the power behind them
+    // — this only ever records against the subordinate fought, not the
+    // WorldActor itself, and the heat bump reflects that (see engine/grudge.ts).
+    if (enemy.worldActorId) {
+      await recordGrudgeIncident(enemy.worldActorId, character.id, "subordinate_defeat", `derrotó a ${enemy.name} en ${character.currentIsland.name}`, enemy.name, {
+        hp: enemy.hp,
+        atk: enemy.atk,
+        def: enemy.def,
+        spd: enemy.spd,
+      });
+    }
     if (enemy.isBoss && Math.random() < 0.15) {
       const headline = `Rumores de venganza tras la caída de ${enemy.name}`;
       await postNews(headline, `Antiguos aliados de ${enemy.name} habrían jurado hacer pagar a ${character.name} por lo ocurrido.`, "Guerra", character.id);

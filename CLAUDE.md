@@ -374,84 +374,76 @@ down for now, not implemented:
 ### Poneglyph holders fight back — detailed design brief from the user (2026-09-23)
 
 Directly connects to the endgame above and extends what's already built
-(`WorldActor.busyUntil`, the pursuit system, group battles). Still NOT
-built — this is the user's own explanation, captured close to verbatim
-so nothing gets lost:
+(`WorldActor.busyUntil`, the pursuit system, group battles). This is the
+user's own explanation, captured close to verbatim so nothing gets lost —
+**slice 1 (personality + grudge memory) is now DONE, see "NPC personality +
+persistent grudge memory" below.** What's still genuinely open is marked
+explicitly per bullet:
 
-- **A Poneglyph holder's home turf has real weak points.** The "Lugarteniente
-  de Barbanegra" fight already placed on Isla Cementerio is intentionally
-  *not* a watered-down Yonko fight — it's a subordinate, because
-  Blackbeard and his real crew aren't there. That's the pattern to
-  generalize: whether a Poneglyph raid meets a lieutenant or the full
-  crew should depend on where the `WorldActor` actually is right now
-  (`currentFocus`/`busyUntil`), the same mechanic the background world-tick
-  already uses. Characters (NPC or player) can't be everywhere at once —
-  that's a deliberate constraint, not a limitation to work around.
-- **Facing the real thing is lethal if you're not ready.** If the Yonko
-  and their full crew are actually home, an unprepared raid should be
-  able to get the player killed for real — not auto-balanced down to a
-  fair fight.
-- **NPCs should stay in character and remember specific players** — a
-  separate but related ask, captured close to verbatim from the same
-  `Sugerencias.txt` pass that led to the multiplayer party slice
-  ("Live multiplayer party presence" below): "que la ia... nunca se salga
-  de personaje" (a bandit acts like a bandit, a Yonko with huge stats acts
-  like one) and remembers what a specific character did to them, not just
-  a generic escalating danger score. Concretely, on top of what already
-  exists (`WorldActor` has only `name`/`role`/`powerLevel`/a static
-  flavor `description` and a `busyUntil` cooldown — no player linkage at
-  all; the closest precedent is `pursuit.ts`'s anonymous
-  spike-on-event/decay-on-explore/capped-probability `poneglyphHeat`,
-  and `perform-action.ts`'s two purely-cosmetic "jura no olvidar"/"rumores
-  de venganza" news lines that currently write nothing durable):
-  - `WorldActor.personality` (short in-character voice line, same shape
-    as `EnemySpec.personality`, just persistent instead of one-shot) so
-    combat/scene narration involving a named actor can stay consistently
-    in-character across encounters, not just within one fight.
-  - A new per-`(WorldActor, Character)` grudge record — same
-    spike/decay/capped-probability shape `pursuit.ts` already proved out
-    — written for real by the escape/spare/defeat outcomes above (not the
-    current 10-15% flavor-only news rolls), and read by both narration
-    (so a grudge-holder's dialogue can reference the specific history)
-    and by `runWorldTick`'s actor-selection (today fully random among
-    non-busy actors — a grudge should bias which actor gets picked next
-    against a specific player, not just raise a generic danger number).
-  - Dynamic escalation ("llamar a un almirante si algo se pone serio")
-    stays inside this project's hard line: the AI colors it in prose and
-    picks which eligible actor to name-drop, but the trigger condition
-    and mechanical effect (spiking a grudge, scheduling a future ambush)
-    are deterministic/engine-decided — never the AI freely inventing a
-    new mechanical consequence, the same boundary `classify-action.ts`'s
-    tactic modifier and `narrate-prompt.ts`'s `HARD_RULE` already keep
-    everywhere else.
-  - Not built yet — this needs its own pass (new schema, `world.ts`/
-    `world-tick.ts` changes, new narration prompts) separate from the
-    multiplayer party slice, which intentionally left this out to stay a
-    shippable, reviewable size.
+- **A Poneglyph holder's home turf has real weak points** — **still NOT
+  built.** The "Lugarteniente de Barbanegra" fight already placed on Isla
+  Cementerio is intentionally *not* a watered-down Yonko fight — it's a
+  subordinate, because Blackbeard and his real crew aren't there. That's
+  the pattern to generalize: whether a Poneglyph raid meets a lieutenant or
+  the full crew should depend on where the `WorldActor` actually is right
+  now (`currentFocus`/`busyUntil`), the same mechanic the background
+  world-tick already uses. The grudge system below works entirely on top
+  of the existing subordinate-only fights — it doesn't yet make "who you
+  actually meet" dynamic.
+- **Facing the real thing is lethal if you're not ready** — **still NOT
+  built**, depends on the above (there's no "real thing" fight yet, only
+  the subordinate).
+- **NPCs should stay in character and remember specific players** — **DONE**
+  (see "NPC personality + persistent grudge memory" below): `WorldActor.
+  personality`, a real per-`(WorldActor, Character)` `Grudge` record
+  (spike/decay/capped-probability, same shape `pursuit.ts` proved out for
+  `poneglyphHeat`) written by real escape/spare/defeat outcomes — not the
+  old 10-15% flavor-only news rolls — and read by both combat narration
+  (a grudge-holder's dialogue references the specific past incident) and
+  by a new explore-time ambush check (biases a specific grudge-holder's
+  subordinate toward finding this specific character again). **Scope note
+  on where this landed vs. the original ask**: the brief said "read... by
+  `runWorldTick`'s actor-selection" — implemented instead as a per-
+  character explore-time check (mirroring `pursuit.ts`'s `rollHunterAmbush`
+  exactly) rather than touching the global world-tick's news simulation,
+  since world-tick fires world-wide headlines, not per-character encounters
+  — this achieves the same "grudge biases who comes after you" outcome
+  through the architecture the project already uses for exactly this shape
+  of problem. Dynamic escalation ("llamar a un almirante si algo se pone
+  serio") landed as narration-only flavor at high heat (>100) — the
+  trigger and heat math are fully deterministic, the AI only colors the
+  prose, never spawns a mechanically different enemy — satisfying the
+  "AI narrates, code decides" boundary without inventing a second boss tier.
 - **A stealth option should exist**: sneak in, read the Poneglyph, get
   out without ever triggering a fight, for a player who plays it
-  cautious instead of strong.
-- **Escape should be its own mechanic, not a coin flip.** If discovered,
-  the holder doesn't let go easily — but if the player does escape, it
-  has to matter: it makes news, raises their bounty, and — this is the
-  key new piece — earns them **that specific NPC's personal grudge**,
-  not just generic increased danger. Something like a per-`WorldActor`
-  "has a vendetta against character X" flag that then biases future
-  world-tick events or ambushes toward actually targeting that character.
+  cautious instead of strong. **Still NOT built** — deliberately deferred
+  out of the grudge-memory slice as an orthogonal new resolution path for
+  the guardian events (a real alternative to combat, not a memory feature).
+- **Escape should be its own mechanic, not a coin flip. If the player does
+  escape, it has to matter** — **DONE**. `fleeCharacter` used to have zero
+  consequence on a successful escape from even a boss; now, when the enemy
+  is a grudge-linked `WorldActor` subordinate, a successful flee
+  unconditionally posts real news, bumps bounty/notoriety, and spikes that
+  actor's `Grudge` heat against this specific character (escaping costs
+  more heat than losing a clean fight, since the NPC never got closure).
 - **Defeating a beaten subordinate is not the same as defeating the
-  Yonko** — right now there's no distinction in consequence between
-  the two; there should be (a subordinate's death shouldn't carry the
-  same weight/notoriety as toppling the actual power).
+  Yonko** — **DONE, by scale, not by a separate consequence tier**: the
+  grudge heat bump for beating the lieutenant (`GRUDGE_HEAT_SUBORDINATE_
+  DEFEAT = 20`) is deliberately modest against the 150 cap, leaving real
+  room below it for whatever beating the actual `WorldActor` would
+  eventually mean once the "who you actually meet" mechanic above exists
+  — there's no such fight yet to under- or over-weight.
 - **Territory conquest**: beat the Yonko, their commanders, AND their
   army (very plausibly requiring multiple players cooperating), and
   their islands should become conquerable — the player (or players)
   can take over and effectively become the new Yonko. When multiple
   players contributed, who actually keeps the territory/title becomes
   a real in-fiction dispute between them, not something auto-resolved.
-  This needs actual design: how ownership transfers, what "being a
-  Yonko" mechanically grants, and some fair way to arbitrate a
-  multiplayer claim dispute (voting among contributors? whoever dealt
-  the final blow? crew reputation split?) — all open questions.
+  **Still NOT built, needs its own design session**: how ownership
+  transfers, what "being a Yonko" mechanically grants, and some fair way
+  to arbitrate a multiplayer claim dispute (voting among contributors?
+  whoever dealt the final blow? crew reputation split?) — all open
+  questions, same as before.
 
 ### Done since the first session
 
@@ -1000,6 +992,140 @@ reference material that rarely changes, and because the repo is public
   top of `docs/mapa.html`'s `<script>` block to match — nothing wires
   this automatically, by design (a static reference page has no server
   to call).
+
+**Let players permanently delete a character** (2026-09-23): a real
+row-level delete (`src/lib/game/delete-character.ts`'s `deleteCharacter`),
+not a status flip — clears every table that belongs only to the character
+(logs, scene transcript, inventory, pending encounter, imprisonment,
+companions, battle participations, grudges). Hands off crew captaincy or
+dissolves the crew if they were its only member (`Crew.captainId` is a
+plain string, not FK-enforced, so it'd otherwise dangle); dissolves their
+live `Party` if it drops below 2 members. Deletes instanced common gear
+(see the `Weapon.name` uniqueness note above) but returns any 1-of-1 named
+meito to the world unclaimed rather than deleting it. World-facing history
+(`NewsItem`, `PartySceneMessage` transcripts, old `GroupBattle` records) is
+deliberately left as stale non-FK-enforced references — deleting a
+character doesn't rewrite the world's past, same as permadeath. UI: a
+"Borrar" button + inline Sí/No confirm on each character row on the
+character-list page (`src/app/page.tsx`), same confirm convention the
+party-leave flow already established. Verified with a deterministic
+cascade check (`scripts/delete-character-check.ts`, 13 assertions against
+the real dev DB — crew handoff, party dissolution, meito-survives-unclaimed
+vs. common-gear-deleted, every dependent table emptied) plus a real-browser
+run (`scripts/delete-character-ui-check.mjs`) confirming the character
+actually disappears from the list. No schema change.
+
+**OpenRouter narration fallback hardening** (2026-09-23): the user hit the
+dry "(La IA no respondió a tiempo)" fallback live in production during
+normal play, not just heavy testing — flagged in Roadmap item 6 below as
+"not urgent" until this. Diagnosed with real data (the account's
+`GET /api/v1/auth/key` status, and production `ErrorLog` rows), not
+guessed at: the earlier $10 top-up had already worked exactly as intended
+(`free_model_daily_requests` 61/1000 used, nowhere near the cap) — the
+actual cause was the 4 free `:free`-suffixed models in `models.ts` sharing
+OpenRouter-wide capacity across *all* users of that model, so they can
+occasionally all be briefly saturated together regardless of this
+account's own headroom. Fix: `models.ts`'s `DEFAULT_MODELS` gained a 5th,
+paid, last-resort entry (`openai/gpt-4o-mini`, sub-$0.001/call) so that
+rare simultaneous-failure moment degrades to a slightly-paid real
+narration instead of the static fallback text; `openrouter-client.ts`'s
+`callOpenRouter` now collects and logs every model's failure reason
+instead of only the last one, so a future investigation doesn't need
+production credentials pasted fresh into a session. New
+`scripts/check-errors.ts` (dump the N most recent `ErrorLog` rows) added
+as a standing debug helper. No schema change; deployed same day.
+
+**NPC personality + persistent grudge memory — "Poneglyph holders fight
+back," slice 1** (2026-09-23): the user reopened `Sugerencias.txt` and
+asked to build the piece the multiplayer party slice explicitly deferred —
+see the "Poneglyph holders fight back" design brief above for the full
+context and which of its bullets this does/doesn't cover (short version:
+personality + grudge memory is DONE; dynamic "who you actually fight,"
+stealth approach, and territory conquest are still open, deliberately kept
+out of this slice's scope).
+- **`WorldActor.personality`** (additive `String?`): a short in-character
+  voice line, same shape as the existing `EnemySpec.personality` but
+  persistent across encounters instead of one-shot. Backfilled on all ~10
+  seeded actors (Shanks, Marshall D. Teach, Kizaru, Sakazuki, Rob Lucci,
+  etc.) in `prisma/seed.ts` — the upsert's `update` clause was changed from
+  `{}` to actually write `personality` on every reseed, so re-running the
+  seed against already-existing production `WorldActor` rows backfills it
+  instead of silently no-op'ing (a real gotcha caught before it shipped:
+  the original upsert only set fields on *create*).
+- **New `Grudge` model** (`worldActorId`, `characterId` — plain strings,
+  not FK-enforced, matching the existing `Crew.captainId` convention):
+  per-(NPC, character) memory of the latest incident, with the same
+  spike/decay/capped-probability shape `src/lib/engine/pursuit.ts` already
+  proved out for `poneglyphHeat` — new sibling `src/lib/engine/grudge.ts`
+  (`heatAfterGrudgeIncident`, `heatAfterMercy`, `decayGrudgeHeat`,
+  `rollGrudgeAmbush`, 14 tests). Escaping spikes heat more than losing a
+  clean fight (`GRUDGE_HEAT_ESCAPE` 35 vs. `GRUDGE_HEAT_SUBORDINATE_DEFEAT`
+  20, out of a 150 cap) — the NPC never got closure; sparing *lowers* heat
+  (`heatAfterMercy`) — mercy is remembered too, not just hostility. Each
+  row also denormalizes the exact enemy snapshot (`enemySnapshotJson`) and
+  a short past-tense note (`lastIncidentNote`) from the incident that last
+  touched it, so a future ambush or narration line never has to re-derive
+  either from seed data.
+- **Wired to the two encounters that already had real lore linkage**:
+  `EnemySpec`/`StoredEnemy` gained an optional `worldActorId`, set in
+  `prisma/seed.ts` on "Lugarteniente de Barbanegra" (→ Marshall D. Teach)
+  and "Agente de CP-0" (→ Rob Lucci) — the two boss fights that were
+  already narratively "a subordinate, not the real power" (see "World
+  content so far" above), just with nothing in the DB encoding that link
+  before now. `src/lib/game/grudges.ts` (`recordGrudgeIncident`,
+  `recordMercyIncident`, `decayGrudgesForCharacter`,
+  `rollGrudgeAmbushForCharacter`, `getGrudgeContextForNarration`) is the
+  Prisma-facing layer `perform-action.ts` calls into:
+  - `fleeCharacter`: a successful escape from a grudge-linked enemy used
+    to have **zero** consequence, even against a boss — now it always (not
+    probabilistically) posts real news, bumps bounty/notoriety, and spikes
+    the grudge. This was the literal "it has to matter" gap the design
+    brief named.
+  - `resolveMercyChoice`: the old 10%/15% `Math.random()` "jura no
+    olvidar"/"rumores de venganza" news rolls wrote nothing durable — now
+    a real `Grudge` write always happens (spare → relief, finish →
+    subordinate-defeat spike) when the enemy is grudge-linked; the flavor
+    news post itself stays probabilistic, matching the previous feel.
+  - `exploreCharacter`: a new grudge-ambush check sits right next to the
+    existing poneglyph hunter-ambush check (same lazy-per-explore shape,
+    at most one ambush per explore, unconditional heat decay every
+    explore regardless of outcome) — a grudge-holder's subordinate can
+    come looking for a specific character again, reusing that grudge's
+    denormalized enemy snapshot so it's the *same* fight, not a
+    re-rolled one.
+  - Combat narration (`engageCharacter` → `narrateCombat`): when the
+    enemy is grudge-linked, `getGrudgeContextForNarration` feeds a short
+    "remembers this specific history" line into the new
+    `CombatNarrationInput.grudgeContext` field — omitted entirely on a
+    first meeting. Above `CRITICAL_HEAT_THRESHOLD` (100), an extra
+    narration-only hint tells the model the NPC may threaten to call in
+    backup — satisfies "llamar a un almirante si algo se pone serio"
+    without inventing a second mechanical enemy tier; the trigger
+    (heat > threshold) and the actual enemy stats stay fully
+    deterministic, the AI only colors the prose.
+  - `deleteCharacter` (built earlier this session) gained one more
+    cleanup line — `Grudge` rows have no historical value once their
+    character is gone, unlike `NewsItem`/scene transcripts, so they're
+    deleted rather than left stale.
+- **Verified**: `grudge.test.ts` (14, mirrors `pursuit.test.ts`'s
+  structure) — 219 tests total, full suite green, `tsc --noEmit` clean.
+  Deterministic: `scripts/grudge-check.ts` (12 assertions against the real
+  dev DB, direct function calls — forces a lieutenant encounter via a
+  self-contained helper that reads the *actual* seeded template body
+  instead of hardcoding a copy, unlike the existing
+  `force-poneglyph-encounter.ts`; boosts test-character agility so
+  `fleeCharacter`'s real skill check succeeds reliably; confirms escape
+  news/bounty/grudge-write, defeat raises heat further, mercy lowers it,
+  and a grudge-ambush eventually fires at max heat reusing the exact
+  denormalized snapshot). Live browser: `scripts/grudge-ui-check.mjs` +
+  new `scripts/force-grudge-ambush.ts` helper — confirms a grudge-ambush
+  encounter renders the right enemy name and full-HP bar, a combat round
+  resolves normally, zero console errors (narration prose itself isn't
+  asserted, same scope `combat-rounds-check.mjs` already uses, since it's
+  non-deterministic AI text). Schema change (`WorldActor.personality`,
+  new `Grudge` model) pushed to Neon production the same documented way as
+  every prior schema change; code deployed to Render and confirmed live.
+  Local dev DB reset to clean-seeded state afterward.
 
 ## Conventions to keep matching
 

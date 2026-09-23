@@ -554,25 +554,85 @@ async function main() {
   }
 
   // ---------- World actors ----------
-  const actors: Array<{ name: string; role: ActorRole; powerLevel: number; description: string }> = [
-    { name: "Shanks", role: ActorRole.YONKO, powerLevel: 99, description: "El pelirrojo, uno de los Cuatro Emperadores, tan temido por su espada como por su influencia política." },
-    { name: "Marshall D. Teach", role: ActorRole.YONKO, powerLevel: 98, description: 'Apodado "Barbanegra", el único hombre conocido por poseer dos frutas del diablo. Su ambición no tiene fondo.' },
-    { name: "Buggy", role: ActorRole.YONKO, powerLevel: 75, description: 'El "Payaso Estrella", ascendido a Emperador casi por accidente, ahora al frente del Cross Guild.' },
-    { name: "Dracule Mihawk", role: ActorRole.WARLORD, powerLevel: 97, description: "El espadachín más fuerte del mundo, ahora aliado incómodo del Cross Guild." },
-    { name: "Kizaru", role: ActorRole.ADMIRAL, powerLevel: 95, description: "Almirante de la Marina, usuario de la Pika Pika no Mi, tan veloz como despreocupado." },
-    { name: "Fujitora", role: ActorRole.ADMIRAL, powerLevel: 94, description: "Almirante ciego que juzga con gravedad literal y figurada; su sentido de la justicia incomoda a sus superiores." },
-    { name: "Ryokugyu", role: ActorRole.ADMIRAL, powerLevel: 90, description: "El almirante más reciente, de métodos tan lentos como implacables." },
-    { name: "Sakazuki", role: ActorRole.ADMIRAL, powerLevel: 99, description: 'Almirante de Flota, apodado "Akainu". Encarna la Justicia Absoluta sin piedad ni excepciones.' },
-    { name: "Sabo", role: ActorRole.REVOLUTIONARY_COMMANDER, powerLevel: 92, description: "Jefe de Estado Mayor del Ejército Revolucionario, hermano de juramento de sangre de dos futuros Emperadores." },
-    { name: "Rob Lucci", role: ActorRole.CIPHER_POL, powerLevel: 88, description: "Agente de CP-0, el brazo encubierto del Gobierno Mundial para los asuntos que nadie debe conocer." },
+  const actors: Array<{ name: string; role: ActorRole; powerLevel: number; description: string; personality: string }> = [
+    {
+      name: "Shanks",
+      role: ActorRole.YONKO,
+      powerLevel: 99,
+      description: "El pelirrojo, uno de los Cuatro Emperadores, tan temido por su espada como por su influencia política.",
+      personality: "Habla con calma casi displicente incluso ante una amenaza real, pero su tono se vuelve absolutamente serio en el instante en que alguien cruza una línea que le importa.",
+    },
+    {
+      name: "Marshall D. Teach",
+      role: ActorRole.YONKO,
+      powerLevel: 98,
+      description: 'Apodado "Barbanegra", el único hombre conocido por poseer dos frutas del diablo. Su ambición no tiene fondo.',
+      personality: 'Ríe con una carcajada grave y teatral antes de cada golpe, disfrutando abiertamente del caos que provoca; llama "amigo" a quien está a punto de destruir.',
+    },
+    {
+      name: "Buggy",
+      role: ActorRole.YONKO,
+      powerLevel: 75,
+      description: 'El "Payaso Estrella", ascendido a Emperador casi por accidente, ahora al frente del Cross Guild.',
+      personality: "Fanfarrón y ruidoso, exagera cada amenaza hasta lo absurdo, pero entra en pánico genuino si las cosas se ponen realmente serias.",
+    },
+    {
+      name: "Dracule Mihawk",
+      role: ActorRole.WARLORD,
+      powerLevel: 97,
+      description: "El espadachín más fuerte del mundo, ahora aliado incómodo del Cross Guild.",
+      personality: "Habla poco y con desdén aristocrático; valora la habilidad con la espada por encima de casi todo lo demás y lo dice sin rodeos.",
+    },
+    {
+      name: "Kizaru",
+      role: ActorRole.ADMIRAL,
+      powerLevel: 95,
+      description: "Almirante de la Marina, usuario de la Pika Pika no Mi, tan veloz como despreocupado.",
+      personality: "Arrastra las palabras con pereza deliberada, como si nada le urgiera nunca — incluso en pleno combate parece estar de vacaciones.",
+    },
+    {
+      name: "Fujitora",
+      role: ActorRole.ADMIRAL,
+      powerLevel: 94,
+      description: "Almirante ciego que juzga con gravedad literal y figurada; su sentido de la justicia incomoda a sus superiores.",
+      personality: "Habla con solemnidad pausada, casi paternal, y no oculta su incomodidad cuando la Marina le pide algo que no considera justo.",
+    },
+    {
+      name: "Ryokugyu",
+      role: ActorRole.ADMIRAL,
+      powerLevel: 90,
+      description: "El almirante más reciente, de métodos tan lentos como implacables.",
+      personality: "Parco y metódico, deja largos silencios antes de hablar, como si cada palabra le costara un esfuerzo que prefiere ahorrarse.",
+    },
+    {
+      name: "Sakazuki",
+      role: ActorRole.ADMIRAL,
+      powerLevel: 99,
+      description: 'Almirante de Flota, apodado "Akainu". Encarna la Justicia Absoluta sin piedad ni excepciones.',
+      personality: "Frío, tajante y sin una pizca de humor; cualquier piedad ajena le resulta personalmente ofensiva y lo dice sin levantar la voz.",
+    },
+    {
+      name: "Sabo",
+      role: ActorRole.REVOLUTIONARY_COMMANDER,
+      powerLevel: 92,
+      description: "Jefe de Estado Mayor del Ejército Revolucionario, hermano de juramento de sangre de dos futuros Emperadores.",
+      personality: "Directo y cálido con quienes considera aliados, pero implacablemente estratégico frente al Gobierno Mundial, sin un ápice de duda.",
+    },
+    {
+      name: "Rob Lucci",
+      role: ActorRole.CIPHER_POL,
+      powerLevel: 88,
+      description: "Agente de CP-0, el brazo encubierto del Gobierno Mundial para los asuntos que nadie debe conocer.",
+      personality: "Habla en voz baja y mide cada palabra como si calculara distancias de combate; trata la piedad ajena como una debilidad táctica, nunca como una virtud.",
+    },
   ];
 
   const worldActors: Record<string, { id: string }> = {};
   for (const a of actors) {
     const actor = await prisma.worldActor.upsert({
       where: { name: a.name },
-      update: {},
-      create: { name: a.name, role: a.role, powerLevel: a.powerLevel, description: a.description },
+      update: { personality: a.personality },
+      create: { name: a.name, role: a.role, powerLevel: a.powerLevel, description: a.description, personality: a.personality },
     });
     worldActors[a.name] = actor;
   }
@@ -1088,6 +1148,7 @@ async function main() {
           spd: 42,
           isBoss: true,
           personality: "un antiguo preso de Impel Down, brutal y sin miedo, que disfruta el dolor ajeno tanto como el propio",
+          worldActorId: worldActors["Marshall D. Teach"].id,
         },
         poneglyphId: albaPoneglyph.id,
       }),
@@ -1126,6 +1187,7 @@ async function main() {
           spd: 60,
           isBoss: true,
           personality: "frío, metódico y silencioso, no desperdicia palabras ni movimientos innecesarios",
+          worldActorId: worldActors["Rob Lucci"].id,
         },
         poneglyphId: ocasoPoneglyph.id,
       }),

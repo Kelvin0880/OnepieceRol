@@ -472,8 +472,35 @@ model WorldActor {
   currentFocus String?
   busyUntil    DateTime?
   homeIslandId String?
+  // Short in-character voice line, fed to combat narration — same shape as
+  // EnemySpec.personality, just persistent across encounters instead of
+  // one-shot. See Grudge below for the per-character memory this enables.
+  personality  String?
 
   createdAt DateTime @default(now())
+}
+
+// Per-(WorldActor, Character) persistent memory — same spike/decay/capped-
+// probability shape pursuit.ts already proved out for poneglyphHeat, just
+// scoped to one specific NPC-character pair instead of one global "how
+// hunted are you." worldActorId/characterId are plain strings, not FK-
+// enforced, matching the existing Crew.captainId/GroupBattle.crewAId
+// convention above — avoids relation-ambiguity headaches on two models that
+// already have many other relations. See src/lib/engine/grudge.ts and
+// src/lib/game/grudges.ts.
+model Grudge {
+  id                String   @id @default(cuid())
+  worldActorId      String
+  characterId       String
+  heat              Int      @default(0)
+  lastIncidentAt    DateTime @default(now())
+  lastIncidentNote  String // short past-tense line narration can reference, e.g. "escapó de él en Isla Cementerio"
+  enemyName         String // denormalized snapshot of the subordinate fought, so a future ambush can reuse it without re-deriving from seed data
+  enemySnapshotJson String // { hp, atk, def, spd } at the time of the incident — replayed as-is for a future ambush
+  createdAt         DateTime @default(now())
+  updatedAt         DateTime @updatedAt
+
+  @@unique([worldActorId, characterId])
 }
 
 model WorldEventTemplate {

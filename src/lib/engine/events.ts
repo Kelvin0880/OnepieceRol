@@ -17,6 +17,7 @@ export interface EnemySpec {
   spd: number;
   isBoss?: boolean;
   personality?: string; // short in-character flavor line, fed to AI narration
+  worldActorId?: string; // links this fight to a persistent WorldActor's grudge memory (see engine/grudge.ts) — only set for lore-linked subordinate fights
 }
 
 export interface EventBody {

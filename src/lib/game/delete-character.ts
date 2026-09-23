@@ -59,6 +59,10 @@ export async function deleteCharacter(characterId: string, userId: string): Prom
     await tx.sceneMessage.deleteMany({ where: { characterId } });
     await tx.inventoryItem.deleteMany({ where: { characterId } });
     await tx.groupBattleParticipant.deleteMany({ where: { characterId } });
+    // Unlike NewsItem/PartySceneMessage, a Grudge row has no historical
+    // value once its character is gone — it only exists to bias that
+    // character's own future encounters.
+    await tx.grudge.deleteMany({ where: { characterId } });
 
     await tx.character.delete({ where: { id: characterId } });
 
