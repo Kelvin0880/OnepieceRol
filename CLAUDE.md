@@ -380,6 +380,27 @@ start command `npm run start`, plan `free`, region `oregon`.
    dwindling leftover time. No test asserts list order, so this was a
    pure reorder — full suite (223) and `tsc --noEmit` still clean,
    deployed and confirmed live.
+   **Third follow-up, same day, same hour**: the reorder fixed the
+   "skipped" case but not the underlying shape of the bug — a request
+   right after that deploy logged BOTH the free router and the paid model
+   as "This operation was aborted." Re-testing OpenRouter directly a few
+   minutes later showed both responding fast and normally (gpt-4o-mini
+   ~3.2s, the free router ~0.7s) — genuinely transient upstream
+   congestion in that moment, not a code bug, but it exposed the real
+   structural gap: the two were still tried strictly *sequentially*, so a
+   hanging free-router call fully blocked the paid model from even
+   starting until the free one had already burned its whole timeout.
+   Reordering it to 2nd place didn't help if it never got a turn. Fixed
+   properly this time: `callOpenRouter` now fires the first two models
+   (free router + paid backup) at once and races them — whichever answers
+   first wins, the loser is aborted immediately (negligible extra cost,
+   an aborted request generates ~no tokens). Any models beyond the first
+   two are still only tried sequentially afterward, if both raced
+   attempts fail. New test asserts the fix directly (a hanging first
+   model no longer blocks a fast second one from succeeding quickly) —
+   224 tests total, `tsc --noEmit` clean, deployed and confirmed live.
+   This is the actual structural fix; the previous two entries were real
+   but incomplete steps toward it.
 
 ### The endgame — explicitly discussed, NOT designed or built yet
 
