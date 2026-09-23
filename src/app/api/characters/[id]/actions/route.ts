@@ -10,6 +10,8 @@ import {
   fleeCharacter,
   resolveMercyChoice,
   resolveFreeTextAction,
+  confirmLeaveParty,
+  rejoinParty,
   GameActionError,
 } from "@/lib/game/perform-action";
 import { logError } from "@/lib/log-error";
@@ -22,6 +24,8 @@ const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("engage") }),
   z.object({ action: z.literal("flee") }),
   z.object({ action: z.literal("mercy"), spare: z.boolean() }),
+  z.object({ action: z.literal("confirm_leave_party") }),
+  z.object({ action: z.literal("rejoin_party") }),
 ]);
 
 // Free text is the primary input path (see resolveFreeTextAction) — the
@@ -56,6 +60,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return NextResponse.json(await fleeCharacter(id, userId));
       case "mercy":
         return NextResponse.json(await resolveMercyChoice(id, userId, parsed.data.spare));
+      case "confirm_leave_party":
+        return NextResponse.json(await confirmLeaveParty(id, userId));
+      case "rejoin_party":
+        return NextResponse.json(await rejoinParty(id, userId));
     }
   } catch (err) {
     if (err instanceof UnauthorizedError) return NextResponse.json({ error: err.message }, { status: 401 });

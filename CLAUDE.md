@@ -276,18 +276,23 @@ start command `npm run start`, plan `free`, region `oregon`.
 
 1. **AI Game Master, Phase 2: multiplayer orchestration.** Phase 1
    (single-player AI narration + free-text actions, then the free-roam
-   roleplay pivot — narrate/explore split, round-by-round combat, see
-   "Done since the first session" below) is live. The user's original ask
-   also included a multiplayer layer — turn order (AI narrates first,
-   then whoever invited the world), a live panel of who's in your world,
-   same-crew presence sharing actions/narration in real time, and
-   free-text detection of "separating from the crew" (with an explicit
-   confirm prompt) vs. staying together — **explicitly deferred**, not
-   designed yet. Needs its own dedicated design pass before touching it
-   (turn sync model, what "same room" visibility actually means
-   server-side, how AI narration coordinates across multiple players'
-   actions, and how round-by-round combat works when more than one
-   player/NPC can act in the same fight).
+   roleplay pivot — narrate/explore split, round-by-round combat) is
+   live. A first multiplayer slice — party presence, one shared scene per
+   together crew, turn order, and explicit separation/rejoin — is now
+   **also live** (see "Live multiplayer party presence" below). What's
+   still not built: real-time push (today's party scene is still the same
+   10s poll everything else uses, just now shared — see that entry for
+   why this was an acceptable trade this round), and — the harder piece —
+   genuine multi-actor combat where more than one player/NPC acts within
+   the *same* fight. Right now a party member's own fight always stays
+   solo (their own `PendingEncounter`, resolved exactly as in single-player,
+   just echoed as a one-liner to the shared scene); an actual joint fight
+   still means the existing deterministic `GroupBattle` (crew-vs-crew)
+   system, not the AI-narrated round-by-round loop. Needs its own design
+   pass if/when wanted: how `resolveExchange` would generalize past one
+   attacker + one defender, and how AI narration would coordinate a
+   beat where multiple humans are choosing actions inside the same
+   exchange instead of one at a time.
 2. Expanding Grand Line/New World further (14 islands now — see "World
    content" below).
 3. Placing the remaining 2 Road Poneglyphs (Fragmento del Alba and
@@ -361,6 +366,43 @@ so nothing gets lost:
   and their full crew are actually home, an unprepared raid should be
   able to get the player killed for real — not auto-balanced down to a
   fair fight.
+- **NPCs should stay in character and remember specific players** — a
+  separate but related ask, captured close to verbatim from the same
+  `Sugerencias.txt` pass that led to the multiplayer party slice
+  ("Live multiplayer party presence" below): "que la ia... nunca se salga
+  de personaje" (a bandit acts like a bandit, a Yonko with huge stats acts
+  like one) and remembers what a specific character did to them, not just
+  a generic escalating danger score. Concretely, on top of what already
+  exists (`WorldActor` has only `name`/`role`/`powerLevel`/a static
+  flavor `description` and a `busyUntil` cooldown — no player linkage at
+  all; the closest precedent is `pursuit.ts`'s anonymous
+  spike-on-event/decay-on-explore/capped-probability `poneglyphHeat`,
+  and `perform-action.ts`'s two purely-cosmetic "jura no olvidar"/"rumores
+  de venganza" news lines that currently write nothing durable):
+  - `WorldActor.personality` (short in-character voice line, same shape
+    as `EnemySpec.personality`, just persistent instead of one-shot) so
+    combat/scene narration involving a named actor can stay consistently
+    in-character across encounters, not just within one fight.
+  - A new per-`(WorldActor, Character)` grudge record — same
+    spike/decay/capped-probability shape `pursuit.ts` already proved out
+    — written for real by the escape/spare/defeat outcomes above (not the
+    current 10-15% flavor-only news rolls), and read by both narration
+    (so a grudge-holder's dialogue can reference the specific history)
+    and by `runWorldTick`'s actor-selection (today fully random among
+    non-busy actors — a grudge should bias which actor gets picked next
+    against a specific player, not just raise a generic danger number).
+  - Dynamic escalation ("llamar a un almirante si algo se pone serio")
+    stays inside this project's hard line: the AI colors it in prose and
+    picks which eligible actor to name-drop, but the trigger condition
+    and mechanical effect (spiking a grudge, scheduling a future ambush)
+    are deterministic/engine-decided — never the AI freely inventing a
+    new mechanical consequence, the same boundary `classify-action.ts`'s
+    tactic modifier and `narrate-prompt.ts`'s `HARD_RULE` already keep
+    everywhere else.
+  - Not built yet — this needs its own pass (new schema, `world.ts`/
+    `world-tick.ts` changes, new narration prompts) separate from the
+    multiplayer party slice, which intentionally left this out to stay a
+    shippable, reviewable size.
 - **A stealth option should exist**: sneak in, read the Poneglyph, get
   out without ever triggering a fight, for a player who plays it
   cautious instead of strong.
@@ -750,6 +792,143 @@ tactic *biases* that roll.
   addressed further this session (would mean either a paid/higher-limit
   key or further cutting AI-call volume) — worth knowing if narration
   quality seems to degrade during a long play session.
+
+**Live multiplayer party presence — shared scenes, turn order, separation**
+(2026-09-23, the first slice of AI Game Master Phase 2): the user reopened
+`Sugerencias.txt` and asked to build out the multiplayer piece that Phase 1
+explicitly deferred. Re-read in full, it blends two different asks — this
+slice covers the first (presence/shared scene/turn order/separation); the
+second (NPCs with persistent memory/grudges/dynamic escalation) is written
+down as an expansion of "Poneglyph holders fight back" above, not built
+this round, to keep this change a shippable, reviewable size. Also
+confirmed via `Sugerencias.txt`'s own examples (a bar scene between five
+characters who are already crewmates) that "presence" here means **your
+own crew**, not a new "private hosted session" concept — two different
+crews on the same island stay exactly as before (read-only "Aventureros en
+esta isla" list, plus the existing `GroupBattle` challenge system).
+- **New `Party`/`PartySceneMessage` models** (`prisma/schema.prisma`):
+  crewmates who are `ALIVE`, on the same island, and haven't explicitly
+  separated share one `Party` row (`crewId` unique — one active party per
+  crew at a time) with a `turnOrder` (captain first, JSON array of
+  character ids), a `turnIndex`, and `awaitingNarrator` (true only in the
+  narrow window between a human's free text and the AI's reply — blocks
+  every other submit meanwhile). `Character` gained `partyId` (null =
+  not currently sharing a scene) and `isSeparatedFromParty` (an explicit
+  "I stepped away" flag, separate from just "not in a party right now" —
+  needed so a character who's still physically on the same island as
+  their crew doesn't get silently auto-rejoined; matches the user's own
+  words, "uno se puede separar momentáneamente" while staying nominally
+  present). `PartySceneMessage` is the shared transcript — distinct from
+  the existing per-character `SceneMessage`, which stays exactly as-is
+  and is what a character falls back to whenever they aren't in a party.
+- **Lazily materialized/dissolved, no cron** — same request-driven style
+  `tickWorldIfDue`/`WorldClock` already use. `syncPartyForCharacter`
+  (`src/lib/game/party.ts`) runs at the top of every
+  `GET /api/characters/[id]` (the existing 10s poll everyone already
+  has), scoped to just that one character's own crew — cheap, no
+  world-wide scan. It creates a party once 2+ crewmates are together,
+  recomputes membership/turn order (restarting the cycle at `turnIndex`
+  0) whenever who's actually together changes, and deletes the party
+  outright once fewer than 2 remain — eventually consistent across a
+  crew purely through each member's own next poll, no push/broadcast
+  needed. This means the party feature reuses 100% of the existing
+  polling infrastructure — no WebSocket/SSE was introduced, a deliberate
+  choice matching the project's "no extra infra" convention and Render's
+  single free-tier web service.
+- **Turn order is enforced server-side, not just hidden in the UI**:
+  `beginPartyTurn` (`party.ts`) checks whose turn it is and locks the
+  party (`awaitingNarrator = true`) inside one `prisma.$transaction`
+  (same check-then-flip pattern `world-tick.ts` already used) — a
+  same-party member submitting free text out of turn gets a clear
+  `GameActionError` ("Espera tu turno — le toca a X.") from the API
+  itself, not just a disabled button. `advancePartyTurn` unlocks and
+  moves to the next member; `releasePartyTurnLock` unlocks *without*
+  advancing, used only for the leave_party confirmation step below (a
+  cancelled/pending confirmation shouldn't cost the party's turn).
+- **Personal combat always bypasses party turn order entirely** — the
+  hard scope cut of this slice, matching Roadmap item 1's note above: a
+  party member's own fight (`PendingEncounter`) resolves exactly as in
+  solo play, immediately, on every message, never gated by whose turn it
+  is in the shared scene — you can't be blocked from fighting for your
+  life by group chat turn order. `resolveFreeTextAction`
+  (`perform-action.ts`) only routes into the party-aware branch
+  (`resolvePartyFreeTextAction`) when the character has **no**
+  `pendingEncounter`; the moment `explore` (dispatched through the party
+  path) triggers a fight, every further message from that character goes
+  through the unchanged solo path instead, pulling them into their own
+  mini-thread while the party's shared turn moves on to the next member.
+  Once that personal fight is no longer "still fighting" (won, lost, or
+  fled), a short one-line summary (`summarizeCombatForParty`) is echoed
+  into the shared `PartySceneMessage` feed via `echoToParty` — satisfies
+  "que puedan leer las acciones del otro" without inventing multi-actor
+  dice resolution. A real *joint* fight is still the existing
+  deterministic `GroupBattle` (crew-vs-crew) system, completely untouched.
+- **One shared AI call per turn, same as solo play** — the user's
+  "narrate" default and the tactic-modifier-merge discipline both exist
+  specifically to keep AI-call volume low against OpenRouter's free-tier
+  rate limit (see the free-roam pivot entry below); a naive multiplayer
+  design that classified+narrated once per party member per beat would
+  have directly reproduced that same problem, just multiplied by party
+  size instead of call type. Instead: `buildPartySceneNarrationPrompt`/
+  `narratePartyScene` (`ai/narrate-prompt.ts`/`ai/narrate.ts`) is a single
+  call per human turn, addressed to the whole present roster (names,
+  factions, levels) rather than one protagonist — exactly one classify +
+  one narrate call, identical cost to solo play regardless of how many
+  people are in the party. `classify-action.ts` gained one new
+  `ActionId`, `"leave_party"` (only ever offered when the acting
+  character currently has a `partyId`), classified in the same call as
+  everything else — no extra AI call for that either.
+- **Separation is a real confirm step, not instant** — per the user's
+  explicit ask ("le ponga en pantalla al usuario: ¿te quieres separar de
+  tus nakamas?"): free text read as `leave_party` returns
+  `ActionResult.confirmRequired: "leave_party"` with **nothing mutated
+  yet** — the UI (`play/[id]/page.tsx`) renders an inline Sí/Ño instead of
+  appending to the feed; only clicking "Sí, separarme" actually posts
+  `{action:"confirm_leave_party"}`, which is what calls `confirmLeaveParty`
+  (sets `isSeparatedFromParty`, clears `partyId`, echoes a line, dissolves
+  the party if that drops it below 2). A dedicated "Separarte del grupo"
+  button offers the same confirm UI without needing to type anything —
+  clicking an explicit button *is* the confirmation, same convention as
+  the mercy-choice buttons skipping classification entirely. Rejoining
+  (`{action:"rejoin_party"}` → `rejoinParty` → clears the flag and calls
+  `syncPartyForCharacter` immediately) only appears as a button when
+  actually possible — same crew, same island, someone still there.
+- **UI**: the solo "Escena" panel is swapped for a "Escena compartida"
+  panel whenever `character.party` is set (bubbles gain an author-name
+  label so more than two roles can render sensibly; the player's own
+  messages stay gold-right-aligned, others' own text left-aligned in a
+  bordered bubble, the narrator's stays the existing dark bubble); a turn
+  label ("Es tu turno." / "Le toca a X." / "El narrador está
+  pensando...") sits next to the "¿Qué haces?" label, and the textarea/
+  Actuar button/quick Entrenar/Descansar buttons all disable together
+  when it isn't this character's turn (never when they have a
+  `pendingEncounter`, matching the bypass rule above). The crew panel
+  labels each member "contigo ahora" / "en esta isla, por su cuenta" /
+  "en otra isla" using the new `partyId`/`currentIslandId` fields the
+  API now exposes on `crew.members`.
+- **Verified**: `party-turns.test.ts` (new, pure `buildTurnOrder`/
+  `nextTurnIndex`), `classify-action.test.ts` additions (`leave_party`
+  valid-set/keyword-fallback cases), `narrate-prompt.test.ts` additions
+  (`buildPartySceneNarrationPrompt`) — 205 tests total, full suite green,
+  `tsc --noEmit` clean. Live: new `scripts/party-multiplayer-smoke.mjs`
+  (two real accounts/characters via two Playwright browser contexts — a
+  crew founded and joined, both land on the shared starting island,
+  captain's turn goes first, the second member's Actuar button is
+  server-and-UI blocked out of turn, both clients see the same
+  transcript with both names after each takes a turn, sending
+  separation text produces the confirm prompt instead of acting
+  immediately, confirming it drops the member to a private scene and
+  dissolves the now-too-small party for the remaining member too, and
+  rejoining via the button restores the shared scene on both clients) —
+  11/11 checks passed against real `npm run dev` + a real OpenRouter key.
+  One `429` (all 4 fallback models rate-limited) was hit during this run
+  and degraded gracefully to the documented fallback line rather than
+  breaking anything — the same known, already-documented free-tier
+  ceiling from the free-roam pivot below, not a new issue. Local dev DB
+  reset to clean-seeded state afterward. Schema changes need the same
+  documented push to Neon production (`gen-prod-schema.mjs` →
+  `prisma generate --schema=...production.prisma` → `prisma db push` →
+  `prisma generate` back to sqlite) before deploying.
 
 ## Conventions to keep matching
 

@@ -36,7 +36,7 @@ import { OPENROUTER_MODELS } from "./models";
  *    "keep the game playable during an outage" path, not a substitute
  *    for the model's judgment on phrasing it did manage to see.
  */
-export type ActionId = "narrate" | "explore" | "train" | "rest" | "travel" | "engage" | "flee" | "mercy_spare" | "mercy_finish";
+export type ActionId = "narrate" | "explore" | "train" | "rest" | "travel" | "engage" | "flee" | "mercy_spare" | "mercy_finish" | "leave_party";
 
 export interface ClassifyResult {
   action: ActionId | "unclear";
@@ -62,6 +62,7 @@ function clampTacticModifier(n: number): number {
 }
 
 const KEYWORD_RULES: Array<{ action: ActionId; pattern: RegExp }> = [
+  { action: "leave_party", pattern: /me separo|voy solo|me alejo|por mi cuenta|me bajo del (barco|grupo)/i },
   { action: "flee", pattern: /huy|corr|escap|retroced/i },
   { action: "engage", pattern: /atac|luch|pele|golpe|desenfund|embist|arremet|presion|contraataq|bloque|esquiv|defiend/i },
   { action: "mercy_spare", pattern: /perdon|deja.*vivir|suelt|no lo mat/i },
@@ -91,11 +92,16 @@ function keywordClassify(freeText: string, validActions: ActionId[]): ActionId |
 function buildClassifyPrompt(freeText: string, validActions: ActionId[]): { system: string; user: string } {
   const narrateIsDefault = validActions.includes("narrate");
   const isCombatChoice = validActions.includes("engage");
+  const canLeaveParty = validActions.includes("leave_party");
   const guidance = narrateIsDefault
     ? "Esto es un rol libre de verdad: el jugador puede escribir cualquier cosa — caminar, hablar con alguien, coquetear, comprar, beber, merodear, pensar, lo que sea. " +
       "Usa 'narrate' (pura interacción de rol, sin dados) para CUALQUIER texto que no sea claramente entrenar físicamente/técnicas, descansar/dormir, " +
       "ni una decisión arriesgada y decisiva de avanzar la trama (como 'exploro la isla a fondo', 'me interno en la jungla a buscar algo', 'busco pelea con quien sea', 'me arriesgo a robar esto'). " +
-      "Esas decisiones arriesgadas y decisivas van en 'explore'. Ante la duda, o si es solo conversación/ambiente, usa siempre 'narrate' — nunca respondas unclear solo porque la acción sea social, graciosa, atrevida o no encaje perfecto en una categoría."
+      "Esas decisiones arriesgadas y decisivas van en 'explore'. Ante la duda, o si es solo conversación/ambiente, usa siempre 'narrate' — nunca respondas unclear solo porque la acción sea social, graciosa, atrevida o no encaje perfecto en una categoría." +
+      (canLeaveParty
+        ? " El jugador está ahora mismo en una escena compartida con sus compañeros de tripulación. Si el texto describe explícitamente alejarse físicamente del grupo o irse por su cuenta " +
+          "(p. ej. 'me bajo del barco y me voy solo', 'me separo del grupo', 'voy por mi lado'), usa 'leave_party' en vez de 'narrate' — es distinto de simplemente hablar o actuar dentro de la escena compartida."
+        : "")
     : isCombatChoice
     ? "Es un combate en curso: el jugador está describiendo su movimiento (atacar, esquivar, bloquear, una táctica, cualquier acción física de pelea) — todo eso es engage. " +
       "Usa 'flee' solo si el texto describe claramente intentar escapar, huir o retirarse. Ante cualquier duda, o si el texto describe seguir peleando de cualquier forma, usa 'engage' — " +

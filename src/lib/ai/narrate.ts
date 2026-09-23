@@ -5,9 +5,11 @@ import {
   buildCombatNarrationPrompt,
   buildMemoryUpdatePrompt,
   buildSceneNarrationPrompt,
+  buildPartySceneNarrationPrompt,
   ExploreNarrationInput,
   CombatNarrationInput,
   SceneNarrationInput,
+  PartySceneNarrationInput,
 } from "./narrate-prompt";
 import { callOpenRouter } from "./openrouter-client";
 import { OPENROUTER_MODELS } from "./models";
@@ -91,6 +93,18 @@ export async function narrateScene(input: SceneNarrationInput, meta: { character
   } catch (err) {
     await logError("ai/narrate-scene", err, meta);
     return "El mundo sigue su curso a tu alrededor, pero por ahora nada más que contar. (La IA no respondió a tiempo — prueba de nuevo en un momento.)";
+  }
+}
+
+/** Same never-throws contract as narrateScene, for a shared party scene (see Party in schema.prisma). */
+export async function narratePartyScene(input: PartySceneNarrationInput, meta: { partyId: string }): Promise<string> {
+  try {
+    const { system, user } = buildPartySceneNarrationPrompt(input);
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 700, validate: isValidNarration });
+    return text.trim();
+  } catch (err) {
+    await logError("ai/narrate-party-scene", err, meta);
+    return "El mundo sigue su curso alrededor del grupo, pero por ahora nada más que contar. (La IA no respondió a tiempo — prueba de nuevo en un momento.)";
   }
 }
 

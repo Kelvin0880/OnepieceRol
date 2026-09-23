@@ -4,9 +4,11 @@ import {
   buildCombatNarrationPrompt,
   buildMemoryUpdatePrompt,
   buildSceneNarrationPrompt,
+  buildPartySceneNarrationPrompt,
   ExploreNarrationInput,
   CombatNarrationInput,
   SceneNarrationInput,
+  PartySceneNarrationInput,
 } from "./narrate-prompt";
 
 const exploreBase: ExploreNarrationInput = {
@@ -164,6 +166,46 @@ describe("buildSceneNarrationPrompt", () => {
   it("includes the persistent memory summary when provided", () => {
     const { user } = buildSceneNarrationPrompt({ ...sceneBase, memorySummary: "Es conocido por su generosidad con extraños." });
     expect(user).toContain("Es conocido por su generosidad con extraños.");
+  });
+});
+
+const partySceneBase: PartySceneNarrationInput = {
+  islandName: "Pueblo Foosha",
+  islandDescription: "Un pueblo costero tranquilo.",
+  partyRoster: [
+    { name: "Kaze", faction: "PIRATE", level: 5 },
+    { name: "Mira", faction: "PIRATE", level: 4 },
+  ],
+  actingCharacterName: "Kaze",
+  playerText: "Entro al bar mirando si alguien nos reconoce.",
+};
+
+describe("buildPartySceneNarrationPrompt", () => {
+  it("forbids granting or altering any mechanical outcome, same as the solo scene prompt", () => {
+    const { system } = buildPartySceneNarrationPrompt(partySceneBase);
+    expect(system).toMatch(/SIN tiradas de dados ni resultados mecánicos/);
+    expect(system).toMatch(/Nunca otorgues ni quites berries/);
+  });
+
+  it("lists every present party member by name, not just whoever is acting", () => {
+    const { user } = buildPartySceneNarrationPrompt(partySceneBase);
+    expect(user).toContain("Kaze");
+    expect(user).toContain("Mira");
+  });
+
+  it("instructs the narrator it may address anyone in the group, not only the acting character", () => {
+    const { system } = buildPartySceneNarrationPrompt(partySceneBase);
+    expect(system).toMatch(/CUALQUIERA de los personajes presentes/);
+  });
+
+  it("includes the acting character's free text verbatim", () => {
+    const { user } = buildPartySceneNarrationPrompt(partySceneBase);
+    expect(user).toContain("Entro al bar mirando si alguien nos reconoce.");
+  });
+
+  it("includes recent party transcript lines when provided", () => {
+    const { user } = buildPartySceneNarrationPrompt({ ...partySceneBase, recentParty: ["Mira: Pido una ronda para todos.", "Narrador: El tabernero asiente."] });
+    expect(user).toContain("El tabernero asiente.");
   });
 });
 

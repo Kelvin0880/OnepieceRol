@@ -62,6 +62,25 @@ interface CrewMember {
   faction: string;
   status: string;
   currentIslandId: string;
+  partyId: string | null;
+  isSeparatedFromParty: boolean;
+}
+
+interface PartyMsg {
+  id: string;
+  authorCharacterId: string | null;
+  authorName: string;
+  text: string;
+  createdAt: string;
+}
+
+interface PartyState {
+  id: string;
+  turnOrder: string[];
+  turnIndex: number;
+  awaitingNarrator: boolean;
+  members: { id: string; name: string }[];
+  messages: PartyMsg[];
 }
 
 interface Crew {
@@ -157,6 +176,8 @@ interface Character {
   } | null;
   crew: Crew | null;
   imprisonment: Imprisonment | null;
+  partyId: string | null;
+  isSeparatedFromParty: boolean;
 }
 
 interface StateResponse {
@@ -165,6 +186,7 @@ interface StateResponse {
   othersHere: OtherHere[];
   prisonersHere: PrisonerHere[];
   crewBattles: BattleSummary[];
+  party: PartyState | null;
   error?: string;
 }
 
@@ -224,6 +246,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [battleError, setBattleError] = useState<string | null>(null);
   const [battleBusy, setBattleBusy] = useState(false);
   const [freeText, setFreeText] = useState("");
+  const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const sceneEndRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
@@ -249,7 +272,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
 
   useEffect(() => {
     sceneEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
-  }, [data?.character.sceneMessages.length, busy]);
+  }, [data?.character.sceneMessages.length, data?.party?.messages.length, busy]);
 
   async function doCrewAction(body: Record<string, unknown>) {
     setCrewBusy(true);
@@ -334,6 +357,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
       }
       if (result.log) setFeed((f) => [...result.log, ...f].slice(0, 60));
       if (result.arcIntro) setArcIntro(result.arcIntro);
+      if (result.confirmRequired === "leave_party") setShowLeaveConfirm(true);
       await load();
       return true;
     } finally {
@@ -364,9 +388,22 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     );
   }
 
-  const { character, connectedIslands } = data;
+  const { character, connectedIslands, party } = data;
   const isDead = character.status === "DEAD";
   const isImprisoned = character.status === "IMPRISONED";
+
+  // Party turn-gating never applies while resolving a personal fight — you
+  // can't be blocked from fighting for your life by whose turn it is in
+  // the group scene (see resolvePartyFreeTextAction in perform-action.ts).
+  const isMyPartyTurn = party ? party.turnOrder[party.turnIndex] === character.id : true;
+  const partyBlocksInput = !!party && !character.pendingEncounter && (party.awaitingNarrator || !isMyPartyTurn);
+  const partyTurnLabel = !party || character.pendingEncounter
+    ? null
+    : party.awaitingNarrator
+    ? "El narrador está pensando..."
+    : isMyPartyTurn
+    ? "Es tu turno."
+    : `Le toca a ${party.members.find((m) => m.id === party.turnOrder[party.turnIndex])?.name ?? "otro miembro del grupo"}.`;
 
   return (
     <main className="flex-1 w-full max-w-6xl mx-auto p-4 md:p-6 flex flex-col gap-4">
@@ -445,7 +482,29 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
 
             {!isDead && !isImprisoned && (
               <div className="mb-4">
-                <label className="text-xs text-ink-dim mb-1 block">¿Qué haces?</label>
+                <div className="flex items-center justify-between mb-1">
+                  <label className="text-xs text-ink-dim">¿Qué haces?</label>
+                  {partyTurnLabel && <span className={`text-xs ${isMyPartyTurn && !party?.awaitingNarrator ? "text-gold" : "text-ink-dim italic"}`}>{partyTurnLabel}</span>}
+                </div>
+                {showLeaveConfirm && (
+                  <div className="panel p-3 mb-2" style={{ borderColor: "var(--gold)" }}>
+                    <p className="text-sm mb-2">¿Quieres separarte de tus nakamas?</p>
+                    <div className="flex gap-2">
+                      <button
+                        className="btn-gold px-3 py-1.5 text-xs"
+                        onClick={async () => {
+                          setShowLeaveConfirm(false);
+                          await doAction({ action: "confirm_leave_party" });
+                        }}
+                      >
+                        Sí, separarme
+                      </button>
+                      <button className="btn-ghost px-3 py-1.5 text-xs" onClick={() => setShowLeaveConfirm(false)}>
+                        No, seguir con ellos
+                      </button>
+                    </div>
+                  </div>
+                )}
                 <textarea
                   className="w-full bg-sea-deep border border-[--line] rounded px-3 py-2 text-sm outline-none focus:border-gold resize-none"
                   rows={2}
@@ -454,10 +513,12 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                       ? "Ej: Desenfundo mi espada y cargo contra él sin dudar."
                       : character.pendingEncounter?.phase === "victory"
                       ? "Ej: Le perdono la vida y le advierto que no vuelva."
+                      : partyBlocksInput
+                      ? "Espera tu turno..."
                       : "Ej: Entro al bar y me fijo si alguien interesante anda por ahí."
                   }
                   value={freeText}
-                  disabled={busy}
+                  disabled={busy || partyBlocksInput}
                   onChange={(e) => setFreeText(e.target.value)}
                   onKeyDown={(e) => {
                     if (e.key === "Enter" && !e.shiftKey) {
@@ -467,9 +528,14 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                   }}
                 />
                 <div className="flex items-center gap-2 mt-2">
-                  <button className="btn-gold px-4 py-2 text-sm" disabled={busy || !freeText.trim()} onClick={submitFreeText}>
+                  <button className="btn-gold px-4 py-2 text-sm" disabled={busy || partyBlocksInput || !freeText.trim()} onClick={submitFreeText}>
                     Actuar
                   </button>
+                  {party && (
+                    <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => setShowLeaveConfirm(true)}>
+                      Separarte del grupo
+                    </button>
+                  )}
                   {busy && (
                     <span className="flex items-center gap-1.5 text-xs text-ink-dim">
                       <span className="inline-block w-3.5 h-3.5 rounded-full border-2 border-gold/30 border-t-gold animate-spin" />
@@ -509,10 +575,18 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
             {!isDead && !isImprisoned && !character.pendingEncounter && (
               <div className="flex flex-wrap items-center gap-2">
                 <span className="text-xs text-ink-dim">O, para lo simple:</span>
-                <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "train" })}>
+                <button
+                  className="btn-ghost px-3 py-1.5 text-xs"
+                  disabled={busy || partyBlocksInput}
+                  onClick={() => (party ? doAction({ freeText: "Me pongo a entrenar un rato." }) : doAction({ action: "train" }))}
+                >
                   Entrenar
                 </button>
-                <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "rest" })}>
+                <button
+                  className="btn-ghost px-3 py-1.5 text-xs"
+                  disabled={busy || partyBlocksInput}
+                  onClick={() => (party ? doAction({ freeText: "Me tomo un momento para descansar." }) : doAction({ action: "rest" }))}
+                >
                   Descansar
                 </button>
               </div>
@@ -539,21 +613,45 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
 
           {!isDead && (
             <div className="panel p-4">
-              <h3 className="font-display text-sm text-ink-dim mb-2">Escena</h3>
+              <h3 className="font-display text-sm text-ink-dim mb-2">{party ? "Escena compartida" : "Escena"}</h3>
               <div className="flex flex-col gap-3 max-h-[520px] overflow-y-auto scrollbar-thin pr-1">
-                {character.sceneMessages.length === 0 && (
-                  <p className="text-sm text-ink-dim italic">Escribe qué haces arriba para empezar a rolear.</p>
-                )}
-                {character.sceneMessages.map((m) =>
-                  m.role === "player" ? (
-                    <div key={m.id} className="self-end max-w-[85%] rounded-lg px-3 py-2 text-sm" style={{ background: "var(--gold)", color: "var(--sea-deep)" }}>
-                      {m.text}
-                    </div>
-                  ) : (
-                    <div key={m.id} className="self-start max-w-[85%] rounded-lg px-3 py-2 text-sm bg-black/25 whitespace-pre-line">
-                      {m.text}
-                    </div>
-                  )
+                {party ? (
+                  <>
+                    {party.messages.length === 0 && <p className="text-sm text-ink-dim italic">La escena del grupo empieza aquí.</p>}
+                    {party.messages.map((m) => {
+                      const mine = m.authorCharacterId === character.id;
+                      const isNarrator = m.authorCharacterId === null;
+                      return (
+                        <div
+                          key={m.id}
+                          className={`max-w-[85%] rounded-lg px-3 py-2 text-sm ${mine ? "self-end" : "self-start"} ${
+                            isNarrator ? "bg-black/25 whitespace-pre-line" : mine ? "" : "bg-black/10 border border-[--line]"
+                          }`}
+                          style={mine ? { background: "var(--gold)", color: "var(--sea-deep)" } : undefined}
+                        >
+                          {!mine && <div className="text-[10px] uppercase tracking-wide text-ink-dim mb-0.5">{m.authorName}</div>}
+                          {m.text}
+                        </div>
+                      );
+                    })}
+                  </>
+                ) : (
+                  <>
+                    {character.sceneMessages.length === 0 && (
+                      <p className="text-sm text-ink-dim italic">Escribe qué haces arriba para empezar a rolear.</p>
+                    )}
+                    {character.sceneMessages.map((m) =>
+                      m.role === "player" ? (
+                        <div key={m.id} className="self-end max-w-[85%] rounded-lg px-3 py-2 text-sm" style={{ background: "var(--gold)", color: "var(--sea-deep)" }}>
+                          {m.text}
+                        </div>
+                      ) : (
+                        <div key={m.id} className="self-start max-w-[85%] rounded-lg px-3 py-2 text-sm bg-black/25 whitespace-pre-line">
+                          {m.text}
+                        </div>
+                      )
+                    )}
+                  </>
                 )}
                 {busy && (
                   <div className="self-start max-w-[85%] rounded-lg px-3 py-2 text-sm bg-black/25 flex items-center gap-1.5 text-ink-dim italic">
@@ -851,15 +949,37 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                 <p className="text-xs text-ink-dim">{character.crew.flagDesc}</p>
                 <p className="text-xs text-ink-dim">Barco: {character.crew.shipName}</p>
                 <div className="mt-1 flex flex-col gap-1">
-                  {character.crew.members.map((m) => (
-                    <div key={m.id} className="text-sm flex justify-between">
-                      <span className={m.status !== "ALIVE" ? "text-blood line-through" : ""}>
-                        {m.name} {m.id === character.crew!.captainId && <span className="text-gold text-xs">★</span>}
-                      </span>
-                      <span className="text-ink-dim text-xs">Nv. {m.level}</span>
-                    </div>
-                  ))}
+                  {character.crew.members.map((m) => {
+                    const presence =
+                      m.id === character.id
+                        ? null
+                        : m.status !== "ALIVE"
+                        ? null
+                        : m.partyId && m.partyId === character.partyId
+                        ? "contigo ahora"
+                        : m.currentIslandId === character.currentIsland.id
+                        ? "en esta isla, por su cuenta"
+                        : "en otra isla";
+                    return (
+                      <div key={m.id} className="text-sm flex justify-between">
+                        <span className={m.status !== "ALIVE" ? "text-blood line-through" : ""}>
+                          {m.name} {m.id === character.crew!.captainId && <span className="text-gold text-xs">★</span>}
+                        </span>
+                        <span className="text-ink-dim text-xs">
+                          Nv. {m.level}
+                          {presence && ` · ${presence}`}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
+                {!party &&
+                  character.isSeparatedFromParty &&
+                  character.crew.members.some((m) => m.id !== character.id && m.status === "ALIVE" && m.currentIslandId === character.currentIsland.id) && (
+                    <button className="btn-gold px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "rejoin_party" })}>
+                      Unirme al grupo
+                    </button>
+                  )}
                 <div className="mt-2 pt-2 border-t border-[--line]">
                   <p className="text-xs text-ink-dim mb-1">Código de invitación:</p>
                   <p className="text-xs font-mono text-gold select-all break-all">{character.crew.inviteCode}</p>

@@ -238,9 +238,39 @@ Cómo funciona una batalla de tripulaciones:
 
 (Nota: esto es distinto del combate por rondas cuerpo a cuerpo de la
 sección 5 — las batallas de tripulación siguen resolviéndose por oleadas
-de una vez. Rolear una batalla de tripulaciones ronda a ronda, en
-conjunto con otros jugadores reales, es algo que todavía no existe y
-está en el horizonte del juego, no disponible aún.)
+de una vez.)
+
+ESCENA COMPARTIDA: cuando estás con tu tripulación de verdad
+
+Si tú y un compañero de tripulación (jugado por otra persona real) están
+en la misma isla al mismo tiempo, dejan de tener cada uno su propia
+escena en privado: comparten UNA sola escena de rol libre, con un orden
+de turnos claro.
+
+  - La escena aparece como "Escena compartida" en vez de "Escena", con
+    burbujas de cada personaje etiquetadas con su nombre.
+  - Hay un turno claro: "Es tu turno.", "Le toca a [nombre].", o "El
+    narrador está pensando..." — solo puede escribir quien tiene el
+    turno, y el cuadro de texto se bloquea para los demás mientras tanto.
+  - El capitán de la tripulación va primero.
+  - Si durante tu turno decides explorar y te topa un combate, ESE
+    combate sigue siendo tuyo y solo tuyo — se resuelve igual que en
+    solitario (sección 5), en tu propio ritmo, sin esperar turno de
+    nadie. Tus compañeros ven un resumen de una línea en la escena
+    compartida ("X se topa con problemas — ¡combate!"), pero no pueden
+    meterse dentro de tu pelea todavía; eso sigue siendo terreno de las
+    batallas de tripulación de arriba, no de la escena libre.
+  - ¿Quieres separarte un momento? Escribe algo como "me separo del
+    grupo" o "me voy por mi cuenta", o usa el botón "Separarte del
+    grupo". Nunca pasa sin que lo confirmes: el juego te pregunta
+    "¿Quieres separarte de tus nakamas?" antes de hacer nada. Si
+    confirmas, vuelves a tener tu propia escena privada. Mientras sigas
+    en la misma isla, puedes reunirte de nuevo cuando quieras con el
+    botón "Unirme al grupo".
+
+(Rolear una batalla de tripulaciones ronda a ronda, con varios jugadores
+reales actuando dentro de la misma pelea a la vez, es algo que todavía
+no existe y está en el horizonte del juego, no disponible aún.)
 
 -----------------------------------------------------------
 9. SI TE CAPTURAN: PRISIÓN Y RESCATE

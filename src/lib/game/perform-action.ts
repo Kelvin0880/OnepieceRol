@@ -11,8 +11,17 @@ import { toCombatant, generalSkillModifier } from "./derive";
 import { tickWorldIfDue } from "./world-tick";
 import { postNews, handleDeathCheck } from "./death-resolution";
 import { applyBountyOrNotoriety } from "./reputation";
-import { narrateExplore, narrateCombat, narrateScene, getRecentScene, updateCharacterMemory } from "../ai/narrate";
+import { narrateExplore, narrateCombat, narrateScene, narratePartyScene, getRecentScene, updateCharacterMemory } from "../ai/narrate";
 import { classifyPlayerAction, ActionId } from "../ai/classify-action";
+import {
+  beginPartyTurn,
+  advancePartyTurn,
+  releasePartyTurnLock,
+  writePartyMessage,
+  echoToParty,
+  confirmLeaveParty as partyConfirmLeaveParty,
+  rejoinParty as partyRejoinParty,
+} from "./party";
 import { CharacterStatus } from "@prisma/client";
 
 const TRAINING_COOLDOWN_MS = 30 * 60 * 1000;
@@ -59,6 +68,8 @@ export interface ActionResult {
   conquerorsHakiAwakened?: boolean;
   pendingCombat?: { enemyName: string; assessment: ThreatAssessment; isBoss: boolean };
   awaitingMercyChoice?: { enemyName: string };
+  /** Set when free text read as wanting to leave a shared party scene — a real confirm step, nothing mutated yet. */
+  confirmRequired?: "leave_party";
 }
 
 async function tryDropFruit(characterId: string, newsLog: string[]): Promise<string | undefined> {
@@ -703,7 +714,22 @@ const FREE_TEXT_ACTION_LABELS: Record<ActionId, string> = {
   flee: "Huir",
   mercy_spare: "Perdonar",
   mercy_finish: "Rematar",
+  leave_party: "Separarse del grupo",
 };
+
+/** Confirms a leave_party read from free text — the actual state change (see party.ts's confirmLeaveParty). */
+export async function confirmLeaveParty(characterId: string, userId: string): Promise<ActionResult> {
+  const character = await loadCharacterOrThrow(characterId, userId);
+  const { log } = await partyConfirmLeaveParty(character.id, userId);
+  return emptyResult(log, character.level);
+}
+
+/** Rejoins a shared party scene, if crewmates are still together on this island. */
+export async function rejoinParty(characterId: string, userId: string): Promise<ActionResult> {
+  const character = await loadCharacterOrThrow(characterId, userId);
+  const { log } = await partyRejoinParty(character.id, userId);
+  return emptyResult(log, character.level);
+}
 
 /**
  * Free text is the primary input (per the user's explicit choice over a
@@ -721,8 +747,112 @@ const FREE_TEXT_ACTION_LABELS: Record<ActionId, string> = {
  * needs a target island id the classifier has no way to extract, so it
  * stays button-only for now.
  */
+function summarizeCombatForParty(action: ActionId, characterName: string, result: ActionResult): string {
+  if (result.died) return `${characterName} cae en combate.`;
+  if (result.awaitingMercyChoice) return `${characterName} vence a su enemigo y decide qué hacer con él.`;
+  if (action === "flee") return `${characterName} logra escapar de su enemigo.`;
+  if (action === "mercy_spare") return `${characterName} perdona a su enemigo derrotado.`;
+  if (action === "mercy_finish") return `${characterName} remata a su enemigo derrotado.`;
+  return `${characterName} resuelve su combate.`;
+}
+
+/**
+ * The turn-gated branch for a character currently sharing a live scene with
+ * crewmates (Character.partyId set — see party.ts). Mechanical actions
+ * (explore/train/rest) still dispatch to the exact same solo functions as
+ * always — the only difference is a short shared line gets echoed to the
+ * party feed and the turn passes to the next member. Pure "narrate" text
+ * gets one shared AI call (narratePartyScene) instead of the solo
+ * narrateScene, addressed to the whole present roster. Never called while
+ * this character has their own pendingEncounter — that always resolves
+ * immediately via the unchanged solo path in resolveFreeTextAction below,
+ * bypassing party turn order entirely (you can't be blocked from fighting
+ * for your life by whose turn it is in the group chat).
+ */
+async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: string): Promise<ActionResult> {
+  const begin = await beginPartyTurn(character.id);
+  if (!begin.ok) throw new GameActionError(begin.reason);
+
+  const validActions: ActionId[] = ["narrate", "explore", "train", "rest", "leave_party"];
+  const { action } = await classifyPlayerAction(freeText, validActions);
+
+  if (action === "unclear") {
+    await releasePartyTurnLock(begin.partyId);
+    throw new GameActionError("No logro entender qué quieres hacer. Prueba a describirlo de otra forma.");
+  }
+
+  if (action === "leave_party") {
+    await releasePartyTurnLock(begin.partyId);
+    return {
+      ...emptyResult(["¿Quieres separarte de tus nakamas? Puedes reunirte con ellos más tarde si sigues en la misma isla."], character.level),
+      confirmRequired: "leave_party",
+    };
+  }
+
+  if (action === "narrate") {
+    const text = await narratePartyScene(
+      {
+        islandName: character.currentIsland.name,
+        islandDescription: character.currentIsland.description,
+        partyRoster: begin.roster,
+        actingCharacterName: character.name,
+        playerText: freeText,
+        recentParty: begin.recentLines,
+      },
+      { partyId: begin.partyId }
+    );
+    await writePartyMessage(begin.partyId, character.id, character.name, freeText);
+    await writePartyMessage(begin.partyId, null, "Narrador", text);
+    await advancePartyTurn(begin.partyId);
+    await prisma.sceneMessage.createMany({
+      data: [
+        { characterId: character.id, role: "player", text: freeText },
+        { characterId: character.id, role: "narrator", text },
+      ],
+    });
+    return emptyResult([text], character.level);
+  }
+
+  let result: ActionResult;
+  let sharedLine: string;
+  switch (action) {
+    case "explore":
+      result = await exploreCharacter(character.id, character.userId, freeText);
+      sharedLine = result.pendingCombat
+        ? `${character.name} se topa con problemas mientras exploraba por su cuenta — ¡combate!`
+        : `${character.name} explora por su cuenta y vuelve con algo que contar.`;
+      break;
+    case "train":
+      result = await trainCharacter(character.id, character.userId);
+      sharedLine = `${character.name} se aparta un momento a entrenar.`;
+      break;
+    case "rest":
+    default:
+      result = await restCharacter(character.id, character.userId);
+      sharedLine = `${character.name} se toma un respiro para descansar.`;
+      break;
+  }
+
+  const finalLog = [`(interpretado como: ${FREE_TEXT_ACTION_LABELS[action]})`, ...result.log];
+  await prisma.sceneMessage.createMany({
+    data: [
+      { characterId: character.id, role: "player", text: freeText },
+      { characterId: character.id, role: "narrator", text: finalLog.join("\n\n") },
+    ],
+  });
+  await writePartyMessage(begin.partyId, character.id, character.name, freeText);
+  await writePartyMessage(begin.partyId, null, "Narrador", sharedLine);
+  await advancePartyTurn(begin.partyId);
+
+  return { ...result, log: finalLog };
+}
+
 export async function resolveFreeTextAction(characterId: string, userId: string, freeText: string): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
+
+  if (character.partyId && !character.isSeparatedFromParty && !character.pendingEncounter) {
+    return resolvePartyFreeTextAction(character, freeText);
+  }
 
   const validActions: ActionId[] = character.pendingEncounter
     ? character.pendingEncounter.phase === "victory"
@@ -780,6 +910,14 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
       { characterId, role: "narrator", text: finalLog.join("\n\n") },
     ],
   });
+
+  // Reaching here with a partyId set means this character was mid-fight
+  // (see the branch above) — their own combat always resolves immediately,
+  // never gated by party turn order, but once it's no longer "still
+  // fighting" the group should see the headline.
+  if (character.partyId && !result.pendingCombat) {
+    await echoToParty(character.partyId, summarizeCombatForParty(action, character.name, result));
+  }
 
   return { ...result, log: finalLog };
 }

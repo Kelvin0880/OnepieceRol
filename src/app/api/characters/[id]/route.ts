@@ -2,11 +2,19 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireUserId, UnauthorizedError } from "@/lib/require-user";
 import { logError } from "@/lib/log-error";
+import { syncPartyForCharacter, getPartyStateForCharacter } from "@/lib/game/party";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await requireUserId();
     const { id } = await params;
+
+    // Lazily materializes/dissolves this character's live party scene based
+    // on current crew+island togetherness — same request-driven style as
+    // tickWorldIfDue, no cron/background job. Cheap: scoped to this one
+    // character's crew, not a world-wide scan.
+    await syncPartyForCharacter(id);
+
     const character = await prisma.character.findUnique({
       where: { id },
       include: {
@@ -16,7 +24,11 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         ownedWeapons: true,
         companions: true,
         inventory: true,
-        crew: { include: { members: { select: { id: true, name: true, level: true, faction: true, status: true, currentIslandId: true } } } },
+        crew: {
+          include: {
+            members: { select: { id: true, name: true, level: true, faction: true, status: true, currentIslandId: true, partyId: true, isSeparatedFromParty: true } },
+          },
+        },
         pendingEncounter: true,
         imprisonment: true,
         logs: { orderBy: { createdAt: "desc" }, take: 30 },
@@ -26,6 +38,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (!character || character.userId !== userId) {
       return NextResponse.json({ error: "Personaje no encontrado." }, { status: 404 });
     }
+
+    const party = await getPartyStateForCharacter(id);
     const connections = JSON.parse(character.currentIsland.connections) as string[];
     const connectedIslands = await prisma.island.findMany({ where: { id: { in: connections } } });
 
@@ -88,6 +102,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       othersHere,
       prisonersHere,
       crewBattles: shapedBattles,
+      party,
     });
   } catch (err) {
     if (err instanceof UnauthorizedError) return NextResponse.json({ error: err.message }, { status: 401 });

@@ -13,6 +13,9 @@ beforeEach(() => {
 });
 
 const nonCombatPhase: ActionId[] = ["narrate", "explore", "train", "rest", "travel"];
+// A party member's shared-scene turn: same non-combat set, plus the option
+// to explicitly step away from the group.
+const partyScenePhase: ActionId[] = ["narrate", "explore", "train", "rest", "leave_party"];
 // The very first fight-or-flee choice, and every subsequent round of an
 // ongoing exchange, share this set — both now default to "engage" on real
 // ambiguity, since the dice (not the classification) decide the outcome.
@@ -142,6 +145,32 @@ describe("classifyPlayerAction", () => {
     const result = await classifyPlayerAction("cualquier cosa", []);
     expect(result).toEqual({ action: "unclear", source: "ai", tacticModifier: 0 });
     expect(callOpenRouterMock).not.toHaveBeenCalled();
+  });
+
+  describe("leave_party (only offered while sharing a live party scene)", () => {
+    it("returns leave_party when the model picks it and it's in the valid set", async () => {
+      callOpenRouterMock.mockResolvedValue('{"action":"leave_party"}');
+      const result = await classifyPlayerAction("Me bajo del barco y me voy solo a mirar el mercado.", partyScenePhase);
+      expect(result).toEqual({ action: "leave_party", source: "ai", tacticModifier: 0 });
+    });
+
+    it("never returns leave_party when it isn't in the valid set (solo play, no active party)", async () => {
+      callOpenRouterMock.mockResolvedValue('{"action":"leave_party"}');
+      const result = await classifyPlayerAction("Me separo del grupo.", nonCombatPhase);
+      expect(result).toEqual({ action: "narrate", source: "ai", tacticModifier: 0 });
+    });
+
+    it("keyword fallback recognizes explicit separation phrasing", async () => {
+      callOpenRouterMock.mockRejectedValue(new AiUnavailableError("all models down"));
+      const result = await classifyPlayerAction("Me separo del grupo y voy por mi cuenta.", partyScenePhase);
+      expect(result).toEqual({ action: "leave_party", source: "keyword_fallback", tacticModifier: 0 });
+    });
+
+    it("keyword fallback still defaults ordinary roleplay text to narrate, not leave_party", async () => {
+      callOpenRouterMock.mockRejectedValue(new AiUnavailableError("all models down"));
+      const result = await classifyPlayerAction("Pido una cerveza y me siento en la barra.", partyScenePhase);
+      expect(result).toEqual({ action: "narrate", source: "keyword_fallback", tacticModifier: 0 });
+    });
   });
 
   describe("tactic_modifier (merged into the same classification call, not a separate AI call)", () => {

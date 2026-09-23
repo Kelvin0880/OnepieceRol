@@ -98,6 +98,14 @@ model Character {
 
   lastTrainedAt DateTime? // null = never trained under this rule yet, so always eligible
 
+  // Multiplayer party presence — see Party below. null = not currently
+  // sharing a live scene with crewmates. isSeparatedFromParty is an
+  // explicit "I stepped away" flag so a character who's still physically
+  // on the same island as their party doesn't get silently auto-rejoined.
+  partyId              String?
+  party                Party?  @relation(fields: [partyId], references: [id])
+  isSeparatedFromParty Boolean @default(false)
+
   // Bounded, AI-maintained long-term memory — a compact prose digest the
   // narration/classification prompts feed back in, refreshed only on
   // significant beats (combat, mercy choice), never on every action. null =
@@ -127,6 +135,42 @@ model Crew {
   inviteCode  String      @unique @default(cuid())
   members     Character[]
   createdAt   DateTime    @default(now())
+}
+
+// ---------- Live multiplayer party scenes (crewmates physically together) ----------
+
+// A crew's currently-together members share one live scene with a turn
+// order (narrator always responds first, then whichever human's turnIndex
+// it is). Lazily created/dissolved by src/lib/game/party.ts's
+// syncPartyForCharacter, the same request-driven style WorldClock/
+// tickWorldIfDue already uses — no cron/background job. One active party
+// per crew at a time (crewId is unique): if a crew's members split across
+// islands or drop below two together, the party is deleted, not archived.
+model Party {
+  id               String   @id @default(cuid())
+  crewId           String   @unique // not FK-enforced, same convention as Crew.captainId
+  turnOrder        String // JSON array of characterIds, captain first
+  turnIndex        Int      @default(0)
+  awaitingNarrator Boolean  @default(false) // true right after a human posts, until the AI reply lands — locks out other submits meanwhile; false on creation, since nobody has spoken yet and it's simply turnIndex 0's turn
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+  members          Character[]
+  messages         PartySceneMessage[]
+}
+
+// The shared transcript for a Party — every member's free-text turn and
+// every narrator reply, in order. Distinct from SceneMessage (which stays
+// the per-character solo transcript, used whenever a character isn't
+// currently in a party, and for echoing personal combat outcomes into the
+// party feed as one-liners).
+model PartySceneMessage {
+  id                String   @id @default(cuid())
+  partyId           String
+  party             Party    @relation(fields: [partyId], references: [id], onDelete: Cascade)
+  authorCharacterId String? // null = the AI narrator
+  authorName        String // denormalized at write time (character name, or "Narrador")
+  text              String
+  createdAt         DateTime @default(now())
 }
 
 // ---------- Devil Fruits ----------
