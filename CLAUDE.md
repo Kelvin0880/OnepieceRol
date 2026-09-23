@@ -364,6 +364,22 @@ start command `npm run start`, plan `free`, region `oregon`.
    hid this bug's real shape (`openai/gpt-4o-mini: This operation was
    aborted`) on the first read. 223 tests total, `tsc --noEmit` clean,
    deployed and confirmed live the same way as every other change here.
+   **Second follow-up, same day**: the user hit the fallback again right
+   after that deploy and asked directly whether the paid model had also
+   run out of quota. Checked with real data, not assumed: OpenRouter's own
+   `GET /api/v1/auth/key` showed `limit_remaining: 4.998` of a `$5` limit
+   and `free_model_daily_requests` 88/1000 — nowhere close to any cap. The
+   actual bug was an interaction between the two fixes above:
+   `models.ts`'s `DEFAULT_MODELS` still had `openai/gpt-4o-mini` *last*,
+   behind 3 free named models, so once the time-budget fix existed, a bad
+   stretch of those 3 being slow could burn the whole shared budget before
+   the paid model was ever attempted — logged as "skipped, narration time
+   budget exhausted." Fixed by moving it to 2nd position (right after
+   `openrouter/free`), so it's one of only two attempts that reliably get
+   a real timeout slice instead of the last of five competing for
+   dwindling leftover time. No test asserts list order, so this was a
+   pure reorder — full suite (223) and `tsc --noEmit` still clean,
+   deployed and confirmed live.
 
 ### The endgame — explicitly discussed, NOT designed or built yet
 
