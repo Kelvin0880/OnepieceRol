@@ -1,0 +1,60 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grand Line RPG — Documentación</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Lora:ital,wght@0,400;0,700;1,400&display=swap');
+  :root { --bg-color: #f4f1ea; --text-main: #2c241b; --accent-red: #8b0000; --accent-gold: #c5a059; --parchment: #fdfbf7; --line: #d4c4a8; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; min-height: 100vh; display: flex; flex-direction: column;
+    font-family: 'Lora', serif; background-color: var(--bg-color); color: var(--text-main);
+    background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+  }
+  h1, h2, .title-font { font-family: 'Cinzel', serif; }
+  header { background: #1a202c; color: #f6e0b5; text-align: center; padding: 3.5rem 1rem 3rem; border-bottom: 8px solid var(--accent-red); background-image: url('https://www.transparenttextures.com/patterns/stardust.png'); }
+  header h1 { font-size: 2.6rem; margin: 0 0 .4rem; letter-spacing: .04em; }
+  header p { margin: 0; opacity: .85; font-style: italic; max-width: 640px; margin: 0 auto; }
+  main { max-width: 900px; margin: 0 auto; padding: 2.5rem 1rem; flex: 1; }
+  .cards { display: grid; grid-template-columns: 1fr; gap: 1.5rem; }
+  @media (min-width: 700px) { .cards { grid-template-columns: 1fr 1fr; } }
+  .card {
+    background: var(--parchment); border: 1px solid var(--line); border-radius: 8px;
+    box-shadow: 2px 4px 10px rgba(0,0,0,.06); padding: 2rem 1.75rem; text-align: center;
+    text-decoration: none; color: var(--text-main); transition: transform .15s ease, box-shadow .15s ease;
+  }
+  .card:hover { transform: translateY(-4px); box-shadow: 0 10px 20px rgba(0,0,0,.1); }
+  .card i { font-size: 2.4rem; color: var(--accent-red); margin-bottom: 1rem; }
+  .card h2 { font-size: 1.4rem; margin: 0 0 .6rem; }
+  .card p { font-size: .9rem; color: #6b5b3a; margin: 0; }
+  footer { text-align: center; padding: 1.5rem; color: #8a7c5f; font-size: .8rem; }
+  footer a { color: var(--accent-red); }
+</style>
+</head>
+<body>
+  <header>
+    <h1><i class="fas fa-compass"></i> GRAND LINE RPG</h1>
+    <p>Documentación del jugador — se amplía junto con el juego.</p>
+  </header>
+  <main>
+    <div class="cards">
+      <a class="card" href="guia.html">
+        <i class="fas fa-book-open"></i>
+        <h2>Guía del Jugador</h2>
+        <p>Cómo se juega, combate ronda a ronda, frutas del diablo, reputación, multijugador y el endgame de los Poneglifos.</p>
+      </a>
+      <a class="card" href="mapa.html">
+        <i class="fas fa-map-marked-alt"></i>
+        <h2>Mapa de Ruta</h2>
+        <p>Las 14 islas jugables, sus conexiones, peligro y nivel mínimo — interactivo, isla por isla.</p>
+      </a>
+    </div>
+  </main>
+  <footer>
+    Grand Line RPG — <a href="https://grand-line-rpg-qgkv.onrender.com" target="_blank" rel="noopener">volver al juego</a>
+  </footer>
+</body>
+</html>

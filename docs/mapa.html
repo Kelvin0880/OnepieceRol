@@ -1,0 +1,332 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Grand Line RPG — Mapa de Ruta</title>
+<link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Lora:ital,wght@0,400;0,700;1,400&display=swap');
+
+  :root {
+    --bg-color: #f4f1ea;
+    --text-main: #2c241b;
+    --accent-red: #8b0000;
+    --accent-gold: #c5a059;
+    --parchment: #fdfbf7;
+    --line: #d4c4a8;
+  }
+
+  * { box-sizing: border-box; }
+
+  body {
+    margin: 0;
+    font-family: 'Lora', serif;
+    background-color: var(--bg-color);
+    color: var(--text-main);
+    background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+  }
+
+  h1, h2, h3, h4, .title-font { font-family: 'Cinzel', serif; }
+
+  header {
+    background: #1a202c;
+    color: #f6e0b5;
+    text-align: center;
+    padding: 2.5rem 1rem 2rem;
+    border-bottom: 8px solid var(--accent-red);
+    background-image: url('https://www.transparenttextures.com/patterns/stardust.png');
+  }
+  header h1 { font-size: 2.4rem; margin: 0 0 .3rem; letter-spacing: .04em; }
+  header p { margin: 0; opacity: .85; font-style: italic; }
+  header a.back {
+    display: inline-block; margin-top: 1rem; color: var(--accent-gold);
+    text-decoration: none; border: 1px solid var(--accent-gold); border-radius: 999px;
+    padding: .4rem 1rem; font-size: .85rem;
+  }
+  header a.back:hover { background: rgba(197,160,89,.15); }
+
+  main {
+    max-width: 1300px;
+    margin: 0 auto;
+    padding: 1.5rem 1rem 4rem;
+  }
+
+  .intro-card {
+    background: var(--parchment);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 2px 4px 10px rgba(0,0,0,.06);
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+  .intro-card h2 { margin-top: 0; color: var(--accent-red); font-size: 1.3rem; }
+
+  .level-box {
+    background: #fff8e6;
+    border: 1px solid var(--accent-gold);
+    border-radius: 6px;
+    padding: 1rem 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+  .level-box h3 { margin: 0 0 .5rem; color: #7a5a12; font-size: 1.05rem; }
+  .level-box p { margin: .35rem 0; font-size: .92rem; }
+  .level-box strong.bad { color: var(--accent-red); }
+  .level-box strong.good { color: #1b6d3a; }
+
+  .legend {
+    display: flex; flex-wrap: wrap; gap: 1rem 1.75rem;
+    font-size: .82rem; margin-bottom: 1.5rem;
+    background: var(--parchment); border: 1px solid var(--line); border-radius: 6px;
+    padding: .85rem 1.25rem;
+  }
+  .legend .item { display: flex; align-items: center; gap: .4rem; }
+  .legend .dot { width: 13px; height: 13px; border-radius: 50%; display: inline-block; border: 2px solid #1a202c; }
+
+  .map-wrap {
+    display: grid;
+    grid-template-columns: 1fr;
+    gap: 1.25rem;
+  }
+  @media (min-width: 980px) {
+    .map-wrap { grid-template-columns: 2.1fr 1fr; align-items: start; }
+  }
+
+  .map-card {
+    background: var(--parchment);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 2px 4px 10px rgba(0,0,0,.06);
+    padding: .75rem;
+    overflow-x: auto;
+  }
+  svg#routeMap { display: block; width: 100%; min-width: 760px; height: auto; }
+
+  .edge { stroke: #b9a578; stroke-width: 3; fill: none; }
+  .node circle.ring { stroke: #1a202c; stroke-width: 2.5; cursor: pointer; transition: transform .15s ease, filter .15s ease; }
+  .node:hover circle.ring, .node.active circle.ring { transform: scale(1.12); filter: drop-shadow(0 0 6px rgba(197,160,89,.9)); }
+  .node.active circle.ring { stroke: var(--accent-red); stroke-width: 4; }
+  .node text.label { font-family: 'Cinzel', serif; font-size: 13px; fill: var(--text-main); pointer-events: none; }
+  .node text.badge { font-family: 'Lora', serif; font-size: 10px; fill: #6b5b3a; pointer-events: none; }
+  .node .poneglyph-mark { pointer-events: none; }
+
+  .detail-card {
+    background: var(--parchment);
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    box-shadow: 2px 4px 10px rgba(0,0,0,.06);
+    padding: 1.25rem 1.4rem;
+    min-height: 320px;
+  }
+  .detail-card h3 { margin: 0 0 .15rem; color: var(--accent-red); font-size: 1.4rem; }
+  .detail-card .sea-tag { font-size: .78rem; text-transform: uppercase; letter-spacing: .06em; color: #6b5b3a; margin-bottom: .9rem; display: block; }
+  .detail-card .stat-row { display: flex; justify-content: space-between; font-size: .85rem; margin: .35rem 0; border-bottom: 1px dashed var(--line); padding-bottom: .35rem; }
+  .detail-card .stat-row span:first-child { color: #6b5b3a; }
+  .detail-card p.desc { font-size: .92rem; margin: 1rem 0; line-height: 1.5; }
+  .detail-card .hook { background: #fdf3f3; border-left: 3px solid var(--accent-red); padding: .6rem .8rem; font-size: .85rem; font-style: italic; margin-top: .75rem; }
+  .detail-card .empty { color: #8a7c5f; font-style: italic; text-align: center; margin-top: 3rem; }
+  .detail-card .poneglyph-flag { display: inline-flex; align-items: center; gap: .4rem; background: #f6e0b5; color: #5a3d05; border-radius: 999px; padding: .25rem .75rem; font-size: .78rem; font-weight: 700; margin-top: .75rem; }
+
+  .danger-bar { display: flex; gap: 3px; margin-top: 2px; }
+  .danger-bar span { width: 12px; height: 7px; border-radius: 2px; background: #e4dcc8; }
+  .danger-bar span.on { background: var(--accent-red); }
+
+  footer { text-align: center; padding: 2rem 1rem; color: #8a7c5f; font-size: .8rem; }
+  footer a { color: var(--accent-red); }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><i class="fas fa-map-marked-alt"></i> GRAND LINE RPG — MAPA DE RUTA</h1>
+  <p>Las 14 islas jugables de hoy, sus conexiones, y qué te espera en cada una.</p>
+  <a class="back" href="index.html"><i class="fas fa-arrow-left"></i> Volver</a>
+</header>
+
+<main>
+  <div class="intro-card">
+    <h2><i class="fas fa-info-circle"></i> Cómo leer este mapa</h2>
+    <p style="margin:0; font-size:.92rem;">
+      Cada punto es una isla real del juego, con el mismo peligro y nivel mínimo que verás dentro.
+      Haz clic en cualquier isla para ver su ficha. Las líneas son las rutas que puedes navegar
+      directamente con la acción <strong>Zarpar</strong> — no puedes saltar de una isla a otra sin
+      conexión directa. Este mapa se irá ampliando según crezca el mundo del juego.
+    </p>
+  </div>
+
+  <div class="level-box">
+    <h3><i class="fas fa-arrow-trend-up"></i> ¿Cómo subo de nivel? (la pregunta que más se confunde)</h3>
+    <p><strong class="bad">Entrenar NO te sube de nivel</strong> — solo sube tu Haki de Observación o de Armadura, con un límite de 30 minutos reales entre sesiones.</p>
+    <p><strong class="good">Subes de nivel ganando experiencia</strong>, y la experiencia se gana explorando y peleando de verdad: cada vez que tu texto libre se lee como una decisión arriesgada y decisiva ("me interno en la jungla", "me arriesgo a robar esto", buscar pelea, etc.) el motor tira los dados, y un resultado con éxito da berries + experiencia. Ganar un combate también da experiencia extra al decidir perdonar o rematar.</p>
+    <p style="margin-top:.6rem;">Por eso el nivel mínimo de cada isla importa: si tu nivel es menor al que pide la isla, <strong>el juego se niega a dejarte zarpar hacia allí</strong> — el Grand Line no perdona a quien no está listo.</p>
+  </div>
+
+  <div class="legend">
+    <span class="item"><span class="dot" style="background:#2f9e44"></span> Peligro 1–3</span>
+    <span class="item"><span class="dot" style="background:#e0a72e"></span> Peligro 4–6</span>
+    <span class="item"><span class="dot" style="background:#c0392b"></span> Peligro 7–9</span>
+    <span class="item"><span class="dot" style="background:#4a0d0d"></span> Peligro 10</span>
+    <span class="item"><i class="fas fa-scroll" style="color:#8b0000"></i> Poneglifo de Ruta aquí</span>
+    <span class="item"><i class="fas fa-lock" style="color:#6b5b3a"></i> Nivel mínimo para entrar</span>
+  </div>
+
+  <div class="map-wrap">
+    <div class="map-card">
+      <svg id="routeMap" viewBox="0 0 1500 650" xmlns="http://www.w3.org/2000/svg"></svg>
+    </div>
+    <div class="detail-card" id="detailCard">
+      <p class="empty"><i class="fas fa-hand-pointer"></i><br>Haz clic en una isla del mapa para ver su ficha.</p>
+    </div>
+  </div>
+</main>
+
+<footer>
+  Grand Line RPG — mapa de referencia, se actualiza junto con el juego.
+  <br><a href="https://grand-line-rpg-qgkv.onrender.com" target="_blank" rel="noopener">Volver al juego</a>
+</footer>
+
+<script>
+const ISLANDS = [
+  { key: "foosha", name: "Pueblo Foosha", sea: "East Blue", danger: 1, minLevel: 1, faction: null, poneglyph: false, x: 130, y: 380,
+    desc: "Un pueblo costero tranquilo de tejados rojos, donde los barcos pesqueros zarpan cada mañana y los niños sueñan con el mar. El punto de partida clásico de todo pirata novato.",
+    hook: "Un mensajero de la Marina pasó ayer preguntando por \"cualquier joven con ambiciones de zarpar\"." },
+  { key: "marineG5", name: "Cuartel Marine G-5", sea: "East Blue", danger: 1, minLevel: 1, faction: "Marina", poneglyph: false, x: 300, y: 180,
+    desc: "Una base de entrenamiento gris y disciplinada en el límite del East Blue, donde los reclutas aprenden que la justicia absoluta empieza por obedecer órdenes.",
+    hook: "Los rumores en el cuartel hablan de una tripulación novata que ya ha empezado a dar problemas en el East Blue." },
+  { key: "baltigo", name: "Isla Baltigo", sea: "East Blue", danger: 2, minLevel: 1, faction: "Ejército Revolucionario", poneglyph: false, x: 60, y: 200,
+    desc: "Oculta tras corrientes que confunden a los Log Pose corrientes, esta isla alberga un cuartel secreto donde se planifica la caída del Gobierno Mundial.",
+    hook: "Una célula ha dejado de reportar. El Ejército Revolucionario necesita saber qué pasó." },
+  { key: "gecko", name: "Isla Gecko", sea: "East Blue", danger: 2, minLevel: 1, faction: null, poneglyph: false, x: 440, y: 560,
+    desc: "Un puerto polvoriento dominado por tablones de recompensas y tabernas donde los cazarrecompensas comparan cicatrices y cuentan mentiras sobre sus capturas.",
+    hook: "El tablón de recompensas está más lleno que de costumbre esta semana." },
+  { key: "shimotsuki", name: "Villa Shimotsuki", sea: "East Blue", danger: 2, minLevel: 1, faction: null, poneglyph: false, x: 270, y: 470,
+    desc: "Famosa por su dojo centenario y sus herreros que aún forjan katanas siguiendo tradiciones perdidas. El acero que sale de aquí puede cortar el destino.",
+    hook: "El maestro del dojo lleva días sin abrir las puertas." },
+  { key: "baratie", name: "Restaurante Baratie", sea: "East Blue", danger: 3, minLevel: 1, faction: null, poneglyph: false, x: 460, y: 400,
+    desc: "Un galeón reconvertido en el restaurante flotante más famoso de los mares, donde cocineros pelean tan bien como cocinan y ningún hambriento se va sin comer.",
+    hook: "El dueño del restaurante ha triplicado la seguridad esta semana." },
+  { key: "conomi", name: "Isla Conomi", sea: "East Blue", danger: 4, minLevel: 1, faction: "Arlong", poneglyph: false, x: 440, y: 260,
+    desc: "Un archipiélago de aldeas pesqueras bajo el yugo de un hombre-pez tirano que extorsiona a los humanos con impuestos imposibles de pagar.",
+    hook: "Arlong ha subido de nuevo los \"impuestos\" a las aldeas humanas." },
+  { key: "loguetown", name: "Loguetown", sea: "East Blue", danger: 5, minLevel: 1, faction: "Marina", poneglyph: false, x: 620, y: 330,
+    desc: "La \"Ciudad del Comienzo y el Final\", donde el Rey de los Piratas fue ejecutado. La plataforma de ejecución todavía domina la plaza.",
+    hook: "La Marina ha reforzado la vigilancia en cada muelle desde que corrió un rumor." },
+  { key: "reverseMountain", name: "Reverse Mountain", sea: "East Blue", danger: 6, minLevel: 1, faction: null, poneglyph: false, x: 790, y: 330,
+    desc: "La única entrada segura al Grand Line: una montaña donde cuatro corrientes oceánicas ascienden en vez de descender. Más allá, el mundo se vuelve mucho más peligroso.",
+    hook: "Las cuatro corrientes rugen más fuerte de lo habitual este año." },
+  { key: "whiskyPeak", name: "Whisky Peak", sea: "Paradise (Grand Line)", danger: 6, minLevel: 8, faction: "Baroque Works", poneglyph: false, x: 960, y: 330,
+    desc: "Un pueblo de fiesta perpetua que recibe a cada recién llegado como a un héroe... hasta que baja la guardia. Nada en el Grand Line es lo que parece.",
+    hook: "La isla entera parece demasiado feliz de verte." },
+  { key: "littleGarden", name: "Little Garden", sea: "Paradise (Grand Line)", danger: 7, minLevel: 10, faction: null, poneglyph: false, x: 1120, y: 330,
+    desc: "Una isla prehistórica congelada en el tiempo, hogar de bestias colosales y de dos gigantes que llevan cien años duelando por una promesa de honor.",
+    hook: "El duelo centenario entre los dos gigantes sigue sin ganador — pero algo en la jungla ha empezado a cazar a ambos bandos." },
+  { key: "alabasta", name: "Alabasta", sea: "Paradise (Grand Line)", danger: 8, minLevel: 12, faction: null, poneglyph: false, x: 1280, y: 330,
+    desc: "Un reino desértico al borde de la guerra civil, donde la arena guarda secretos más viejos que el propio Gobierno Mundial.",
+    hook: "El desierto susurra sobre una rebelión que crece más rápido de lo que la corona puede contener." },
+  { key: "graveyardIsland", name: "Isla Cementerio", sea: "New World", danger: 10, minLevel: 30, faction: "Marshall D. Teach (Barbanegra)", poneglyph: true,
+    poneglyphName: "Fragmento del Alba", x: 1430, y: 190,
+    desc: "Una fortaleza natural de rocas negras y niebla permanente, dominio absoluto de Barbanegra. Los rumores dicen que aquí guarda mucho más que su tripulación de criminales fugados de Impel Down.",
+    hook: "No hay mapas que marquen bien esta isla, y los pocos que se acercan sin ser convocados no suelen volver a salir." },
+  { key: "eniesLobby", name: "Enies Lobby", sea: "New World", danger: 10, minLevel: 35, faction: "Gobierno Mundial (CP-0)", poneglyph: true,
+    poneglyphName: "Fragmento del Ocaso", x: 1430, y: 470,
+    desc: "La sede judicial del Gobierno Mundial en persona: torres de mármol blanco, un Árbol del Conocimiento marchito, y un Portal de la Justicia que ha visto entrar a más piratas de los que ha visto salir.",
+    hook: "CP-0 ha sellado el archivo sobre un Poneglifo confiscado hace décadas." },
+];
+
+const EDGES = [
+  ["foosha","shimotsuki"], ["foosha","marineG5"], ["foosha","baltigo"],
+  ["marineG5","loguetown"], ["gecko","shimotsuki"], ["gecko","loguetown"],
+  ["shimotsuki","baratie"], ["baratie","conomi"], ["conomi","loguetown"],
+  ["loguetown","reverseMountain"], ["reverseMountain","whiskyPeak"],
+  ["whiskyPeak","littleGarden"], ["littleGarden","alabasta"],
+  ["alabasta","graveyardIsland"], ["alabasta","eniesLobby"],
+];
+
+function dangerColor(d) {
+  if (d >= 10) return "#4a0d0d";
+  if (d >= 7) return "#c0392b";
+  if (d >= 4) return "#e0a72e";
+  return "#2f9e44";
+}
+
+const byKey = Object.fromEntries(ISLANDS.map((i) => [i.key, i]));
+const svg = document.getElementById("routeMap");
+const NS = "http://www.w3.org/2000/svg";
+
+for (const [a, b] of EDGES) {
+  const A = byKey[a], B = byKey[b];
+  const path = document.createElementNS(NS, "path");
+  const mx = (A.x + B.x) / 2, my = (A.y + B.y) / 2 - 18;
+  path.setAttribute("d", `M ${A.x} ${A.y} Q ${mx} ${my} ${B.x} ${B.y}`);
+  path.setAttribute("class", "edge");
+  svg.appendChild(path);
+}
+
+const nodeEls = {};
+for (const isl of ISLANDS) {
+  const g = document.createElementNS(NS, "g");
+  g.setAttribute("class", "node");
+  g.setAttribute("transform", `translate(${isl.x}, ${isl.y})`);
+  g.style.cursor = "pointer";
+
+  const ring = document.createElementNS(NS, "circle");
+  ring.setAttribute("class", "ring");
+  ring.setAttribute("r", "16");
+  ring.setAttribute("fill", dangerColor(isl.danger));
+  g.appendChild(ring);
+
+  if (isl.poneglyph) {
+    const mark = document.createElementNS(NS, "text");
+    mark.setAttribute("class", "poneglyph-mark");
+    mark.setAttribute("x", "0");
+    mark.setAttribute("y", "5");
+    mark.setAttribute("text-anchor", "middle");
+    mark.setAttribute("font-size", "14");
+    mark.setAttribute("fill", "#f6e0b5");
+    mark.textContent = "✦";
+    g.appendChild(mark);
+  }
+
+  const label = document.createElementNS(NS, "text");
+  label.setAttribute("class", "label");
+  label.setAttribute("x", "0");
+  label.setAttribute("y", "-24");
+  label.setAttribute("text-anchor", "middle");
+  label.textContent = isl.name;
+  g.appendChild(label);
+
+  const badge = document.createElementNS(NS, "text");
+  badge.setAttribute("class", "badge");
+  badge.setAttribute("x", "0");
+  badge.setAttribute("y", "32");
+  badge.setAttribute("text-anchor", "middle");
+  badge.textContent = isl.minLevel > 1 ? `Nv. mín. ${isl.minLevel}` : "";
+  g.appendChild(badge);
+
+  g.addEventListener("click", () => selectIsland(isl.key));
+  svg.appendChild(g);
+  nodeEls[isl.key] = g;
+}
+
+function selectIsland(key) {
+  for (const el of Object.values(nodeEls)) el.classList.remove("active");
+  nodeEls[key].classList.add("active");
+  const isl = byKey[key];
+  const bars = Array.from({ length: 10 }, (_, i) => `<span class="${i < isl.danger ? 'on' : ''}"></span>`).join("");
+  document.getElementById("detailCard").innerHTML = `
+    <h3>${isl.name}</h3>
+    <span class="sea-tag">${isl.sea}</span>
+    <div class="stat-row"><span>Peligro</span><span>${isl.danger}/10</span></div>
+    <div class="danger-bar">${bars}</div>
+    <div class="stat-row" style="margin-top:.6rem;"><span><i class="fas fa-lock"></i> Nivel mínimo</span><span>${isl.minLevel}</span></div>
+    <div class="stat-row"><span>Control</span><span>${isl.faction ?? "Sin dueño claro"}</span></div>
+    <p class="desc">${isl.desc}</p>
+    <div class="hook"><i class="fas fa-quote-left"></i> ${isl.hook}</div>
+    ${isl.poneglyph ? `<div class="poneglyph-flag"><i class="fas fa-scroll"></i> ${isl.poneglyphName}</div>` : ""}
+  `;
+}
+
+selectIsland("foosha");
+</script>
+</body>
+</html>

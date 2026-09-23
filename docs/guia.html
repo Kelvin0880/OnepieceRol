@@ -1,0 +1,366 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Grand Line RPG - Guía del Jugador</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700;900&family=Lora:ital,wght@0,400;0,700;1,400&display=swap');
+
+        :root {
+            --bg-color: #f4f1ea;
+            --text-main: #2c241b;
+            --accent-red: #8b0000;
+            --accent-gold: #c5a059;
+            --parchment: #fdfbf7;
+        }
+
+        body {
+            font-family: 'Lora', serif;
+            background-color: var(--bg-color);
+            color: var(--text-main);
+            background-image: url('https://www.transparenttextures.com/patterns/aged-paper.png');
+        }
+
+        h1, h2, h3, h4, .title-font {
+            font-family: 'Cinzel', serif;
+        }
+
+        .paper-card {
+            background-color: var(--parchment);
+            border: 1px solid #d4c4a8;
+            box-shadow: 2px 4px 10px rgba(0,0,0,0.05);
+            border-radius: 4px;
+        }
+
+        .faction-card {
+            transition: transform 0.2s ease;
+        }
+
+        .faction-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 15px rgba(0,0,0,0.1);
+        }
+
+        /* Ocultar botones e interfaces al imprimir */
+        @media print {
+            body { background: white; background-image: none; font-size: 11pt; }
+            .no-print { display: none !important; }
+            .paper-card { box-shadow: none; border: 1px solid #ccc; page-break-inside: avoid; }
+            .page-break { page-break-before: always; }
+            h2 { margin-top: 1rem; page-break-after: avoid; }
+            .container { max-width: 100% !important; padding: 0 !important; }
+        }
+    </style>
+</head>
+<body class="antialiased leading-relaxed">
+
+    <!-- Botones fijos -->
+    <div class="fixed top-4 right-4 z-50 no-print flex gap-2">
+        <a href="mapa.html" class="bg-[#1a202c] text-[#c5a059] border border-[#c5a059] px-5 py-3 rounded-full font-bold shadow-lg hover:bg-[#2a3441] transition flex items-center gap-2 title-font text-sm">
+            <i class="fas fa-map-marked-alt"></i> Ver mapa
+        </a>
+        <button onclick="window.print()" class="bg-[#8b0000] text-white px-6 py-3 rounded-full font-bold shadow-lg hover:bg-red-700 transition flex items-center gap-2 title-font">
+            <i class="fas fa-file-pdf"></i> Descargar como PDF
+        </button>
+    </div>
+
+    <!-- Portada -->
+    <header class="bg-[#1a202c] text-center py-24 border-b-8 border-[#8b0000] text-[#f6e0b5] relative overflow-hidden" style="background-image: url('https://www.transparenttextures.com/patterns/stardust.png');">
+        <div class="max-w-4xl mx-auto relative z-10 px-4">
+            <i class="fas fa-compass text-5xl mb-6 text-[#c5a059]"></i>
+            <h1 class="text-5xl md:text-7xl font-black mb-4 tracking-wider">GRAND LINE RPG</h1>
+            <h2 class="text-2xl md:text-3xl font-light tracking-widest text-[#d4c4a8] mb-8">— GUÍA DEL JUGADOR —</h2>
+            <p class="text-lg italic max-w-2xl mx-auto opacity-90 font-serif">
+                "Esto no es un rol narrado a mano: es un juego de rol de texto libre con una IA como narradora, reglas reales por debajo, dados de verdad, y un mundo que sigue girando aunque tú no estés conectado."
+            </p>
+            <a href="index.html" class="no-print inline-block mt-6 text-sm text-[#c5a059] underline"><i class="fas fa-arrow-left"></i> Volver al índice</a>
+        </div>
+    </header>
+
+    <main class="max-w-5xl mx-auto px-4 py-12">
+
+        <!-- 1. Qué es esto -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-6 text-[#8b0000] border-b-2 border-[#c5a059] pb-2 flex items-center gap-3">
+                <i class="fas fa-scroll"></i> 1. ¿Qué es esto?
+            </h2>
+            <div class="paper-card p-6 md:p-8 text-lg">
+                <p class="mb-4">Un RPG de texto multijugador ambientado en el universo de <strong>One Piece</strong>. Creas un personaje, eliges bando y estilo de combate, y sales al mundo a explorar islas, luchar, hacer fortuna (o no), formar tripulación con otros jugadores reales, y perseguir el objetivo más difícil del juego: <strong>los Poneglifos de Ruta</strong>, la llave hacia Laugh Tale.</p>
+
+                <div class="bg-red-50 border-l-4 border-red-800 p-4 mt-6">
+                    <h3 class="font-bold text-red-900 mb-2 title-font"><i class="fas fa-skull-crossbones"></i> ADVERTENCIA: RIESGO REAL</h3>
+                    <p class="text-sm text-red-800">Todo se resuelve con tiradas aleatorias reales (nunca resultados prefabricados) y <strong>la muerte es permanente</strong>. Si tu personaje cae, cae de verdad — no hay revivir, no hay "vuelve a intentarlo". Las decisiones importan porque cuestan algo. Una IA narra todo lo que pasa, pero nunca decide los números — eso siempre lo hacen los dados.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 2. Crear Personaje -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-6 text-[#8b0000] border-b-2 border-[#c5a059] pb-2 flex items-center gap-3">
+                <i class="fas fa-user-plus"></i> 2. Crear Personaje
+            </h2>
+            <p class="text-lg mb-6">Al registrarte eliges dos cosas fundamentales: tu Facción y tu Arquetipo.</p>
+
+            <h3 class="text-2xl font-bold mb-4 title-font mt-8">Facciones</h3>
+            <p class="mb-4 italic">Define tu punto de partida y tu camino de reputación.</p>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-10">
+                <div class="paper-card p-6 faction-card border-t-4 border-t-black">
+                    <h4 class="text-xl font-bold mb-2 flex items-center gap-2"><i class="fas fa-skull text-gray-800"></i> PIRATA</h4>
+                    <p class="text-sm">Persigues tu propia leyenda. Tu progreso se mide en <strong>RECOMPENSA</strong> (berries sobre tu cabeza). Empiezas en <em>Pueblo Foosha</em>.</p>
+                </div>
+                <div class="paper-card p-6 faction-card border-t-4 border-t-blue-600">
+                    <h4 class="text-xl font-bold mb-2 flex items-center gap-2 text-blue-800"><i class="fas fa-anchor"></i> MARINE</h4>
+                    <p class="text-sm">Sirves a la Justicia (Absoluta o no, tú decides). Tu progreso se mide en tu <strong>RANGO</strong>. Empiezas en el <em>Cuartel Marine G-5</em>.</p>
+                </div>
+                <div class="paper-card p-6 faction-card border-t-4 border-t-red-700">
+                    <h4 class="text-xl font-bold mb-2 flex items-center gap-2 text-red-800"><i class="fas fa-flag"></i> REVOLUCIONARIO</h4>
+                    <p class="text-sm">Trabajas para derribar al Gobierno Mundial desde dentro. Empiezas en <em>Isla Baltigo</em>.</p>
+                </div>
+                <div class="paper-card p-6 faction-card border-t-4 border-t-green-700">
+                    <h4 class="text-xl font-bold mb-2 flex items-center gap-2 text-green-800"><i class="fas fa-crosshairs"></i> CAZARRECOMPENSAS</h4>
+                    <p class="text-sm">Nadie es tu enemigo por ideología, solo por precio. Empiezas en <em>Isla Gecko</em>.</p>
+                </div>
+            </div>
+
+            <h3 class="text-2xl font-bold mb-4 title-font">Arquetipos</h3>
+            <p class="mb-4 italic">Define tus estadísticas base y tu arma inicial. Cada arquetipo reparte distinto (fuerza, agilidad, resistencia, voluntad e intelecto). No hay combinación "correcta".</p>
+
+            <ul class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <li class="bg-white p-4 rounded shadow-sm border border-gray-200"><strong>Espadachín:</strong> Ágil y letal, empieza con una espada de acero.</li>
+                <li class="bg-white p-4 rounded shadow-sm border border-gray-200"><strong>Cuerpo a Cuerpo:</strong> Resistente y contundente, empieza con nudillos de hierro.</li>
+                <li class="bg-white p-4 rounded shadow-sm border border-gray-200"><strong>Tirador:</strong> Frío y preciso a distancia, empieza con pistola de chispa.</li>
+                <li class="bg-white p-4 rounded shadow-sm border border-gray-200"><strong>Fuerza Bruta:</strong> Lento pero devastador, empieza con hacha de leñador.</li>
+            </ul>
+        </section>
+
+        <!-- Salto de página para PDF -->
+        <div class="page-break"></div>
+
+        <!-- 3. Cómo se juega -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-6 text-[#8b0000] border-b-2 border-[#c5a059] pb-2 flex items-center gap-3">
+                <i class="fas fa-keyboard"></i> 3. Cómo se juega: Tú escribes, la IA narra
+            </h2>
+            <div class="paper-card p-6 md:p-8">
+                <p class="mb-4">Olvídate de menús de botones para casi todo. En la pantalla de tu personaje hay un cuadro de texto: <strong>"¿Qué haces?"</strong>. Ahí escribes tu acción como en cualquier rol de mesa, con tus propias palabras.</p>
+
+                <div class="bg-gray-100 p-4 rounded border-l-4 border-gray-400 font-mono text-sm mb-6">
+                    > "Entro al bar y me fijo si hay alguien buscando tripulación."<br>
+                    > "Desenfundo mi espada y cargo directo contra él, sin dudar."<br>
+                    > "Le perdono la vida y le advierto que no vuelva a cruzarse conmigo."
+                </div>
+
+                <p class="mb-6">Una IA lee lo que escribiste y decide qué tipo de acción es. <strong>Los números los decide siempre el motor de dados</strong>, la IA solo le pone palabras a lo que los dados decidieron.</p>
+
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+                    <div class="bg-blue-50 p-5 rounded border border-blue-200">
+                        <h4 class="font-bold text-blue-900 mb-2"><i class="fas fa-comments"></i> Conversación / Escena</h4>
+                        <p class="text-sm">Hablar, mirar alrededor, curiosear o pensar en voz alta. La IA simplemente narra la escena. <em>No cuesta recursos ni tira dados: es rol puro.</em></p>
+                    </div>
+                    <div class="bg-red-50 p-5 rounded border border-red-200">
+                        <h4 class="font-bold text-red-900 mb-2"><i class="fas fa-dice-d20"></i> Acción Decisiva</h4>
+                        <p class="text-sm">Arriesgarse, explorar a fondo, buscar pelea, robar. Se activa el motor del juego: se tira contra el peligro de la isla y tus estadísticas. Debajo de la respuesta verás "(interpretado como: X)".</p>
+                    </div>
+                </div>
+
+                <p class="text-sm bg-yellow-50 p-3 rounded border border-yellow-200">
+                    <i class="fas fa-info-circle text-yellow-600"></i> La <strong>"Bitácora"</strong> muestra un resumen rápido mecánico (recompensas, daño, subidas). <strong>Entrenar y Descansar</strong> siguen siendo botones simples (Entrenar tiene un límite de 30 mins reales). <strong>Viajar</strong> también es un botón.
+                </p>
+            </div>
+        </section>
+
+        <!-- 4. El Bucle Principal -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-6 text-[#8b0000] border-b-2 border-[#c5a059] pb-2 flex items-center gap-3">
+                <i class="fas fa-sync-alt"></i> 4. El Bucle Principal
+            </h2>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="paper-card p-5">
+                    <h4 class="font-bold text-lg mb-2 text-[#8b0000]"><i class="fas fa-search-location"></i> EXPLORAR (Texto Libre)</h4>
+                    <p class="text-sm">El corazón del juego. Cada acción decisiva desencadena un evento aleatorio: hallazgo, pelea, evento social o desastre. Depende de los dados y tus estadísticas.</p>
+                </div>
+                <div class="paper-card p-5">
+                    <h4 class="font-bold text-lg mb-2 text-[#8b0000]"><i class="fas fa-dumbbell"></i> ENTRENAR</h4>
+                    <p class="text-sm">Sube tu Haki de forma predecible. <em>No sube tu nivel de personaje</em> — solo Haki. Cooldown: 30 minutos reales.</p>
+                </div>
+                <div class="paper-card p-5">
+                    <h4 class="font-bold text-lg mb-2 text-[#8b0000]"><i class="fas fa-bed"></i> DESCANSAR</h4>
+                    <p class="text-sm">Recupera vida. No puedes actuar con un combate pendiente sin resolver, a veces es tu única salida.</p>
+                </div>
+                <div class="paper-card p-5">
+                    <h4 class="font-bold text-lg mb-2 text-[#8b0000]"><i class="fas fa-ship"></i> VIAJAR</h4>
+                    <p class="text-sm">Te mueves entre islas conectadas. El Grand Line no te deja pasar de nivel si no estás listo (nivel mínimo requerido).</p>
+                </div>
+            </div>
+
+            <div class="bg-gray-800 text-white p-5 rounded mt-6">
+                <h4 class="font-bold text-[#c5a059] mb-2 title-font"><i class="fas fa-arrow-trend-up"></i> ¿Y cómo subo de NIVEL, exactamente?</h4>
+                <p class="text-sm">El nivel de tu personaje sube por <strong>experiencia</strong>, y la experiencia se gana <strong>explorando y peleando</strong> — no entrenando. Cada acción decisiva exitosa da berries + XP; ganar un combate da XP extra al decidir perdonar o rematar. Consulta el <a href="mapa.html" class="underline text-[#c5a059]">mapa de ruta</a> para ver qué nivel mínimo pide cada isla antes de zarpar hacia allá.</p>
+            </div>
+        </section>
+
+        <!-- Salto de página para PDF -->
+        <div class="page-break"></div>
+
+        <!-- 5. Combate -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-6 text-[#8b0000] border-b-2 border-[#c5a059] pb-2 flex items-center gap-3">
+                <i class="fas fa-fist-raised"></i> 5. Combate: Pelea de verdad, ronda a ronda
+            </h2>
+            <div class="paper-card p-6 md:p-8">
+                <p class="mb-4">El combate se juega como una pelea real, un intercambio a la vez, y tú decides tu siguiente movimiento mediante <strong>texto libre</strong>.</p>
+
+                <ul class="list-disc pl-5 mb-6 space-y-2">
+                    <li><strong>LUCHAR:</strong> Describes tu movimiento en una ronda. El motor decide el éxito (ataque, defensa, velocidad). La IA narra el intercambio.</li>
+                    <li><strong>HUIR:</strong> Puedes intentarlo al inicio o en medio. Si fallas, recibes daño.</li>
+                </ul>
+
+                <div class="bg-gray-800 text-white p-4 rounded mb-6">
+                    <h4 class="font-bold text-[#c5a059] mb-2"><i class="fas fa-brain"></i> Tu astucia importa de verdad</h4>
+                    <p class="text-sm">La IA lee qué tan inteligente es tu táctica (fintas, entorno, debilidades) y eso <strong>mejora tus probabilidades reales</strong> en los dados. Una idea torpe las empeora. Pero los dados tienen la última palabra.</p>
+                </div>
+
+                <h4 class="font-bold text-xl mb-3 title-font">Decisión Moral (Si Ganas)</h4>
+                <div class="flex flex-col sm:flex-row gap-4 mb-6">
+                    <div class="flex-1 border border-green-300 bg-green-50 p-4 rounded text-center">
+                        <strong>PERDONAR</strong><br><span class="text-sm">Dejas vivir al enemigo.</span>
+                    </div>
+                    <div class="flex-1 border border-red-300 bg-red-50 p-4 rounded text-center">
+                        <strong>REMATAR</strong><br><span class="text-sm">Lo derrotas por completo.</span>
+                    </div>
+                </div>
+                <p class="text-sm italic text-center mb-6">Ambas generan noticias y consecuencias distintas. El mundo lo recuerda.</p>
+
+                <div class="border-t-2 border-dashed border-red-300 pt-4 mt-4">
+                    <p class="text-red-700 font-bold"><i class="fas fa-exclamation-triangle"></i> Si pierdes: Chequeo de Muerte.</p>
+                    <p class="text-sm text-gray-700">Depende de tu vida restante y diferencia de nivel. No hay red de seguridad.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 6. Frutas, Armas y Haki -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-6 text-[#8b0000] border-b-2 border-[#c5a059] pb-2 flex items-center gap-3">
+                <i class="fab fa-apple"></i> 6. Frutas del Diablo, Armas y Haki
+            </h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="paper-card p-6">
+                    <h4 class="font-bold text-xl mb-3 title-font text-purple-900"><i class="fas fa-apple-alt"></i> Frutas del Diablo</h4>
+                    <p class="text-sm mb-2">Drop aleatorio, nunca garantizado. Solo puedes tener una. Al comerla, <strong>pierdes para siempre la capacidad de nadar</strong>.</p>
+                    <p class="text-sm bg-purple-50 p-2 rounded">Si el mar te alcanza en un evento, tus probabilidades de sobrevivir caen en picado. Para ti, el mar es mortal.</p>
+                </div>
+                <div class="paper-card p-6">
+                    <h4 class="font-bold text-xl mb-3 title-font text-gray-800"><i class="fas fa-khanda"></i> Armas Únicas y Haki</h4>
+                    <p class="text-sm mb-2">Existen espadas <em>Saijo O Wazamono</em> (Wado Ichimonji, Enma...) de las que <strong>solo existe una unidad en todo el mundo</strong>. Si otro jugador la tiene, tú no. Quítasela o cómprala.</p>
+                    <p class="text-sm">El <strong>Haki</strong> se entrena como una estadística más, con su propio progreso — pero recuerda: eso no es tu nivel de personaje (ver sección 4).</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Salto de página para PDF -->
+        <div class="page-break"></div>
+
+        <!-- 7. Reputación -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-6 text-[#8b0000] border-b-2 border-[#c5a059] pb-2 flex items-center gap-3">
+                <i class="fas fa-star"></i> 7. Reputación: El mundo te reconoce
+            </h2>
+            <p class="mb-6">Cruzar un escalón importante sale en las noticias. Todo el servidor se entera de quién eres.</p>
+
+            <div class="space-y-4">
+                <div class="bg-white p-4 rounded shadow border-l-4 border-black">
+                    <strong class="text-lg">Pirata:</strong> <span class="text-sm text-gray-600">Sin recompensa → Novato → De interés → Superrookie → Amenaza → Objetivo prioritario → Candidato a Shichibukai → Emperador → Leyenda → Rey Pirata</span>
+                </div>
+                <div class="bg-white p-4 rounded shadow border-l-4 border-blue-600">
+                    <strong class="text-lg text-blue-800">Marine:</strong> <span class="text-sm text-gray-600">Recluta → Raso → Cabo → Sargento → Teniente → Capitán → Comodoro → Contraalmirante → Vicealmirante → Almirante</span>
+                </div>
+                <div class="bg-white p-4 rounded shadow border-l-4 border-red-600">
+                    <strong class="text-lg text-red-800">Revolucionario:</strong> <span class="text-sm text-gray-600">Simpatizante → Célula activa → Agente → Organizador → Comandante → Jefe de ejército → Mano derecha → Núcleo</span>
+                </div>
+                <div class="bg-white p-4 rounded shadow border-l-4 border-green-600">
+                    <strong class="text-lg text-green-800">Cazarrecompensas:</strong> <span class="text-sm text-gray-600">Novato → Gremio → Rastreador → Verdugo → Leyenda → Rival de Marina → Azote de los mares</span>
+                </div>
+            </div>
+        </section>
+
+        <!-- 8 y 9. Multijugador y Prisión -->
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-16">
+            <section>
+                <h2 class="text-2xl font-bold mb-4 text-[#8b0000] border-b-2 border-[#c5a059] pb-2">
+                    <i class="fas fa-users"></i> 8. Multijugador y Tripulaciones
+                </h2>
+                <div class="paper-card p-5 h-full">
+                    <p class="text-sm mb-4">Funda o únete a una tripulación con un código de invitación. Ves a otros en tu isla en tiempo real, y pueden desafiarse en batallas N-contra-N.</p>
+                    <div class="bg-blue-50 border border-blue-200 rounded p-3 mb-4">
+                        <h4 class="font-bold text-blue-900 text-sm mb-1"><i class="fas fa-comments"></i> Escena compartida</h4>
+                        <p class="text-xs text-blue-900">Si estás en la misma isla que un compañero de tripulación real, dejan de tener cada uno su escena privada: comparten <strong>una sola escena con turnos claros</strong> (el capitán va primero). Si te topas un combate durante tu turno, esa pelea sigue siendo tuya y tuya sola, resuelta a tu propio ritmo — el grupo ve un resumen de una línea, pero no puede intervenir directamente en ella. Separarte del grupo pide confirmación explícita, y puedes reunirte de nuevo cuando quieras mientras sigas en la misma isla.</p>
+                    </div>
+                    <ul class="text-sm list-disc pl-4 space-y-2">
+                        <li>Se eligen enfrentamientos uno a uno.</li>
+                        <li>Se resuelve por oleadas.</li>
+                        <li>Si terminas con más de 50% de vida, puedes <strong>REFORZAR</strong> a un compañero que siga peleando.</li>
+                    </ul>
+                    <p class="text-xs italic mt-4 text-gray-500">*Rolear estas batallas masivas ronda a ronda, con varios jugadores actuando dentro de la misma pelea, aún no está disponible.</p>
+                </div>
+            </section>
+
+            <section>
+                <h2 class="text-2xl font-bold mb-4 text-[#8b0000] border-b-2 border-[#c5a059] pb-2">
+                    <i class="fas fa-lock"></i> 9. Prisión y Rescate
+                </h2>
+                <div class="paper-card p-5 h-full bg-gray-100">
+                    <p class="text-sm mb-4">Perder contra la Marina puede significar la cárcel. No puedes actuar hasta salir.</p>
+                    <ul class="text-sm list-disc pl-4 space-y-2">
+                        <li><strong>PAGAR FIANZA:</strong> Te libera al instante (cuesta más si tienes fruta, te vigilan con Kairoseki).</li>
+                        <li><strong>RESCATE:</strong> Un aliado en la isla puede intentar sacarte. Se tira comprobación real contra el captor. Si falla, el rescatador acaba preso también. <em>Es un riesgo, no un favor automático.</em></li>
+                    </ul>
+                </div>
+            </section>
+        </div>
+
+        <!-- Salto de página para PDF -->
+        <div class="page-break"></div>
+
+        <!-- 10 y 11. Mundo y Endgame -->
+        <section class="mb-16">
+            <h2 class="text-3xl font-bold mb-6 text-[#8b0000] border-b-2 border-[#c5a059] pb-2 flex items-center gap-3">
+                <i class="fas fa-globe"></i> 10. El mundo vive sin ti
+            </h2>
+            <div class="paper-card p-6 mb-8">
+                <p>Aunque no estés conectado, el mundo se mueve. Yonkos, Almirantes y Revolucionarios actúan, generando <strong>NOTICIAS</strong> reales (guerras, capturas, Buster Calls).</p>
+                <p class="mt-2 text-sm text-gray-700">Un actor del mundo no puede estar en dos sitios a la vez. Si un Yonko ataca otro lado, su territorio queda vulnerable. Presta atención a las Noticias.</p>
+            </div>
+
+            <h2 class="text-3xl font-bold mb-6 text-[#8b0000] border-b-2 border-[#c5a059] pb-2 flex items-center gap-3">
+                <i class="fas fa-map"></i> 11. Los Poneglifos de Ruta (El Endgame)
+            </h2>
+            <div class="paper-card p-6 bg-red-900 text-[#f6e0b5]">
+                <p class="mb-4">Existen 4 Poneglifos de Ruta. Son la única forma de llegar a Laugh Tale. Los guardan las potencias del mundo — consulta el <a href="mapa.html" class="underline text-[#c5a059]">mapa de ruta</a> para ver dónde están los dos ya colocados.</p>
+                <div class="bg-black bg-opacity-30 p-4 rounded border border-red-700">
+                    <h4 class="font-bold text-[#c5a059] title-font mb-2"><i class="fas fa-fire-alt"></i> Calor de Persecución</h4>
+                    <p class="text-sm">Al leer un Poneglifo, quien lo perdió se entera. Tu "calor" sube y corres el riesgo real de que cazadores te encuentren primero al explorar. El riesgo solo baja con el tiempo. Reunir los 4 y llegar a Laugh Tale desatará una guerra. Nadie lo logrará en solitario.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- 12. Cierre -->
+        <section class="text-center py-12 border-t border-[#d4c4a8]">
+            <i class="fas fa-dice text-4xl text-[#8b0000] mb-4"></i>
+            <h2 class="text-2xl font-bold title-font mb-4">12. UNA COSA MÁS</h2>
+            <p class="text-lg italic max-w-2xl mx-auto text-gray-700">
+                "No hay resultados guionizados. No hay 'tranquilo, seguro que sobrevives'. Cada tirada es real, cada muerte es real, y cada título que ganas te lo ganaste de verdad. La IA le pone voz al mundo, pero nunca te hace trampa ni a tu favor ni en tu contra — los dados mandan.<br><br><strong class="text-black title-font text-xl">Bienvenido a bordo.</strong>"
+            </p>
+        </section>
+
+    </main>
+
+    <footer class="bg-[#1a202c] text-[#d4c4a8] text-center py-6 text-sm no-print">
+        <p>Grand Line RPG - Documento generado para impresión. <a href="mapa.html" class="text-[#c5a059] underline">Ver mapa de ruta</a></p>
+    </footer>
+
+</body>
+</html>
