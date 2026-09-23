@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireUserId, UnauthorizedError } from "@/lib/require-user";
 import { logError } from "@/lib/log-error";
 import { syncPartyForCharacter, getPartyStateForCharacter } from "@/lib/game/party";
+import { deleteCharacter, DeleteCharacterError } from "@/lib/game/delete-character";
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
@@ -107,6 +108,20 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   } catch (err) {
     if (err instanceof UnauthorizedError) return NextResponse.json({ error: err.message }, { status: 401 });
     await logError("api/characters/[id]", err);
+    return NextResponse.json({ error: "Error inesperado." }, { status: 500 });
+  }
+}
+
+export async function DELETE(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  try {
+    const userId = await requireUserId();
+    const { id } = await params;
+    const { name } = await deleteCharacter(id, userId);
+    return NextResponse.json({ ok: true, name });
+  } catch (err) {
+    if (err instanceof UnauthorizedError) return NextResponse.json({ error: err.message }, { status: 401 });
+    if (err instanceof DeleteCharacterError) return NextResponse.json({ error: err.message }, { status: 404 });
+    await logError("api/characters/[id] DELETE", err);
     return NextResponse.json({ error: "Error inesperado." }, { status: 500 });
   }
 }

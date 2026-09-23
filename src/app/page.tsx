@@ -36,6 +36,8 @@ export default function HomePage() {
   const [password, setPassword] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null);
+  const [deleting, setDeleting] = useState(false);
 
   async function loadMe() {
     const res = await fetch("/api/me");
@@ -70,6 +72,22 @@ export default function HomePage() {
   async function logout() {
     await fetch("/api/auth/logout", { method: "POST" });
     await loadMe();
+  }
+
+  async function confirmDelete(characterId: string) {
+    setDeleting(true);
+    try {
+      const res = await fetch(`/api/characters/${characterId}`, { method: "DELETE" });
+      const data = await res.json();
+      if (!res.ok) {
+        setError(data.error ?? "No se pudo borrar el personaje.");
+        return;
+      }
+      setConfirmDeleteId(null);
+      await loadMe();
+    } finally {
+      setDeleting(false);
+    }
   }
 
   if (!me) {
@@ -156,6 +174,8 @@ export default function HomePage() {
         </Link>
       </div>
 
+      {error && <p className="text-blood text-sm mb-3">{error}</p>}
+
       {me.characters.length === 0 ? (
         <div className="panel p-8 text-center text-ink-dim">
           Todavía no tienes ningún personaje. El mar te espera.
@@ -163,8 +183,8 @@ export default function HomePage() {
       ) : (
         <div className="flex flex-col gap-3">
           {me.characters.map((c) => (
-            <Link key={c.id} href={`/play/${c.id}`} className="panel p-4 flex items-center justify-between hover:border-gold transition-colors">
-              <div>
+            <div key={c.id} className="panel p-4 flex items-center justify-between hover:border-gold transition-colors">
+              <Link href={`/play/${c.id}`} className="flex-1 min-w-0">
                 <div className="font-display text-lg">
                   {c.name} <span className="text-ink-dim text-sm font-body">— Nv. {c.level}</span>
                 </div>
@@ -173,14 +193,35 @@ export default function HomePage() {
                   {FACTION_LABEL[c.faction]} · {c.currentIsland.name}
                   {c.status !== "ALIVE" && <span className="text-blood"> · {c.status === "DEAD" ? "Caído" : c.status}</span>}
                 </div>
+              </Link>
+              <div className="flex items-center gap-3 shrink-0">
+                {c.faction === "PIRATE" && c.bounty > 0 && (
+                  <div className="text-right">
+                    <div className="text-gold-bright font-display">฿ {c.bounty.toLocaleString("es-ES")}</div>
+                    <div className="text-xs text-ink-dim">Recompensa</div>
+                  </div>
+                )}
+                {confirmDeleteId === c.id ? (
+                  <div className="flex items-center gap-1.5 text-xs">
+                    <span className="text-ink-dim">¿Borrar para siempre?</span>
+                    <button className="btn-ghost px-2 py-1 text-blood" disabled={deleting} onClick={() => confirmDelete(c.id)}>
+                      {deleting ? "..." : "Sí, borrar"}
+                    </button>
+                    <button className="btn-ghost px-2 py-1" disabled={deleting} onClick={() => setConfirmDeleteId(null)}>
+                      No
+                    </button>
+                  </div>
+                ) : (
+                  <button
+                    className="btn-ghost px-2 py-1.5 text-xs text-ink-dim hover:text-blood"
+                    onClick={() => setConfirmDeleteId(c.id)}
+                    title="Borrar personaje permanentemente"
+                  >
+                    Borrar
+                  </button>
+                )}
               </div>
-              {c.faction === "PIRATE" && c.bounty > 0 && (
-                <div className="text-right">
-                  <div className="text-gold-bright font-display">฿ {c.bounty.toLocaleString("es-ES")}</div>
-                  <div className="text-xs text-ink-dim">Recompensa</div>
-                </div>
-              )}
-            </Link>
+            </div>
           ))}
         </div>
       )}
