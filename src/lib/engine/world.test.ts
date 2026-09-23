@@ -24,9 +24,39 @@ const lateGameTemplate: WorldEventTemplateSpec = {
   bodyVariants: ["El equilibrio de poder se rompe."],
 };
 
+const marineOnlyTemplate: WorldEventTemplateSpec = {
+  id: "marine-only",
+  weight: 10,
+  minHeat: 0,
+  headline: "{actor} captura una tripulación pirata",
+  category: "Gobierno Mundial",
+  bodyVariants: ["{actor} anuncia una captura."],
+  allowedFactionTypes: ["MARINE"],
+};
+
 const actors: WorldActorState[] = [
-  { id: "a1", name: "Kizaru", role: "ADMIRAL", busyUntil: null },
-  { id: "a2", name: "Shanks", role: "YONKO", busyUntil: new Date("2026-01-02T00:00:00Z") }, // busy in the future
+  {
+    id: "a1",
+    name: "Kizaru",
+    role: "ADMIRAL",
+    factionType: "MARINE",
+    factionName: "Marina",
+    rankLabel: null,
+    canonBounty: null,
+    personality: null,
+    busyUntil: null,
+  },
+  {
+    id: "a2",
+    name: "Shanks",
+    role: "YONKO",
+    factionType: "PIRATE",
+    factionName: "Piratas Pelirrojos",
+    rankLabel: null,
+    canonBounty: "4048900000",
+    personality: null,
+    busyUntil: new Date("2026-01-02T00:00:00Z"),
+  }, // busy in the future
 ];
 
 describe("runWorldTick", () => {
@@ -48,10 +78,57 @@ describe("runWorldTick", () => {
   });
 
   it("falls back to a generic actor name when nobody is available", () => {
-    const allBusy: WorldActorState[] = [{ id: "a1", name: "Kizaru", role: "ADMIRAL", busyUntil: new Date("2099-01-01") }];
+    const allBusy: WorldActorState[] = [
+      {
+        id: "a1",
+        name: "Kizaru",
+        role: "ADMIRAL",
+        factionType: "MARINE",
+        factionName: "Marina",
+        rankLabel: null,
+        canonBounty: null,
+        personality: null,
+        busyUntil: new Date("2099-01-01"),
+      },
+    ];
     const result = runWorldTick(mulberry32(1), now, 0, [calmTemplate], allBusy);
     expect(result?.involvedActorId).toBeNull();
     expect(result?.headline).toContain("Gobierno Mundial");
+  });
+
+  it("only picks an actor whose factionType is in allowedFactionTypes", () => {
+    for (let seed = 0; seed < 100; seed++) {
+      const result = runWorldTick(mulberry32(seed), now, 0, [marineOnlyTemplate], actors);
+      // Shanks (PIRATE) is never eligible for a MARINE-only template, whether busy or not.
+      expect(result?.involvedActorId).not.toBe("a2");
+      if (result) expect(result.involvedActorId).toBe("a1"); // only Kizaru (MARINE) qualifies
+    }
+  });
+
+  it("skips the tick entirely when a faction-gated template has no eligible actor available", () => {
+    const noMarineAvailable: WorldActorState[] = [
+      {
+        id: "a2",
+        name: "Shanks",
+        role: "YONKO",
+        factionType: "PIRATE",
+        factionName: "Piratas Pelirrojos",
+        rankLabel: null,
+        canonBounty: "4048900000",
+        personality: null,
+        busyUntil: null,
+      },
+    ];
+    for (let seed = 0; seed < 50; seed++) {
+      const result = runWorldTick(mulberry32(seed), now, 0, [marineOnlyTemplate], noMarineAvailable);
+      expect(result).toBeNull();
+    }
+  });
+
+  it("carries the template's promptHint through to the result", () => {
+    const withHint: WorldEventTemplateSpec = { ...calmTemplate, promptHint: "a pirate recruits new crew" };
+    const result = runWorldTick(mulberry32(1), now, 0, [withHint], actors);
+    expect(result?.promptHint).toBe("a pirate recruits new crew");
   });
 
   it("sets a busyUntil window strictly after `now` when the template specifies busyHours", () => {

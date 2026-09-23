@@ -187,10 +187,18 @@ a single linear gate. `Island.minLevelToEnter` (checked in
 travel outright below the requirement — the Grand Line doesn't ease you
 in.
 
-27 devil fruits across every rarity tier, 6 named meito + 5 common
-starter weapons, 10 world actors (3 Yonko, 3 Admirals, 1 Warlord, 1
-Revolutionary commander, 1 Cipher Pol agent) who act independently via
-the lazy world-tick, 4 Road Poneglyphs — **two placed**:
+**Full canon character roster + devil fruit catalog now live in
+`WORLD_LORE.md`** (2026-09-23) — read it before touching `WorldActor`,
+`DevilFruit`, or the news system; it's the durable source of truth for
+faction/rank/canon bounty/canon fruit data, same role `prisma/seed.ts`
+plays for islands. Short version: 35+ devil fruits (some now
+`isSingleton`-locked to a specific canon character, duplicable otherwise
+— see WORLD_LORE.md's "Devil fruit duplication rules"), 6 named meito + 5
+common starter weapons, ~41 world actors across every faction (Yonko,
+Admirals, Warlords, Revolutionary command, Cipher Pol, and the full Straw
+Hat crew) who act independently via the lazy world-tick — now
+faction-gated (see Roadmap's "Faction-aware world news" entry) instead of
+picking a random actor for any event. 4 Road Poneglyphs — **two placed**:
 
 - Fragmento del Alba: boss loot of "La guardia personal de Barbanegra" on
   Isla Cementerio.
@@ -401,6 +409,26 @@ start command `npm run start`, plan `free`, region `oregon`.
    224 tests total, `tsc --noEmit` clean, deployed and confirmed live.
    This is the actual structural fix; the previous two entries were real
    but incomplete steps toward it.
+7. **Silent auto-compaction of scene/AI context** (flagged by the user
+   2026-09-23, explicitly deferred — "esto lo harás después"). Right now
+   `getRecentScene`/`memorySummary` bound context by a fixed recent-message
+   count (see `narrate.ts`), not by actually summarizing older history —
+   the user wants the AI to compact long-running scene context
+   automatically and invisibly (no player-visible interruption, no
+   perceptible pause) so it keeps full effective context without token
+   growth being unbounded. Likely builds on the existing
+   `updateCharacterMemory`/`memorySummary` mechanism (already does
+   AI-driven compaction on combat/mercy beats) rather than a new system —
+   probably needs it to also fire for long pure-`narrate` scene stretches,
+   which today never touch `memorySummary` at all.
+8. **Travel needs real limitations, not unlimited free hops.** Flagged by
+   the user in the same message as #7, same "later" status. Today
+   `travelCharacter` (`src/lib/game/perform-action.ts`) has zero rate
+   limiting — a character can hop island to island as many times as they
+   want, back to back. The user wants a cooldown (shape TBD: fixed real-
+   time cooldown like `lastTrainedAt`'s 30 minutes, a berries/stamina
+   cost, or danger-scaled) so travel becomes a real decision, not a free
+   action.
 
 ### The endgame — explicitly discussed, NOT designed or built yet
 
@@ -1185,6 +1213,121 @@ out of this slice's scope).
   new `Grudge` model) pushed to Neon production the same documented way as
   every prior schema change; code deployed to Render and confirmed live.
   Local dev DB reset to clean-seeded state afterward.
+
+**Faction-aware world news + canon character codex + devil fruit
+duplication** (2026-09-23): the user hit a real logic bug live in
+production — "Kizaru es visto reclutando nuevos aliados," an Admiral doing
+something only a pirate would plausibly do — and asked for the news system
+to be genuinely faction/rank-aware, not just fixed for that one case. Full
+detail and the actual roster/fruit data live in `WORLD_LORE.md` (new,
+project root) — read it before touching `WorldActor`, `DevilFruit`, or the
+news system. Summary of what changed:
+- **Root cause, confirmed by reading the code, not guessed**:
+  `runWorldTick` (`src/lib/engine/world.ts`) picked a random available
+  `WorldActor` for ANY event template with zero regard for
+  category/faction — any of the 10 then-seeded actors could star in any
+  event, including ones that only made sense for one faction.
+- **New `FactionType` enum** (`PIRATE`/`MARINE`/`REVOLUTIONARY`/
+  `CIPHER_POL`/`BOUNTY_HUNTER`/`CIVILIAN`/`UNAFFILIATED`) on `WorldActor`,
+  distinct from `Character`'s existing `Faction` enum (that one only
+  covers what a player can pick, not the full canon cast).
+  `WorldEventTemplate.allowedFactionTypes` (JSON array, nullable) gates
+  which actors are eligible per template; `runWorldTick` now filters
+  strictly — a faction-gated template with no eligible actor available
+  skips the tick entirely (`null`) rather than either faking a
+  wrong-faction actor or firing with nobody to name. `WorldActor` also
+  gained `factionName` (display label), `rankLabel` (free-text override
+  for `role`'s coarser enum), `canonBounty` (`BigInt` — real canon
+  numbers like Shanks' 4,048,900,000 overflow `Character.bounty`'s
+  Int32), and `canonWeapon` (flavor text).
+- **~11 old hand-written templates → ~16 faction-specific ones**
+  (`prisma/seed.ts`), each now just a short **event shape**
+  (`promptHint`) instead of full prose — MARINE-only (patrols,
+  deployments, Buster Calls), PIRATE-only (recruiting, territory wars,
+  Poneglyph hunts, mutinies, skirmishes), BOUNTY_HUNTER-only (collecting a
+  bounty), REVOLUTIONARY-only (sabotage, liberating settlements),
+  CIPHER_POL-only (covert ops), and a few no-actor-required government
+  announcements. Old hand-written `bodyJson` variants are kept, but now
+  purely as the **offline fallback** if the AI call below fails.
+- **AI-generated news prose** — `ai/narrate-prompt.ts`'s
+  `buildNewsNarrationPrompt`/`buildBountyDigestPrompt` +
+  `ai/narrate.ts`'s `narrateNews`/`narrateBountyDigest`, following the
+  exact established "pure prompt builder + never-throws caller + static
+  fallback" pattern every other narration type uses. The news-specific
+  hard rule directly answers the user's other worry ("no puedes poner
+  noticias graves a la ligera de muerte... o captura"): the AI is
+  explicitly forbidden from narrating the death, permanent capture, or
+  dethroning of a named canon actor as an accomplished fact, since no
+  such mechanic exists yet — it can narrate skirmishes/near-misses/
+  deployments freely, just never a confirmed permanent outcome the engine
+  never actually applied. `world-tick.ts` calls this once per ~30-minute
+  ambient tick (unchanged interval — the bug was content quality, not
+  frequency) with the real actor's faction/rank/bounty/personality as
+  context.
+- **New, much rarer periodic bounty digest** (`tickBountyDigestIfDue`,
+  `WorldClock.lastDigestAt`, 6-hour interval, own `severity: "digest"`
+  news item) — satisfies "cada intervalo se publica recompensas de los
+  piratas importantes" as an actual roundup of real canon bounties,
+  without adding noise to the ambient tick.
+- **`NewsItem.severity`** (`"normal"`/`"digest"`/`"major"`) added and set
+  explicitly at every `postNews` call site — player
+  death/capture/poneglyph-reads/group-battle outcomes are `"major"`,
+  giving the news UI real visual hierarchy immediately, independent of
+  any canon-actor mechanic.
+- **News UI redesign** (`src/app/news/page.tsx`,
+  `src/app/api/news/route.ts`): real cursor pagination (`?cursor=&limit=`,
+  was a hardcoded `take: 40` with none) and `?category=` filtering;
+  day-grouped sections ("Hoy"/"Ayer"/dated), category filter chips,
+  severity-based card treatment (bordered/larger for `"major"`, a
+  distinct roundup style for `"digest"`), "Cargar más" button.
+- **Devil fruit duplication — a real mechanic, not just a rule tweak**:
+  found live that `DevilFruit.name` was `@unique` (plus
+  `Character.devilFruitId` `@unique`), so EVERY fruit — not just the
+  "main" ones — was already a hard DB singleton; "fruits can repeat
+  except the main ones" wasn't implementable without a real schema
+  change. Fixed: `name` lost `@unique`; new `isSingleton Boolean`; the
+  full 27→35-entry catalog moved out of `prisma/seed.ts` into new
+  `src/lib/game/devil-fruit-catalog.ts` (single source of truth, shared
+  by the seed and by drop logic — same principle as `common-gear.ts`).
+  `tryDropFruit` (`perform-action.ts`) now creates a **fresh row** per
+  common-fruit grant (mirrors `Weapon`'s non-unique-name/fresh-instance
+  pattern exactly) instead of picking from a DB "unclaimed" pool;
+  singleton fruits are filtered out of that pool entirely and only exist
+  as the one seeded row, linked to their canon `WorldActor` via the new
+  `WorldActor.devilFruitId`. A found-live gotcha worth remembering: on a
+  reseed against an already-seeded dev DB, the fruit-seed loop originally
+  did `findFirst ?? create`, which silently left a pre-existing row's
+  `isSingleton` at the schema default (`false`) forever since it never
+  updated an already-found row — fixed by always `update`-ing the found
+  row's fields to match the catalog, not just create-if-missing.
+- **~31 new `WorldActor` rows** (full Straw Hat crew incl. Luffy as a 4th
+  active Yonko, ex-Warlords, Revolutionary leadership, more Cipher Pol,
+  several Worst-Generation captains) on top of the 10 already seeded —
+  full table in `WORLD_LORE.md`. Deliberately excluded: historically
+  inactive canon figures (Kaido, Big Mom, Whitebeard, Ace — the existing
+  roster already implies a post-their-fall timeline, and `WorldActor` has
+  no deceased/retired status field yet).
+- **Verified**: `world.test.ts` gained faction-gating cases (a
+  MARINE-only template never resolves to a PIRATE actor across 100+ seeded
+  runs; an empty-eligible-actor tick returns `null` gracefully;
+  `promptHint` carries through) — 227 tests total, full suite green,
+  `tsc --noEmit` clean. Deterministic: new `scripts/world-news-check.ts`
+  (confirms two `DevilFruit` rows can share a name now; singleton fruits
+  are correctly linked to their `WorldActor`; 300 simulated ticks never
+  once picked a faction-incompatible actor; the digest produces exactly
+  one new item citing a real canon bounty). Live, real OpenRouter API:
+  new `scripts/world-news-ai-smoke.ts` — confirmed a MARINE-context call
+  actually narrates Kizaru running a patrol (not recruiting), a
+  PIRATE-context call narrates Buggy recruiting crew, and the bounty
+  digest cites the real supplied canon figures, none of the three ever
+  claiming a death/execution/permanent capture. Schema changes (`WorldActor`
+  faction/rank/bounty/fruit fields, `DevilFruit.isSingleton` +
+  non-unique `name`, `WorldEventTemplate.allowedFactionTypes`/
+  `promptHint`, `NewsItem.severity`, `WorldClock.lastDigestAt`, new
+  `FactionType`/`NOTABLE_PIRATE` enum values) pushed to Neon production
+  the same documented way as every prior schema change; code deployed to
+  Render and confirmed live. Local dev DB reset to clean-seeded state
+  afterward.
 
 ## Conventions to keep matching
 

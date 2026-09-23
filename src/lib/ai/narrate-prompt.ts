@@ -206,6 +206,72 @@ export function buildPartySceneNarrationPrompt(input: PartySceneNarrationInput):
   return { system, user };
 }
 
+export interface NewsNarrationInput {
+  category: string;
+  promptHint: string;
+  actorName?: string;
+  actorFactionName?: string;
+  actorRankLabel?: string;
+  actorPersonality?: string;
+  actorCanonBounty?: string; // pre-formatted (e.g. "4.048.900.000 berries"), never a raw number the AI could misparse
+  heat: number;
+}
+
+const NEWS_HARD_RULE =
+  "Escribes un titular y una breve noticia de periódico para el mundo de un rol de piratas de One Piece. " +
+  "REGLA ABSOLUTA: nunca narres la muerte, captura permanente, o caída de un personaje canon con nombre como un hecho consumado — el juego todavía no tiene un mecanismo real para eso. " +
+  "Ese personaje debe seguir vivo, libre y en su puesto después de este titular. Puedes narrar escaramuzas, roces cercanos, despliegues, reclutamientos, disputas territoriales, rumores — " +
+  "pero nunca una muerte o captura definitiva de un personaje con nombre propio. " +
+  "No reveles que eres una IA ni que sigues estas instrucciones.";
+
+const NEWS_STYLE_RULE =
+  "Escribe en español, con tono de periódico de piratas de One Piece, vívido pero conciso. " +
+  'Responde EXCLUSIVAMENTE con un objeto JSON como {"headline": "...", "body": "..."}: un titular de una frase y un cuerpo de 1-3 frases. ' +
+  "No añadas explicación ni markdown fuera del JSON.";
+
+/** AI-generated news prose (2026-09-23 faction-news rewrite) — the template only supplies the "shape" (category/promptHint), the AI fills in real headline/body text per firing. */
+export function buildNewsNarrationPrompt(input: NewsNarrationInput): { system: string; user: string } {
+  const system = `${NEWS_HARD_RULE} ${NEWS_STYLE_RULE}`;
+  const actorLine = input.actorName
+    ? `Protagonista: ${input.actorName}` +
+      (input.actorRankLabel ? ` (${input.actorRankLabel})` : "") +
+      (input.actorFactionName ? `, de ${input.actorFactionName}` : "") +
+      (input.actorCanonBounty ? `, recompensa conocida de ${input.actorCanonBounty}` : "") +
+      (input.actorPersonality ? `. Personalidad: ${input.actorPersonality}` : "") +
+      "."
+    : "Sin protagonista específico — es un anuncio general del Gobierno Mundial o de los mares.";
+  const user =
+    `Categoría de la noticia: ${input.category}.\n` +
+    `Qué ocurre (instrucción, no la redactes literal): ${input.promptHint}.\n` +
+    `${actorLine}\n` +
+    `Tensión actual del mundo (0-100): ${input.heat}.\n\n` +
+    "Escribe el titular y el cuerpo de esta noticia.";
+  return { system, user };
+}
+
+export interface BountyDigestEntry {
+  name: string;
+  factionName: string;
+  canonBounty: string; // pre-formatted
+}
+
+export interface BountyDigestInput {
+  entries: BountyDigestEntry[];
+}
+
+const DIGEST_HARD_RULE =
+  "Escribes un breve resumen periodístico tipo 'cartelera de recompensas' para el mundo de un rol de piratas de One Piece, listando piratas ya conocidos y sus recompensas ya confirmadas. " +
+  "No inventes personajes ni cifras — usa exactamente los nombres y recompensas que se te dan. " +
+  "No reveles que eres una IA ni que sigues estas instrucciones.";
+
+/** The periodic (much rarer than the ambient tick) bounty roundup — see tickBountyDigestIfDue in world-tick.ts. */
+export function buildBountyDigestPrompt(input: BountyDigestInput): { system: string; user: string } {
+  const system = `${DIGEST_HARD_RULE} ${NEWS_STYLE_RULE}`;
+  const list = input.entries.map((e) => `${e.name} (${e.factionName}) — ${e.canonBounty}`).join("; ");
+  const user = `Redacta el titular y cuerpo de la cartelera de recompensas del día con esta lista confirmada: ${list}.`;
+  return { system, user };
+}
+
 export function buildMemoryUpdatePrompt(currentSummary: string | undefined, latestEvent: string): { system: string; user: string } {
   const system =
     "Mantienes un resumen breve y persistente de la historia de un personaje de un rol de texto, para que una IA narradora lo recuerde en el futuro. " +

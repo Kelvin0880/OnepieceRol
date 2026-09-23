@@ -6,10 +6,14 @@ import {
   buildMemoryUpdatePrompt,
   buildSceneNarrationPrompt,
   buildPartySceneNarrationPrompt,
+  buildNewsNarrationPrompt,
+  buildBountyDigestPrompt,
   ExploreNarrationInput,
   CombatNarrationInput,
   SceneNarrationInput,
   PartySceneNarrationInput,
+  NewsNarrationInput,
+  BountyDigestInput,
 } from "./narrate-prompt";
 import { callOpenRouter } from "./openrouter-client";
 import { OPENROUTER_MODELS } from "./models";
@@ -105,6 +109,66 @@ export async function narratePartyScene(input: PartySceneNarrationInput, meta: {
   } catch (err) {
     await logError("ai/narrate-party-scene", err, meta);
     return "El mundo sigue su curso alrededor del grupo, pero por ahora nada más que contar. (La IA no respondió a tiempo — prueba de nuevo en un momento.)";
+  }
+}
+
+/** Rejects malformed JSON or missing fields the same way isValidNarration rejects garbage prose — treated as a failed model, moves to the next one. */
+function isValidNewsJson(text: string): boolean {
+  try {
+    const parsed = JSON.parse(text);
+    return typeof parsed?.headline === "string" && parsed.headline.trim().length > 3 && typeof parsed?.body === "string" && parsed.body.trim().length > 3;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Narrates one background world-news beat. Never throws: falls back to one
+ * of the template's static fallback lines (passed in by the caller,
+ * world-tick.ts) on any AI failure, same safety net every other narration
+ * type already has.
+ */
+export async function narrateNews(
+  input: NewsNarrationInput,
+  fallback: { headline: string; body: string },
+  meta: { category: string }
+): Promise<{ headline: string; body: string }> {
+  try {
+    const { system, user } = buildNewsNarrationPrompt(input);
+    const raw = await callOpenRouter(system, user, {
+      models: OPENROUTER_MODELS,
+      jsonMode: true,
+      timeoutMs: NARRATION_TIMEOUT_MS,
+      maxTokens: 300,
+      validate: isValidNewsJson,
+    });
+    const parsed = JSON.parse(raw);
+    return { headline: String(parsed.headline).trim(), body: String(parsed.body).trim() };
+  } catch (err) {
+    await logError("ai/narrate-news", err, meta);
+    return fallback;
+  }
+}
+
+/** Same never-throws contract, for the periodic bounty roundup (see tickBountyDigestIfDue in world-tick.ts). */
+export async function narrateBountyDigest(
+  input: BountyDigestInput,
+  fallback: { headline: string; body: string }
+): Promise<{ headline: string; body: string }> {
+  try {
+    const { system, user } = buildBountyDigestPrompt(input);
+    const raw = await callOpenRouter(system, user, {
+      models: OPENROUTER_MODELS,
+      jsonMode: true,
+      timeoutMs: NARRATION_TIMEOUT_MS,
+      maxTokens: 400,
+      validate: isValidNewsJson,
+    });
+    const parsed = JSON.parse(raw);
+    return { headline: String(parsed.headline).trim(), body: String(parsed.body).trim() };
+  } catch (err) {
+    await logError("ai/narrate-bounty-digest", err, {});
+    return fallback;
   }
 }
 

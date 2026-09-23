@@ -204,7 +204,7 @@ export async function respondToBattle(defendingCharacterId: string, userId: stri
   const headline = victorName
     ? `${victorName} se impone en el choque contra ${result.victor === "a" ? crewB?.name : crewA?.name}`
     : `Empate sangriento entre ${crewA?.name} y ${crewB?.name}`;
-  await postNews(headline, `Un enfrentamiento de ${matchups.length} contra ${matchups.length} terminó con ${result.duels.filter((d) => d.winner !== "draw").length} duelos decididos.`, "Guerra");
+  await postNews(headline, `Un enfrentamiento de ${matchups.length} contra ${matchups.length} terminó con ${result.duels.filter((d) => d.winner !== "draw").length} duelos decididos.`, "Guerra", undefined, "major");
   newsLog.push(headline);
 
   return { status: "RESOLVED" as const, result, newsPosted: newsLog };

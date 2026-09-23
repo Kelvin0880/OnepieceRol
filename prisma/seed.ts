@@ -1,4 +1,5 @@
-import { PrismaClient, FruitType, Rarity, WeaponGrade, Sea, EventKind, ActorRole } from "@prisma/client";
+import { PrismaClient, WeaponGrade, Sea, EventKind, ActorRole, FactionType } from "@prisma/client";
+import { DEVIL_FRUIT_CATALOG } from "../src/lib/game/devil-fruit-catalog";
 
 const prisma = new PrismaClient();
 
@@ -219,252 +220,30 @@ async function main() {
   }
 
   // ---------- Devil Fruits ----------
-  type FruitSeed = {
-    name: string;
-    englishName: string;
-    type: FruitType;
-    rarity: Rarity;
-    description: string;
-    effects: object;
-  };
-
-  const fruits: FruitSeed[] = [
-    // Paramecia — common/uncommon utility
-    {
-      name: "Bara Bara no Mi",
-      englishName: "Chop-Chop Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.COMMON,
-      description: "Permite separar el cuerpo en pedazos a voluntad, inmune a cortes.",
-      effects: { category: "defensive", def: 15 },
-    },
-    {
-      name: "Sube Sube no Mi",
-      englishName: "Slip-Slip Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.COMMON,
-      description: "Vuelve la piel perfectamente resbaladiza; los golpes y agarres resbalan sin efecto.",
-      effects: { category: "defensive", def: 8, spd: 5 },
-    },
-    {
-      name: "Kilo Kilo no Mi",
-      englishName: "Kilo-Kilo Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.COMMON,
-      description: "Cambia el propio peso entre 1 y 10.000 kilos a voluntad.",
-      effects: { category: "utility", atk: 6 },
-    },
-    {
-      name: "Bomu Bomu no Mi",
-      englishName: "Bomb-Bomb Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.UNCOMMON,
-      description: "Todo el cuerpo, incluidos mocos y aliento, puede detonar como explosivo.",
-      effects: { category: "offensive", element: "explosivo", atk: 14 },
-    },
-    {
-      name: "Doa Doa no Mi",
-      englishName: "Door-Door Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.UNCOMMON,
-      description: "Crea puertas en cualquier superficie, incluido el aire.",
-      effects: { category: "utility", spd: 10 },
-    },
-    {
-      name: "Toge Toge no Mi",
-      englishName: "Spike-Spike Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.UNCOMMON,
-      description: "El cuerpo puede cubrirse de púas afiladas como agujas.",
-      effects: { category: "offensive", atk: 10, def: 8 },
-    },
-    {
-      name: "Horo Horo no Mi",
-      englishName: "Ghost-Ghost Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.UNCOMMON,
-      description: "Invoca espíritus que debilitan la voluntad de lucha del enemigo.",
-      effects: { category: "utility", atk: 8, def: 6 },
-    },
-    {
-      name: "Hana Hana no Mi",
-      englishName: "Flower-Flower Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.RARE,
-      description: "Hace florecer partes del propio cuerpo en cualquier superficie al alcance de la vista.",
-      effects: { category: "utility", atk: 8, def: 8, spd: 8 },
-    },
-    {
-      name: "Doku Doku no Mi",
-      englishName: "Venom-Venom Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.RARE,
-      description: "El cuerpo genera y controla venenos capaces de corroer una isla entera.",
-      effects: { category: "offensive", element: "veneno", atk: 18, awakened: { atk: 30, note: "El veneno corrompe la isla entera" } },
-    },
-    {
-      name: "Bari Bari no Mi",
-      englishName: "Barrier-Barrier Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.RARE,
-      description: "Genera barreras irrompibles a voluntad, incluso para atacar.",
-      effects: { category: "defensive", def: 22 },
-    },
-    {
-      name: "Ope Ope no Mi",
-      englishName: "Op-Op Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.EPIC,
-      description: 'Crea una "sala" esférica donde su usuario controla el espacio como un cirujano todopoderoso.',
-      effects: { category: "utility", atk: 10, def: 20, awakened: { def: 25, note: "Operación a nivel de ciudad entera" } },
-    },
-    {
-      name: "Ito Ito no Mi",
-      englishName: "String-String Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.EPIC,
-      description: "Genera hilos más afilados que espadas y capaces de controlar cuerpos ajenos como marionetas.",
-      effects: { category: "offensive", atk: 16, def: 10, spd: 6, awakened: { atk: 20, note: "Hilos que gobiernan un reino entero" } },
-    },
-    {
-      name: "Kage Kage no Mi",
-      englishName: "Shadow-Shadow Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.EPIC,
-      description: "Manipula sombras propias y ajenas, pudiendo robarlas para crear ejércitos de zombis.",
-      effects: { category: "utility", atk: 12, def: 8 },
-    },
-    {
-      name: "Zushi Zushi no Mi",
-      englishName: "Gravity-Gravity Fruit",
-      type: FruitType.PARAMECIA,
-      rarity: Rarity.LEGENDARY,
-      description: "Controla la gravedad a voluntad, capaz de atraer meteoritos del espacio.",
-      effects: { category: "offensive", atk: 28, def: 18, awakened: { atk: 15, note: "Lluvia de meteoros a voluntad" } },
-    },
-    // Logia
-    {
-      name: "Suna Suna no Mi",
-      englishName: "Sand-Sand Fruit",
-      type: FruitType.LOGIA,
-      rarity: Rarity.EPIC,
-      description: "Cuerpo, creación y control de arena; puede absorber la humedad de cualquier cosa.",
-      effects: { category: "offensive", element: "arena", atk: 18, def: 18, logiaIntangible: true },
-    },
-    {
-      name: "Mera Mera no Mi",
-      englishName: "Flame-Flame Fruit",
-      type: FruitType.LOGIA,
-      rarity: Rarity.LEGENDARY,
-      description: "Cuerpo, creación y control absoluto del fuego.",
-      effects: { category: "offensive", element: "fuego", atk: 30, def: 15, logiaIntangible: true, awakened: { atk: 20 } },
-    },
-    {
-      name: "Hie Hie no Mi",
-      englishName: "Ice-Ice Fruit",
-      type: FruitType.LOGIA,
-      rarity: Rarity.LEGENDARY,
-      description: "Cuerpo, creación y control del hielo, capaz de congelar mares enteros.",
-      effects: { category: "offensive", element: "hielo", atk: 25, def: 20, logiaIntangible: true },
-    },
-    {
-      name: "Pika Pika no Mi",
-      englishName: "Light-Light Fruit",
-      type: FruitType.LOGIA,
-      rarity: Rarity.LEGENDARY,
-      description: "Cuerpo, creación y control de la luz; ataca y se mueve a velocidad lumínica.",
-      effects: { category: "offensive", element: "luz", atk: 30, spd: 25, logiaIntangible: true },
-    },
-    {
-      name: "Yami Yami no Mi",
-      englishName: "Dark-Dark Fruit",
-      type: FruitType.LOGIA,
-      rarity: Rarity.MYTHICAL_TIER,
-      description:
-        "Controla la oscuridad y la gravedad de la nada misma; la única Logia que, en vez de esquivar, atrae cualquier golpe hacia sí.",
-      effects: { category: "offensive", element: "oscuridad", atk: 35, def: 25, logiaIntangible: false, awakened: { atk: 25, note: "Un agujero negro que engulle la luz" } },
-    },
-    {
-      name: "Magu Magu no Mi",
-      englishName: "Magma-Magma Fruit",
-      type: FruitType.LOGIA,
-      rarity: Rarity.MYTHICAL_TIER,
-      description: "Cuerpo, creación y control del magma, considerado el elemento más fuerte al superar al fuego.",
-      effects: { category: "offensive", element: "magma", atk: 38, def: 22, logiaIntangible: true, awakened: { atk: 30, note: "El elemento más fuerte de los mares" } },
-    },
-    // Zoan / Ancient / Mythical
-    {
-      name: "Ushi Ushi no Mi: Modelo Bisonte",
-      englishName: "Ox-Ox Fruit: Bison",
-      type: FruitType.ZOAN,
-      rarity: Rarity.UNCOMMON,
-      description: "Transformación en un poderoso bisonte de combate, o un híbrido con fuerza descomunal.",
-      effects: { category: "transformation", atk: 14, def: 10 },
-    },
-    {
-      name: "Neko Neko no Mi: Modelo Leopardo",
-      englishName: "Cat-Cat Fruit: Leopard",
-      type: FruitType.ZOAN,
-      rarity: Rarity.EPIC,
-      description: "Transformación en un leopardo ágil y letal, o un híbrido de reflejos felinos.",
-      effects: { category: "transformation", atk: 18, spd: 22 },
-    },
-    {
-      name: "Inu Inu no Mi: Modelo Okuchi no Makami",
-      englishName: "Dog-Dog Fruit: Okuchi no Makami",
-      type: FruitType.ZOAN_MYTHICAL,
-      rarity: Rarity.EPIC,
-      description: "Transformación en el lobo-deidad guardián que puede caminar sobre el hielo a voluntad.",
-      effects: { category: "transformation", atk: 20, def: 18, spd: 12 },
-    },
-    {
-      name: "Hito Hito no Mi: Modelo Daibutsu",
-      englishName: "Human-Human Fruit: Buddha",
-      type: FruitType.ZOAN_MYTHICAL,
-      rarity: Rarity.LEGENDARY,
-      description: "Transformación en un gigantesco Buda dorado, con ondas de choque devastadoras.",
-      effects: { category: "transformation", atk: 28, def: 25 },
-    },
-    {
-      name: "Tori Tori no Mi: Modelo Fénix",
-      englishName: "Bird-Bird Fruit: Phoenix",
-      type: FruitType.ZOAN_MYTHICAL,
-      rarity: Rarity.LEGENDARY,
-      description: "Transformación en un fénix de llamas azules capaces de regenerar heridas mortales.",
-      effects: { category: "defensive", element: "fuego azul curativo", atk: 15, def: 20, awakened: { def: 30, note: "Regeneración incluso de heridas mortales" } },
-    },
-    {
-      name: "Uo Uo no Mi: Modelo Seiryu",
-      englishName: "Fish-Fish Fruit: Azure Dragon",
-      type: FruitType.ZOAN_MYTHICAL,
-      rarity: Rarity.MYTHICAL_TIER,
-      description: "Transformación en un dragón oriental legendario capaz de controlar el clima a su alrededor.",
-      effects: { category: "transformation", atk: 40, def: 30, spd: 10, awakened: { atk: 25, note: "Forma de dragón celestial completa" } },
-    },
-    {
-      name: "Hito Hito no Mi: Modelo Nika",
-      englishName: "Human-Human Fruit: Nika",
-      type: FruitType.ZOAN_MYTHICAL,
-      rarity: Rarity.MYTHICAL_TIER,
-      description:
-        'La legendaria "fruta más ridícula del mundo": otorga un cuerpo de goma con libertad absoluta de movimiento, dicha en leyendas como el fruto del Guerrero de la Liberación.',
-      effects: { category: "transformation", atk: 25, def: 10, spd: 15, awakened: { atk: 40, spd: 20, note: "Despertar del Guerrero de la Liberación" } },
-    },
-  ];
-
-  for (const f of fruits) {
-    await prisma.devilFruit.upsert({
-      where: { name: f.name },
-      update: {},
-      create: {
-        name: f.name,
-        englishName: f.englishName,
-        type: f.type,
-        rarity: f.rarity,
-        description: f.description,
-        effectsJson: JSON.stringify(f.effects),
-      },
-    });
+  // Full catalog lives in src/lib/game/devil-fruit-catalog.ts now — shared
+  // with tryDropFruit's random-grant logic (perform-action.ts) so common
+  // fruits can be duplicated (fresh row per grant) while isSingleton ones
+  // stay locked to the single row created here. Existing rows are always
+  // refreshed on reseed (not just created-if-missing) so isSingleton and
+  // other catalog fields never drift from a pre-existing row created before
+  // that field existed — found live the first time this ran against an
+  // already-seeded dev DB, where the old Yami Yami no Mi row silently kept
+  // isSingleton's schema default (false) instead of the catalog's true.
+  const fruitsByName: Record<string, { id: string }> = {};
+  for (const f of DEVIL_FRUIT_CATALOG) {
+    const existing = await prisma.devilFruit.findFirst({ where: { name: f.name } });
+    const data = {
+      englishName: f.englishName,
+      type: f.type,
+      rarity: f.rarity,
+      description: f.description,
+      effectsJson: JSON.stringify(f.effects),
+      isSingleton: f.isSingleton,
+    };
+    const fruit = existing
+      ? await prisma.devilFruit.update({ where: { id: existing.id }, data })
+      : await prisma.devilFruit.create({ data: { name: f.name, ...data } });
+    fruitsByName[f.name] = fruit;
   }
 
   // ---------- Weapons ----------
@@ -554,13 +333,34 @@ async function main() {
   }
 
   // ---------- World actors ----------
-  const actors: Array<{ name: string; role: ActorRole; powerLevel: number; description: string; personality: string }> = [
+  // Faction/rank/bounty/fruit/weapon data added 2026-09-23 alongside the
+  // faction-aware news rewrite — see WORLD_LORE.md for the full roster
+  // table, scope notes, and what's deliberately excluded/simplified.
+  type ActorSeed = {
+    name: string;
+    role: ActorRole;
+    powerLevel: number;
+    description: string;
+    personality: string;
+    factionType: FactionType;
+    factionName: string;
+    rankLabel?: string;
+    canonBounty?: bigint;
+    canonWeapon?: string;
+    devilFruitName?: string; // looked up in fruitsByName — must be an isSingleton catalog entry
+  };
+
+  const actors: ActorSeed[] = [
+    // ---------- Yonko / near-Yonko ----------
     {
       name: "Shanks",
       role: ActorRole.YONKO,
       powerLevel: 99,
       description: "El pelirrojo, uno de los Cuatro Emperadores, tan temido por su espada como por su influencia política.",
       personality: "Habla con calma casi displicente incluso ante una amenaza real, pero su tono se vuelve absolutamente serio en el instante en que alguien cruza una línea que le importa.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas Pelirrojos",
+      canonBounty: BigInt(4_048_900_000),
     },
     {
       name: "Marshall D. Teach",
@@ -568,6 +368,10 @@ async function main() {
       powerLevel: 98,
       description: 'Apodado "Barbanegra", el único hombre conocido por poseer dos frutas del diablo. Su ambición no tiene fondo.',
       personality: 'Ríe con una carcajada grave y teatral antes de cada golpe, disfrutando abiertamente del caos que provoca; llama "amigo" a quien está a punto de destruir.',
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas de Barbanegra",
+      canonBounty: BigInt(3_996_000_000),
+      devilFruitName: "Yami Yami no Mi",
     },
     {
       name: "Buggy",
@@ -575,20 +379,33 @@ async function main() {
       powerLevel: 75,
       description: 'El "Payaso Estrella", ascendido a Emperador casi por accidente, ahora al frente del Cross Guild.',
       personality: "Fanfarrón y ruidoso, exagera cada amenaza hasta lo absurdo, pero entra en pánico genuino si las cosas se ponen realmente serias.",
+      factionType: FactionType.PIRATE,
+      factionName: "Cross Guild",
+      canonBounty: BigInt(3_189_000_000),
+      devilFruitName: "Bara Bara no Mi",
     },
     {
-      name: "Dracule Mihawk",
-      role: ActorRole.WARLORD,
+      name: "Monkey D. Luffy",
+      role: ActorRole.YONKO,
       powerLevel: 97,
-      description: "El espadachín más fuerte del mundo, ahora aliado incómodo del Cross Guild.",
-      personality: "Habla poco y con desdén aristocrático; valora la habilidad con la espada por encima de casi todo lo demás y lo dice sin rodeos.",
+      description: "Capitán de los Piratas de Sombrero de Paja, el más nuevo de los Cuatro Emperadores tras Wano.",
+      personality: "Directo hasta la ingenuidad, decide en segundos y sin cálculo político — pero se vuelve absolutamente implacable si tocan a su tripulación.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas de Sombrero de Paja",
+      canonBounty: BigInt(3_000_000_000),
+      devilFruitName: "Hito Hito no Mi: Modelo Nika",
     },
+    // ---------- Marina ----------
     {
       name: "Kizaru",
       role: ActorRole.ADMIRAL,
       powerLevel: 95,
       description: "Almirante de la Marina, usuario de la Pika Pika no Mi, tan veloz como despreocupado.",
       personality: "Arrastra las palabras con pereza deliberada, como si nada le urgiera nunca — incluso en pleno combate parece estar de vacaciones.",
+      factionType: FactionType.MARINE,
+      factionName: "Marina",
+      rankLabel: "Almirante",
+      devilFruitName: "Pika Pika no Mi",
     },
     {
       name: "Fujitora",
@@ -596,6 +413,10 @@ async function main() {
       powerLevel: 94,
       description: "Almirante ciego que juzga con gravedad literal y figurada; su sentido de la justicia incomoda a sus superiores.",
       personality: "Habla con solemnidad pausada, casi paternal, y no oculta su incomodidad cuando la Marina le pide algo que no considera justo.",
+      factionType: FactionType.MARINE,
+      factionName: "Marina",
+      rankLabel: "Almirante",
+      devilFruitName: "Zushi Zushi no Mi",
     },
     {
       name: "Ryokugyu",
@@ -603,6 +424,10 @@ async function main() {
       powerLevel: 90,
       description: "El almirante más reciente, de métodos tan lentos como implacables.",
       personality: "Parco y metódico, deja largos silencios antes de hablar, como si cada palabra le costara un esfuerzo que prefiere ahorrarse.",
+      factionType: FactionType.MARINE,
+      factionName: "Marina",
+      rankLabel: "Almirante",
+      devilFruitName: "Mori Mori no Mi",
     },
     {
       name: "Sakazuki",
@@ -610,70 +435,479 @@ async function main() {
       powerLevel: 99,
       description: 'Almirante de Flota, apodado "Akainu". Encarna la Justicia Absoluta sin piedad ni excepciones.',
       personality: "Frío, tajante y sin una pizca de humor; cualquier piedad ajena le resulta personalmente ofensiva y lo dice sin levantar la voz.",
+      factionType: FactionType.MARINE,
+      factionName: "Marina",
+      rankLabel: "Almirante de Flota",
+      devilFruitName: "Magu Magu no Mi",
     },
+    {
+      name: "Monkey D. Garp",
+      role: ActorRole.MARINE_GENERAL,
+      powerLevel: 93,
+      description: 'El "Héroe de la Marina", el único que hizo retroceder al Rey de los Piratas. Rechazó tres veces el puesto de Almirante de Flota.',
+      personality: "Ruidoso, directo y sentimental bajo la fachada dura; resuelve casi cualquier desacuerdo con los puños antes que con las palabras, incluida su propia familia.",
+      factionType: FactionType.MARINE,
+      factionName: "Marina",
+      rankLabel: "Vicealmirante (Héroe de la Marina)",
+    },
+    {
+      name: "Sengoku",
+      role: ActorRole.MARINE_GENERAL,
+      powerLevel: 91,
+      description: "Antiguo Almirante de Flota, retirado tras Marineford pero todavía una autoridad moral dentro de la Marina.",
+      personality: "Severo y formal en público, pero capaz de una ironía seca cuando la burocracia del Gobierno Mundial lo exaspera.",
+      factionType: FactionType.MARINE,
+      factionName: "Marina",
+      rankLabel: "Almirante de Flota (retirado)",
+      devilFruitName: "Hito Hito no Mi: Modelo Daibutsu",
+    },
+    {
+      name: "Smoker",
+      role: ActorRole.MARINE_GENERAL,
+      powerLevel: 85,
+      description: "Vicealmirante de justicia inflexible, tan desconfiado del Gobierno Mundial como de cualquier pirata.",
+      personality: "Habla poco y a medio masticar un puro; su paciencia con la política interna de la Marina es prácticamente nula.",
+      factionType: FactionType.MARINE,
+      factionName: "Marina",
+      rankLabel: "Vicealmirante",
+      devilFruitName: "Moku Moku no Mi",
+    },
+    {
+      name: "X Drake",
+      role: ActorRole.MARINE_GENERAL,
+      powerLevel: 82,
+      description: "Antiguo pirata del Peor Generación, hoy Comodoro encubierto de una unidad especial de la Marina.",
+      personality: "Calculador y hermético, mide cada palabra sabiendo que su doble vida podría desmoronarse en cualquier momento.",
+      factionType: FactionType.MARINE,
+      factionName: "Marina (SWORD, encubierto)",
+      rankLabel: "Comodoro",
+    },
+    {
+      name: "Kaku",
+      role: ActorRole.CIPHER_POL,
+      powerLevel: 84,
+      description: "Agente de CP-0 experto en Rokushiki, antiguo carpintero encubierto durante el incidente de Enies Lobby.",
+      personality: "Cortés hasta lo absurdo incluso en pleno combate, oculta una ambición fría tras modales impecables.",
+      factionType: FactionType.CIPHER_POL,
+      factionName: "CP-0",
+      canonWeapon: "Kabutowari",
+    },
+    {
+      name: "Kalifa",
+      role: ActorRole.CIPHER_POL,
+      powerLevel: 80,
+      description: "Agente de CP-0 especializada en Rokushiki e infiltración administrativa.",
+      personality: "Profesional y fría hasta la crueldad, trata cualquier muestra de debilidad ajena como una invitación a explotarla.",
+      factionType: FactionType.CIPHER_POL,
+      factionName: "CP-0",
+    },
+    // ---------- Ejército Revolucionario ----------
     {
       name: "Sabo",
       role: ActorRole.REVOLUTIONARY_COMMANDER,
       powerLevel: 92,
       description: "Jefe de Estado Mayor del Ejército Revolucionario, hermano de juramento de sangre de dos futuros Emperadores.",
       personality: "Directo y cálido con quienes considera aliados, pero implacablemente estratégico frente al Gobierno Mundial, sin un ápice de duda.",
+      factionType: FactionType.REVOLUTIONARY,
+      factionName: "Ejército Revolucionario",
+      rankLabel: "Jefe de Estado Mayor",
+      devilFruitName: "Mera Mera no Mi",
     },
+    {
+      name: "Monkey D. Dragon",
+      role: ActorRole.REVOLUTIONARY_COMMANDER,
+      powerLevel: 96,
+      description: 'El "Peor Criminal del Mundo" según el Gobierno Mundial, líder absoluto del Ejército Revolucionario.',
+      personality: "Habla en frases cortas y contundentes, casi nunca de más; deja que el peso de sus palabras haga el trabajo del volumen.",
+      factionType: FactionType.REVOLUTIONARY,
+      factionName: "Ejército Revolucionario",
+      rankLabel: "Comandante en Jefe",
+    },
+    {
+      name: "Emporio Ivankov",
+      role: ActorRole.REVOLUTIONARY_COMMANDER,
+      powerLevel: 88,
+      description: 'Jefe de Estado Mayor y gobernante del Reino de Kamabakka, antiguo compañero de celda de Ace en Impel Down.',
+      personality: "Extravagante y teatral, pero con una lucidez estratégica que sorprende a quien lo subestima por su exuberancia.",
+      factionType: FactionType.REVOLUTIONARY,
+      factionName: "Ejército Revolucionario",
+    },
+    {
+      name: "Koala",
+      role: ActorRole.REVOLUTIONARY_COMMANDER,
+      powerLevel: 75,
+      description: "Oficial revolucionaria y experta en Fishman Karate, rescatada de la esclavitud por Fisher Tiger de niña.",
+      personality: "Cálida y leal hasta la médula, pero con una determinación fría en cualquier cosa relacionada con la trata de personas.",
+      factionType: FactionType.REVOLUTIONARY,
+      factionName: "Ejército Revolucionario",
+    },
+    // ---------- Warlords / Cross Guild / independientes ----------
+    {
+      name: "Dracule Mihawk",
+      role: ActorRole.WARLORD,
+      powerLevel: 97,
+      description: "El espadachín más fuerte del mundo, ahora aliado incómodo del Cross Guild.",
+      personality: "Habla poco y con desdén aristocrático; valora la habilidad con la espada por encima de casi todo lo demás y lo dice sin rodeos.",
+      factionType: FactionType.BOUNTY_HUNTER,
+      factionName: "Cross Guild",
+      canonWeapon: "Kokuto Yoru",
+    },
+    {
+      name: "Boa Hancock",
+      role: ActorRole.WARLORD,
+      powerLevel: 90,
+      description: 'La "Emperatriz Pirata", ex-Shichibukai y capitana de las Piratas Kuja de la isla Amazon Lily.',
+      personality: "Orgullosa y volátil, alterna entre desdén absoluto y una devoción inesperada — nunca a medias tintas.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas Kuja",
+      canonBounty: BigInt(1_658_000_000),
+      devilFruitName: "Mero Mero no Mi",
+    },
+    {
+      name: "Crocodile",
+      role: ActorRole.WARLORD,
+      powerLevel: 91,
+      description: "Antiguo Shichibukai, hoy socio del Cross Guild tras años operando en las sombras del Gobierno Mundial.",
+      personality: "Frío, calculador y sin lealtades sinceras a nadie; negocia con cualquiera si el trato le conviene.",
+      factionType: FactionType.PIRATE,
+      factionName: "Cross Guild",
+      canonBounty: BigInt(1_965_000_000),
+      devilFruitName: "Suna Suna no Mi",
+    },
+    {
+      name: "Donquixote Doflamingo",
+      role: ActorRole.WARLORD,
+      powerLevel: 93,
+      description: 'Ex "Rey Celestial" y antiguo Shichibukai, cabeza de la familia Donquixote — hoy tras las rejas, pero su sombra sigue larga.',
+      personality: "Sonríe siempre, incluso al amenazar de muerte; disfruta abiertamente manipular a quien cree tener bajo control.",
+      factionType: FactionType.PIRATE,
+      factionName: "Familia Donquixote (encarcelado)",
+      canonBounty: BigInt(3_000_000_000),
+      devilFruitName: "Ito Ito no Mi",
+    },
+    // ---------- Piratas notables / Peor Generación ----------
+    {
+      name: "Trafalgar D. Water Law",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 92,
+      description: 'El "Cirujano de la Muerte", capitán de los Piratas Heart y antiguo Shichibukai.',
+      personality: "Reservado y sarcástico, calcula cada movimiento como una operación quirúrgica antes de comprometerse a nada.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas Heart",
+      rankLabel: "Capitán",
+      canonBounty: BigInt(3_000_000_000),
+      devilFruitName: "Ope Ope no Mi",
+    },
+    {
+      name: "Eustass Kid",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 92,
+      description: "Capitán de los Piratas Kid, uno de los del Peor Generación con más ambición declarada de llegar a la cima.",
+      personality: "Violento y sin paciencia para la diplomacia; responde a cualquier desafío con más fuerza, nunca con menos.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas Kid",
+      rankLabel: "Capitán",
+      canonBounty: BigInt(3_000_000_000),
+      devilFruitName: "Jiki Jiki no Mi",
+    },
+    {
+      name: "Basil Hawkins",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 84,
+      description: 'El "Mago", capitán de los Piratas Hawkins, siempre calcula probabilidades de supervivencia antes de actuar.',
+      personality: "Frío y fatalista, habla de la muerte propia y ajena con la misma calma con la que baraja sus cartas del tarot.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas Hawkins",
+      rankLabel: "Capitán",
+      canonBounty: BigInt(320_000_000),
+    },
+    {
+      name: "Killer",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 86,
+      description: "Primer oficial de los Piratas Kid, casi tan temido como su propio capitán.",
+      personality: "Leal hasta el extremo a Kid, mantiene un silencio letal hasta el instante en que sus guadañas entran en juego.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas Kid",
+      rankLabel: "Primer oficial",
+      canonBounty: BigInt(1_057_000_000),
+    },
+    {
+      name: "Charlotte Katakuri",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 93,
+      description: 'Comandante Dulce de las Piratas de Big Mom, considerado el más fuerte de sus hermanos.',
+      personality: "Estoico y orgulloso de su propia disciplina, oculta una vulnerabilidad que jamás admite en voz alta.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas de Big Mom",
+      rankLabel: "Comandante Dulce",
+      canonBounty: BigInt(1_057_000_000),
+      devilFruitName: "Mochi Mochi no Mi",
+    },
+    {
+      name: "Jewelry Bonney",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 85,
+      description: 'La "Pirata Tirana", capitana de su propia tripulación, capaz de alterar edades a voluntad.',
+      personality: "Hosca y desconfiada por fuera, pero movida por una determinación personal que no discute con nadie.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas de Bonney",
+      rankLabel: "Capitana",
+      canonBounty: BigInt(1_390_000_000),
+      devilFruitName: "Toshi Toshi no Mi",
+    },
+    // ---------- Straw Hat crew ----------
+    {
+      name: "Roronoa Zoro",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 90,
+      description: "Primer oficial y espadachín de los Piratas de Sombrero de Paja, aspirante al título de mejor espadachín del mundo.",
+      personality: "Directo y de pocas palabras, resuelve casi cualquier problema con determinación bruta y una lealtad inquebrantable a su capitán.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas de Sombrero de Paja",
+      rankLabel: "Primer oficial",
+      canonBounty: BigInt(1_111_000_000),
+      canonWeapon: "Santoryu (tres espadas, incluida Enma)",
+    },
+    {
+      name: "Nami",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 70,
+      description: "Navegante de los Piratas de Sombrero de Paja, capaz de leer el clima del Grand Line como nadie más.",
+      personality: "Pragmática y obsesionada con el dinero en apariencia, pero fieramente protectora de su tripulación cuando de verdad importa.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas de Sombrero de Paja",
+      rankLabel: "Navegante",
+      canonBounty: BigInt(366_000_000),
+    },
+    {
+      name: "Usopp",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 72,
+      description: 'Francotirador de los Piratas de Sombrero de Paja, apodado "Sogeking".',
+      personality: "Fanfarrón y cobarde en apariencia, pero encuentra un valor genuino justo cuando su tripulación más lo necesita.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas de Sombrero de Paja",
+      rankLabel: "Francotirador",
+      canonBounty: BigInt(500_000_000),
+    },
+    {
+      name: "Vinsmoke Sanji",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 88,
+      description: "Cocinero de los Piratas de Sombrero de Paja, heredero renegado de la familia Vinsmoke.",
+      personality: "Caballeroso hasta el extremo con cualquier mujer, feroz en combate, y visceralmente protector de quien no puede defenderse.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas de Sombrero de Paja",
+      rankLabel: "Cocinero",
+      canonBounty: BigInt(1_032_000_000),
+    },
+    {
+      name: "Tony Tony Chopper",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 60,
+      description: "Médico de los Piratas de Sombrero de Paja, un reno que comió una fruta del diablo y aprendió medicina humana.",
+      personality: "Tímido e inseguro sobre sus propios elogios, pero absolutamente decidido cuando la vida de un nakama está en juego.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas de Sombrero de Paja",
+      rankLabel: "Médico",
+      canonBounty: BigInt(1000),
+      devilFruitName: "Hito Hito no Mi",
+    },
+    {
+      name: "Nico Robin",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 82,
+      description: 'Arqueóloga de los Piratas de Sombrero de Paja, apodada "La Niña Demonio" desde la infancia.',
+      personality: "Reservada y de humor negro, tarda en confiar pero, una vez lo hace, es absolutamente leal.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas de Sombrero de Paja",
+      rankLabel: "Arqueóloga",
+      canonBounty: BigInt(930_000_000),
+      devilFruitName: "Hana Hana no Mi",
+    },
+    {
+      name: "Franky",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 78,
+      description: "Carpintero cyborg de los Piratas de Sombrero de Paja, constructor del Thousand Sunny.",
+      personality: "Exuberante y sentimental bajo una fachada de metal, presume de cada invento propio sin ninguna modestia.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas de Sombrero de Paja",
+      rankLabel: "Carpintero",
+      canonBounty: BigInt(394_000_000),
+    },
+    {
+      name: "Brook",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 80,
+      description: "Músico esqueleto de los Piratas de Sombrero de Paja, revivido por su propia fruta tras décadas de soledad.",
+      personality: "Cortés hasta lo anticuado, oculta el peso de años de aislamiento tras chistes constantes sobre no tener carne (ni ojos que mostrar).",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas de Sombrero de Paja",
+      rankLabel: "Músico",
+      canonBounty: BigInt(383_000_000),
+      devilFruitName: "Yomi Yomi no Mi",
+    },
+    {
+      name: "Jinbe",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 89,
+      description: "Timonel de los Piratas de Sombrero de Paja, antiguo Shichibukai y ex-Primer Timonel de los Piratas de Sol.",
+      personality: "Honorable hasta la médula, prioriza el bienestar del grupo por encima del propio sin dudarlo jamás.",
+      factionType: FactionType.PIRATE,
+      factionName: "Piratas de Sombrero de Paja",
+      rankLabel: "Timonel",
+      canonBounty: BigInt(1_100_000_000),
+    },
+    // ---------- Cipher Pol ----------
     {
       name: "Rob Lucci",
       role: ActorRole.CIPHER_POL,
       powerLevel: 88,
       description: "Agente de CP-0, el brazo encubierto del Gobierno Mundial para los asuntos que nadie debe conocer.",
       personality: "Habla en voz baja y mide cada palabra como si calculara distancias de combate; trata la piedad ajena como una debilidad táctica, nunca como una virtud.",
+      factionType: FactionType.CIPHER_POL,
+      factionName: "CP-0",
+      devilFruitName: "Neko Neko no Mi: Modelo Leopardo",
+    },
+    {
+      name: "Spandam",
+      role: ActorRole.CIPHER_POL,
+      powerLevel: 55,
+      description: "Alto cargo administrativo de Cipher Pol, antiguo director de Enies Lobby.",
+      personality: "Cobarde y cruel a partes iguales, se apoya siempre en el poder de otros para amenazar a quien no puede defenderse.",
+      factionType: FactionType.CIPHER_POL,
+      factionName: "Cipher Pol / Gobierno Mundial",
+    },
+    {
+      name: "Stussy",
+      role: ActorRole.CIPHER_POL,
+      powerLevel: 87,
+      description: "Agente de CP-0 con un pasado ligado a la Era del Vacío, cuya lealtad real es motivo de rumores incluso dentro del Gobierno Mundial.",
+      personality: "Serena y observadora, deja que otros revelen sus cartas primero antes de mostrar cuál es realmente su bando.",
+      factionType: FactionType.CIPHER_POL,
+      factionName: "CP-0 (lealtad incierta)",
     },
   ];
 
   const worldActors: Record<string, { id: string }> = {};
   for (const a of actors) {
+    const devilFruitId = a.devilFruitName ? fruitsByName[a.devilFruitName]?.id : undefined;
     const actor = await prisma.worldActor.upsert({
       where: { name: a.name },
-      update: { personality: a.personality },
-      create: { name: a.name, role: a.role, powerLevel: a.powerLevel, description: a.description, personality: a.personality },
+      update: {
+        personality: a.personality,
+        factionType: a.factionType,
+        factionName: a.factionName,
+        rankLabel: a.rankLabel,
+        canonBounty: a.canonBounty,
+        canonWeapon: a.canonWeapon,
+        devilFruitId,
+      },
+      create: {
+        name: a.name,
+        role: a.role,
+        powerLevel: a.powerLevel,
+        description: a.description,
+        personality: a.personality,
+        factionType: a.factionType,
+        factionName: a.factionName,
+        rankLabel: a.rankLabel,
+        canonBounty: a.canonBounty,
+        canonWeapon: a.canonWeapon,
+        devilFruitId,
+      },
     });
     worldActors[a.name] = actor;
   }
 
   // ---------- World event templates (background simulation) ----------
-  const worldEventTemplates = [
+  // Rewritten 2026-09-23 to be faction-specific: each template's
+  // allowedFactionTypes restricts which WorldActor can star in it (see
+  // engine/world.ts's runWorldTick) — this is the direct fix for the bug
+  // that started this pass ("Kizaru es visto reclutando aliados", a
+  // pirate-flavored headline landing on an Admiral because the old code
+  // picked from ALL available actors with no faction check at all).
+  // `body` variants are now only the OFFLINE FALLBACK if the AI narration
+  // call fails (world-tick.ts's narrateNews) — promptHint is what actually
+  // drives the generated prose per firing.
+  type WorldTemplateSeed = {
+    weight: number;
+    minHeat: number;
+    headline: string;
+    category: string;
+    body: string[];
+    promptHint: string;
+    allowedFactionTypes?: FactionType[]; // omitted = no specific actor required
+    busyHours?: [number, number];
+    heatDelta?: number;
+  };
+
+  const worldEventTemplates: WorldTemplateSeed[] = [
+    // ---------- MARINE-only ----------
     {
-      weight: 15,
+      weight: 12,
       minHeat: 0,
-      headline: "{actor} es desplegado de emergencia",
+      headline: "{actor} despliega una patrulla contra la piratería",
       category: "Gobierno Mundial",
-      body: [
-        "El Gobierno Mundial moviliza a {actor} para sofocar disturbios en una isla remota del Nuevo Mundo.",
-        "Se reporta a {actor} zarpando hacia una zona de conflicto sin revelar el destino exacto.",
-      ],
-      busyHours: [6, 24] as [number, number],
+      body: ["{actor} lidera una redada contra una tripulación pirata de poca monta en una isla del Nuevo Mundo."],
+      promptHint: "a Marine officer leads a patrol that captures or drives off a minor pirate crew",
+      allowedFactionTypes: [FactionType.MARINE],
+      busyHours: [6, 20],
       heatDelta: 1,
-    },
-    {
-      weight: 10,
-      minHeat: 10,
-      headline: "Guerra de territorio: la fuerza de {actor} ataca una base rival",
-      category: "Guerra",
-      body: ["Testigos reportan explosiones y humo negro en el horizonte tras el choque liderado por {actor}."],
-      busyHours: [8, 20] as [number, number],
-      heatDelta: 3,
-    },
-    {
-      weight: 8,
-      minHeat: 0,
-      headline: "El Gobierno Mundial anuncia una recompensa histórica",
-      category: "Recompensas",
-      body: ["Un pirata novato ha hecho suficiente ruido como para que su nombre aparezca en todos los periódicos de golpe."],
     },
     {
       weight: 6,
       minHeat: 15,
-      headline: "Rumores de un Poneglifo perdido inquietan a {actor}",
+      headline: "El Gobierno Mundial ordena una Buster Call",
+      category: "Guerra",
+      body: ["Cinco Vicealmirantes convergen sobre una isla que, para cuando amanezca, puede que ya no exista."],
+      promptHint: "the World Government authorizes a Buster Call on an island sheltering dangerous pirates",
+      allowedFactionTypes: [FactionType.MARINE],
+      heatDelta: 8,
+    },
+    {
+      weight: 8,
+      minHeat: 0,
+      headline: "{actor} es desplegado de emergencia",
+      category: "Gobierno Mundial",
+      body: ["El Gobierno Mundial moviliza a {actor} para sofocar disturbios en una isla remota del Nuevo Mundo."],
+      promptHint: "a Marine admiral or officer is urgently deployed to contain unrest",
+      allowedFactionTypes: [FactionType.MARINE],
+      busyHours: [6, 24],
+      heatDelta: 1,
+    },
+    // ---------- PIRATE-only ----------
+    {
+      weight: 12,
+      minHeat: 0,
+      headline: "{actor} es visto reclutando nueva tripulación",
+      category: "Tripulaciones",
+      body: ["En un puerto discreto, {actor} habría cerrado una alianza que promete cambiar el mapa de poder."],
+      promptHint: "a pirate captain recruits new crew members in a discreet port",
+      allowedFactionTypes: [FactionType.PIRATE],
+    },
+    {
+      weight: 10,
+      minHeat: 10,
+      headline: "Guerra de territorio: la tripulación de {actor} ataca dominios rivales",
+      category: "Guerra",
+      body: ["Testigos reportan explosiones y humo negro en el horizonte tras el choque liderado por {actor}."],
+      promptHint: "a pirate crew attacks a rival crew's claimed territory",
+      allowedFactionTypes: [FactionType.PIRATE],
+      busyHours: [8, 20],
+      heatDelta: 3,
+    },
+    {
+      weight: 6,
+      minHeat: 10,
+      headline: "{actor} persigue rumores de un Poneglifo perdido",
       category: "Poneglifos",
       body: ["Fuentes cercanas a {actor} confirman movimientos inusuales cerca de ruinas ancestrales."],
-      busyHours: [12, 30] as [number, number],
+      promptHint: "a pirate crew investigates rumors of a lost Poneglyph",
+      allowedFactionTypes: [FactionType.PIRATE],
+      busyHours: [12, 30],
       heatDelta: 2,
     },
     {
@@ -682,30 +916,85 @@ async function main() {
       headline: "Motín a bordo: la tripulación de {actor} sufre una crisis interna",
       category: "Tripulaciones",
       body: ["Se dice que ni siquiera {actor} pudo evitar que la disputa llegara a las espadas."],
-    },
-    {
-      weight: 3,
-      minHeat: 40,
-      headline: "El Gobierno Mundial ordena una Buster Call",
-      category: "Guerra",
-      body: ["Cinco Vicealmirantes convergen sobre una isla que, para cuando amanezca, puede que ya no exista."],
-      heatDelta: 8,
-    },
-    {
-      weight: 12,
-      minHeat: 0,
-      headline: "{actor} es visto reclutando nuevos aliados",
-      category: "Tripulaciones",
-      body: ["En un puerto discreto, {actor} habría cerrado una alianza que promete cambiar el mapa de poder."],
+      promptHint: "internal tension or a near-mutiny shakes a pirate crew from within",
+      allowedFactionTypes: [FactionType.PIRATE],
     },
     {
       weight: 7,
       minHeat: 20,
-      headline: "Escaramuza en alta mar entre {actor} y una flota desconocida",
+      headline: "Escaramuza en alta mar: la flota de {actor} choca con un rival desconocido",
       category: "Guerra",
       body: ["Los supervivientes hablan de un combate breve, brutal, y de un vencedor que no se detuvo a dar explicaciones."],
-      busyHours: [4, 10] as [number, number],
+      promptHint: "a pirate crew fights a brief, brutal naval skirmish against an unknown rival fleet",
+      allowedFactionTypes: [FactionType.PIRATE],
+      busyHours: [4, 10],
       heatDelta: 2,
+    },
+    {
+      weight: 5,
+      minHeat: 15,
+      headline: "Emboscada en alta mar: {actor} estuvo cerca de perderlo todo",
+      category: "Guerra",
+      body: ["Una flota rival, coordinada con precisión imposible, cayó sobre {actor} en aguas que se creían seguras. Hubo bajas en ambos bandos."],
+      promptHint: "a rival fleet nearly ambushes and overwhelms a pirate crew in waters thought safe",
+      allowedFactionTypes: [FactionType.PIRATE],
+      busyHours: [10, 26],
+      heatDelta: 3,
+    },
+    // ---------- BOUNTY_HUNTER-only ----------
+    {
+      weight: 6,
+      minHeat: 0,
+      headline: "{actor} cobra una recompensa más",
+      category: "Recompensas",
+      body: ["{actor} entrega a un pirata buscado a las autoridades a cambio de una suma considerable."],
+      promptHint: "a bounty hunter turns in a wanted pirate for a considerable cash reward",
+      allowedFactionTypes: [FactionType.BOUNTY_HUNTER],
+      busyHours: [2, 8],
+    },
+    // ---------- REVOLUTIONARY-only ----------
+    {
+      weight: 5,
+      minHeat: 10,
+      headline: "El Ejército Revolucionario, bajo {actor}, golpea una línea de suministro del Gobierno Mundial",
+      category: "Gobierno Mundial",
+      body: ["Un convoy militar nunca llega a su destino. El Gobierno Mundial evita hablar del incidente en público."],
+      promptHint: "the Revolutionary Army sabotages a World Government supply line or convoy",
+      allowedFactionTypes: [FactionType.REVOLUTIONARY],
+      busyHours: [8, 24],
+      heatDelta: 2,
+    },
+    {
+      weight: 4,
+      minHeat: 5,
+      headline: "{actor} lidera la liberación de un asentamiento bajo control de la Marina",
+      category: "Gobierno Mundial",
+      body: ["Un pequeño asentamiento amanece sin bandera del Gobierno Mundial ondeando por primera vez en años."],
+      promptHint: "the Revolutionary Army liberates a small settlement from Marine control",
+      allowedFactionTypes: [FactionType.REVOLUTIONARY],
+      busyHours: [12, 30],
+      heatDelta: 2,
+    },
+    // ---------- CIPHER_POL-only ----------
+    {
+      weight: 5,
+      minHeat: 10,
+      headline: "{actor} es visto en una misión encubierta de propósito desconocido",
+      category: "Gobierno Mundial",
+      body: ["Testigos aseguran haber reconocido a un agente de Cipher Pol, aunque nadie sabe con certeza qué buscaba."],
+      promptHint: "a Cipher Pol agent is spotted on a covert assignment whose purpose stays unclear",
+      allowedFactionTypes: [FactionType.CIPHER_POL],
+      busyHours: [8, 20],
+      heatDelta: 1,
+    },
+    // ---------- No actor required ----------
+    {
+      weight: 8,
+      minHeat: 0,
+      headline: "El Gobierno Mundial anuncia una recompensa histórica",
+      category: "Recompensas",
+      body: ["Un pirata novato ha hecho suficiente ruido como para que su nombre aparezca en todos los periódicos de golpe."],
+      promptHint: "the World Government announces a dramatic new bounty for a rising, still-unnamed rookie pirate",
     },
     {
       weight: 6,
@@ -714,22 +1003,9 @@ async function main() {
       category: "Poneglifos",
       body: [
         "Una tripulación sin nombre conocido desembarcó en busca de ruinas ancestrales. Solo la mitad regresó al barco; el resto quedó donde la Marina los encontró primero.",
-        "Arqueólogos independientes financiados en secreto por un Emperador desaparecieron cerca de una isla que ni figura en los mapas oficiales. Se los da por muertos.",
-        "Una emboscada en las ruinas dejó un poblado entero preguntándose qué buscaban realmente los forasteros que llegaron de madrugada.",
       ],
+      promptHint: "an unnamed crew's Poneglyph hunt ends badly for most of them",
       heatDelta: 2,
-    },
-    {
-      weight: 5,
-      minHeat: 15,
-      headline: "Emboscada en alta mar: {actor} estuvo cerca de perderlo todo",
-      category: "Guerra",
-      body: [
-        "Una flota rival, coordinada con precisión imposible, cayó sobre {actor} en aguas que se creían seguras. Hubo bajas en ambos bandos.",
-        "Nadie sabe cómo filtraron la ruta de {actor}, pero el ataque casi funciona. La desconfianza dentro de su tripulación crece.",
-      ],
-      busyHours: [10, 26] as [number, number],
-      heatDelta: 3,
     },
     {
       weight: 2,
@@ -737,10 +1013,10 @@ async function main() {
       headline: "Gran Guerra en los mares: el equilibrio del mundo se sacude",
       category: "Guerra",
       body: [
-        "Lo que empezó como una operación de rescate se convirtió en la batalla más grande en años: Marina, piratas y revolucionarios chocando sobre la misma agua, con {actor} en el centro de todo. Cuando el humo se disipa, el mapa de poder ya no es el mismo.",
-        "Durante días, ninguna isla cercana tuvo noticias claras: solo humo en el horizonte y rumores de que {actor} no salió ileso. El Gobierno Mundial tardó una semana en emitir un comunicado, y cuando lo hizo, omitió más de lo que contó.",
+        "Lo que empezó como una operación de rescate se convirtió en la batalla más grande en años: Marina, piratas y revolucionarios chocando sobre la misma agua. Cuando el humo se disipa, el mapa de poder ya no es el mismo.",
       ],
-      busyHours: [48, 96] as [number, number],
+      promptHint: "Marines, pirates, and revolutionaries collide in the same waters in the largest clash in years — the balance of power visibly shifts, but no single named actor is confirmed dead or captured",
+      busyHours: [48, 96],
       heatDelta: 15,
     },
   ];
@@ -753,10 +1029,12 @@ async function main() {
         minHeat: t.minHeat,
         headline: t.headline,
         category: t.category,
+        promptHint: t.promptHint,
+        allowedFactionTypes: t.allowedFactionTypes ? JSON.stringify(t.allowedFactionTypes) : null,
         bodyJson: JSON.stringify({
           variants: t.body,
-          busyHours: "busyHours" in t ? t.busyHours : undefined,
-          heatDelta: "heatDelta" in t ? t.heatDelta : undefined,
+          busyHours: t.busyHours,
+          heatDelta: t.heatDelta,
         }),
       },
     });

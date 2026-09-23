@@ -17,6 +17,7 @@ import {
 import { toCombatant, generalSkillModifier } from "./derive";
 import { tickWorldIfDue } from "./world-tick";
 import { postNews, handleDeathCheck } from "./death-resolution";
+import { DEVIL_FRUIT_CATALOG } from "./devil-fruit-catalog";
 import { applyBountyOrNotoriety } from "./reputation";
 import { narrateExplore, narrateCombat, narrateScene, narratePartyScene, getRecentScene, updateCharacterMemory } from "../ai/narrate";
 import { classifyPlayerAction, ActionId } from "../ai/classify-action";
@@ -80,9 +81,25 @@ export interface ActionResult {
 }
 
 async function tryDropFruit(characterId: string, newsLog: string[]): Promise<string | undefined> {
-  const unclaimed = await prisma.devilFruit.findMany({ where: { claimedBy: { is: null } } });
-  if (unclaimed.length === 0) return undefined;
-  const fruit = unclaimed[Math.floor(Math.random() * unclaimed.length)];
+  // Singleton (main/canon) fruits never drop randomly — they only ever exist
+  // as the one seeded row, locked to their canon WorldActor. Common fruits
+  // get a FRESH row per grant (mirrors Weapon.name/common-gear.ts exactly),
+  // which is what actually makes them duplicable across characters instead
+  // of the old "pick from the one unclaimed row" model.
+  const commonKinds = DEVIL_FRUIT_CATALOG.filter((f) => !f.isSingleton);
+  if (commonKinds.length === 0) return undefined;
+  const kind = commonKinds[Math.floor(Math.random() * commonKinds.length)];
+  const fruit = await prisma.devilFruit.create({
+    data: {
+      name: kind.name,
+      englishName: kind.englishName,
+      type: kind.type,
+      rarity: kind.rarity,
+      description: kind.description,
+      effectsJson: JSON.stringify(kind.effects),
+      isSingleton: false,
+    },
+  });
   await prisma.character.update({ where: { id: characterId }, data: { devilFruitId: fruit.id } });
   const character = await prisma.character.findUnique({ where: { id: characterId } });
   const headline = `¡${character?.name} despierta el poder de la ${fruit.name}!`;
@@ -669,7 +686,8 @@ export async function resolveMercyChoice(characterId: string, userId: string, sp
           headline,
           `Pocos en el mundo pueden leer los símbolos antiguos — ${character.name} acaba de hacerlo en ${character.currentIsland.name}. No tardarán en venir a silenciar a quien sabe demasiado.`,
           "Poneglifos",
-          character.id
+          character.id,
+          "major"
         );
         newsLog.push(headline);
       }

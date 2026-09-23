@@ -43,7 +43,8 @@ export async function captureCharacter(
     headline,
     `${reason} Ahora espera tras las rejas: alguien deberá pagar su fianza o venir a rescatarlo.${kairosekiNote}`,
     "Gobierno Mundial",
-    character.id
+    character.id,
+    "major"
   );
   newsLog.push(headline);
 }
@@ -114,7 +115,7 @@ export async function attemptRescue(rescuerCharacterId: string, userId: string, 
     await prisma.gameLogEntry.create({ data: { characterId: rescuer.id, kind: "prison", text: log[0] } });
     await prisma.gameLogEntry.create({ data: { characterId: prisoner.id, kind: "prison", text: `${rescuer.name} te rescata de tu celda.` } });
     const headline = `${rescuer.name} libera a ${prisoner.name}`;
-    await postNews(headline, `En una fuga audaz en ${rescuer.currentIsland.name}, ${rescuer.name} logró sacar a ${prisoner.name} de su celda.`, "Gobierno Mundial", rescuer.id);
+    await postNews(headline, `En una fuga audaz en ${rescuer.currentIsland.name}, ${rescuer.name} logró sacar a ${prisoner.name} de su celda.`, "Gobierno Mundial", rescuer.id, "major");
     newsLog.push(headline);
     return { success: true, log, newsPosted: newsLog };
   }

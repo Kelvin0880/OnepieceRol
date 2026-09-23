@@ -38,19 +38,19 @@ enum CharacterStatus {
 }
 
 model Character {
-  id       String          @id @default(cuid())
-  name     String
-  faction  Faction
-  status   CharacterStatus @default(ALIVE)
-  userId   String
-  user     User            @relation(fields: [userId], references: [id])
+  id      String          @id @default(cuid())
+  name    String
+  faction Faction
+  status  CharacterStatus @default(ALIVE)
+  userId  String
+  user    User            @relation(fields: [userId], references: [id])
 
   // Core stats — raw points, each roughly 1-99 in the early game
-  strength    Int @default(5)
-  agility     Int @default(5)
-  durability  Int @default(5)
-  willpower   Int @default(5) // fuels Haki growth
-  intellect   Int @default(5) // fuels devil fruit mastery / negotiation checks
+  strength   Int @default(5)
+  agility    Int @default(5)
+  durability Int @default(5)
+  willpower  Int @default(5) // fuels Haki growth
+  intellect  Int @default(5) // fuels devil fruit mastery / negotiation checks
 
   level      Int @default(1)
   experience Int @default(0)
@@ -60,33 +60,33 @@ model Character {
 
   berries Int @default(3000) // starting money, canon-flavored amount
 
-  bounty       Int    @default(0) // pirates
-  marineRank   String? // marines: "Recluta", "Alférez", ... escalates with merit
-  notoriety    Int    @default(0) // revolutionaries/bounty hunters track this instead of bounty
+  bounty     Int     @default(0) // pirates
+  marineRank String? // marines: "Recluta", "Alférez", ... escalates with merit
+  notoriety  Int     @default(0) // revolutionaries/bounty hunters track this instead of bounty
 
-  observationHaki Int @default(0) // 0-100, 0 = locked
-  armamentHaki    Int @default(0)
+  observationHaki Int     @default(0) // 0-100, 0 = locked
+  armamentHaki    Int     @default(0)
   conquerorsHaki  Boolean @default(false) // exceedingly rare, rolled for, not chosen
 
   devilFruitId String?     @unique
   devilFruit   DevilFruit? @relation(fields: [devilFruitId], references: [id])
 
-  equippedWeaponId String?  @unique
-  equippedWeapon   Weapon?  @relation("EquippedWeapon", fields: [equippedWeaponId], references: [id])
+  equippedWeaponId String? @unique
+  equippedWeapon   Weapon? @relation("EquippedWeapon", fields: [equippedWeaponId], references: [id])
 
   currentIslandId String
-  currentIsland   Island   @relation(fields: [currentIslandId], references: [id])
+  currentIsland   Island @relation(fields: [currentIslandId], references: [id])
 
-  crewId String?
-  crew   Crew?   @relation(fields: [crewId], references: [id])
+  crewId    String?
+  crew      Crew?   @relation(fields: [crewId], references: [id])
   isCaptain Boolean @default(false)
 
-  inventory    InventoryItem[]
-  ownedWeapons Weapon[]        @relation("OwnedWeapons")
-  companions   NPCCompanion[]
-  logs         GameLogEntry[]
-  bountyLogs   BountyLogEntry[]
-  sceneMessages SceneMessage[]
+  inventory            InventoryItem[]
+  ownedWeapons         Weapon[]                 @relation("OwnedWeapons")
+  companions           NPCCompanion[]
+  logs                 GameLogEntry[]
+  bountyLogs           BountyLogEntry[]
+  sceneMessages        SceneMessage[]
   battleParticipations GroupBattleParticipant[]
 
   poneglyphsRead String @default("[]") // JSON string array of Poneglyph ids read
@@ -147,13 +147,13 @@ model Crew {
 // per crew at a time (crewId is unique): if a crew's members split across
 // islands or drop below two together, the party is deleted, not archived.
 model Party {
-  id               String   @id @default(cuid())
-  crewId           String   @unique // not FK-enforced, same convention as Crew.captainId
+  id               String              @id @default(cuid())
+  crewId           String              @unique // not FK-enforced, same convention as Crew.captainId
   turnOrder        String // JSON array of characterIds, captain first
-  turnIndex        Int      @default(0)
-  awaitingNarrator Boolean  @default(false) // true right after a human posts, until the AI reply lands — locks out other submits meanwhile; false on creation, since nobody has spoken yet and it's simply turnIndex 0's turn
-  createdAt        DateTime @default(now())
-  updatedAt        DateTime @updatedAt
+  turnIndex        Int                 @default(0)
+  awaitingNarrator Boolean             @default(false) // true right after a human posts, until the AI reply lands — locks out other submits meanwhile; false on creation, since nobody has spoken yet and it's simply turnIndex 0's turn
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
   members          Character[]
   messages         PartySceneMessage[]
 }
@@ -193,18 +193,29 @@ enum Rarity {
 }
 
 model DevilFruit {
-  id          String    @id @default(cuid())
-  name        String    @unique // Japanese canon name, e.g. "Gomu Gomu no Mi"
-  englishName String
-  type        FruitType
-  rarity      Rarity
-  description String
+  id                  String      @id @default(cuid())
+  // NOT @unique: a common (non-singleton) fruit gets a fresh row created
+  // per grant, exactly like Weapon.name — see src/lib/game/devil-fruit-catalog.ts.
+  // The catalog's `name` still only ever has ONE row when isSingleton is
+  // true, because only the seed's upsert ever creates one.
+  name                String // Japanese canon name, e.g. "Gomu Gomu no Mi"
+  englishName         String
+  type                FruitType
+  rarity              Rarity
+  description         String
   // Combat modifiers applied by the engine, kept as a JSON string so fruit
   // design stays data-driven instead of hardcoded per-fruit branches.
-  effectsJson String
-  awakenable  Boolean @default(true)
-  claimedBy   Character?
-  createdAt   DateTime @default(now())
+  effectsJson         String
+  awakenable          Boolean     @default(true)
+  claimedBy           Character?
+  // true = one of the "main" canon fruits (Yami Yami, Magu Magu, a named
+  // WorldActor's signature fruit, ...): never enters tryDropFruit's random
+  // pool, only ever exists as the single seeded row, and stays permanently
+  // linked to its canon WorldActor until a future kill-mechanic (not built
+  // yet) reassigns it to a player. Everything else is duplicable.
+  isSingleton         Boolean     @default(false)
+  claimedByWorldActor WorldActor? @relation("WorldActorFruit")
+  createdAt           DateTime    @default(now())
 }
 
 // ---------- Crew-vs-crew group battles (N-vs-N, individually chosen matchups) ----------
@@ -216,15 +227,15 @@ enum BattleStatus {
 }
 
 model GroupBattle {
-  id           String        @id @default(cuid())
+  id           String                   @id @default(cuid())
   islandId     String
-  island       Island        @relation(fields: [islandId], references: [id])
+  island       Island                   @relation(fields: [islandId], references: [id])
   crewAId      String // challenger
   crewBId      String // defender
-  status       BattleStatus  @default(PROPOSED)
+  status       BattleStatus             @default(PROPOSED)
   matchupsJson String // [{ aId, bId }] — each a named 1-vs-1 the challenger proposed
   resultJson   String? // GroupBattleResult, set once RESOLVED
-  createdAt    DateTime      @default(now())
+  createdAt    DateTime                 @default(now())
   resolvedAt   DateTime?
   participants GroupBattleParticipant[]
 }
@@ -252,10 +263,10 @@ model PendingEncounter {
   rewardsJson String // { berries, xp, bounty, hpLoss, islandDanger, isBoss }
   narrative   String
   assessment  String // "weaker" | "even" | "superior" — a read from Observation Haki + level gap, not a guarantee
-  phase       String   @default("threat") // "threat" (fight-or-flee pending) | "fighting" (round-by-round exchanges) | "victory" (mercy choice pending)
+  phase       String    @default("threat") // "threat" (fight-or-flee pending) | "fighting" (round-by-round exchanges) | "victory" (mercy choice pending)
   enemyHp     Int? // live remaining HP once fighting has started; null before the first exchange
-  roundNumber Int      @default(0) // how many exchanges have happened so far, for the same MAX_ROUNDS cutoff runCombat used
-  createdAt   DateTime @default(now())
+  roundNumber Int       @default(0) // how many exchanges have happened so far, for the same MAX_ROUNDS cutoff runCombat used
+  createdAt   DateTime  @default(now())
 }
 
 // ---------- Capture & rescue ----------
@@ -280,17 +291,17 @@ model Imprisonment {
 // ---------- Recruitable crew NPCs (a lightweight companion, not a full account) ----------
 
 model NPCCompanion {
-  id          String    @id @default(cuid())
+  id          String          @id @default(cuid())
   characterId String
-  character   Character @relation(fields: [characterId], references: [id])
+  character   Character       @relation(fields: [characterId], references: [id])
   name        String
   role        String // "Espadachín", "Cocinero", "Médico", "Navegante", "Francotirador", "Arqueóloga", "Carpintero", "Músico", ...
-  hp          Int       @default(30)
-  maxHp       Int       @default(30)
-  loyalty     Int       @default(50) // 0-100, affects desertion/rescue behavior
+  hp          Int             @default(30)
+  maxHp       Int             @default(30)
+  loyalty     Int             @default(50) // 0-100, affects desertion/rescue behavior
   status      CharacterStatus @default(ALIVE)
   deathCause  String?
-  joinedAt    DateTime  @default(now())
+  joinedAt    DateTime        @default(now())
   diedAt      DateTime?
 }
 
@@ -306,7 +317,7 @@ enum WeaponGrade {
 }
 
 model Weapon {
-  id   String @id @default(cuid())
+  id          String      @id @default(cuid())
   // Not @unique: common-grade starter/shop gear is instanced per character
   // (many "Espada de acero" can exist at once). Only named meito are
   // seeded as a single row, which keeps them 1-of-1 in practice since
@@ -319,8 +330,8 @@ model Weapon {
   specialJson String? // special ability payload, engine-interpreted
   basePrice   Int         @default(500)
 
-  ownerId String?    @unique
-  owner   Character? @relation("OwnedWeapons", fields: [ownerId], references: [id])
+  ownerId    String?    @unique
+  owner      Character? @relation("OwnedWeapons", fields: [ownerId], references: [id])
   equippedOn Character? @relation("EquippedWeapon")
 
   createdAt DateTime @default(now())
@@ -349,17 +360,17 @@ enum Sea {
 }
 
 model Island {
-  id          String @id @default(cuid())
-  name        String @unique
-  sea         Sea
-  description String
-  arcHook     String? // the island's current conflict, told once on first arrival — separate from the ambient `description` shown every visit
-  dangerLevel Int    @default(1) // 1-10, gates which events/enemies can roll
-  minLevelToEnter Int @default(1) // travel to this island is refused below this level — the Grand Line doesn't ease you in
-  factionControl String? // "Marina", "Yonko Kaido", "Sin gobierno", ...
-  hasPoneglyph Boolean @default(false)
-  poneglyphId  String? @unique
-  poneglyph    Poneglyph? @relation(fields: [poneglyphId], references: [id])
+  id              String     @id @default(cuid())
+  name            String     @unique
+  sea             Sea
+  description     String
+  arcHook         String? // the island's current conflict, told once on first arrival — separate from the ambient `description` shown every visit
+  dangerLevel     Int        @default(1) // 1-10, gates which events/enemies can roll
+  minLevelToEnter Int        @default(1) // travel to this island is refused below this level — the Grand Line doesn't ease you in
+  factionControl  String? // "Marina", "Yonko Kaido", "Sin gobierno", ...
+  hasPoneglyph    Boolean    @default(false)
+  poneglyphId     String?    @unique
+  poneglyph       Poneglyph? @relation(fields: [poneglyphId], references: [id])
 
   connections String // JSON string array of reachable Island ids (adjacency)
 
@@ -370,12 +381,12 @@ model Island {
 }
 
 model Poneglyph {
-  id          String  @id @default(cuid())
-  codeName    String  @unique // "Poneglyph de Zou", etc.
-  kind        String // "Road", "Historia", "Corazón"
-  loreText    String
-  guardedBy   String? // description of the guardian encounter
-  island      Island?
+  id        String  @id @default(cuid())
+  codeName  String  @unique // "Poneglyph de Zou", etc.
+  kind      String // "Road", "Historia", "Corazón"
+  loreText  String
+  guardedBy String? // description of the guardian encounter
+  island    Island?
 }
 
 // ---------- Events (the random engine's content pool) ----------
@@ -392,16 +403,16 @@ enum EventKind {
 }
 
 model EventTemplate {
-  id          String    @id @default(cuid())
-  islandId    String?
-  island      Island?   @relation(fields: [islandId], references: [id])
-  kind        EventKind
-  minDanger   Int       @default(1)
-  maxDanger   Int       @default(10)
-  weight      Int       @default(10) // relative pick chance
-  title       String
-  bodyJson    String // narrative variants + outcome table, engine-interpreted
-  repeatable  Boolean   @default(true)
+  id         String    @id @default(cuid())
+  islandId   String?
+  island     Island?   @relation(fields: [islandId], references: [id])
+  kind       EventKind
+  minDanger  Int       @default(1)
+  maxDanger  Int       @default(10)
+  weight     Int       @default(10) // relative pick chance
+  title      String
+  bodyJson   String // narrative variants + outcome table, engine-interpreted
+  repeatable Boolean   @default(true)
 }
 
 // ---------- Logs & the living world ----------
@@ -441,14 +452,19 @@ model SceneMessage {
 
 // Global news feed — every player reads the same world.
 model NewsItem {
-  id        String   @id @default(cuid())
-  headline  String
-  body      String
-  category  String // "Recompensas" | "Frutas" | "Poneglifos" | "Tripulaciones" | "Guerra" | "Muertes" | "Gobierno Mundial"
+  id           String   @id @default(cuid())
+  headline     String
+  body         String
+  category     String // "Recompensas" | "Frutas" | "Poneglifos" | "Tripulaciones" | "Guerra" | "Muertes" | "Gobierno Mundial"
   // when a headline is about a player, link it so profiles can show "apareciste en las noticias"
-  characterId String?
+  characterId  String?
   worldActorId String?
-  createdAt DateTime @default(now())
+  // "normal" | "digest" | "major" — drives headline treatment in the news
+  // UI. Set explicitly at every postNews/newsItem.create call site: player
+  // death/capture/poneglyph-reads/group-battle outcomes are "major", the
+  // periodic bounty roundup is "digest", everything else stays "normal".
+  severity     String   @default("normal")
+  createdAt    DateTime @default(now())
 }
 
 // ---------- The world simulates itself: factions act independently ----------
@@ -460,6 +476,22 @@ enum ActorRole {
   REVOLUTIONARY_COMMANDER
   MARINE_GENERAL
   CIPHER_POL
+  NOTABLE_PIRATE // a significant independent captain/crewmate, not yet Yonko/Warlord tier — rankLabel carries the specific title
+}
+
+// The behavioral bucket world-news templates gate actor selection on — see
+// WorldEventTemplate.allowedFactionTypes and src/lib/engine/world.ts. Not
+// the same enum as Character's `Faction` (that one only covers what a
+// PLAYER can pick at creation); this one also needs CIPHER_POL/CIVILIAN/
+// UNAFFILIATED to cover the full canon cast.
+enum FactionType {
+  PIRATE
+  MARINE
+  REVOLUTIONARY
+  CIPHER_POL
+  BOUNTY_HUNTER // e.g. Cross Guild — hunts pirates for reward, not government-aligned
+  CIVILIAN
+  UNAFFILIATED
 }
 
 model WorldActor {
@@ -476,6 +508,24 @@ model WorldActor {
   // EnemySpec.personality, just persistent across encounters instead of
   // one-shot. See Grudge below for the per-character memory this enables.
   personality  String?
+
+  // Faction-aware world news (2026-09-23 follow-up): factionType is what
+  // WorldEventTemplate.allowedFactionTypes gates on; factionName is the
+  // specific display label ("Marina", "Piratas de Barbanegra", "Cross
+  // Guild"). rankLabel overrides `role`'s coarser enum for display/news
+  // when needed (e.g. role: MARINE_GENERAL, rankLabel: "Almirante de
+  // Flota (retirado)"). canonBounty is the TRUE canon berries figure —
+  // BigInt because real canon numbers (e.g. Shanks' 4,048,900,000)
+  // overflow Character.bounty's Int32. canonWeapon is flavor/display text
+  // only — WorldActors never fight directly today. devilFruitId links a
+  // canon signature fruit (only ever set on an isSingleton DevilFruit row).
+  factionType  FactionType @default(UNAFFILIATED)
+  factionName  String      @default("Desconocida")
+  rankLabel    String?
+  canonBounty  BigInt?
+  canonWeapon  String?
+  devilFruitId String?     @unique
+  devilFruit   DevilFruit? @relation("WorldActorFruit", fields: [devilFruitId], references: [id])
 
   createdAt DateTime @default(now())
 }
@@ -504,20 +554,34 @@ model Grudge {
 }
 
 model WorldEventTemplate {
-  id          String @id @default(cuid())
-  weight      Int    @default(10)
-  minHeat     Int    @default(0) // world "heat" gates escalating events (0 = calm era, 100 = final saga chaos)
-  headline    String // may contain {actor} placeholder
-  bodyJson    String // narrative variants + side effects, engine-interpreted
-  category    String
-  repeatable  Boolean @default(true)
+  id                  String  @id @default(cuid())
+  weight              Int     @default(10)
+  minHeat             Int     @default(0) // world "heat" gates escalating events (0 = calm era, 100 = final saga chaos)
+  headline            String // may contain {actor} placeholder
+  bodyJson            String // narrative variants + side effects, engine-interpreted
+  category            String
+  repeatable          Boolean @default(true)
+  // JSON array of FactionType values gating which WorldActor can star in
+  // this template (see src/lib/engine/world.ts's runWorldTick) — null means
+  // no specific actor is needed (a bare Gobierno Mundial announcement).
+  // Fixes the original bug this whole pass started from: an Admiral being
+  // picked for a "recluta nuevos aliados" pirate-flavored headline.
+  allowedFactionTypes String?
+  // Short instruction fed to the AI narrator (e.g. "a pirate crew raids a
+  // rival's territory") — the actual headline/body prose is generated per
+  // firing now, not picked from bodyJson's old hand-written variants; those
+  // variants are kept only as the offline fallback if the AI call fails.
+  promptHint          String  @default("")
 }
 
 // Tracks the single global simulation clock so the tick only ever runs once per interval.
 model WorldClock {
-  id          Int      @id @default(1)
-  heat        Int      @default(10) // escalates over time / with big player feats
-  lastTickAt  DateTime @default(now())
+  id           Int       @id @default(1)
+  heat         Int       @default(10) // escalates over time / with big player feats
+  lastTickAt   DateTime  @default(now())
+  // Separate, much rarer cadence for the periodic canon-bounty roundup
+  // (tickBountyDigestIfDue in world-tick.ts) — null means it has never run.
+  lastDigestAt DateTime?
 }
 
 // Durable record of unexpected server-side errors — survives restarts and

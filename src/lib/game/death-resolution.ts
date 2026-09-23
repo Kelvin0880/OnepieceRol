@@ -3,8 +3,8 @@ import { liveRng } from "../engine/rng";
 import { rollDeath } from "../engine/death";
 import { CharacterStatus } from "@prisma/client";
 
-export async function postNews(headline: string, body: string, category: string, characterId?: string) {
-  await prisma.newsItem.create({ data: { headline, body, category, characterId } });
+export async function postNews(headline: string, body: string, category: string, characterId?: string, severity: "normal" | "digest" | "major" = "normal") {
+  await prisma.newsItem.create({ data: { headline, body, category, characterId, severity } });
 }
 
 export interface DeathCheckCharacter {
@@ -45,7 +45,7 @@ export async function handleDeathCheck(
       data: { status: CharacterStatus.DEAD, hp: 0, deathCause: cause, diedAt: new Date() },
     });
     const headline = `${character.name} ha caído en ${character.currentIsland.name}`;
-    await postNews(headline, `${cause} Su leyenda termina aquí, en las aguas donde tantos otros también se quedaron.`, "Muertes", character.id);
+    await postNews(headline, `${cause} Su leyenda termina aquí, en las aguas donde tantos otros también se quedaron.`, "Muertes", character.id, "major");
     newsLog.push(headline);
 
     for (const companion of character.companions?.filter((c) => c.status === "ALIVE") ?? []) {
