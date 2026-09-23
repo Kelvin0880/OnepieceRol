@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import { buildTurnOrder, nextTurnIndex } from "../engine/party-turns";
+import { notifyParty } from "./notify";
 
 /**
  * Live multiplayer party scenes — crewmates who are physically together
@@ -163,15 +164,18 @@ export async function advancePartyTurn(partyId: string): Promise<void> {
   if (!party) return;
   const turnOrder = JSON.parse(party.turnOrder) as string[];
   await prisma.party.update({ where: { id: partyId }, data: { awaitingNarrator: false, turnIndex: nextTurnIndex(turnOrder, party.turnIndex) } });
+  await notifyParty(partyId);
 }
 
 /** Unlocks the party without advancing the turn — used when a beginPartyTurn lock led nowhere (e.g. a leave_party confirmation prompt), so the same member can immediately act again instead of the group getting stuck. */
 export async function releasePartyTurnLock(partyId: string): Promise<void> {
   await prisma.party.update({ where: { id: partyId }, data: { awaitingNarrator: false } });
+  await notifyParty(partyId);
 }
 
 export async function writePartyMessage(partyId: string, authorCharacterId: string | null, authorName: string, text: string): Promise<void> {
   await prisma.partySceneMessage.create({ data: { partyId, authorCharacterId, authorName, text } });
+  await notifyParty(partyId);
 }
 
 /** A short narrator-authored line for the shared feed — used to echo a personal (non-party-turn) mechanical outcome, like a solo fight resolving, without touching turn state. */

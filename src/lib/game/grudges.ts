@@ -13,7 +13,7 @@ export interface EnemySnapshot {
 export async function recordGrudgeIncident(
   worldActorId: string,
   characterId: string,
-  kind: "escape" | "subordinate_defeat",
+  kind: "escape" | "subordinate_defeat" | "actor_defeat",
   note: string,
   enemyName: string,
   enemySnapshot: EnemySnapshot

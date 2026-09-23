@@ -186,6 +186,141 @@ async function main() {
       arcHook:
         "CP-0 ha sellado el archivo sobre un Poneglifo confiscado hace décadas. Nadie entra sin autorización directa del Gobierno Mundial, y nadie que lo intente sin ella ha vuelto a ser visto.",
     },
+    // ---------- Phase 2 world expansion (2026-09-24) ----------
+    {
+      key: "drum",
+      name: "Isla Drum",
+      sea: Sea.PARADISE,
+      danger: 7,
+      minLevel: 11,
+      factionControl: "Sin rey (Dr. Kureha)",
+      description:
+        "Un reino de nieve eterna sin rey desde que su tirano huyó. En lo alto de la montaña, una vieja doctora de risa temible cura lo que ningún hospital del mundo puede curar — y cobra a su manera.",
+      arcHook:
+        "El invierno aquí no es solo frío: es hambre, enfermedad y un pueblo que aprendió a desconfiar de los piratas por la mala fama de uno solo. Ganarse a Drum es más difícil que sobrevivirle.",
+    },
+    {
+      key: "skypiea",
+      name: "Skypiea",
+      sea: Sea.PARADISE,
+      danger: 8,
+      minLevel: 15,
+      factionControl: "Eneru",
+      description:
+        "Una isla entre las nubes, hecha de mar de algodón y ruinas de oro, donde un autoproclamado dios impone su ley a rayo limpio y ha convertido la fe de un pueblo en un arma.",
+      arcHook:
+        "Los cuatro Sacerdotes vigilan cada nube y el Dios de Skypiea todo lo oye antes de que lo digas. Quien pisa la isla sin ser invitado pasa a formar parte de su juicio.",
+    },
+    {
+      key: "waterSeven",
+      name: "Water 7",
+      sea: Sea.PARADISE,
+      danger: 7,
+      minLevel: 14,
+      factionControl: "Galley-La / CP-0 infiltrada",
+      description:
+        "La ciudad del agua: canales que hacen de calles, gigantescos astilleros y los mejores carpinteros del mundo. Bajo tanta prosperidad, alguien lleva años buscando unos planos que el Gobierno prefiere olvidados.",
+      arcHook:
+        "Todos aquí hablan bien de todos, y precisamente por eso nadie repara en quien se ha ganado la confianza del pueblo para robarles sus secretos. En Water 7, el mejor disfraz es ser querido.",
+    },
+    {
+      key: "sabaody",
+      name: "Archipiélago Sabaody",
+      sea: Sea.PARADISE,
+      danger: 8,
+      minLevel: 18,
+      factionControl: "Marina / Dragones Celestiales",
+      description:
+        "Setenta y nueve manglares gigantes que respiran burbujas, la última parada antes de bajar al Nuevo Mundo. Bajo la alegría de sus tiendas, una casa de subastas vende personas, y a un paso, los Dragones Celestiales pasean impunes.",
+      arcHook:
+        "Aquí se recubren las naves con cobre para bucear al Nuevo Mundo, se reúnen las mayores recompensas del mar y basta un mal gesto ante un noble mundial para que llegue un Almirante. Se rumorea que en un bar de burbujas vive un viejo que sabe leer Poneglifos.",
+    },
+    {
+      key: "fishMan",
+      name: "Isla Gyojin",
+      sea: Sea.NEW_WORLD,
+      danger: 9,
+      minLevel: 22,
+      factionControl: "Nuevos Piratas Gyojin (Hody Jones)",
+      description:
+        "Una ciudad de cristal a diez mil metros bajo el mar, gobernada por un reino de gyojin y sirenas y amenazada por un odio antiguo hacia los humanos que ahora alguien ha decidido convertir en guerra.",
+      arcHook:
+        "El Árbol Eve protege el reino con su sombra y una promesa de paz, pero una banda de gyojin resentidos quiere vengar siglos de esclavitud. Si triunfan, ninguna puerta volverá a abrirse entre superficie y fondo.",
+    },
+    {
+      key: "punkHazard",
+      name: "Punk Hazard",
+      sea: Sea.NEW_WORLD,
+      danger: 9,
+      minLevel: 25,
+      factionControl: "Caesar Clown",
+      description:
+        "Una isla partida en dos por un duelo entre dos Almirantes: una mitad arde y la otra está cubierta de hielo eterno. En el laboratorio sellado del centro, un científico sin escrúpulos produce armas y venenos para quien pague.",
+      arcHook:
+        "Las llamas de un lado y el hielo del otro dejaron un páramo donde los niños que no debían estar ahí lloran de noche. Nadie que no haya sido invitado al laboratorio sale con la cordura intacta.",
+    },
+    {
+      key: "wholeCake",
+      name: "Whole Cake Island",
+      sea: Sea.NEW_WORLD,
+      danger: 10,
+      minLevel: 28,
+      factionControl: "Charlotte Katakuri",
+      description:
+        "Un archipiélago de tartas, torres de caramelo y bosques de galleta: el reino de una de las tripulaciones más grandes del mundo, hoy mantenido por su hijo más disciplinado, un hombre que jamás pierde la calma ni cede un centímetro.",
+      arcHook:
+        "Todo aquí es dulce a la vista y letal al tacto. Los Ministros de la tripulación vigilan cada rincón, y el propio Katakuri sabe con un segundo de ventaja lo que vas a hacer.",
+    },
+    {
+      key: "wano",
+      name: "País de Wano",
+      sea: Sea.NEW_WORLD,
+      danger: 10,
+      minLevel: 32,
+      factionControl: "Sin gobierno (samuráis)",
+      description:
+        "Un país cerrado durante siglos tras montañas y cascadas, cuna de las mejores espadas del mundo. Cayó un tirano, pero los samuráis y ninjas que lo reconstruyen saben que la paz es solo el intervalo entre dos guerras.",
+      arcHook:
+        "Aquí el honor pesa más que el oro y un juramento se cumple aunque cueste la vida. Quien llega como aliado es recibido con sake y espadas; quien llega como conquistador no vuelve a ver la costa.",
+    },
+    {
+      key: "abyss",
+      name: "Isla Abismo",
+      sea: Sea.NEW_WORLD,
+      danger: 10,
+      minLevel: 38,
+      factionControl: "Custodios de las Mareas (Thalassa)",
+      tidal: true,
+      description:
+        "Una isla que las mareas esconden y devuelven a su antojo: emerge unas horas y vuelve a hundirse otras tantas. Los Custodios de las Mareas llevan siglos guardando lo que hay en su corazón de coral negro, un Poneglifo que el mar no quiso llevarse.",
+      arcHook:
+        "Solo se puede llegar cuando baja la marea, y quien llegue tarde se queda en el fondo. Thalassa no odia a los intrusos: simplemente cree que algunas verdades es mejor que sigan bajo el agua.",
+    },
+    {
+      key: "maryGeoise",
+      name: "Mary Geoise",
+      sea: Sea.NEW_WORLD,
+      danger: 10,
+      minLevel: 42,
+      factionControl: "Gobierno Mundial (Gorosei)",
+      description:
+        "La Tierra Sagrada sobre la Línea Roja, donde viven los Dragones Celestiales y de donde emana la ley que rige el mundo. Palacios blancos, jardines impecables y, en el corazón del Castillo de Pangea, un salón al que ni los Almirantes tienen acceso.",
+      arcHook:
+        "Los Cinco Ancianos gobiernan a la sombra de alguien a quien nunca se nombra. Cualquier intruso es una amenaza para el orden entero, y el orden entero responde.",
+    },
+    {
+      key: "laughTale",
+      name: "Laugh Tale",
+      sea: Sea.NEW_WORLD,
+      danger: 10,
+      minLevel: 50,
+      factionControl: null,
+      requiresRoad: true,
+      description:
+        "La última isla, la que nadie encuentra si no ha leído los cuatro Poneglifos de Ruta. Un lugar que ríe con quien llega y guarda el mayor secreto de la historia: lo que fue el One Piece, y por qué el mundo lleva ochocientos años sin poder mencionarlo.",
+      arcHook:
+        "Llegar aquí es haberlo dejado todo atrás. Lo que se descubra en Laugh Tale cambiará el mundo entero, para bien o para mal, y quien lo sepa ya no podrá fingir que no lo sabe.",
+    },
   ];
 
   const islands: Record<string, { id: string }> = {};
@@ -202,6 +337,8 @@ async function main() {
         description: def.description,
         arcHook: def.arcHook,
         connections: "[]",
+        tidal: (def as { tidal?: boolean }).tidal ?? false,
+        requiresRoadPoneglyphs: (def as { requiresRoad?: boolean }).requiresRoad ?? false,
       },
     });
     islands[def.key] = island;
@@ -218,10 +355,21 @@ async function main() {
     loguetown: ["conomi", "marineG5", "gecko", "reverseMountain"],
     reverseMountain: ["loguetown", "whiskyPeak"],
     whiskyPeak: ["reverseMountain", "littleGarden"],
-    littleGarden: ["whiskyPeak", "alabasta"],
-    alabasta: ["littleGarden", "graveyardIsland", "eniesLobby"],
-    graveyardIsland: ["alabasta"],
-    eniesLobby: ["alabasta", "impelDown"],
+    littleGarden: ["whiskyPeak", "alabasta", "drum"],
+    drum: ["littleGarden", "alabasta"],
+    alabasta: ["littleGarden", "drum", "graveyardIsland", "eniesLobby", "skypiea", "waterSeven"],
+    skypiea: ["alabasta"],
+    waterSeven: ["alabasta", "eniesLobby", "sabaody"],
+    sabaody: ["waterSeven", "fishMan"],
+    fishMan: ["sabaody", "punkHazard"],
+    punkHazard: ["fishMan", "wholeCake"],
+    wholeCake: ["punkHazard", "wano"],
+    wano: ["wholeCake", "laughTale"],
+    laughTale: ["wano"],
+    graveyardIsland: ["alabasta", "abyss"],
+    abyss: ["graveyardIsland"],
+    eniesLobby: ["alabasta", "waterSeven", "impelDown", "maryGeoise"],
+    maryGeoise: ["eniesLobby"],
     impelDown: ["eniesLobby"],
   };
 
@@ -317,6 +465,40 @@ async function main() {
       atkBonus: 30,
       basePrice: 500_000,
       special: "drena Haki de Armadura del portador si su nivel es insuficiente para controlarla",
+    },
+    {
+      name: "Yoru",
+      kind: "Espadón",
+      grade: WeaponGrade.SAIJO_O_WAZAMONO,
+      description: "El espadón negro que perteneció al mejor espadachín del mundo: tan pesado que solo un brazo excepcional lo maneja, y capaz de partir un barco de un tajo.",
+      atkBonus: 34,
+      basePrice: 600_000,
+    },
+    {
+      name: "Kikoku",
+      kind: "Katana",
+      grade: WeaponGrade.RYO_WAZAMONO,
+      description: "Una katana maldita que se alimenta del miedo de quien la mira. Corta tanto la carne como la voluntad.",
+      atkBonus: 22,
+      basePrice: 200_000,
+      special: "maldita: aterra a los enemigos débiles, pero exige una voluntad firme a su portador",
+    },
+    {
+      name: "Shodai Kitetsu",
+      kind: "Katana",
+      grade: WeaponGrade.RYO_WAZAMONO,
+      description: "La primera de la familia Kitetsu: hermana mayor de una estirpe maldita, con más filo que paciencia.",
+      atkBonus: 21,
+      basePrice: 150_000,
+      special: "maldita: pequeña probabilidad de herir a su propio portador en cada combate",
+    },
+    {
+      name: "Murakumogiri",
+      kind: "Katana",
+      grade: WeaponGrade.RYO_WAZAMONO,
+      description: "Una hoja sagrada de Wano que jamás pierde el filo y se dice que corta hasta las nubes.",
+      atkBonus: 18,
+      basePrice: 110_000,
     },
     // Unique named item
     {
@@ -588,6 +770,28 @@ async function main() {
       devilFruitName: "Suna Suna no Mi",
     },
     {
+      name: "Mr. 3 (Galdino)",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 45,
+      description: "Agente de Baroque Works que gobierna Whisky Peak en la sombra con su Doru Doru no Mi; cobra a la isla entera su falsa hospitalidad.",
+      personality: "Se cree un artista incomprendido; presume de sus esculturas de cera y teme más al desprecio que a la derrota.",
+      factionType: FactionType.PIRATE,
+      factionName: "Baroque Works",
+      rankLabel: "Oficial de Baroque Works",
+      canonBounty: BigInt(24_000_000),
+    },
+    {
+      name: "Mr. 1 (Daz Bonez)",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 62,
+      description: "El asesino más eficaz de Baroque Works, con su cuerpo convertido en acero; controla Alabasta a sangre y arena mientras la rebelión hierve.",
+      personality: "Frío, metódico y de pocas palabras; considera cada muerte un trabajo bien hecho, nada más.",
+      factionType: FactionType.PIRATE,
+      factionName: "Baroque Works",
+      rankLabel: "Oficial de Baroque Works",
+      canonBounty: BigInt(80_000_000),
+    },
+    {
       name: "Donquixote Doflamingo",
       role: ActorRole.WARLORD,
       powerLevel: 93,
@@ -668,6 +872,76 @@ async function main() {
       rankLabel: "Capitana",
       canonBounty: BigInt(1_390_000_000),
       devilFruitName: "Toshi Toshi no Mi",
+    },
+    // ---------- Phase 2 holders and guardians (2026-09-24) ----------
+    {
+      name: "Eneru",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 72,
+      description: "El autoproclamado Dios de Skypiea: un hombre que confunde su poder con derecho divino y tiene a toda una isla aterrada por su juicio.",
+      personality: "Solemne y burlón, habla de sí mismo en tercera persona y considera a cualquiera que no lo adore un insecto que aún no ha sido castigado.",
+      factionType: FactionType.UNAFFILIATED,
+      factionName: "Dominios de Skypiea",
+      rankLabel: "Dios de Skypiea",
+      canonBounty: BigInt(0),
+      devilFruitName: "Goro Goro no Mi",
+    },
+    {
+      name: "Caesar Clown",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 58,
+      description: "Científico exiliado que domina Punk Hazard con su laboratorio y su fruta de gas; no distingue entre pacientes y sujetos de prueba.",
+      personality: "Egocéntrico y teatral, se llama a sí mismo un genio incomprendido y ríe siempre un segundo antes de hacer algo cruel.",
+      factionType: FactionType.PIRATE,
+      factionName: "Laboratorio de Punk Hazard",
+      rankLabel: "Científico jefe",
+      canonBounty: BigInt(300_000_000),
+      devilFruitName: "Gasu Gasu no Mi",
+    },
+    {
+      name: "Hody Jones",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 55,
+      description: "Capitán de los Nuevos Piratas Gyojin, resentido con los humanos hasta el punto de querer arrasar un reino entero por ellos.",
+      personality: "Rencoroso y despiadado, convencido de que la historia le debe una venganza que nadie más se atreve a cobrar.",
+      factionType: FactionType.PIRATE,
+      factionName: "Nuevos Piratas Gyojin",
+      rankLabel: "Capitán",
+      canonBounty: BigInt(500_000_000),
+    },
+    {
+      name: "Thalassa",
+      role: ActorRole.NOTABLE_PIRATE,
+      powerLevel: 92,
+      description: "La Guardiana del Abismo: última de los Custodios de las Mareas, cree que el Poneglifo bajo su isla debe seguir siendo leído solo por quien merezca perder algo para hacerlo.",
+      personality: "Serena y solemne, habla despacio como el mar; no odia a los intrusos, pero los juzga, y su juicio casi siempre es una marea.",
+      factionType: FactionType.UNAFFILIATED,
+      factionName: "Custodios de las Mareas",
+      rankLabel: "Guardiana del Abismo",
+      canonBounty: BigInt(0),
+      canonWeapon: "Tridente de las Mareas",
+    },
+    {
+      name: "Saint Jaygarcia Saturn",
+      role: ActorRole.GOROSEI,
+      powerLevel: 97,
+      description: "Uno de los Cinco Ancianos: guardián de la guerra y de los secretos de la Tierra Sagrada, aparece rara vez y jamás se ha visto que pierda una discusión.",
+      personality: "Grave y siniestro, habla de la humanidad como quien habla de una plaga necesaria y no admite réplicas.",
+      factionType: FactionType.CIPHER_POL,
+      factionName: "Gorosei",
+      rankLabel: "Anciano — Guardián de la Guerra",
+      canonBounty: BigInt(0),
+    },
+    {
+      name: "El Rey Sin Nombre",
+      role: ActorRole.HIDDEN_RULER,
+      powerLevel: 100,
+      description: "Quien de verdad se sienta en el Trono Vacío de Mary Geoise. Los Cinco Ancianos le sirven y ningún registro guarda su nombre: su poder es el olvido del mundo.",
+      personality: "Sereno, antiguo y sin rencor: habla como quien ya ha visto caer mil veces a los que se le oponen y espera a la siguiente.",
+      factionType: FactionType.UNAFFILIATED,
+      factionName: "Trono Vacío",
+      rankLabel: "Gobernante oculto del mundo",
+      canonBounty: BigInt(0),
     },
     // ---------- Straw Hat crew ----------
     {
@@ -999,6 +1273,17 @@ async function main() {
       allowedFactionTypes: [FactionType.CIPHER_POL],
       busyHours: [8, 20],
       heatDelta: 1,
+    },
+    // ---------- UNAFFILIATED-only (guardians and lone powers) ----------
+    {
+      weight: 5,
+      minHeat: 0,
+      headline: "{actor} recorre las mareas y deja su puesto",
+      category: "Mares",
+      body: ["{actor} habría abandonado su puesto habitual para seguir las corrientes en aguas lejanas. Su territorio queda en manos de subordinados."],
+      promptHint: "a lone, powerful guardian leaves their post for a while to follow the tides or a personal matter, leaving subordinates in charge",
+      allowedFactionTypes: [FactionType.UNAFFILIATED],
+      busyHours: [4, 12],
     },
     // ---------- No actor required ----------
     {
@@ -1344,14 +1629,14 @@ async function main() {
     {
       codeName: "Poneglifo de Ruta — Fragmento del Abismo",
       kind: "Road",
-      loreText: "Ligado a leyendas de una isla que se hunde y resurge con las mareas. Nadie ha confirmado si sigue existiendo.",
-      guardedBy: null,
+      loreText: "Ligado a leyendas de una isla que se hunde y resurge con las mareas. Los pocos que lo han visto dicen que el coral negro que lo rodea canta cuando alguien lo lee.",
+      guardedBy: "Thalassa, la Guardiana del Abismo, y los Custodios de las Mareas: solo se llega en marea baja y solo se sale con su permiso.",
     },
     {
       codeName: "Poneglifo de Ruta — Fragmento Final",
       kind: "Road",
       loreText: "El más buscado y el menos comprendido: se cree que sin los otros tres, este no revela nada en absoluto.",
-      guardedBy: "Se rumorea vigilancia directa de Cipher Pol.",
+      guardedBy: "Los Cinco Ancianos de Mary Geoise, con Cipher Pol como brazo armado: quien lo lea ha visto lo que el mundo entero ha olvidado a propósito.",
     },
   ];
 
@@ -1359,7 +1644,7 @@ async function main() {
   for (const p of poneglyphs) {
     const created = await prisma.poneglyph.upsert({
       where: { codeName: p.codeName },
-      update: {},
+      update: { loreText: p.loreText, guardedBy: p.guardedBy },
       create: { codeName: p.codeName, kind: p.kind, loreText: p.loreText, guardedBy: p.guardedBy },
     });
     createdPoneglyphs[p.codeName] = created;
@@ -1484,6 +1769,144 @@ async function main() {
       }),
     },
   });
+
+  // ---------- Phase 2: the last two Road Poneglyphs ----------
+  const abismoPoneglyph = createdPoneglyphs["Poneglifo de Ruta — Fragmento del Abismo"];
+  await prisma.island.update({ where: { id: islands.abyss.id }, data: { hasPoneglyph: true, poneglyphId: abismoPoneglyph.id } });
+  const finalPoneglyph = createdPoneglyphs["Poneglifo de Ruta — Fragmento Final"];
+  await prisma.island.update({ where: { id: islands.maryGeoise.id }, data: { hasPoneglyph: true, poneglyphId: finalPoneglyph.id } });
+  await prisma.worldActor.update({ where: { id: worldActors["Thalassa"].id }, data: { homeIslandId: islands.abyss.id } });
+  await prisma.worldActor.update({ where: { id: worldActors["Saint Jaygarcia Saturn"].id }, data: { homeIslandId: islands.maryGeoise.id } });
+
+  await prisma.eventTemplate.create({
+    data: {
+      islandId: islands.abyss.id,
+      kind: EventKind.BOSS,
+      minDanger: 10,
+      maxDanger: 10,
+      weight: 3,
+      title: "Los Custodios de las Mareas",
+      bodyJson: JSON.stringify({
+        flavorTexts: [
+          "El coral negro se abre en abanico y del agua emergen figuras de sal y concha que sostienen tridentes: los Custodios, que llevan siglos sin dormir. Tras ellos, la marea empieza a subir demasiado rápido para ser natural.",
+        ],
+        onCriticalSuccess: { text: ["El último Custodio cae de rodillas y el coral se aparta: el Poneglifo queda al descubierto, cantando."], berries: [60_000, 120_000], bounty: [22_000_000, 40_000_000] },
+        onSuccess: { text: ["Tras un combate de agua y sal, los Custodios ceden el paso. El Poneglifo queda a tu alcance."], berries: [30_000, 70_000], bounty: [12_000_000, 24_000_000] },
+        onFail: { text: ["La marea te arrastra y los tridentes hacen el resto."] },
+        onCriticalFail: { text: ["Una ola te levanta y te estrella contra el coral: tarda un rato en volver a ser real todo lo que ves."] },
+        enemy: {
+          name: "Custodios de las Mareas",
+          hp: 380,
+          atk: 92,
+          def: 62,
+          spd: 50,
+          isBoss: true,
+          personality: "silenciosos y pacientes como la marea; no atacan con odio, sino con la inevitabilidad de una ola",
+          worldActorId: worldActors["Thalassa"].id,
+        },
+        poneglyphId: abismoPoneglyph.id,
+      }),
+    },
+  });
+
+  await prisma.eventTemplate.create({
+    data: {
+      islandId: islands.maryGeoise.id,
+      kind: EventKind.BOSS,
+      minDanger: 10,
+      maxDanger: 10,
+      weight: 3,
+      title: "La guardia del Fragmento Final",
+      bodyJson: JSON.stringify({
+        flavorTexts: [
+          "Los jardines de la Tierra Sagrada son perfectos hasta que alguien no debería estar en ellos. Entonces, de entre los setos, salen los guardias del Castillo de Pangea: una unidad de élite de CP-0 que responde directamente a los Ancianos.",
+        ],
+        onCriticalSuccess: { text: ["La unidad cae sin que suene una sola alarma. El pasillo hacia la sala del Fragmento Final queda libre."], berries: [70_000, 140_000], bounty: [25_000_000, 45_000_000] },
+        onSuccess: { text: ["Tras un combate rápido y sucio entre los setos, el pasillo queda despejado. El Fragmento Final aguarda al fondo."], berries: [35_000, 80_000], bounty: [14_000_000, 26_000_000] },
+        onFail: { text: ["La coordinación de la unidad te desborda: cada golpe llegaba antes de que lo vieras venir."] },
+        onCriticalFail: { text: ["No llegas a ver ni la primera técnica: cuando recuperas la conciencia, sigues vivo por un capricho de tus captores."] },
+        enemy: {
+          name: "Guardia de la Tierra Sagrada",
+          hp: 420,
+          atk: 100,
+          def: 70,
+          spd: 58,
+          isBoss: true,
+          personality: "sin rostro ni nombre, hablan con la voz monótona de quien obedece sin pensar",
+          worldActorId: worldActors["Saint Jaygarcia Saturn"].id,
+        },
+        poneglyphId: finalPoneglyph.id,
+      }),
+    },
+  });
+
+  // ---------- Phase 2: island stories (two beats per new island) ----------
+  type Story = { island: string; kind: EventKind; title: string; weight: number; min: number; max: number; flavor: string; crit: string; ok: string; fail: string; critFail: string; loot?: [number, number]; xp?: [number, number]; hurt?: [number, number]; enemy?: { name: string; hp: number; atk: number; def: number; spd: number; personality: string } };
+  const stories: Story[] = [
+    { island: "drum", kind: EventKind.SOCIAL, title: "La doctora de la montaña", weight: 10, min: 7, max: 7, flavor: "Subes por la nieve hasta el hospital de la cima, donde una anciana de risa inquietante te mira de arriba abajo como quien ya sabe qué te duele.", crit: "La doctora te ofrece un tratamiento que casi ningún forastero recibe: te sientes más fuerte que nunca.", ok: "Te cura las heridas viejas y te cobra con un recado que resulta útil.", fail: "Te despacha con una receta amarga y una carcajada.", critFail: "Su medicina 'de prueba' te deja ardiendo de fiebre un buen rato.", xp: [12, 30], hurt: [0, 6] },
+    { island: "drum", kind: EventKind.COMBAT, title: "Los lobos de nieve", weight: 9, min: 7, max: 7, flavor: "Una manada de lobos de nieve gigantes te cierra el paso: no atacan por hambre, sino porque algo más grande los empuja hacia el pueblo.", crit: "Los dispersas y descubres qué los espantaba: un rastro de caza furtiva que puedes denunciar.", ok: "Rechazas la manada y la nieve se traga sus huellas.", fail: "Los lobos te rodean y solo el frío te salva de una mordida peor.", critFail: "Uno te derriba en la ventisca y te arrastra unos metros antes de soltarte.", enemy: { name: "Manada de lobos de nieve", hp: 95, atk: 30, def: 18, spd: 32, personality: "bestias hambrientas que solo entienden la fuerza" } },
+    { island: "skypiea", kind: EventKind.EXPLORATION, title: "El mar de algodón", weight: 10, min: 8, max: 8, flavor: "Caminas sobre nubes que soportan tu peso a duras penas. Abajo se ve el mar; arriba, un sol que no parece el mismo.", crit: "Encuentras una antigua ofrenda de oro que los Sacerdotes no habían reclamado.", ok: "Cruzas la nube sin incidentes y con algo de botín en el bolsillo.", fail: "Te hundes hasta la cintura y pierdes un buen rato saliendo.", critFail: "La nube cede del todo y te salva un ángel de la casualidad... no del golpe.", loot: [400, 1600], xp: [12, 28], hurt: [0, 14] },
+    { island: "skypiea", kind: EventKind.COMBAT, title: "Los ojos del Dios", weight: 9, min: 8, max: 8, flavor: "Un Sacerdote te intercepta bajo un arco de nubes: Eneru todo lo oye y ya sabe qué has venido a buscar.", crit: "Lo derrotas con un ingenio que ni el Dios podría haber anticipado.", ok: "El Sacerdote cae y su rayo se disipa sobre las nubes.", fail: "Un relámpago te tira al suelo antes de que puedas responder.", critFail: "El siguiente rayo es tan rápido que ni lo ves: cuando abres los ojos ya estás herido.", enemy: { name: "Sacerdote de Eneru", hp: 130, atk: 44, def: 28, spd: 36, personality: "fanático y pomposo, convencido de que ser derrotado es un sacrilegio" } },
+    { island: "waterSeven", kind: EventKind.SOCIAL, title: "Los astilleros Galley-La", weight: 10, min: 7, max: 7, flavor: "Los carpinteros te muestran su trabajo con orgullo, mientras uno de ellos, con demasiada facilidad, pregunta por 'unos planos antiguos'.", crit: "Ganas su confianza y una mejora de tu barco a precio de amigo.", ok: "Charlas con los maestros y compras material de primera con descuento.", fail: "Te toman por un curioso incómodo y te echan con cordialidad.", critFail: "Un malentendido te mete en una pelea de taberna con un carpintero corpulento.", loot: [300, 1200], xp: [10, 24], hurt: [0, 8] },
+    { island: "waterSeven", kind: EventKind.COMBAT, title: "Sombras en los canales", weight: 9, min: 7, max: 7, flavor: "Una silueta te sigue por los puentes de la ciudad de agua: alguien te cree involucrado con lo que el Gobierno busca.", crit: "Lo acorralas y confiesa quién lo envía.", ok: "Lo derribas en el canal y te deja una pista sobre su jefe.", fail: "Te da esquinazo y un golpe bajo de despedida.", critFail: "Cuando te das cuenta, tienes un filo en el costado y el canal frío en la espalda.", enemy: { name: "Agente encubierto de CP", hp: 105, atk: 38, def: 24, spd: 40, personality: "callado y eficiente, actúa como si tuviera todo el tiempo del mundo" } },
+    { island: "sabaody", kind: EventKind.SOCIAL, title: "El viejo de las burbujas", weight: 10, min: 8, max: 8, flavor: "En un bar del manglar 41, un anciano de mirada tranquila te ofrece un trago y una historia sobre lo que hay bajo el mar del Nuevo Mundo.", crit: "El viejo te enseña algo que nadie más sabe del Nuevo Mundo y te presenta a alguien útil.", ok: "Te cuenta una buena historia y te da un consejo que vale oro.", fail: "Te sonríe, calla y cambia de tema con elegancia.", critFail: "Sin querer, insultas a alguien de peso en el bar y sales de allí más rápido que dignamente.", loot: [500, 1800], xp: [14, 32], hurt: [0, 6] },
+    { island: "sabaody", kind: EventKind.COMBAT, title: "La subasta", weight: 9, min: 8, max: 8, flavor: "Ves cómo unos matones se llevan a un joven a la casa de subastas. Nadie mira: aquí, mirar es cómplice.", crit: "Liberas al chico y desapareces antes de que llegue la Marina.", ok: "Los matones caen y el chico escapa, aunque te ha visto la cara.", fail: "Son más de lo que parecían y te ves obligado a retirarte.", critFail: "Te descubren y tienes que huir con más golpes de los que quisieras.", enemy: { name: "Matones de la casa de subastas", hp: 120, atk: 40, def: 22, spd: 30, personality: "brutales y descuidados, acostumbrados a no encontrar resistencia" } },
+    { island: "fishMan", kind: EventKind.EXPLORATION, title: "El Árbol Eve", weight: 10, min: 9, max: 9, flavor: "Bajo la sombra del Árbol Eve, los gyojin te miran con cautela: eres humano, y aquí eso ya es una declaración.", crit: "Una anciana sirena te concede una audiencia y una bendición del árbol.", ok: "Recorres el reino sin incidentes, con la desconfianza a cuestas.", fail: "Un guardia te pide que te marches antes de que lo hagan otros por ti.", critFail: "Una ola te empuja contra un muro de coral y te deja magullado.", loot: [500, 2200], xp: [15, 34], hurt: [0, 10] },
+    { island: "fishMan", kind: EventKind.COMBAT, title: "La banda de Hody", weight: 9, min: 9, max: 9, flavor: "Un grupo de los Nuevos Piratas Gyojin te reconoce como humano y decide que eres el primer motivo de su próxima fiesta.", crit: "Los desarmas sin que tu espada llegue a mojarse.", ok: "Repeles a la banda, que huye entre insultos.", fail: "Cada uno de ellos es más fuerte que tú en su elemento.", critFail: "Un puñetazo que ni ves venir te deja sin aire un buen rato.", enemy: { name: "Nuevos Piratas Gyojin", hp: 150, atk: 50, def: 30, spd: 34, personality: "rencorosos y confiados; ven en cada humano al culpable de su historia" } },
+    { island: "punkHazard", kind: EventKind.EXPLORATION, title: "El laboratorio sellado", weight: 10, min: 9, max: 9, flavor: "Las puertas del laboratorio están abiertas de par en par, lo que en un lugar como este solo puede ser una trampa o un aviso.", crit: "Encuentras un archivo de experimentos que valdría una fortuna para el bando adecuado.", ok: "Sales con material útil y sin haber respirado el gas.", fail: "Un pasillo se sella tras de ti y pierdes un rato buscando la salida.", critFail: "Un gas dulzón te nubla los sentidos y despiertas más tarde con la cabeza a punto de estallar.", loot: [600, 2400], xp: [16, 36], hurt: [0, 16] },
+    { island: "punkHazard", kind: EventKind.COMBAT, title: "Los niños del hielo", weight: 9, min: 9, max: 9, flavor: "Algo entre la ventisca se mueve con torpeza y con rabia: un experimento que ya no obedece a su creador.", crit: "Lo calmas sin luchar y te lleva hasta la puerta secreta del laboratorio.", ok: "Lo detienes y descubres qué lo ha vuelto así.", fail: "Su fuerza desbocada te lanza por los aires.", critFail: "Te encierra entre sus brazos de hielo y por un momento no sientes las manos.", enemy: { name: "Experimento fallido del laboratorio", hp: 170, atk: 55, def: 34, spd: 28, personality: "una criatura rota que ataca por miedo, no por maldad" } },
+    { island: "wholeCake", kind: EventKind.EXPLORATION, title: "El bosque de galleta", weight: 10, min: 10, max: 10, flavor: "Los árboles de galleta esconden ojos de caramelo y bocas de nata que tararean una canción demasiado alegre.", crit: "Un guardián cambia de opinión sobre ti y te deja un tesoro de repostería... y un secreto.", ok: "Recorres el bosque sin que las cosas te devoren a mordiscos.", fail: "Los árboles te siguen y no te sueltan hasta que te distraen con un dulce.", critFail: "Un lazo de regaliz te atrapa y solo escapas a costa de un buen tirón.", loot: [700, 2600], xp: [18, 40], hurt: [0, 18] },
+    { island: "wholeCake", kind: EventKind.COMBAT, title: "Un Ministro de la Tartas", weight: 9, min: 10, max: 10, flavor: "Un Ministro de la tripulación te sale al paso con una sonrisa tan dulce que preferirías que te gritase.", crit: "Lo derrotas con una jugada que todo el reino comentará durante semanas.", ok: "Cae tras un combate encarnizado, sin perder jamás la compostura.", fail: "Su técnica de repostería letal te supera con una elegancia insultante.", critFail: "Te sirve tu propia derrota en bandeja, y duele más de lo que parece.", enemy: { name: "Ministro de Whole Cake", hp: 210, atk: 66, def: 40, spd: 40, personality: "educado hasta la crueldad; te llama 'invitado' mientras te aplasta" } },
+    { island: "wano", kind: EventKind.TRAINING, title: "El herrero de las cascadas", weight: 12, min: 10, max: 10, flavor: "Un viejo herrero acepta enseñarte cómo se templa una hoja bajo una cascada helada, con una condición: que no digas una palabra hasta el final.", crit: "Al terminar, el herrero te da una mirada de respeto que no da a casi nadie.", ok: "Sales con las manos vendadas y una idea nueva de lo que es el filo.", fail: "Hablas antes de tiempo y el herrero te echa sin mirarte.", critFail: "La hoja se quiebra en tu mano y el agua helada hace el resto.", xp: [20, 42], hurt: [0, 8] },
+    { island: "wano", kind: EventKind.COMBAT, title: "El ronin sin nombre", weight: 9, min: 10, max: 10, flavor: "Un samurái sin señor te espera en un puente de madera, con la mano ya en la empuñadura: no busca dinero, busca un buen duelo.", crit: "Tu único tajo lo deja en silencio, con una reverencia respetuosa.", ok: "Tras un duelo limpio, el ronin baja la espada y asiente.", fail: "Su primera estocada te enseña más de lo que querías aprender.", critFail: "Un tajo tan rápido que no lo ves te deja una cicatriz que recordarás.", enemy: { name: "Ronin sin nombre", hp: 200, atk: 68, def: 42, spd: 52, personality: "honorable y de pocas palabras; solo habla de espadas y de deudas de honor" } },
+    { island: "abyss", kind: EventKind.EXPLORATION, title: "El coral que canta", weight: 10, min: 10, max: 10, flavor: "Los arrecifes negros vibran con una nota grave que se mete en el hueso. Cada paso que das parece seguirle el compás.", crit: "Comprendes que la nota es un mapa y encuentras un pasadizo que casi nadie conoce.", ok: "Cruzas el arrecife sin extraviarte y con algo de coral valioso.", fail: "La marea sube de golpe y te obliga a retroceder.", critFail: "Una ola te levanta y te deposita, medio ahogado, más lejos de lo que empezaste.", loot: [800, 3000], xp: [20, 44], hurt: [0, 20] },
+    { island: "maryGeoise", kind: EventKind.SOCIAL, title: "Los jardines de la Tierra Sagrada", weight: 10, min: 10, max: 10, flavor: "Paseas por jardines tan perfectos que resultan hostiles. Un noble mundial pasa cerca, sin mirarte, sobre la espalda de alguien.", crit: "Escuchas una conversación que ninguno de los dos debía tener en voz alta.", ok: "Pasas inadvertido y oyes lo suficiente para hacerte una idea de lo que se cuece aquí.", fail: "Un guardia te pide la documentación con una amabilidad que da miedo.", critFail: "Tu sola presencia incomoda a alguien poderoso: sales, pero con las piernas temblando.", loot: [900, 3400], xp: [22, 46], hurt: [0, 14] },
+    { island: "laughTale", kind: EventKind.EXPLORATION, title: "La isla que ríe", weight: 10, min: 10, max: 10, flavor: "Al pisar la costa, el viento trae una carcajada que no pertenece a nadie. Todo el lugar parece contener la risa esperándote.", crit: "Encuentras una estancia que no aparece en ningún mapa y una inscripción que solo tú puedes leer.", ok: "Recorres la isla con la sensación de estar siendo esperado desde hace mucho.", fail: "La risa se vuelve un murmullo y por un momento no sabes si es contigo o de ti.", critFail: "Un derrumbe te obliga a retroceder, y la risa suena más fuerte, como si algo se divirtiera.", loot: [1000, 4000], xp: [24, 50], hurt: [0, 12] },
+  ];
+  for (const st of stories) {
+    const outcome = (text: string, extra: object = {}) => ({ text: [text], ...extra });
+    await prisma.eventTemplate.create({
+      data: {
+        islandId: islands[st.island].id,
+        kind: st.kind,
+        minDanger: st.min,
+        maxDanger: st.max,
+        weight: st.weight,
+        title: st.title,
+        bodyJson: JSON.stringify({
+          flavorTexts: [st.flavor],
+          onCriticalSuccess: outcome(st.crit, { ...(st.loot ? { berries: [st.loot[0] * 2, st.loot[1] * 2] } : {}), ...(st.xp ? { xp: [st.xp[0] * 2, st.xp[1] * 2] } : {}) }),
+          onSuccess: outcome(st.ok, { ...(st.loot ? { berries: st.loot } : {}), ...(st.xp ? { xp: st.xp } : {}) }),
+          onFail: outcome(st.fail, st.hurt ? { hpLoss: [0, Math.max(2, Math.floor(st.hurt[1] / 2))] } : {}),
+          onCriticalFail: outcome(st.critFail, st.hurt ? { hpLoss: [st.hurt[1], st.hurt[1] * 2] } : {}),
+          ...(st.enemy ? { enemy: { ...st.enemy, isBoss: false } } : {}),
+        }),
+      },
+    });
+  }
+
+  // ---------- Conquerable territories ----------
+  // Only the holder link is (re)written on a reseed — ownership, garrison and any
+  // conquest in progress belong to the players and must never be reset by seeding.
+  const territoryDefs: { island: string; actor: string; title: string }[] = [
+    { island: islands.whiskyPeak.id, actor: "Mr. 3 (Galdino)", title: "Dominio de Baroque Works" },
+    { island: islands.alabasta.id, actor: "Mr. 1 (Daz Bonez)", title: "Dominio de Baroque Works" },
+    { island: islands.graveyardIsland.id, actor: "Marshall D. Teach", title: "Dominio de Barbanegra" },
+    { island: islands.eniesLobby.id, actor: "Rob Lucci", title: "Dominio del Gobierno Mundial" },
+    { island: islands.skypiea.id, actor: "Eneru", title: "Dominio del Dios de Skypiea" },
+    { island: islands.fishMan.id, actor: "Hody Jones", title: "Dominio de los Nuevos Piratas Gyojin" },
+    { island: islands.punkHazard.id, actor: "Caesar Clown", title: "Dominio del Laboratorio" },
+    { island: islands.wholeCake.id, actor: "Charlotte Katakuri", title: "Dominio de Whole Cake" },
+  ];
+  for (const t of territoryDefs) {
+    const actor = worldActors[t.actor];
+    await prisma.worldActor.update({ where: { id: actor.id }, data: { homeIslandId: t.island } });
+    await prisma.territory.upsert({
+      where: { islandId: t.island },
+      update: { homeActorId: actor.id },
+      create: { islandId: t.island, homeActorId: actor.id, ownerActorId: actor.id, ownerName: t.actor, title: t.title },
+    });
+  }
 
   console.log("Seed complete.");
 }

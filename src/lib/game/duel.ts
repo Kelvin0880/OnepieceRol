@@ -9,6 +9,7 @@ import { narrateDuel } from "../ai/narrate";
 import { prepareFighter, combatProgressData } from "./combat-prep";
 import { toCombatant } from "./derive";
 import { postNews } from "./death-resolution";
+import { notifyPair } from "./notify";
 import { resolveDuelLoss, grantVictorSpoils } from "./group-battle";
 import { CharacterStatus } from "@prisma/client";
 
@@ -102,6 +103,7 @@ export async function challengeDuel(challengerId: string, userId: string, oppone
     ? `${challenger.name} propone a ${opponent.name} un duelo A MUERTE. Solo se celebra si ${opponent.name} acepta.`
     : `${challenger.name} reta a ${opponent.name} a un duelo. Esperando su respuesta...`;
   await prisma.duelMessage.create({ data: { duelId: duel.id, authorCharacterId: null, authorName: "Narrador", text } });
+  await notifyPair(challengerId, opponentId);
   return { duelId: duel.id };
 }
 
@@ -182,6 +184,7 @@ export async function submitDuelAction(characterId: string, userId: string, free
     ? { challengerAction: yielded ? "__yield__" : freeText, challengerTactic: classified.tacticModifier, challengerTechnique: technique }
     : { opponentAction: yielded ? "__yield__" : freeText, opponentTactic: classified.tacticModifier, opponentTechnique: technique };
   const updated = await prisma.duel.update({ where: { id: duel.id }, data: patch });
+  await notifyPair(duel.challengerId, duel.opponentId);
 
   if (!updated.challengerAction || !updated.opponentAction) {
     return { log: ["Movimiento registrado. Esperando a tu rival..."], waiting: true };
@@ -287,6 +290,7 @@ async function resolveDuelRoundFor(duelId: string) {
   );
 
   await prisma.duelMessage.create({ data: { duelId, authorCharacterId: null, authorName: "Narrador", text: narration } });
+  await notifyPair(duel.challengerId, duel.opponentId);
   await prisma.duel.update({
     where: { id: duelId },
     data: {

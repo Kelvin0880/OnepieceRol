@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUserId, UnauthorizedError } from "@/lib/require-user";
-import { payBail, attemptRescue, PrisonError } from "@/lib/game/prison";
+import { payBail, attemptRescue, attemptPrisonEscape, PrisonError } from "@/lib/game/prison";
 import { logError } from "@/lib/log-error";
 
 const schema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("bail") }),
   z.object({ op: z.literal("rescue"), targetCharacterId: z.string() }),
+  z.object({ op: z.literal("escape"), plan: z.string().min(1).max(3000) }),
 ]);
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -18,6 +19,9 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
 
     if (parsed.data.op === "bail") {
       return NextResponse.json(await payBail(id, userId));
+    }
+    if (parsed.data.op === "escape") {
+      return NextResponse.json(await attemptPrisonEscape(id, userId, parsed.data.plan));
     }
     return NextResponse.json(await attemptRescue(id, userId, parsed.data.targetCharacterId));
   } catch (err) {

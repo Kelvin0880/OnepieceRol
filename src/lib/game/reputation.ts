@@ -1,6 +1,7 @@
 import { prisma } from "../db";
 import { crossedPirateTier, crossedMarineTier, crossedTier, CP0_TIERS } from "../engine/progression";
 import { postNews } from "./death-resolution";
+import { MAX_PLAYER_BOUNTY } from "../engine/impel-down";
 import { Faction } from "@prisma/client";
 
 export interface ReputationCharacter {
@@ -21,7 +22,7 @@ export async function applyBountyOrNotoriety(character: ReputationCharacter, del
   if (delta === 0) return;
   if (character.faction === "PIRATE") {
     const before = character.bounty;
-    const after = Math.max(0, before + delta);
+    const after = Math.min(MAX_PLAYER_BOUNTY, Math.max(0, before + delta));
     await prisma.character.update({ where: { id: character.id }, data: { bounty: after } });
     await prisma.bountyLogEntry.create({ data: { characterId: character.id, delta, reason } });
     const crossed = crossedPirateTier(before, after);

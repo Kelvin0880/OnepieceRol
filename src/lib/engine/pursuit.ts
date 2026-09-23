@@ -12,8 +12,9 @@ const HEAT_PER_PONEGLYPH = 50;
 const DECAY_PER_EXPLORE = 3;
 const MAX_HEAT = 150;
 
-export function heatAfterReadingPoneglyph(currentHeat: number): number {
-  return Math.min(MAX_HEAT, currentHeat + HEAT_PER_PONEGLYPH);
+/** `amount` lets a stealthy read leave a fainter trail than a fight that shook the whole island. */
+export function heatAfterReadingPoneglyph(currentHeat: number, amount: number = HEAT_PER_PONEGLYPH): number {
+  return Math.min(MAX_HEAT, currentHeat + amount);
 }
 
 /** Called once per explore action, whether or not a hunter shows up. */

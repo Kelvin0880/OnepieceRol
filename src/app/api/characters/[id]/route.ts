@@ -7,6 +7,13 @@ import { currentStamina } from "@/lib/game/combat-prep";
 import { fatigueLevel, FATIGUE_LABELS } from "@/lib/engine/stamina";
 import { fruitPhase, FRUIT_PHASE_LABELS } from "@/lib/engine/fruit-mastery";
 import { getDuelStateForCharacter } from "@/lib/game/duel";
+import { getJointFightStateForCharacter } from "@/lib/game/joint-fight";
+import { getTerritoryState } from "@/lib/game/territory";
+import { getBusterCallState } from "@/lib/game/buster-call";
+import { getRaidState } from "@/lib/game/raid";
+import { getBlackMarketState } from "@/lib/game/black-market";
+import { ensureIslandMissions, getMissionState } from "@/lib/game/missions";
+import { levelsToEscape, escapeCooldownLeftMs } from "@/lib/engine/escape";
 import { areHostile, PlayerFaction } from "@/lib/engine/hostility";
 import { deleteCharacter, DeleteCharacterError } from "@/lib/game/delete-character";
 
@@ -51,6 +58,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     }
     const party = await getPartyStateForCharacter(id);
     const duel = await getDuelStateForCharacter(id);
+    const jointFight = await getJointFightStateForCharacter(id);
+    const territory = await getTerritoryState(id);
+    const busterCall = await getBusterCallState(id);
+    const raid = await getRaidState(id);
+    const blackMarket = await getBlackMarketState(id);
+    await ensureIslandMissions(id);
+    const missions = await getMissionState(id);
     const connections = JSON.parse(character.currentIsland.connections) as string[];
     const connectedIslands = await prisma.island.findMany({ where: { id: { in: connections } } });
 
@@ -104,7 +118,17 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         })()
       : null;
     const shapedImprisonment = imprisonment
-      ? { reason: imprisonment.reason, bailBerries: imprisonment.bailBerries, cellLevel: imprisonment.cellLevel, minRescueLevel: imprisonment.minRescueLevel, capturedAt: imprisonment.capturedAt }
+      ? {
+          reason: imprisonment.reason,
+          bailBerries: imprisonment.bailBerries,
+          cellLevel: imprisonment.cellLevel,
+          minRescueLevel: imprisonment.minRescueLevel,
+          capturedAt: imprisonment.capturedAt,
+          escapeProgress: imprisonment.escapeProgress,
+          escapeNeeded: levelsToEscape(imprisonment.cellLevel),
+          alert: imprisonment.alert,
+          escapeCooldownMs: escapeCooldownLeftMs(imprisonment.lastEscapeAttemptAt, new Date()),
+        }
       : null;
 
     const staminaNow = currentStamina(character);
@@ -124,6 +148,12 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       crewBattles: shapedBattles,
       party,
       duel,
+      jointFight,
+      territory,
+      busterCall,
+      raid,
+      blackMarket,
+      missions,
     });
   } catch (err) {
     if (err instanceof UnauthorizedError) return NextResponse.json({ error: err.message }, { status: 401 });

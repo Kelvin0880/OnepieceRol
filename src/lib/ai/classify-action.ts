@@ -38,7 +38,7 @@ import { TechniqueId, isTechniqueId } from "../engine/techniques";
  *    "keep the game playable during an outage" path, not a substitute
  *    for the model's judgment on phrasing it did manage to see.
  */
-export type ActionId = "narrate" | "explore" | "train" | "rest" | "travel" | "attack" | "engage" | "flee" | "mercy_spare" | "mercy_finish" | "leave_party";
+export type ActionId = "narrate" | "explore" | "train" | "rest" | "travel" | "attack" | "sneak" | "engage" | "flee" | "mercy_spare" | "mercy_finish" | "leave_party";
 
 export type TrainFocus = "armament" | "observation" | "fruit" | "auto";
 const TRAIN_FOCUSES: TrainFocus[] = ["armament", "observation", "fruit", "auto"];
@@ -82,6 +82,7 @@ function clampTacticModifier(n: number): number {
 
 const KEYWORD_RULES: Array<{ action: ActionId; pattern: RegExp }> = [
   { action: "leave_party", pattern: /me separo|voy solo|me alejo|por mi cuenta|me bajo del (barco|grupo)/i },
+  { action: "sneak", pattern: /sigil|me cuelo|me col[ao]|a escondidas|sin ser vist|infiltr|furtiv|de puntillas|en las sombras/i },
   { action: "flee", pattern: /huy|corr|escap|retroced/i },
   { action: "attack", pattern: /\b(atac[oa]|apu[ñn]al|degüell|desenv?ain[oa]|desenfund|le (corto|pego|disparo|clavo)|intent[oa] (cortar|matar|golpear))/i },
   { action: "engage", pattern: /atac|luch|pele|golpe|desenfund|embist|arremet|presion|contraataq|bloque|esquiv|defiend/i },
@@ -127,7 +128,12 @@ function buildClassifyPrompt(freeText: string, validActions: ActionId[], sceneCo
       "Insultos, retos o amenazas SOLO de palabra, sin pasar a la acción física, son 'narrate'. " +
       "Cuando la acción sea 'attack' incluye también: \"target\" (una descripción corta de a quién ataca, tomada de la escena reciente si el jugador no lo nombra, p. ej. \"el hombre de la gorra y el parche\"), " +
       "\"target_tier\" (weak, average, tough o elite según lo que la escena sugiera de esa persona: un borracho o matón de taberna = weak/average, un veterano curtido = tough, un capitán/oficial/élite = elite), " +
-      "\"technique\" y \"tactic_modifier\" (ver abajo). Cuando la acción sea 'train' incluye \"focus\": armament, observation, fruit o auto (auto si no especifica qué entrena). " +
+      "\"technique\" y \"tactic_modifier\" (ver abajo). " +
+      (validActions.includes("sneak")
+        ? "En esta isla hay un Poneglifo custodiado: si el jugador describe colarse, infiltrarse, acercarse a escondidas o sin ser visto hasta el Poneglifo para leerlo, usa 'sneak' e incluye " +
+          `"tactic_modifier" (entero entre ${MIN_TACTIC_MODIFIER} y ${MAX_TACTIC_MODIFIER}: qué tan ingenioso y verosímil es su plan de infiltración; 0 = un intento normal). Si en cambio ataca a los guardias de frente, es 'attack'. `
+        : "") +
+      "Cuando la acción sea 'train' incluye \"focus\": armament, observation, fruit o auto (auto si no especifica qué entrena). " +
       "Ante la duda, o si es solo conversación/ambiente, usa siempre 'narrate' — nunca respondas unclear solo porque la acción sea social, graciosa, atrevida o no encaje perfecto en una categoría." +
       (canLeaveParty
         ? " El jugador está ahora mismo en una escena compartida con sus compañeros de tripulación. Si el texto describe explícitamente alejarse físicamente del grupo o irse por su cuenta " +
@@ -161,7 +167,7 @@ function parseClassifyResponse(raw: string, validActions: ActionId[]): Omit<Clas
     if (typeof action !== "string" || !validActions.includes(action as ActionId)) return { action: "unclear", tacticModifier: 0 };
     const result: Omit<ClassifyResult, "source"> = { action: action as ActionId, tacticModifier: 0 };
     const rawModifier = Number(parsed?.tactic_modifier);
-    if ((action === "engage" || action === "attack") && Number.isFinite(rawModifier)) result.tacticModifier = clampTacticModifier(rawModifier);
+    if ((action === "engage" || action === "attack" || action === "sneak") && Number.isFinite(rawModifier)) result.tacticModifier = clampTacticModifier(rawModifier);
     if ((action === "engage" || action === "attack") && isTechniqueId(parsed?.technique) && parsed.technique !== "none") result.technique = parsed.technique;
     if (action === "attack") {
       if (typeof parsed?.target === "string" && parsed.target.trim()) result.target = parsed.target.trim().slice(0, 80);

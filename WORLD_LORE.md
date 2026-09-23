@@ -203,3 +203,11 @@ of truth, imported by both `prisma/seed.ts` and `tryDropFruit`
   listed here) — this pass covered ~41 total `WorldActor` rows (roughly
   the "amplio" tier the user chose among a few size options), not an
   exhaustive canon cast.
+
+## Phase 2 additions (2026-09-24)
+
+- **26 islands** now (see `prisma/seed.ts`, `docs/mapa.html`): the 15 earlier ones plus Isla Drum, Skypiea, Water 7, Archipiélago Sabaody, Isla Gyojin, Punk Hazard, Whole Cake Island, País de Wano, Isla Abismo (tidal, level 38), Mary Geoise (level 42) and Laugh Tale (level 50, needs all four Road Poneglyphs).
+- **All 4 Road Poneglyphs are placed**: Alba (Isla Cementerio), Ocaso (Enies Lobby), Abismo (Isla Abismo, "Los Custodios de las Mareas") and Fragmento Final (Mary Geoise, "La guardia del Fragmento Final"). Guardians are WorldActors: whether you meet the holder or a subordinate depends on `isActorHome`.
+- **New actors**: Mr. 3, Mr. 1, Eneru, Caesar Clown, Hody Jones, Thalassa, Saint Jaygarcia Saturn (Gorosei) and **El Rey Sin Nombre** (`HIDDEN_RULER`, power 100). Eight islands are `Territory` rows held by canon powers.
+- **Original endgame lore** (`src/lib/game/endgame-lore.ts`): the One Piece is *La Crónica del Mar*, a living archive of the Void Century and the Sea's Voice. The hidden ruler governs through forgetting; whoever inherits the Crónica can break that. This is deliberately not canon's unrevealed answer.
+- Fruits: 24 singletons (new ones include Goro Goro and Gasu Gasu); common fruits stay duplicable.

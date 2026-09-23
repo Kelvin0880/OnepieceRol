@@ -15,6 +15,7 @@ import {
   GameActionError,
 } from "@/lib/game/perform-action";
 import { DuelError } from "@/lib/game/duel";
+import { JointFightError, getOpenJointFightFor } from "@/lib/game/joint-fight";
 import { logError } from "@/lib/log-error";
 
 const actionSchema = z.discriminatedUnion("action", [
@@ -46,6 +47,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       return NextResponse.json(await resolveFreeTextAction(id, userId, parsed.data.freeText));
     }
 
+    if (await getOpenJointFightFor(id)) {
+      return NextResponse.json({ error: "Estás en plena pelea con tus aliados: describe tu movimiento en el cuadro de texto." }, { status: 400 });
+    }
+
     switch (parsed.data.action) {
       case "explore":
         return NextResponse.json(await exploreCharacter(id, userId));
@@ -68,6 +73,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     }
   } catch (err) {
     if (err instanceof UnauthorizedError) return NextResponse.json({ error: err.message }, { status: 401 });
+    if (err instanceof JointFightError) return NextResponse.json({ error: err.message }, { status: 400 });
     if (err instanceof DuelError) return NextResponse.json({ error: err.message }, { status: 400 });
     if (err instanceof GameActionError) return NextResponse.json({ error: err.message }, { status: 400 });
     await logError("api/characters/[id]/actions", err);

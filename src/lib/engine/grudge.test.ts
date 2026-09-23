@@ -15,6 +15,10 @@ describe("heatAfterGrudgeIncident", () => {
     expect(heatAfterGrudgeIncident(0, "escape")).toBeGreaterThan(heatAfterGrudgeIncident(0, "subordinate_defeat"));
   });
 
+  it("humbling the holder in person is remembered longer than beating a subordinate", () => {
+    expect(heatAfterGrudgeIncident(0, "actor_defeat")).toBeGreaterThan(heatAfterGrudgeIncident(0, "escape"));
+  });
+
   it("caps at a maximum even after many incidents", () => {
     let heat = 0;
     for (let i = 0; i < 20; i++) heat = heatAfterGrudgeIncident(heat, "escape");

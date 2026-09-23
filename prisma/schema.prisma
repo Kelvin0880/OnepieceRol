@@ -143,6 +143,11 @@ model Character {
   deathCause String?
   diedAt     DateTime?
 
+  // Earned title (e.g. "Yonko de Isla Cementerio") from holding a territory — shown next to the faction rank.
+  title String?
+  // Set on first arrival at Laugh Tale: has seen what the One Piece really is (game/endgame-lore.ts). Required to join the final raid.
+  knowsTruth Boolean @default(false)
+
   createdAt DateTime @default(now())
   updatedAt DateTime @updatedAt
 }
@@ -349,6 +354,63 @@ model DuelMessage {
   createdAt         DateTime @default(now())
 }
 
+// ---------- Joint fights: N allies (players + NPC companions) against one enemy ----------
+
+// One shared fight where every participant acts in the same round: they each
+// describe a move, the engine resolves all of them at once (engine/joint-fight.ts)
+// and the AI narrates one coral scene. Also the backbone of Poneglyph guardians,
+// territory conquest and the final raid — `kind` + `contextJson` say which.
+// characterId columns are plain strings (same convention as Crew.captainId);
+// NPC allies use an "npc:<companionId>" id and never need to submit a move.
+model JointFight {
+  id             String                  @id @default(cuid())
+  islandId       String
+  kind           String                  @default("party") // "party" | "poneglyph" | "conquest" | "raid"
+  contextJson    String                  @default("{}")
+  status         String                  @default("ACTIVE") // ACTIVE | WON | LOST
+  round          Int                     @default(1)
+  enemyJson      String // StoredEnemy, already scaled for the group at creation
+  enemyHp        Int
+  enemyMaxHp     Int
+  rewardsJson    String
+  stakes         String? // one line for the narrator: what the group is fighting for
+  roundStartedAt DateTime                @default(now())
+  createdAt      DateTime                @default(now())
+  updatedAt      DateTime                @updatedAt
+  participants   JointFightParticipant[]
+  messages       JointFightMessage[]
+}
+
+model JointFightParticipant {
+  id          String     @id @default(cuid())
+  fightId     String
+  fight       JointFight @relation(fields: [fightId], references: [id], onDelete: Cascade)
+  characterId String // real character id, or "npc:<companionId>"
+  name        String
+  isNpc       Boolean    @default(false)
+  hp          Int
+  maxHp       Int
+  action      String? // free text submitted this round (null = hasn't moved yet)
+  tactic      Int        @default(0)
+  technique   String     @default("none")
+  // Stats for an NPC ally that is not a personal companion (a pledged WorldActor in the final raid): JSON { atk, def, spd }.
+  npcStatsJson String?
+  status      String     @default("FIGHTING") // FIGHTING | DOWN | FLED
+  joinedAt    DateTime   @default(now())
+
+  @@index([characterId])
+}
+
+model JointFightMessage {
+  id                String     @id @default(cuid())
+  fightId           String
+  fight             JointFight @relation(fields: [fightId], references: [id], onDelete: Cascade)
+  authorCharacterId String? // null = the narrator
+  authorName        String
+  text              String
+  createdAt         DateTime   @default(now())
+}
+
 // ---------- Capture & rescue ----------
 
 model Imprisonment {
@@ -365,6 +427,11 @@ model Imprisonment {
   minRescueLevel Int
   bailBerries    Int? // an alternative: buy your way out if you can afford it
   cellLevel      Int       @default(0) // 0 = ordinary brig; 1-6 = Impel Down level (engine/impel-down.ts)
+  // Breaking out from the inside (engine/escape.ts): levels already climbed, how
+  // alert the guards are after failed tries, and when the last attempt was.
+  escapeProgress      Int       @default(0)
+  alert               Int       @default(0)
+  lastEscapeAttemptAt DateTime?
   rescuedById    String?
   releasedAt     DateTime?
 }
@@ -449,6 +516,10 @@ model Island {
   dangerLevel     Int        @default(1) // 1-10, gates which events/enemies can roll
   minLevelToEnter Int        @default(1) // travel to this island is refused below this level — the Grand Line doesn't ease you in
   factionControl  String? // "Marina", "Yonko Kaido", "Sin gobierno", ...
+  // tidal: the island only surfaces in alternating tide windows (engine/travel.ts). requiresRoadPoneglyphs:
+  // the way is only known to someone who has read all four Road Poneglyphs (Laugh Tale).
+  tidal                 Boolean    @default(false)
+  requiresRoadPoneglyphs Boolean   @default(false)
   hasPoneglyph    Boolean    @default(false)
   poneglyphId     String?    @unique
   poneglyph       Poneglyph? @relation(fields: [poneglyphId], references: [id])
@@ -557,6 +628,8 @@ enum ActorRole {
   REVOLUTIONARY_COMMANDER
   MARINE_GENERAL
   CIPHER_POL
+  GOROSEI // the Five Elders: the Government's highest visible power
+  HIDDEN_RULER // the one nobody names: the true power behind the Gorosei
   NOTABLE_PIRATE // a significant independent captain/crewmate, not yet Yonko/Warlord tier — rankLabel carries the specific title
 }
 
@@ -634,6 +707,59 @@ model Grudge {
   @@unique([worldActorId, characterId])
 }
 
+// A thread left by sparing or finishing a named enemy: it resurfaces later (boon, betrayal,
+// avenger or tribute) up to 3 stages, each return being a new choice. See engine/consequence.ts.
+model Consequence {
+  id          String    @id @default(cuid())
+  characterId String
+  kind        String // "spared" | "killed"
+  enemyName   String
+  worldActorId String?
+  islandId    String
+  islandName  String
+  stage       Int       @default(1)
+  dueAt       DateTime
+  resolvedAt  DateTime?
+  outcome     String?
+  createdAt   DateTime  @default(now())
+
+  @@index([characterId, resolvedAt])
+}
+
+// A concrete goal an island hands one character, scaled to their level (engine/missions.ts).
+model Mission {
+  id            String    @id @default(cuid())
+  characterId   String
+  islandId      String
+  kind          String // explore | win_fights | train | spare | travel
+  title         String
+  brief         String
+  target        Int
+  progress      Int       @default(0)
+  tier          Int       @default(1)
+  berries       Int       @default(0)
+  xp            Int       @default(0)
+  destination   String?
+  isArc         Boolean   @default(false)
+  patronActorId String?
+  status        String    @default("ACTIVE") // ACTIVE | DONE
+  createdAt     DateTime  @default(now())
+  completedAt   DateTime?
+
+  @@index([characterId, islandId, status])
+}
+
+// Marks that a character has already been given the AI's full panorama of an island.
+model IslandBriefing {
+  id          String   @id @default(cuid())
+  characterId String
+  islandId    String
+  text        String   @default("") // empty until the AI (or its static fallback) has produced the panorama
+  createdAt   DateTime @default(now())
+
+  @@unique([characterId, islandId])
+}
+
 model WorldEventTemplate {
   id                  String  @id @default(cuid())
   weight              Int     @default(10)
@@ -663,6 +789,8 @@ model WorldClock {
   // Separate, much rarer cadence for the periodic canon-bounty roundup
   // (tickBountyDigestIfDue in world-tick.ts) — null means it has never run.
   lastDigestAt DateTime?
+  // The world's current age. Flips to "Nueva Era" when a final raid topples the hidden ruler (game/raid.ts).
+  era          String    @default("Era del Olvido")
 }
 
 // Durable record of unexpected server-side errors — survives restarts and
@@ -676,4 +804,97 @@ model ErrorLog {
   stack     String?
   metaJson  String?
   createdAt DateTime @default(now())
+}
+
+// ---------- Territory conquest ("become the new Yonko") ----------
+
+// One row per conquerable island. Held by a canon power (ownerActorId) until
+// players break its army, its commanders and then the holder in person (three
+// joint fights, game/territory.ts); the contributors then VOTE who among them
+// keeps the island — a real in-fiction dispute, weighted by what each gave.
+// The winner gets a title, income and a garrison that decays: neglect it and
+// the old power takes the island back. String ids are plain (no FKs), same
+// convention as Crew.captainId.
+model Territory {
+  id                   String    @id @default(cuid())
+  islandId             String    @unique
+  homeActorId          String? // the canon power that holds it by default and retakes it if the garrison falls
+  ownerActorId         String? // current canon holder (null once players hold it)
+  ownerCharacterId     String? // player claimant — "the new Yonko"
+  ownerCrewId          String?
+  ownerName            String
+  title                String    @default("Señor de la isla")
+  status               String    @default("HELD") // HELD | CONQUEST | CLAIM_VOTE
+  stage                String    @default("ARMY") // ARMY -> COMMANDERS -> HOLDER (only meaningful in CONQUEST)
+  garrison             Int       @default(100)
+  lastPressureAt       DateTime  @default(now())
+  lastIncomeAt         DateTime  @default(now())
+  lastActivityAt       DateTime  @default(now())
+  contributionsJson    String    @default("{}") // characterId -> points earned this conquest
+  finalBlowCharacterId String?
+  voteDeadline         DateTime?
+  votesJson            String    @default("{}") // voterId -> candidateId
+  musterJson           String    @default("[]") // characterIds signed up for the assault
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+// ---------- Buster Call: the Government's siege of an island ----------
+
+// A timed siege: three waves of warships that defenders (players on the island)
+// must break with joint fights before endsAt. If they don't, the island is
+// bombarded — everyone still present takes a brutal hit with a real death roll.
+// Triggered by deep Impel Down breakouts and by taking a Government stronghold.
+model BusterCall {
+  id          String   @id @default(cuid())
+  islandId    String
+  reason      String
+  status      String   @default("ACTIVE") // ACTIVE | REPELLED | FALLEN
+  wave        Int      @default(1) // the wave currently coming (1-3)
+  wavesBroken Int      @default(0)
+  musterJson  String   @default("[]")
+  startedAt   DateTime @default(now())
+  endsAt      DateTime
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([islandId, status])
+}
+
+// ---------- The final raid: toppling the hidden ruler ----------
+
+// One world-wide raid at a time. A coalition of players who have seen Laugh Tale
+// (plus pledged NPC allies) storms Mary Geoise through four joint fights; the
+// survivors then vote who is crowned Pirate King (weighted by contribution).
+// characterId strings are plain (no FKs), same convention as Territory/Crew.
+model Raid {
+  id                   String    @id @default(cuid())
+  status               String    @default("MUSTERING") // MUSTERING | ACTIVE | CLAIM_VOTE | WON | LOST | CANCELLED
+  phase                Int       @default(1) // 1 Guardia de Pangea, 2 Gorosei, 3 Almirantes, 4 Rey Sin Nombre
+  leaderId             String
+  musterJson           String    @default("[]")
+  alliesJson           String    @default("[]") // pledged WorldActor ids
+  contributionsJson    String    @default("{}")
+  finalBlowCharacterId String?
+  votesJson            String    @default("{}")
+  voteDeadline         DateTime?
+  lastActivityAt       DateTime  @default(now())
+  resolvedAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+}
+
+// How much a WorldActor trusts one character (0-100): raised by missions done in
+// their name and by sparing their people; enough of it lets that actor be pledged
+// as an NPC ally of the final raid.
+model Alliance {
+  id           String   @id @default(cuid())
+  worldActorId String
+  characterId  String
+  standing     Int      @default(0)
+  lastNote     String   @default("")
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  @@unique([worldActorId, characterId])
 }

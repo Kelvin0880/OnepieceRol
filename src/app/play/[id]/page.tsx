@@ -13,6 +13,7 @@ interface Island {
   description: string;
   dangerLevel: number;
   factionControl: string | null;
+  poneglyphId?: string | null;
 }
 
 interface Weapon {
@@ -120,6 +121,79 @@ interface Imprisonment {
   cellLevel: number;
   minRescueLevel: number;
   capturedAt: string;
+  escapeProgress: number;
+  escapeNeeded: number;
+  alert: number;
+  escapeCooldownMs: number;
+}
+
+interface TerritoryState {
+  id: string;
+  islandName: string;
+  status: "HELD" | "CONQUEST" | "CLAIM_VOTE";
+  stage: string | null;
+  stageLabel: string | null;
+  stages: { id: string; label: string }[];
+  ownerName: string;
+  title: string;
+  heldByPlayers: boolean;
+  isOwner: boolean;
+  garrison: number | null;
+  holderName: string | null;
+  holderHome: boolean;
+  muster: { id: string; name: string }[];
+  iAmMustered: boolean;
+  contributions: { id: string; name: string; points: number }[];
+  votes: { voter: string; candidate: string }[];
+  myVote: string | null;
+  iContributed: boolean;
+  voteDeadline: string | null;
+  fortifyCost: number | null;
+  pendingIncome: number | null;
+  canAssault: boolean;
+}
+
+interface RaidState {
+  knowsTruth: boolean;
+  onRaidIsland: boolean;
+  islandName: string;
+  cooldownMs: number;
+  status: string | null;
+  phase: number;
+  phases: number;
+  phaseName: string;
+  iAmLeader: boolean;
+  iAmMustered: boolean;
+  muster: { id: string; name: string }[];
+  maxParticipants: number;
+  allies: { id: string; name: string }[];
+  standings: { actorId: string; name: string; standing: number; pledged: boolean }[];
+  voting: { candidates: { id: string; name: string }[]; deadline: string | null; iVoted: boolean; iCanVote: boolean } | null;
+}
+
+interface MissionsState {
+  islandName: string;
+  briefing: { text: string; ready: boolean } | null;
+  missions: { id: string; kind: string; title: string; brief: string; progress: number; target: number; berries: number; xp: number; tier: number; isArc: boolean; status: string }[];
+}
+
+interface BlackMarketState {
+  offers: { id: string; name: string; description: string; price: number }[];
+  msToRefresh: number;
+  deals: number;
+}
+
+interface BusterCallState {
+  id: string;
+  reason: string;
+  wave: number;
+  waves: number;
+  wavesBroken: number;
+  waveName: string;
+  endsAt: string;
+  msLeft: number;
+  iAmMustered: boolean;
+  musterCount: number;
 }
 
 interface DuelResult {
@@ -166,6 +240,7 @@ interface Character {
   fruitMastery: number;
   fruitAwakened: boolean;
   fruitPhase: string | null;
+  title?: string | null;
   poneglyphsRead: string;
   poneglyphHeat: number;
   currentIsland: Island;
@@ -203,6 +278,18 @@ interface DuelState {
   messages: { id: string; authorName: string; isNarrator: boolean; mine: boolean; text: string }[];
 }
 
+interface JointFightState {
+  id: string;
+  kind: string;
+  status: "ACTIVE" | "WON" | "LOST";
+  round: number;
+  stakes: string | null;
+  enemy: { name: string; hp: number; maxHp: number; isBoss: boolean };
+  me: { status: "FIGHTING" | "DOWN" | "FLED"; submitted: boolean; hp: number; maxHp: number } | null;
+  participants: { name: string; isNpc: boolean; hp: number; maxHp: number; status: "FIGHTING" | "DOWN" | "FLED"; submitted: boolean }[];
+  messages: { id: string; authorName: string; isNarrator: boolean; mine: boolean; text: string }[];
+}
+
 interface StateResponse {
   character: Character;
   connectedIslands: Island[];
@@ -211,6 +298,12 @@ interface StateResponse {
   crewBattles: BattleSummary[];
   party: PartyState | null;
   duel: DuelState | null;
+  jointFight: JointFightState | null;
+  territory: TerritoryState | null;
+  busterCall: BusterCallState | null;
+  raid: RaidState | null;
+  blackMarket: BlackMarketState | null;
+  missions: MissionsState | null;
   error?: string;
 }
 
@@ -271,10 +364,12 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [battleError, setBattleError] = useState<string | null>(null);
   const [battleBusy, setBattleBusy] = useState(false);
   const [freeText, setFreeText] = useState("");
+  const [escapePlan, setEscapePlan] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
   const sceneEndRef = useRef<HTMLDivElement>(null);
   const duelBoxRef = useRef<HTMLDivElement>(null);
+  const jointBoxRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/characters/${id}`);
@@ -292,8 +387,36 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
 
   // Presence ("who else is here") and world state drift on their own, so
   // poll softly instead of requiring the player to act to see updates.
+  // Server-Sent Events push a refresh the instant something shared changes (a crewmate's move, a fight
+  // resolving...). The poll stays as the safety net and only slows down while the stream is healthy.
+  const streamHealthy = useRef(false);
   useEffect(() => {
-    const interval = setInterval(load, 10_000);
+    if (typeof EventSource === "undefined") return;
+    const es = new EventSource(`/api/characters/${id}/stream`);
+    let timer: ReturnType<typeof setTimeout> | null = null;
+    es.addEventListener("ready", () => {
+      streamHealthy.current = true;
+    });
+    es.addEventListener("refresh", () => {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => load(), 150);
+    });
+    es.onerror = () => {
+      streamHealthy.current = false;
+    };
+    return () => {
+      es.close();
+      if (timer) clearTimeout(timer);
+      streamHealthy.current = false;
+    };
+  }, [id, load]);
+
+  useEffect(() => {
+    let tick = 0;
+    const interval = setInterval(() => {
+      tick++;
+      if (!streamHealthy.current || tick % 3 === 0) load();
+    }, 10_000);
     return () => clearInterval(interval);
   }, [load]);
 
@@ -302,6 +425,11 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     const box = duelBoxRef.current;
     if (box) box.scrollTop = box.scrollHeight;
   }, [data?.duel?.messages.length]);
+
+  useEffect(() => {
+    const box = jointBoxRef.current;
+    if (box) box.scrollTop = box.scrollHeight;
+  }, [data?.jointFight?.messages.length]);
 
   useEffect(() => {
     sceneEndRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
@@ -353,11 +481,11 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     }
   }
 
-  async function doPrisonAction(body: Record<string, unknown>) {
+  async function doPrisonAction(body: Record<string, unknown>, path = "prison") {
     setBattleBusy(true);
     setBattleError(null);
     try {
-      const res = await fetch(`/api/characters/${id}/prison`, {
+      const res = await fetch(`/api/characters/${id}/${path}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(body),
@@ -438,8 +566,9 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     );
   }
 
-  const { character, connectedIslands, party, duel } = data;
+  const { character, connectedIslands, party, duel, jointFight, territory, busterCall, raid, blackMarket, missions } = data;
   const duelActive = duel?.status === "ACTIVE";
+  const jointActive = jointFight?.status === "ACTIVE";
   const isDead = character.status === "DEAD";
   const isImprisoned = character.status === "IMPRISONED";
 
@@ -447,8 +576,8 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   // can't be blocked from fighting for your life by whose turn it is in
   // the group scene (see resolvePartyFreeTextAction in perform-action.ts).
   const isMyPartyTurn = party ? party.turnOrder[party.turnIndex] === character.id : true;
-  const partyBlocksInput = !!party && !character.pendingEncounter && !duelActive && (party.awaitingNarrator || !isMyPartyTurn);
-  const partyTurnLabel = !party || character.pendingEncounter
+  const partyBlocksInput = !!party && !character.pendingEncounter && !duelActive && !jointActive && (party.awaitingNarrator || !isMyPartyTurn);
+  const partyTurnLabel = !party || character.pendingEncounter || jointActive
     ? null
     : party.awaitingNarrator
     ? "El narrador está pensando..."
@@ -462,7 +591,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
         <div>
           <h1 className="font-display text-2xl text-gold-bright">{character.name}</h1>
           <p className="text-sm text-gold">
-            {factionTitle(character.faction as FactionKey, character.bounty, character.notoriety)}
+            {character.title ? `${character.title} · ` : ""}{factionTitle(character.faction as FactionKey, character.bounty, character.notoriety)}
           </p>
           <p className="text-sm text-ink-dim">
             {FACTION_LABEL[character.faction]} · Nv. {character.level} · {character.currentIsland.name}
@@ -559,7 +688,32 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
             ) : (
               <span className="text-xs text-ink-dim">Esta captura no admite fianza.</span>
             )}
-            <span className="text-xs text-ink-dim">o espera a que un aliado venga a rescatarte.</span>
+            <span className="text-xs text-ink-dim">o espera a que un aliado venga a rescatarte, o intenta fugarte tú mismo.</span>
+          </div>
+          <div className="mt-4 border-t border-[--line] pt-3">
+            <p className="text-sm font-display text-gold">Plan de fuga</p>
+            <p className="text-xs text-ink-dim mb-2">
+              Progreso: {character.imprisonment.escapeProgress}/{character.imprisonment.escapeNeeded} {character.imprisonment.cellLevel > 0 ? "niveles" : "obstáculo"} · Alerta de los guardias: {character.imprisonment.alert}/5. Cada intento tiene enfriamiento de 30 min; si te pillan, te llevan a un nivel más profundo y te hieren.
+            </p>
+            <textarea
+              className="w-full bg-sea-deep border border-[--line] rounded px-3 py-2 text-sm outline-none focus:border-gold resize-none"
+              rows={3}
+              placeholder="Ej: Espero al cambio de ronda, aflojo el barrote que llevo días limando y me cuelo por el conducto de ventilación."
+              value={escapePlan}
+              maxLength={3000}
+              disabled={battleBusy || character.imprisonment.escapeCooldownMs > 0}
+              onChange={(e) => setEscapePlan(e.target.value)}
+            />
+            <button
+              className="btn-gold px-4 py-2 text-sm mt-2"
+              disabled={battleBusy || !escapePlan.trim() || character.imprisonment.escapeCooldownMs > 0}
+              onClick={async () => {
+                await doPrisonAction({ op: "escape", plan: escapePlan });
+                setEscapePlan("");
+              }}
+            >
+              {character.imprisonment.escapeCooldownMs > 0 ? `Espera ${Math.ceil(character.imprisonment.escapeCooldownMs / 60000)} min` : "Intentar la fuga"}
+            </button>
           </div>
         </div>
       )}
@@ -632,12 +786,262 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               )}
             </div>
           )}
+          {busterCall && !isDead && (
+            <div className="panel p-4" style={{ borderColor: "var(--blood)", background: "rgba(120,20,20,0.18)" }} data-testid="buster-call">
+              <h3 className="font-display text-lg text-blood">¡BUSTER CALL sobre {character.currentIsland.name}!</h3>
+              <p className="text-sm text-ink-dim mt-1">{busterCall.reason}</p>
+              <p className="text-sm mt-2">
+                Oleada {busterCall.wave}/{busterCall.waves}: <span className="text-gold">{busterCall.waveName}</span> · Hundidas: {busterCall.wavesBroken}/{busterCall.waves} · Tiempo: {Math.ceil(busterCall.msLeft / 60000)} min
+              </p>
+              <p className="text-xs text-ink-dim mt-1">Si el tiempo se agota, la flota bombardea la isla: todos los que sigan aquí reciben un golpe brutal con tirada de muerte. Defiende o zarpa.</p>
+              {battleError && <p className="text-blood text-xs mt-2">{battleError}</p>}
+              <div className="flex flex-wrap gap-2 mt-3">
+                <button className="btn-gold px-4 py-2 text-sm" disabled={battleBusy || !!jointActive} onClick={() => doPrisonAction({ op: "defend" }, "buster-call")}>
+                  Defender contra la oleada
+                </button>
+                <button className="btn-ghost px-3 py-2 text-xs" disabled={battleBusy} onClick={() => doPrisonAction({ op: busterCall.iAmMustered ? "unmuster" : "muster" }, "buster-call")}>
+                  {busterCall.iAmMustered ? "Salir de la línea de defensa" : "Sumarme a la defensa"} ({busterCall.musterCount})
+                </button>
+              </div>
+            </div>
+          )}
+          {missions && !isDead && !isImprisoned && (
+            <div className="panel p-4" style={{ borderColor: "var(--gold)" }} data-testid="missions-panel">
+              <h3 className="font-display text-lg text-gold-bright">Panorama y misiones de {missions.islandName}</h3>
+              {missions.briefing && (
+                <details className="mt-2" open={missions.briefing.ready}>
+                  <summary className="text-sm text-gold cursor-pointer">Lo que debes saber de esta isla</summary>
+                  <p className="text-sm mt-2 whitespace-pre-line" data-testid="island-briefing">
+                    {missions.briefing.ready ? missions.briefing.text : "El narrador está reuniendo el panorama de la isla..."}
+                  </p>
+                </details>
+              )}
+              <div className="mt-3 space-y-3">
+                {missions.missions.map((m) => (
+                  <div key={m.id} data-testid="mission" style={{ opacity: m.status === "DONE" ? 0.55 : 1 }}>
+                    <p className="text-sm">
+                      <span className="text-gold">{m.status === "DONE" ? "✓ " : ""}{m.title}</span>
+                      <span className="text-xs text-ink-dim"> · ฿ {m.berries.toLocaleString("es-ES")} · {m.xp} XP</span>
+                    </p>
+                    <p className="text-xs text-ink-dim">{m.brief}</p>
+                    <StatBar label={`Progreso`} value={m.progress} max={m.target} color="var(--gold)" />
+                  </div>
+                ))}
+                {missions.missions.length === 0 && <p className="text-xs text-ink-dim">Por ahora no hay encargos nuevos aquí: vuelve en un rato.</p>}
+              </div>
+            </div>
+          )}
+          {raid && !isDead && !isImprisoned && (
+            <div className="panel p-4" style={{ borderColor: "var(--gold)" }} data-testid="raid-panel">
+              <h3 className="font-display text-lg text-gold-bright">El Trono Vacío de {raid.islandName}</h3>
+              {!raid.knowsTruth ? (
+                <p className="text-sm text-ink-dim mt-1">Sientes que hay un poder oculto tras estos muros, pero aún no sabes cómo enfrentarlo. Solo quien ha llegado a Laugh Tale conoce la verdad.</p>
+              ) : (
+                <>
+                  <p className="text-sm text-ink-dim mt-1">
+                    {raid.status ? `Fase ${raid.phase}/${raid.phases}: ${raid.phaseName}.` : "Nadie ha reunido aún una coalición."}
+                    {raid.cooldownMs > 0 && ` La guardia se reorganiza (${Math.ceil(raid.cooldownMs / 60000)} min).`}
+                  </p>
+                  {raid.muster.length > 0 && (
+                    <p className="text-sm mt-2">
+                      Coalición ({raid.muster.length}/{raid.maxParticipants}): <span className="text-gold">{raid.muster.map((m) => m.name).join(", ")}</span>
+                    </p>
+                  )}
+                  {raid.allies.length > 0 && <p className="text-sm mt-1">Aliados: <span className="text-gold">{raid.allies.map((a) => a.name).join(", ")}</span></p>}
+                  {battleError && <p className="text-blood text-xs mt-2">{battleError}</p>}
+                  {raid.status !== "CLAIM_VOTE" && raid.status !== "ACTIVE" && (
+                    <div className="flex flex-wrap gap-2 mt-3">
+                      {!raid.iAmMustered ? (
+                        <button className="btn-gold px-4 py-2 text-sm" disabled={battleBusy || !raid.onRaidIsland || raid.cooldownMs > 0} onClick={() => doPrisonAction({ op: "muster" }, "raid")}>
+                          {raid.status ? "Unirme a la coalición" : "Reunir una coalición"}
+                        </button>
+                      ) : (
+                        <button className="btn-ghost px-3 py-2 text-xs" disabled={battleBusy} onClick={() => doPrisonAction({ op: "unmuster" }, "raid")}>Abandonar la coalición</button>
+                      )}
+                      {raid.iAmLeader && raid.status === "MUSTERING" && (
+                        <button className="btn-gold px-4 py-2 text-sm" disabled={battleBusy || !!jointActive} onClick={() => doPrisonAction({ op: "launch" }, "raid")} data-testid="raid-launch">
+                          ¡Dar la orden de asalto!
+                        </button>
+                      )}
+                    </div>
+                  )}
+                  {raid.iAmLeader && raid.status === "MUSTERING" && raid.standings.length > 0 && (
+                    <div className="mt-3">
+                      <p className="text-xs text-ink-dim mb-1">Aliados de renombre que confían en ti:</p>
+                      <div className="flex flex-wrap gap-2">
+                        {raid.standings.map((s) => (
+                          <button key={s.actorId} className="btn-ghost px-3 py-1 text-xs" disabled={battleBusy || s.pledged || s.standing < 60} onClick={() => doPrisonAction({ op: "pledge", actorId: s.actorId }, "raid")}>
+                            {s.name} ({s.standing}/60){s.pledged ? " ✓" : ""}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {raid.voting && (
+                    <div className="mt-3" data-testid="raid-vote">
+                      <p className="text-sm">El Rey Sin Nombre ha caído. ¿Quién será el Rey de los Piratas?</p>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        {raid.voting.candidates.map((c) => (
+                          <button key={c.id} className="btn-gold px-3 py-1 text-xs" disabled={battleBusy || !raid.voting!.iCanVote} onClick={() => doPrisonAction({ op: "vote", candidateId: c.id }, "raid")}>
+                            {c.name}
+                          </button>
+                        ))}
+                      </div>
+                      {raid.voting.iVoted && <p className="text-xs text-ink-dim mt-1">Tu voto está registrado.</p>}
+                    </div>
+                  )}
+                </>
+              )}
+            </div>
+          )}
+          {blackMarket && !isDead && !isImprisoned && (
+            <div className="panel p-4" style={{ borderColor: "var(--blood)" }} data-testid="black-market">
+              <h3 className="font-display text-lg text-gold-bright">Mercado negro</h3>
+              <p className="text-xs text-ink-dim">Sin preguntas y sin garantías: cualquier trato puede ser una trampa de la Marina. El género cambia en {Math.ceil(blackMarket.msToRefresh / 60000)} min.</p>
+              {battleError && <p className="text-blood text-xs mt-2">{battleError}</p>}
+              <div className="mt-2 space-y-2">
+                {blackMarket.offers.map((o) => (
+                  <div key={o.id} className="flex items-center justify-between gap-3">
+                    <div>
+                      <p className="text-sm text-gold">{o.name}</p>
+                      <p className="text-xs text-ink-dim">{o.description}</p>
+                    </div>
+                    <button className="btn-ghost px-3 py-1 text-xs whitespace-nowrap" disabled={battleBusy || character.berries < o.price} onClick={() => doPrisonAction({ op: "buy", offerId: o.id }, "black-market")}>
+                      ฿ {o.price.toLocaleString("es-ES")}
+                    </button>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+          {territory && !isDead && !isImprisoned && (
+            <div className="panel p-4" style={{ borderColor: "var(--gold)" }} data-testid="territory-panel">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-display text-lg text-gold-bright">Dominio de {territory.islandName}</h3>
+                <span className="text-xs text-ink-dim">
+                  {territory.status === "HELD" ? (territory.heldByPlayers ? "En manos de jugadores" : "Bajo un poder local") : territory.status === "CONQUEST" ? "Asalto en curso" : "Votación abierta"}
+                </span>
+              </div>
+              <p className="text-sm">
+                Dueño: <span className="text-gold">{territory.ownerName}</span> — {territory.title}
+              </p>
+              {territory.garrison != null && <StatBar label="Guarnición" value={territory.garrison} max={100} color="var(--gold)" />}
+              {territory.status === "CONQUEST" && (
+                <div className="mt-2 text-sm">
+                  <div className="flex gap-1 mb-2">
+                    {territory.stages.map((s) => (
+                      <span key={s.id} className={`text-xs px-2 py-0.5 rounded border ${s.id === territory.stage ? "border-gold text-gold" : "border-[--line] text-ink-dim"}`}>
+                        {s.label}
+                      </span>
+                    ))}
+                  </div>
+                  <p className="text-xs text-ink-dim">Frente actual: {territory.stageLabel}. {territory.stage === "HOLDER" && !territory.holderHome && `${territory.holderName} no está en la isla: hay que esperar a que regrese.`}</p>
+                </div>
+              )}
+              {territory.contributions.length > 0 && (
+                <p className="text-xs text-ink-dim mt-2">Aportes: {territory.contributions.map((c) => `${c.name} ${c.points}`).join(" · ")}</p>
+              )}
+              {territory.muster.length > 0 && territory.status !== "CLAIM_VOTE" && <p className="text-xs text-ink-dim mt-1">Hueste reunida: {territory.muster.map((m) => m.name).join(", ")}</p>}
+              {battleError && <p className="text-blood text-xs mt-2">{battleError}</p>}
+              <div className="flex flex-wrap gap-2 mt-3">
+                {territory.canAssault && !jointActive && (
+                  <>
+                    <button className="btn-ghost px-3 py-1.5 text-xs" disabled={battleBusy} onClick={() => doPrisonAction({ op: territory.iAmMustered ? "unmuster" : "muster" }, "territory")}>
+                      {territory.iAmMustered ? "Retirarme de la hueste" : "Sumarme a la hueste"}
+                    </button>
+                    <button className="btn-gold px-4 py-1.5 text-sm" disabled={battleBusy} onClick={() => doPrisonAction({ op: "assault" }, "territory")}>
+                      Asaltar ({territory.status === "CONQUEST" ? territory.stageLabel : "el ejército"})
+                    </button>
+                  </>
+                )}
+                {territory.isOwner && (
+                  <>
+                    <button className="btn-gold px-3 py-1.5 text-xs" disabled={battleBusy || !territory.pendingIncome} onClick={() => doPrisonAction({ op: "collect" }, "territory")}>
+                      Cobrar tributos (฿ {(territory.pendingIncome ?? 0).toLocaleString("es-ES")})
+                    </button>
+                    <button className="btn-ghost px-3 py-1.5 text-xs" disabled={battleBusy || !territory.fortifyCost} onClick={() => doPrisonAction({ op: "fortify" }, "territory")}>
+                      Reforzar guarnición (฿ {(territory.fortifyCost ?? 0).toLocaleString("es-ES")})
+                    </button>
+                    <button className="btn-ghost px-3 py-1.5 text-xs" disabled={battleBusy || !!jointActive || (territory.garrison ?? 100) >= 100} onClick={() => doPrisonAction({ op: "defend" }, "territory")}>
+                      Repeler fuerza de retoma
+                    </button>
+                  </>
+                )}
+              </div>
+              {territory.status === "CLAIM_VOTE" && (
+                <div className="mt-3">
+                  <p className="text-sm text-gold">La resistencia ha caído. Quienes participaron votan quién se queda la isla (peso = lo aportado).</p>
+                  {territory.voteDeadline && <p className="text-xs text-ink-dim">Cierra: {new Date(territory.voteDeadline).toLocaleString("es-ES")} o cuando voten todos.</p>}
+                  {territory.iContributed ? (
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      {territory.contributions.map((c) => (
+                        <button key={c.id} className={territory.myVote === c.id ? "btn-gold px-3 py-1.5 text-xs" : "btn-ghost px-3 py-1.5 text-xs"} disabled={battleBusy} onClick={() => doPrisonAction({ op: "vote", candidateId: c.id }, "territory")}>
+                          Votar por {c.name}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-ink-dim mt-1">Solo votan quienes participaron en la conquista.</p>
+                  )}
+                  {territory.votes.length > 0 && <p className="text-xs text-ink-dim mt-2">Votos: {territory.votes.map((v) => `${v.voter} → ${v.candidate}`).join(" · ")}</p>}
+                </div>
+              )}
+            </div>
+          )}
+          {jointFight && (
+            <div className="panel p-4" style={{ borderColor: "var(--blood)" }}>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-display text-lg text-gold-bright">
+                  Pelea en grupo contra {jointFight.enemy.name}
+                  {jointFight.enemy.isBoss && <span className="ml-2 text-xs px-2 py-0.5 rounded bg-blood text-white align-middle">JEFE</span>}
+                </h3>
+                <span className="text-xs text-ink-dim">{jointFight.status === "ACTIVE" ? `Ronda ${jointFight.round}` : jointFight.status === "WON" ? "Victoria" : "Derrota"}</span>
+              </div>
+              {jointFight.stakes && <p className="text-xs text-ink-dim mb-2">{jointFight.stakes}</p>}
+              <div className="mb-3">
+                <StatBar label={jointFight.enemy.name} value={jointFight.enemy.hp} max={jointFight.enemy.maxHp} color="var(--blood)" />
+              </div>
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
+                {jointFight.participants.map((p) => (
+                  <div key={p.name} data-testid="joint-participant">
+                    <StatBar label={`${p.name}${p.isNpc ? " (NPC)" : ""}`} value={p.hp} max={p.maxHp} color="var(--gold)" />
+                    <p className="text-[11px] text-ink-dim mt-0.5">
+                      {p.status === "DOWN" ? "Caído" : p.status === "FLED" ? "Huyó" : jointFight.status !== "ACTIVE" ? "" : p.isNpc ? "Lucha por su cuenta" : p.submitted ? "Movimiento enviado" : "Falta su movimiento"}
+                    </p>
+                  </div>
+                ))}
+              </div>
+              <div ref={jointBoxRef} className="flex flex-col gap-2 max-h-80 overflow-y-auto mb-3">
+                {jointFight.messages.map((m) => (
+                  <div
+                    key={m.id}
+                    className={`max-w-[92%] rounded-lg px-3 py-2 text-sm whitespace-pre-line ${m.mine ? "self-end" : "self-start"} ${m.isNarrator ? "bg-black/25" : m.mine ? "" : "bg-black/10 border border-[--line]"}`}
+                    style={m.mine ? { background: "var(--gold)", color: "var(--sea-deep)" } : undefined}
+                  >
+                    {!m.mine && <div className="text-[10px] uppercase tracking-wide text-ink-dim mb-0.5">{m.authorName}</div>}
+                    {m.text}
+                  </div>
+                ))}
+              </div>
+              {jointFight.status === "ACTIVE" && jointFight.me?.status === "FIGHTING" && (
+                <p className="text-xs text-ink-dim">
+                  {jointFight.me.submitted
+                    ? "Movimiento enviado. Esperando a tus aliados (si alguien tarda más de 2 minutos, se cubre y la ronda se resuelve)."
+                    : "Describe tu movimiento abajo (lo que intentas, no lo que consigues). Cuando todos hayáis movido, el motor lo resuelve a la vez. Puedes escribir que huyes: se decide por velocidad."}
+                </p>
+              )}
+              {jointFight.status === "ACTIVE" && jointFight.me?.status === "DOWN" && <p className="text-sm text-blood">Estás caído. Tus aliados deciden el desenlace: si vencen, te sacan con vida; si caen, tirada de muerte.</p>}
+            </div>
+          )}
           <div className="panel p-4">
             <div className="flex items-center justify-between mb-2">
               <h2 className="font-display text-lg">{character.currentIsland.name}</h2>
               <span className="text-xs text-ink-dim">Peligro {character.currentIsland.dangerLevel}/10</span>
             </div>
             <p className="text-sm text-ink-dim mb-4">{character.currentIsland.description}</p>
+            {character.currentIsland.poneglyphId && !(JSON.parse(character.poneglyphsRead || "[]") as string[]).includes(character.currentIsland.poneglyphId) && !isDead && !isImprisoned && (
+              <p className="text-xs text-gold mb-3" data-testid="stealth-hint">Aquí hay un Poneglifo custodiado. Puedes enfrentarte a sus guardianes… o describir cómo te infiltras a escondidas para leerlo sin ser visto (cuesta 15 de estamina; si te descubren, viene el guardián).</p>
+            )}
 
             {!isDead && !isImprisoned && (
               <div className="mb-4">
@@ -668,7 +1072,11 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                   className="w-full bg-sea-deep border border-[--line] rounded px-3 py-2 text-sm outline-none focus:border-gold resize-none"
                   rows={4}
                   placeholder={
-                    duelActive
+                    jointActive
+                      ? jointFight?.me?.status === "DOWN"
+                        ? "Estás caído: espera el desenlace."
+                        : "Ej: Cubro a mis nakamas con mi guardia y contraataco a su costado."
+                      : duelActive
                       ? "Ej: Giro sobre mi pie y intento un tajo ascendente a su guardia, rodeando su flanco."
                       : character.pendingEncounter?.phase === "threat"
                       ? "Ej: Desenfundo mi espada y cargo contra él sin dudar."
@@ -679,7 +1087,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                       : "Ej: Entro al bar y me fijo si alguien interesante anda por ahí."
                   }
                   value={freeText}
-                  disabled={busy || partyBlocksInput}
+                  disabled={busy || partyBlocksInput || (jointActive && (jointFight?.me?.status !== "FIGHTING" || !!jointFight?.me?.submitted))}
                   onChange={(e) => setFreeText(e.target.value)}
                   maxLength={6000}
                   onKeyDown={(e) => {

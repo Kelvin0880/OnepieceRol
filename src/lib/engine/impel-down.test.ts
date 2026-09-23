@@ -11,6 +11,7 @@ describe("impelDownCell", () => {
     expect(impelDownCell("PIRATE", 100_000_000, 0)).toBe(1);
     expect(impelDownCell("PIRATE", 1_000_000_000, 0)).toBe(4);
     expect(impelDownCell("PIRATE", 9_000_000_000, 0)).toBe(6);
+    expect(impelDownCell("PIRATE", 2_000_000_000, 0)).toBe(6); // reachable below the 32-bit bounty ceiling
   });
 
   it("revolutionaries and hunters are judged by notoriety, pirates by bounty", () => {

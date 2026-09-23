@@ -264,6 +264,53 @@ export function buildDuelNarrationPrompt(input: DuelNarrationInput): { system: s
   return { system, user };
 }
 
+export interface JointFightNarrationInput {
+  round: number;
+  enemyName: string;
+  enemyPersonality?: string;
+  isBoss: boolean;
+  /** What each fighter tried this round, in their own words (NPC allies get a generic line). */
+  actions: { name: string; text: string; technique?: string; isNpc?: boolean }[];
+  rounds: CombatRoundInput[];
+  roster: { name: string; hp: number; maxHp: number; down: boolean; fled?: boolean }[];
+  enemyHp: number;
+  enemyMaxHp: number;
+  finished: boolean;
+  outcome?: "victory" | "defeat";
+  /** Context of what the group is fighting for ("proteger el Poneglifo", "tomar la isla"...). */
+  stakes?: string;
+  recentScene?: string[];
+}
+
+/** N-vs-1 fight: the AI narrates one shared beat covering EVERY participant's simultaneous move and the enemy's answers. */
+export function buildJointFightNarrationPrompt(input: JointFightNarrationInput): { system: string; user: string } {
+  const system =
+    "Eres el narrador de una pelea en grupo de un rol de piratas de One Piece: varios aliados contra un mismo enemigo. Todos actuaron a la vez; el motor ya resolvió cada golpe. " +
+    "Narra UNA sola escena coral y viva que dé protagonismo a cada participante según lo que intentó y el resultado indicado, sin favorecer a nadie ni cambiar quién golpea, falla o cae. " +
+    "Quien queda caído (vida 0) está fuera de combate pero NO está muerto todavía: el motor decide después su destino, no lo narres como muerto. " +
+    "No decidas nada del siguiente turno. No reveles que eres una IA. " +
+    ROLE_RULES +
+    " " +
+    COMBAT_STYLE_RULE;
+  const actionLines = input.actions.map((a) => `- ${a.name}${a.isNpc ? " (aliado NPC)" : ""}: "${a.text}"${a.technique ? ` (usando ${a.technique})` : ""}`).join("\n");
+  const roundLines = input.rounds.map((r, i) => `${i + 1}. ${describeRound(r)}`).join("\n");
+  const rosterLine = input.roster.map((r) => `${r.name} ${r.fled ? "huyó" : r.down ? "caído" : `${r.hp}/${r.maxHp}`}`).join("; ");
+  const transcriptBlock = input.recentScene && input.recentScene.length > 0 ? `\n\nEscena reciente:\n${input.recentScene.join("\n")}` : "";
+  const user =
+    `Ronda ${input.round} contra ${input.enemyName}${input.enemyPersonality ? ` — personalidad: ${input.enemyPersonality}` : ""} (${input.isBoss ? "enemigo formidable" : "enemigo común"}).\n` +
+    (input.stakes ? `Lo que está en juego: ${input.stakes}\n` : "") +
+    `Lo que intentó cada aliado:\n${actionLines}\n` +
+    `Resultado, EN ESTE ORDEN, ya decidido (definitivo):\n${roundLines || "(ningún golpe)"}\n` +
+    `Vida del grupo: ${rosterLine}. Vida de ${input.enemyName}: ${input.enemyHp}/${input.enemyMaxHp}.\n` +
+    (input.finished
+      ? input.outcome === "victory"
+        ? `El combate termina: el grupo derrota a ${input.enemyName}. Narra el desenlace coral.`
+        : `El combate termina: ${input.enemyName} vence al grupo. Narra la derrota sin decidir quién muere (eso lo resuelve el motor después).`
+      : "El combate continúa: termina dejando a todos listos para su siguiente movimiento.") +
+    transcriptBlock;
+  return { system, user };
+}
+
 export interface SceneNarrationInput {
   characterName: string;
   faction: string;
@@ -429,4 +476,54 @@ export function buildMemoryUpdatePrompt(currentSummary: string | undefined, late
     (currentSummary ? `Resumen actual: ${currentSummary}` : "Resumen actual: (todavía no hay ninguno, este es el primer evento memorable)") +
     `\n\nEvento reciente a incorporar: ${latestEvent}\n\nDevuelve el resumen actualizado.`;
   return { system, user };
+}
+
+export interface IslandBriefingInput {
+  characterName: string;
+  faction: string;
+  level: number;
+  islandName: string;
+  islandDescription: string;
+  arcHook?: string | null;
+  factionControl?: string | null;
+  danger: number;
+  minLevel: number;
+  isStart: boolean;
+  /** Canon figures tied to this island (holders, rulers): name plus a short description. */
+  powers: { name: string; description: string }[];
+  missions: { title: string; brief: string }[];
+}
+
+const BRIEFING_HARD_RULE =
+  "Eres el narrador (rol master) de un juego de rol de One Piece. El jugador acaba de llegar a una isla (o de empezar su aventura en ella) y tu deber es darle el PANORAMA COMPLETO de la isla: su historia y ambiente, quién manda, " +
+  "los villanos o poderes que la marcan y qué está pasando ahora mismo — usando SOLO los datos que se te dan, sin inventar personajes nombrados nuevos ni cambiar nada de lo que ya está decidido. " +
+  "Después presenta, dentro de la ficción y con la voz de un personaje o del propio ambiente (un vigía, un tabernero, un rumor), las MISIONES que se te dan como oportunidades concretas para progresar a su nivel, sin cambiar sus objetivos ni inventar recompensas. " +
+  "No otorgues ni quites nada ni decidas lo que hace el jugador: solo informa y ofrece. No reveles que eres una IA. " +
+  "Escribe en español, tono oscuro y evocador de One Piece, 4-6 párrafos en prosa, sin JSON, sin encabezados, sin listas, sin markdown. " +
+  ROLE_RULES;
+
+export function buildIslandBriefingPrompt(input: IslandBriefingInput): { system: string; user: string } {
+  const powers = input.powers.length ? input.powers.map((p) => `- ${p.name}: ${p.description}`).join("\n") : "- (ninguna figura destacada: la isla se gobierna sola)";
+  const missions = input.missions.map((m, i) => `${i + 1}. ${m.title}: ${m.brief}`).join("\n");
+  const user =
+    `Personaje: ${input.characterName} (nivel ${input.level}, facción ${input.faction}).\n` +
+    `${input.isStart ? "Es el lugar donde comienza su leyenda." : "Acaba de desembarcar por primera vez."}\n` +
+    `Isla: ${input.islandName} — peligro ${input.danger}/10, nivel recomendado ${input.minLevel}+. Control: ${input.factionControl ?? "sin gobierno claro"}.\n` +
+    `Ambiente: ${input.islandDescription}\n` +
+    `Lo que está pasando ahora: ${input.arcHook ?? "la vida sigue su curso, pero hay tensión bajo la superficie."}\n\n` +
+    `Poderes y villanos vinculados a la isla:\n${powers}\n\n` +
+    `Misiones que se le ofrecen (preséntalas de forma natural):\n${missions}`;
+  return { system: BRIEFING_HARD_RULE, user };
+}
+
+/** Used verbatim when the AI is unavailable: the player still gets the panorama and the goals. */
+export function buildStaticBriefing(input: IslandBriefingInput): string {
+  const parts = [
+    `${input.isStart ? "Comienzas tu leyenda en" : "Desembarcas en"} ${input.islandName}. ${input.islandDescription}`,
+    input.arcHook ? `Lo que se cuece ahora mismo: ${input.arcHook}` : "",
+    input.factionControl ? `Aquí manda: ${input.factionControl}.` : "",
+    input.powers.length ? `Nombres que conviene conocer: ${input.powers.map((p) => `${p.name} (${p.description})`).join("; ")}.` : "",
+    `Para progresar, esto es lo que se te ofrece: ${input.missions.map((m) => `«${m.title}» — ${m.brief}`).join(" ")}`,
+  ];
+  return parts.filter(Boolean).join("\n\n");
 }

@@ -301,7 +301,7 @@ start command `npm run start`, plan `free`, region `oregon`.
    attacker + one defender, and how AI narration would coordinate a
    beat where multiple humans are choosing actions inside the same
    exchange instead of one at a time.
-2. Expanding Grand Line/New World further (14 islands now — see "World
+2. Expanding Grand Line/New World further (26 islands now — see "World
    content" below).
 3. Placing the remaining 2 Road Poneglyphs (Fragmento del Alba and
    Fragmento del Ocaso are placed; see "World content" below) — stays
@@ -1390,6 +1390,15 @@ absolutely everything: **`APLICACION_COMPLETA.md`** — keep it in sync.
 - **Length:** freeText max 6000; narrator max_tokens up to 2500, per-model timeout 30s,
   `LENGTH_RULE` asks for 5-8 paragraphs when the scene deserves it.
 - Verified with `scripts/hunt-check.ts`, `impel-check.ts`, `compaction-travel-check.ts`.
+
+**Phase 2 complete — the whole universe (2026-09-24)**: joint multi-actor fights, guardians + stealth, territory conquest and the Yonko claim vote, Impel Down escape + Buster Call, SSE real-time push, 26 islands with all 4 Road Poneglyphs placed, the endgame raid, kill/spare consequence threads, a black market, and AI island briefings + level-scaled missions. The Roadmap items above that describe these as "NOT built" are historical; the durable description is in `APLICACION_COMPLETA.md` section 4.15. Where things live:
+- Engine (pure + tests): `joint-fight`, `guardian`, `territory`, `escape`, `buster-call`, `raid`, `consequence`, `black-market`, `missions`, plus `travel` (tides, `knowsTheRoad`).
+- Game layer: `joint-fight` (kinds party/poneglyph/conquest/raid; NPC ally ids `npc:<companionId>` or `npc:ally:<actorId>` with `npcStatsJson`; settle hooks use dynamic `import()` to avoid circular imports), `guardian`, `territory`, `buster-call`, `raid`, `alliance`, `endgame-lore`, `consequences`, `black-market`, `missions`, `notify` (+ `src/lib/realtime.ts` hub, `stream` route).
+- Routes under `api/characters/[id]/`: `territory`, `buster-call`, `raid`, `black-market`, `stream`, and `prison` op "escape". `GET` returns `jointFight`, `territory`, `busterCall`, `raid`, `blackMarket`, `missions`.
+- Wrappers: `exploreCharacter`/`resolveMercyChoice`/`trainCharacter`/`travelCharacter` wrap `*Inner` functions to feed mission progress (`withMissions`).
+- Schema additions (all additive): JointFight*, Territory, BusterCall, Raid, Alliance, Consequence, Mission, IslandBriefing; `Character.title/knowsTruth`, `Island.tidal/requiresRoadPoneglyphs`, `WorldClock.era`, `Imprisonment.escape*`, `ActorRole.GOROSEI/HIDDEN_RULER`. Production needs the documented Neon push before deploying.
+- Verification scripts: `joint-fight-check`, `guardian-check`, `territory-check`, `escape-buster-check`, `raid-check`, `consequence-check`, `black-market-check`, `missions-check`, `verify-world-expansion` (DB) and `*-ui-check.mjs` / `missions-ui-check.mjs` / `realtime-check.mjs` (browser). `e2e-smoke.mjs` and `party-attack-check.mjs` are stale (they predate the free-text pivot); use `ai-e2e-smoke.mjs` and `roleplay-attack-check.mjs`.
+- Keep `docs/mapa.html` in sync via `npx tsx scripts/gen-map-islands.ts` (prints ISLANDS entries from the seeded DB).
 
 ## Conventions to keep matching
 

@@ -6,7 +6,9 @@
  * reaching the island itself (very high level requirement) and beating a
  * guard strength that grows with the depth.
  */
-const PIRATE_BOUNTY_CELLS = [100_000_000, 300_000_000, 600_000_000, 1_000_000_000, 2_000_000_000, 3_000_000_000];
+// Character.bounty is a 32-bit column (max ~2.147B), so the deepest cell has to sit below that ceiling to be reachable at all.
+export const MAX_PLAYER_BOUNTY = 2_100_000_000;
+const PIRATE_BOUNTY_CELLS = [100_000_000, 300_000_000, 600_000_000, 1_000_000_000, 1_500_000_000, 2_000_000_000];
 const NOTORIETY_CELLS = [700, 1_300, 2_400, 4_200, 7_000, 12_000];
 
 function cellFor(value: number, thresholds: number[]): number {

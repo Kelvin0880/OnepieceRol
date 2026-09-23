@@ -139,7 +139,7 @@
 
 <header>
   <h1><i class="fas fa-map-marked-alt"></i> GRAND LINE RPG — MAPA DE RUTA</h1>
-  <p>Las 14 islas jugables de hoy, sus conexiones, y qué te espera en cada una.</p>
+  <p>Las 26 islas jugables de hoy, sus conexiones, y qué te espera en cada una.</p>
   <a class="back" href="index.html"><i class="fas fa-arrow-left"></i> Volver</a>
 </header>
 
@@ -172,7 +172,7 @@
 
   <div class="map-wrap">
     <div class="map-card">
-      <svg id="routeMap" viewBox="0 0 1500 650" xmlns="http://www.w3.org/2000/svg"></svg>
+      <svg id="routeMap" viewBox="0 0 1700 700" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
     <div class="detail-card" id="detailCard">
       <p class="empty"><i class="fas fa-hand-pointer"></i><br>Haz clic en una isla del mapa para ver su ficha.</p>
@@ -234,6 +234,39 @@ const ISLANDS = [
   { key: "impelDown", name: "Impel Down", sea: "New World", danger: 10, minLevel: 45, faction: "Gobierno Mundial (Impel Down)", poneglyph: false, x: 1430, y: 570,
     desc: "La gran prisión submarina del Gobierno Mundial: seis niveles de infierno bajo el mar. Los muy buscados cumplen aquí su condena sin fianza posible; sacar a alguien exige un nivel altísimo y vencer a los carceleros de cada nivel.",
     hook: "Los guardias han doblado las rondas desde la última fuga." },
+  { key: "drum", name: "Isla Drum", sea: "Paradise (Grand Line)", danger: 7, minLevel: 11, faction: "Sin rey (Dr. Kureha)", poneglyph: false, x: 1200, y: 190,
+    desc: "Un reino de nieve eterna sin rey desde que su tirano huyó. En lo alto de la montaña, una vieja doctora de risa temible cura lo que ningún hospital del mundo puede curar — y cobra a su manera.",
+    hook: "El invierno aquí no es solo frío: es hambre, enfermedad y un pueblo que aprendió a desconfiar de los piratas por la mala fama de uno solo. Ganarse a Drum es más difícil que sobrevivirle." },
+  { key: "skypiea", name: "Skypiea", sea: "Paradise (Grand Line)", danger: 8, minLevel: 15, faction: "Eneru", poneglyph: false, x: 1350, y: 80,
+    desc: "Una isla entre las nubes, hecha de mar de algodón y ruinas de oro, donde un autoproclamado dios impone su ley a rayo limpio y ha convertido la fe de un pueblo en un arma.",
+    hook: "Los cuatro Sacerdotes vigilan cada nube y el Dios de Skypiea todo lo oye antes de que lo digas. Quien pisa la isla sin ser invitado pasa a formar parte de su juicio." },
+  { key: "waterSeven", name: "Water 7", sea: "Paradise (Grand Line)", danger: 7, minLevel: 14, faction: "Galley-La / CP-0 infiltrada", poneglyph: false, x: 1250, y: 480,
+    desc: "La ciudad del agua: canales que hacen de calles, gigantescos astilleros y los mejores carpinteros del mundo. Bajo tanta prosperidad, alguien lleva años buscando unos planos que el Gobierno prefiere olvidados.",
+    hook: "Todos aquí hablan bien de todos, y precisamente por eso nadie repara en quien se ha ganado la confianza del pueblo para robarles sus secretos. En Water 7, el mejor disfraz es ser querido." },
+  { key: "sabaody", name: "Archipiélago Sabaody", sea: "Paradise (Grand Line)", danger: 8, minLevel: 18, faction: "Marina / Dragones Celestiales", poneglyph: false, x: 1250, y: 600,
+    desc: "Setenta y nueve manglares gigantes que respiran burbujas, la última parada antes de bajar al Nuevo Mundo. Bajo la alegría de sus tiendas, una casa de subastas vende personas, y a un paso, los Dragones Celestiales pasean impunes.",
+    hook: "Aquí se recubren las naves con cobre para bucear al Nuevo Mundo, se reúnen las mayores recompensas del mar y basta un mal gesto ante un noble mundial para que llegue un Almirante. Se rumorea que en un bar de burbujas vive un viejo que sabe leer Poneglifos." },
+  { key: "fishMan", name: "Isla Gyojin", sea: "New World", danger: 9, minLevel: 22, faction: "Nuevos Piratas Gyojin (Hody Jones)", poneglyph: false, x: 1100, y: 615,
+    desc: "Una ciudad de cristal a diez mil metros bajo el mar, gobernada por un reino de gyojin y sirenas y amenazada por un odio antiguo hacia los humanos que ahora alguien ha decidido convertir en guerra.",
+    hook: "El Árbol Eve protege el reino con su sombra y una promesa de paz, pero una banda de gyojin resentidos quiere vengar siglos de esclavitud. Si triunfan, ninguna puerta volverá a abrirse entre superficie y fondo." },
+  { key: "punkHazard", name: "Punk Hazard", sea: "New World", danger: 9, minLevel: 25, faction: "Caesar Clown", poneglyph: false, x: 950, y: 600,
+    desc: "Una isla partida en dos por un duelo entre dos Almirantes: una mitad arde y la otra está cubierta de hielo eterno. En el laboratorio sellado del centro, un científico sin escrúpulos produce armas y venenos para quien pague.",
+    hook: "Las llamas de un lado y el hielo del otro dejaron un páramo donde los niños que no debían estar ahí lloran de noche. Nadie que no haya sido invitado al laboratorio sale con la cordura intacta." },
+  { key: "wholeCake", name: "Whole Cake Island", sea: "New World", danger: 10, minLevel: 28, faction: "Charlotte Katakuri", poneglyph: false, x: 800, y: 610,
+    desc: "Un archipiélago de tartas, torres de caramelo y bosques de galleta: el reino de una de las tripulaciones más grandes del mundo, hoy mantenido por su hijo más disciplinado, un hombre que jamás pierde la calma ni cede un centímetro.",
+    hook: "Todo aquí es dulce a la vista y letal al tacto. Los Ministros de la tripulación vigilan cada rincón, y el propio Katakuri sabe con un segundo de ventaja lo que vas a hacer." },
+  { key: "wano", name: "País de Wano", sea: "New World", danger: 10, minLevel: 32, faction: "Sin gobierno (samuráis)", poneglyph: false, x: 660, y: 610,
+    desc: "Un país cerrado durante siglos tras montañas y cascadas, cuna de las mejores espadas del mundo. Cayó un tirano, pero los samuráis y ninjas que lo reconstruyen saben que la paz es solo el intervalo entre dos guerras.",
+    hook: "Aquí el honor pesa más que el oro y un juramento se cumple aunque cueste la vida. Quien llega como aliado es recibido con sake y espadas; quien llega como conquistador no vuelve a ver la costa." },
+  { key: "abyss", name: "Isla Abismo", sea: "New World", danger: 10, minLevel: 38, faction: "Custodios de las Mareas (Thalassa)", poneglyph: true, poneglyphName: "Poneglifo de Ruta — Fragmento del Abismo", x: 1620, y: 110,
+    desc: "Una isla que las mareas esconden y devuelven a su antojo: emerge unas horas y vuelve a hundirse otras tantas. Los Custodios de las Mareas llevan siglos guardando lo que hay en su corazón de coral negro, un Poneglifo que el mar no quiso llevarse.",
+    hook: "Solo se puede llegar cuando baja la marea, y quien llegue tarde se queda en el fondo. Thalassa no odia a los intrusos: simplemente cree que algunas verdades es mejor que sigan bajo el agua." },
+  { key: "maryGeoise", name: "Mary Geoise", sea: "New World", danger: 10, minLevel: 42, faction: "Gobierno Mundial (Gorosei)", poneglyph: true, poneglyphName: "Poneglifo de Ruta — Fragmento Final", x: 1620, y: 400,
+    desc: "La Tierra Sagrada sobre la Línea Roja, donde viven los Dragones Celestiales y de donde emana la ley que rige el mundo. Palacios blancos, jardines impecables y, en el corazón del Castillo de Pangea, un salón al que ni los Almirantes tienen acceso.",
+    hook: "Los Cinco Ancianos gobiernan a la sombra de alguien a quien nunca se nombra. Cualquier intruso es una amenaza para el orden entero, y el orden entero responde." },
+  { key: "laughTale", name: "Laugh Tale", sea: "New World", danger: 10, minLevel: 50, faction: null, poneglyph: false, x: 560, y: 650,
+    desc: "La última isla, la que nadie encuentra si no ha leído los cuatro Poneglifos de Ruta. Un lugar que ríe con quien llega y guarda el mayor secreto de la historia: lo que fue el One Piece, y por qué el mundo lleva ochocientos años sin poder mencionarlo.",
+    hook: "Llegar aquí es haberlo dejado todo atrás. Lo que se descubra en Laugh Tale cambiará el mundo entero, para bien o para mal, y quien lo sepa ya no podrá fingir que no lo sabe." },
 ];
 
 const EDGES = [
@@ -241,8 +274,11 @@ const EDGES = [
   ["marineG5","loguetown"], ["gecko","shimotsuki"], ["gecko","loguetown"],
   ["shimotsuki","baratie"], ["baratie","conomi"], ["conomi","loguetown"],
   ["loguetown","reverseMountain"], ["reverseMountain","whiskyPeak"],
-  ["whiskyPeak","littleGarden"], ["littleGarden","alabasta"],
-  ["alabasta","graveyardIsland"], ["alabasta","eniesLobby"], ["eniesLobby","impelDown"],
+  ["whiskyPeak","littleGarden"], ["littleGarden","alabasta"], ["littleGarden","drum"], ["drum","alabasta"],
+  ["alabasta","skypiea"], ["alabasta","waterSeven"], ["alabasta","graveyardIsland"], ["alabasta","eniesLobby"],
+  ["waterSeven","eniesLobby"], ["waterSeven","sabaody"], ["sabaody","fishMan"], ["fishMan","punkHazard"],
+  ["punkHazard","wholeCake"], ["wholeCake","wano"], ["wano","laughTale"],
+  ["graveyardIsland","abyss"], ["eniesLobby","impelDown"], ["eniesLobby","maryGeoise"],
 ];
 
 function dangerColor(d) {

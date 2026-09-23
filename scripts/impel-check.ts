@@ -18,7 +18,7 @@ async function main() {
   const small = await createCharacter(u.id, `Pez${stamp}`, "PIRATE", "swordsman");
   const u2 = await prisma.user.create({ data: { username: `impelB${stamp}`, passwordHash: "x" } });
   const big = await createCharacter(u2.id, `Emperador${stamp}`, "PIRATE", "swordsman");
-  await prisma.character.update({ where: { id: big.id }, data: { bounty: 1_500_000_000, level: 20, berries: 999_999_999 } });
+  await prisma.character.update({ where: { id: big.id }, data: { bounty: 1_100_000_000, level: 20, berries: 999_999_999 } });
 
   const impelIsland = await prisma.island.findUniqueOrThrow({ where: { name: "Impel Down" } });
   assert(impelIsland.minLevelToEnter >= 45, "Impel Down demands a very high level to enter");
@@ -30,7 +30,7 @@ async function main() {
   await captureCharacter(bigFull, 120, "Capturado por la Marina.", []);
   const jail = await prisma.imprisonment.findUniqueOrThrow({ where: { characterId: big.id } });
   const moved = await load(big.id);
-  assert(jail.cellLevel === 4, "1.5B bounty lands in cell level 4");
+  assert(jail.cellLevel === 4, "1.1B bounty lands in cell level 4");
   assert(jail.islandId === impelIsland.id && moved.currentIslandId === impelIsland.id, "the prisoner is held on the Impel Down island itself");
   assert(jail.bailBerries === null, "no bail in Impel Down");
   assert(jail.minRescueLevel > 120 * 2, "rescue wall is far above the captor's raw power");

@@ -10,13 +10,14 @@ import { Rng } from "./rng";
  */
 
 export const GRUDGE_HEAT_SUBORDINATE_DEFEAT = 20; // beating the lieutenant — modest; a real Yonko fight (not built yet) would warrant far more
+export const GRUDGE_HEAT_ACTOR_DEFEAT = 60; // beating the holder in person — they do not forget being humbled on their own turf
 export const GRUDGE_HEAT_ESCAPE = 35; // escaping mid-fight — "doesn't let go easily," costs more than a clean loss for the NPC
 export const GRUDGE_HEAT_MERCY_RELIEF = 15;
 export const MAX_GRUDGE_HEAT = 150;
 const DECAY_PER_EXPLORE = 2;
 
-export function heatAfterGrudgeIncident(currentHeat: number, kind: "escape" | "subordinate_defeat"): number {
-  const delta = kind === "escape" ? GRUDGE_HEAT_ESCAPE : GRUDGE_HEAT_SUBORDINATE_DEFEAT;
+export function heatAfterGrudgeIncident(currentHeat: number, kind: "escape" | "subordinate_defeat" | "actor_defeat"): number {
+  const delta = kind === "escape" ? GRUDGE_HEAT_ESCAPE : kind === "actor_defeat" ? GRUDGE_HEAT_ACTOR_DEFEAT : GRUDGE_HEAT_SUBORDINATE_DEFEAT;
   return Math.min(MAX_GRUDGE_HEAT, currentHeat + delta);
 }
 

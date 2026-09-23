@@ -37,3 +37,29 @@ describe("travel cooldown", () => {
     expect(travelWaitMs(last, 5, now)).toBe(travelCooldownMs(5) - 60_000);
   });
 });
+
+import { tideStatus, TIDE_WINDOW_MS, knowsTheRoad } from "./travel";
+
+describe("tideStatus", () => {
+  it("alternates open and closed windows and reports how long the current one lasts", () => {
+    const openStart = new Date(TIDE_WINDOW_MS * 4);
+    const a = tideStatus(openStart);
+    expect(a.open).toBe(true);
+    expect(a.msUntilChange).toBe(TIDE_WINDOW_MS);
+    const b = tideStatus(new Date(TIDE_WINDOW_MS * 5 + 1000));
+    expect(b.open).toBe(false);
+    expect(b.msUntilChange).toBe(TIDE_WINDOW_MS - 1000);
+    expect(tideStatus(new Date(TIDE_WINDOW_MS * 6)).open).toBe(true);
+  });
+});
+
+describe("knowsTheRoad", () => {
+  const road = ["a", "b", "c", "d"];
+  it("needs every Road Poneglyph read", () => {
+    expect(knowsTheRoad(["a", "b", "c"], road)).toBe(false);
+    expect(knowsTheRoad(["d", "c", "b", "a", "x"], road)).toBe(true);
+  });
+  it("is never satisfied when no Road Poneglyphs exist", () => {
+    expect(knowsTheRoad([], [])).toBe(false);
+  });
+});

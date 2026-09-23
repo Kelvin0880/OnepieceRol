@@ -205,3 +205,27 @@ describe("classifyPlayerAction", () => {
     });
   });
 });
+
+describe("sneak (Poneglyph infiltration)", () => {
+  const withSneak: ActionId[] = ["narrate", "explore", "attack", "train", "rest", "sneak"];
+
+  it("accepts sneak only when it is offered, carrying a clamped tactic modifier", async () => {
+    callOpenRouterMock.mockResolvedValue('{"action":"sneak","tactic_modifier":99}');
+    const result = await classifyPlayerAction("Me cuelo por los conductos hasta el Poneglifo sin ser visto.", withSneak);
+    expect(result.action).toBe("sneak");
+    expect(result.tacticModifier).toBe(MAX_TACTIC_MODIFIER);
+  });
+
+  it("rejects sneak when the island has no Poneglyph to sneak to", async () => {
+    callOpenRouterMock.mockResolvedValue('{"action":"sneak"}');
+    const result = await classifyPlayerAction("Me cuelo sin ser visto.", nonCombatPhase);
+    expect(result.action).toBe("narrate");
+  });
+
+  it("the outage keyword fallback recognises an infiltration", async () => {
+    callOpenRouterMock.mockRejectedValue(new AiUnavailableError("down"));
+    const result = await classifyPlayerAction("Me infiltro a escondidas hacia la bóveda.", withSneak);
+    expect(result.action).toBe("sneak");
+    expect(result.source).toBe("keyword_fallback");
+  });
+});

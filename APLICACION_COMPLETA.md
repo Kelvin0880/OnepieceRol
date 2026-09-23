@@ -204,8 +204,20 @@ Escaleras por umbrales de recompensa/notoriedad, con noticia al cruzar un escal�
 - **Página `/news`:** agrupada por día (Hoy/Ayer/fecha), filtros por categoría, paginación por cursor, tratamiento visual por severidad.
 - **Contenido:** ~41 actores canon (Yonko, Almirantes, Shichibukai, Revolución, Cipher Pol, Sombrero de Paja…) con facción, rango, recompensa canon, fruta canon, personalidad; ver `WORLD_LORE.md`.
 
-### 4.14 Islas (15)
-East Blue: Pueblo Foosha, Cuartel Marine G-5, Isla Baltigo, Isla Gecko, Villa Shimotsuki, Restaurante Baratie, Isla Conomi (Arlong), Loguetown, Reverse Mountain. Grand Line/Nuevo Mundo: Whisky Peak (peligro 6, nivel 8) → Little Garden (7, 10) → Alabasta (8, 12) → **Isla Cementerio** (10, nivel 30, Barbanegra) y **Enies Lobby** (10, nivel 35, CP-0) → **Impel Down** (10, nivel 45). El nivel mínimo se comprueba al zarpar.
+### 4.15 Fase 2: el universo completo
+- **Peleas conjuntas** (`engine/joint-fight`, `game/joint-fight`): N jugadores + NPC aliados contra un enemigo escalado (`scaleEnemyForGroup`: HP ×(1+0,75·(n−1))); ronda simultánea, la resuelve el último en enviar (reclamo atómico); 120 s y quien tarda guarda. Tipos: party / poneglyph / conquest / raid. Al ganar, caídos salen vivos al 10 % de vida.
+- **Guardianes y sigilo** (`engine/guardian`, `game/guardian`): el guardián en casa (`isActorHome`) se encuentra en persona un 75 %, con stats por `powerLevel`; si no, un subordinado. Sigilo = tirada (limpio / notado / visto / atrapado). Derrotado, se retira 6 h y guarda rencor (`actor_defeat`).
+- **Dominios** (`Territory`, `engine/territory`, `game/territory`): ejército → comandantes → dueño como peleas conjuntas; voto ponderado por aportación (desempate: golpe final → aportación → id); título, tributos, guarnición (−25/12 h) y retoma del antiguo poder.
+- **Impel Down** (`engine/escape`, `engine/buster-call`, `game/buster-call`): fuga por niveles con enfriamiento 30 min y alerta; Buster Call (3 oleadas como peleas conjuntas, 40 min; si cae, bombardeo 70 % + tirada de muerte + isla perdida).
+- **Tiempo real** (`realtime.ts`, ruta `stream`): hub SSE en memoria (un solo proceso) + `notify*`; el cliente recarga al recibir y el sondeo pasa a 30 s.
+- **Mundo**: 26 islas (11 nuevas), 4 Poneglifos de Ruta colocados, isla de marea (Isla Abismo, ventanas de 3 h), Laugh Tale exige los 4 (`knowsTheRoad`), 24 frutas únicas, Gorosei y Rey Sin Nombre como `WorldActor`.
+- **Final** (`engine/raid`, `game/raid`, `game/endgame-lore`, `game/alliance`): al pisar Laugh Tale se revela "La Crónica del Mar" (`knowsTruth`); coalición ≤20 + hasta 4 aliados NPC por confianza (`Alliance`, ≥60), 4 fases (`RAID_PHASES`) como peleas conjuntas con tope de 6 ataques enemigos; voto del Rey de los Piratas; `WorldClock.era` = "Nueva Era", título "Rey de los Piratas"; enfriamiento 7 d (victoria) / 24 h (derrota).
+- **Consecuencias** (`Consequence`, `engine/consequence`, `game/consequences`): perdonar/matar a un enemigo con nombre deja un hilo (favor, traición, vengador, tributo), hasta 3 etapas.
+- **Mercado negro** (`engine/black-market`, `game/black-market`): 4 islas, género rotativo cada 3 h, riesgo de trampa creciente por trato.
+- **Misiones y panorama** (`Mission`, `IslandBriefing`, `engine/missions`, `game/missions`, `narrateIslandBriefing`): cada isla (y la de inicio de cualquier facción) da 3 misiones escaladas por nivel y un panorama narrado por la IA (con texto estático de respaldo); completarlas da berries/XP y confianza (`Alliance`).
+
+### 4.14 Islas (26)
+Ver 4.15 para las 11 islas de la fase 2 (Isla Drum, Skypiea, Water 7, Archipiélago Sabaody, Isla Gyojin, Punk Hazard, Whole Cake, País de Wano, Isla Abismo, Mary Geoise, Laugh Tale). East Blue: Pueblo Foosha, Cuartel Marine G-5, Isla Baltigo, Isla Gecko, Villa Shimotsuki, Restaurante Baratie, Isla Conomi (Arlong), Loguetown, Reverse Mountain. Grand Line/Nuevo Mundo: Whisky Peak (peligro 6, nivel 8) → Little Garden (7, 10) → Alabasta (8, 12) → **Isla Cementerio** (10, nivel 30, Barbanegra) y **Enies Lobby** (10, nivel 35, CP-0) → **Impel Down** (10, nivel 45). El nivel mínimo se comprueba al zarpar.
 
 ## 5. Sistema de IA
 
@@ -253,11 +265,4 @@ Errores tipados (`GameActionError`, `DuelError`, `CrewError`, `BattleError`, `Pr
 
 ## 10. Lo que NO está hecho (hoja de ruta)
 
-1. Combate con **varios actores dentro de la misma pelea** (que un compañero se una a la pelea de otro; hoy solo la lee).
-2. Regiones y NPC canon con **ubicación real** (la mayoría de personajes canon solo existen como noticias/lore).
-3. Territorio y título: convertirse en Yonko conquistando; misiones de cima por facción (Almirante de Flota, Gorosei, Líder Revolucionario…).
-4. Sigilo para leer Poneglifos; “quién te encuentras de verdad” según dónde esté el actor; los 2 Poneglifos restantes.
-5. Impel Down: fuga individual (sigilo/rebelión), guerras de asedio/Buster Call por un rescate.
-6. Mercado negro, maestros de técnicas, subastas de frutas, coliseo sin permadeath, zonas de encuentro entre facciones.
-7. Endgame: la respuesta a “qué es One Piece”, la raid multijugador y la caída del Gobierno (requiere diseño propio).
-8. Push en tiempo real (hoy todo es sondeo cada 10 s).
+La fase 2 está completa (ver 4.15). Pendiente: pulido general, regiones con NPC canon en ubicaciones reales más allá de los dominios, maestros de técnicas, subastas de frutas, coliseo sin permadeath, y balanceo del final con datos de juego reales.

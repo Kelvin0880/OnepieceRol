@@ -410,3 +410,76 @@ Cada tirada es real, cada muerte es real, y cada título que ganas te lo
 ganaste de verdad. La IA le pone voz al mundo, pero nunca te hace
 trampa ni a tu favor ni en tu contra — los dados mandan. Bienvenido a
 bordo.
+
+============================================================
+FASE 2: EL MUNDO COMPLETO (lo último que se añadió)
+============================================================
+
+PANORAMA Y MISIONES EN CADA ISLA
+Al empezar (sea cual sea tu facción) y cada vez que llegas a una isla,
+el narrador te cuenta el panorama completo: su historia, quién manda,
+los villanos y qué está pasando ahora. Además te ofrece tres misiones
+a tu medida: la amenaza propia de la isla, reconocerla, y una tercera
+(entrenar, perdonar a un enemigo o zarpar hacia una isla vecina). Se
+escalan con tu nivel: cuanto más fuerte eres, más piden y más pagan.
+Cumplirlas da berries, XP y la confianza del poder de la isla, que
+luego sirve para el asalto final. Las ves en el panel "Panorama y misiones".
+
+PELEAS EN GRUPO
+Si tu tripulación está contigo y atacas a una amenaza, la pelea se
+vuelve conjunta: todos describís vuestro movimiento cada ronda y se
+resuelve a la vez. El enemigo crece con el número de luchadores. Tus
+compañeros NPC también pelean. Quien tarda más de 2 minutos, guarda.
+
+GUARDIANES Y SIGILO
+Los Poneglifos los guardan personajes reales. Si el guardián está en
+casa, hay un 75 % de encontrártelo EN PERSONA (letal si no estás
+listo); si anda fuera, te topas con un subordinado. También puedes
+escribir que te infiltras: es una tirada de sigilo (te ven, te
+descubren, te atrapan o pasas limpio). Un guardián derrotado se retira
+unas horas y guarda rencor.
+
+DOMINIOS: CONVERTIRTE EN EL NUEVO YONKO
+Ocho islas tienen dueño (Whisky Peak, Alabasta, Cementerio, Enies
+Lobby, Skypiea, Isla Gyojin, Punk Hazard, Whole Cake). Reúne una hueste
+en la isla y asalta en tres frentes: su ejército, sus comandantes y el
+propio dueño. Si vencéis, quienes participaron VOTAN quién se queda la
+isla (el voto pesa según lo que aportó cada uno). El dueño cobra
+tributos y recibe un título, pero debe reforzar la guarnición: si cae a
+cero, el antiguo poder la recupera. Conquistar Enies Lobby provoca una
+Buster Call.
+
+IMPEL DOWN Y BUSTER CALL
+Desde dentro puedes intentar fugarte por niveles con un plan escrito
+(tirada real, enfriamiento de 30 min; si te atrapan, bajas de celda).
+Los fugados de celdas profundas pueden desencadenar una BUSTER CALL:
+tres oleadas de la Marina contra la isla en 40 minutos. Si la
+defendéis, se salva; si no, bombardean y todos los presentes reciben un
+golpe brutal con tirada de muerte.
+
+MERCADO NEGRO
+Loguetown, Whisky Peak, Water 7 y Sabaody tienen vendedores sin
+preguntas: una fruta sin nombre (a veces podrida), una hoja de
+contrabando, un indulto comprado, una cortina de humo contra la
+persecución y un tónico. El género rota cada 3 horas y cada trato
+puede ser una trampa de la Marina (te dejan sin nada y herido).
+
+CONSECUENCIAS DE PERDONAR O RESCATAR
+Perdonar o matar a un enemigo con nombre deja un hilo: más tarde
+puede volver como un favor pagado, una traición, un vengador o un
+tributo por tu fama. Cada regreso es otra decisión (hasta 3 etapas).
+
+LAUGH TALE Y EL FINAL
+Con los 4 Poneglifos de Ruta (Cementerio, Enies Lobby, Isla Abismo y
+Mary Geoise) se sabe el camino a Laugh Tale. Al pisarla descubres qué
+es de verdad el One Piece. Después, quien conoce la verdad puede reunir
+una COALICIÓN en Mary Geoise (hasta 20 jugadores + 4 aliados de
+renombre que confíen en ti) y asaltar cuatro fases: la Guardia de
+Pangea, los Cinco Ancianos, los Almirantes y el Rey Sin Nombre. Si
+cae, los participantes votan quién será el Rey de los Piratas y el
+mundo entra en la Nueva Era. Una derrota impone 24 h de espera; una
+victoria, una semana.
+
+TIEMPO REAL
+Ya no hay que esperar al sondeo: los cambios de peleas, dominios,
+asaltos y grupo te llegan al instante.

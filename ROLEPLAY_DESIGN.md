@@ -147,3 +147,7 @@ Known gaps (deliberate, tracked): a crewmate can't yet *join* another's
 ongoing fight (needs multi-actor exchange resolution — Roadmap 1); to-the-death
 PvP toggle; Impel Down as a real island/facility (the bail rule is ready for it
 via `facility: "impel_down"`); apex-rank quests; black market; coliseum.
+
+## Phase 2 (2026-09-24): guiding the player
+
+Every island gives each character three level-scaled missions and an AI-narrated panorama (lore, rulers, villains, what is happening) on arrival and on the starting island of any faction (`game/missions.ts`, `narrateIslandBriefing`). The AI only narrates the facts it is given and presents the missions in-fiction; the engine decides targets, rewards and progress (`engine/missions.ts`). Joint fights extend the same rule: N players' moves are classified, the engine resolves them together, the AI narrates once.

@@ -10,6 +10,8 @@ import {
   buildBountyDigestPrompt,
   buildEncounterIntroPrompt,
   buildDuelNarrationPrompt,
+  buildJointFightNarrationPrompt,
+  JointFightNarrationInput,
   EncounterIntroInput,
   DuelNarrationInput,
   ExploreNarrationInput,
@@ -18,6 +20,9 @@ import {
   PartySceneNarrationInput,
   NewsNarrationInput,
   BountyDigestInput,
+  buildIslandBriefingPrompt,
+  buildStaticBriefing,
+  IslandBriefingInput,
 } from "./narrate-prompt";
 import { callOpenRouter } from "./openrouter-client";
 import { OPENROUTER_MODELS } from "./models";
@@ -115,6 +120,20 @@ export async function narrateDuel(input: DuelNarrationInput, meta: { duelId: str
     return text.trim();
   } catch (err) {
     await logError("ai/narrate-duel", err, meta);
+    return fallback;
+  }
+}
+
+export async function narrateJointFight(input: JointFightNarrationInput, meta: { fightId: string }): Promise<string> {
+  const fallback = input.rounds
+    .map((r) => (r.damage > 0 ? `${r.attacker} golpea a ${r.defender} (${r.damage} de daño).` : `${r.attacker} ataca a ${r.defender}, pero no le hace daño.`))
+    .join(" ");
+  try {
+    const { system, user } = buildJointFightNarrationPrompt(input);
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2500, validate: isValidNarration });
+    return text.trim();
+  } catch (err) {
+    await logError("ai/narrate-joint-fight", err, meta);
     return fallback;
   }
 }
@@ -258,5 +277,17 @@ export async function updateCharacterMemory(characterId: string, currentSummary:
     }
   } catch (err) {
     await logError("ai/update-memory", err, { characterId });
+  }
+}
+
+/** Never throws: any AI failure yields the static panorama so the player always gets the briefing and the goals. */
+export async function narrateIslandBriefing(input: IslandBriefingInput, meta: { characterId: string }): Promise<string> {
+  try {
+    const { system, user } = buildIslandBriefingPrompt(input);
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2200, validate: isValidNarration });
+    return text.trim();
+  } catch (err) {
+    await logError("ai/island-briefing", err, meta);
+    return buildStaticBriefing(input);
   }
 }
