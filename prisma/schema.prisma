@@ -95,6 +95,8 @@ model Character {
   poneglyphHeat  Int    @default(0)
   islandsVisited String @default("[]") // JSON string array of Island ids — gates the once-per-island arc-hook intro
 
+  lastTrainedAt DateTime? // null = never trained under this rule yet, so always eligible
+
   imprisonment     Imprisonment?
   pendingEncounter PendingEncounter?
 

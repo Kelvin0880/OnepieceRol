@@ -93,6 +93,24 @@ describe("resolveEvent", () => {
     expect(withEnemy.triggersCombat).toBe(true);
     expect(withoutEnemy.triggersCombat).toBe(false);
   });
+
+  it("passes an enemy's optional personality straight through to the resolution", () => {
+    const rng = mulberry32(1);
+    const result = resolveEvent(
+      rng,
+      { ...sampleBody, enemy: { name: "X", hp: 1, atk: 1, def: 1, spd: 1, personality: "arrogante y cruel" } },
+      0,
+      1,
+      1
+    );
+    expect(result.enemy?.personality).toBe("arrogante y cruel");
+  });
+
+  it("leaves personality undefined when the enemy spec doesn't set one", () => {
+    const rng = mulberry32(1);
+    const result = resolveEvent(rng, { ...sampleBody, enemy: { name: "X", hp: 1, atk: 1, def: 1, spd: 1 } }, 0, 1, 1);
+    expect(result.enemy?.personality).toBeUndefined();
+  });
 });
 
 describe("resolveEvent — devil fruit water hazard", () => {

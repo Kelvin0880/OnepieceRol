@@ -274,21 +274,33 @@ start command `npm run start`, plan `free`, region `oregon`.
 
 ## Roadmap (what's explicitly NOT done yet, roughly in likely priority order)
 
-1. Expanding Grand Line/New World further (14 islands now — see "World
+1. **AI Game Master, Phase 2: multiplayer orchestration.** Phase 1
+   (single-player AI narration + free-text actions, see "Done since the
+   first session" below) is live. The user's original ask also included
+   a multiplayer layer — turn order (AI narrates first, then whoever
+   invited the world), a live panel of who's in your world, same-crew
+   presence sharing actions/narration in real time, and free-text
+   detection of "separating from the crew" (with an explicit confirm
+   prompt) vs. staying together — **explicitly deferred**, not designed
+   yet. Needs its own dedicated design pass before touching it (turn
+   sync model, what "same room" visibility actually means server-side,
+   how AI narration coordinates across multiple players' actions).
+2. Expanding Grand Line/New World further (14 islands now — see "World
    content" below).
-2. Placing the remaining 2 Road Poneglyphs (Fragmento del Alba and
+3. Placing the remaining 2 Road Poneglyphs (Fragmento del Alba and
    Fragmento del Ocaso are placed; see "World content" below) — stays
    hard/scattered on purpose. Natural next holders per the existing
    lore hints: Fragmento Final has a `guardedBy` hint already pointing at
    Cipher Pol (a different island/power than Enies Lobby's CP-0 squad —
    maybe Mary Geoise itself, or a third Yonko); Fragmento del Abismo is
    still a pure mystery, open to invent freely.
-3. More canon devil fruits/characters/weapons.
-4. Kill-vs-spare consequence questlines deeper than the current one-off
+4. More canon devil fruits/characters/weapons.
+5. Kill-vs-spare consequence questlines deeper than the current one-off
    news-flavor hooks (`resolveMercyChoice` in `perform-action.ts`) — the
    user flagged (2026-09-23) that island lore in general should feel
-   slower/richer, not just a first-visit blurb; this is the concrete way
-   to act on that.
+   slower/richer, not just a first-visit blurb. AI narration (Phase 1)
+   addresses the *prose quality* half of that complaint; deeper branching
+   questlines are still a separate, unaddressed ask.
 
 ### The endgame — explicitly discussed, NOT designed or built yet
 
@@ -450,7 +462,8 @@ implemented. It wasn't — flagged and fixed same session, both pieces:
   a 100% wall either way — a DF user can still get lucky, a swimmer can
   still drown, just at wildly different odds. `perform-action.ts`'s
   `exploreCharacter` passes `!!character.devilFruitId`. One live event
-  template, "El mar no perdona" (global, weight 6, `waterHazard: true`),
+  template, "El mar no perdona" (global, weight 2 — dropped from an initial
+  6 after the user found it fired too often, `waterHazard: true`),
   shares its onSuccess/onFail/onCriticalFail text between DF and non-DF
   characters on purpose — the *same* ocean, nothing to a swimmer,
   everything to a fruit user; the asymmetry is entirely the probability
@@ -485,6 +498,125 @@ implemented. It wasn't — flagged and fixed same session, both pieces:
   fired and cost real HP; force-captured the same character and confirmed
   `bailBerries` was exactly the expected ×1.6 and the news post named the
   Kairoseki shackles. Local dev DB reset to clean-seeded state afterward.
+
+**AI Game Master, Phase 1 — narration + free-text actions** (2026-09-23):
+the user found explore/combat text "muy seco" (dry) — fixed static flavor
+arrays and "X golpea a Y (12 de daño)" combat lines — and shared a
+Fate-Core-style AI game-master prompt plus a real freeform roleplay
+transcript with friends as the bar for what it should feel like. Also
+asked for free-text player actions and directly chose, after being shown
+the tradeoff, **text replaces the buttons as the primary input** (not a
+safer "buttons decide, text only narrates" design) — meaning
+classification is a real-state-changing decision in a permadeath game,
+not cosmetic. Hard rule kept throughout: **the engine still computes every
+number** (`src/lib/engine/*` untouched) — the AI only turns an
+already-resolved outcome into prose, and classifies free text into a
+pre-constrained valid-action set; it never invents an outcome.
+- **New `src/lib/ai/` layer**, parallel to `engine/` (pure) and `game/`
+  (Prisma orchestration): `models.ts` (`OPENROUTER_MODELS`, env-overridable
+  via `OPENROUTER_MODELS`, defaults to a handful of OpenRouter free-tier
+  models incl. `openrouter/free`, which itself round-robins a random free
+  model per call); `openrouter-client.ts` (`callOpenRouter` — plain
+  `fetch` against OpenRouter's OpenAI-compatible endpoint, no new
+  dependency, loops the model list on failure, throws `AiUnavailableError`
+  only once every model's exhausted); `narrate-prompt.ts` (pure prompt
+  builders, `buildExploreNarrationPrompt`/`buildCombatNarrationPrompt` —
+  unit tested for "the resolved numbers appear" and "the model is told
+  never to invent outcomes"); `classify-action.ts` (see below);
+  `narrate.ts` (`narrateExplore`/`narrateCombat` — never throw, fall back
+  to the exact old static text on any AI failure, log via
+  `logError("ai/narrate-explore"|"ai/narrate-combat", err, meta)`; also
+  `getRecentMemory(characterId, take=8)` reusing the existing
+  `GameLogEntry` query shape as the AI's "remembers character history"
+  context — no new memory table needed for this phase).
+- **Free-text classification safety** (`classify-action.ts`) — the
+  central design concern given the user's "text replaces buttons" choice:
+  the caller computes the actual valid action set for the character's
+  *current* state first (e.g. only `engage`/`flee` during a
+  `pendingEncounter.phase==="threat"`) and the model is only ever offered
+  those; whatever it returns is re-validated against that same set in
+  code, anything else becomes `"unclear"`; `"unclear"` is a real
+  zero-side-effect no-op (never guessed at via keywords) — the player is
+  asked to rephrase or fall back to a button; a small keyword heuristic
+  (`KEYWORD_RULES`) fires ONLY when the OpenRouter call itself fails
+  outright (network/timeout/all models down), never to override a
+  model-seen-but-ambiguous `"unclear"`; every response is prefixed with
+  `"(interpretado como: X)"` for transparency; the original explicit
+  `{action:"..."}` buttons stay in the UI as a smaller secondary path
+  that skips classification entirely. One extra hardening found through
+  live testing (not assumed): `openrouter/free` picks a random free model
+  per call, so quality varies — a weak pick misclassified clearly-phrased
+  text in a live run. Fixed with a bounded retry (`MAX_ATTEMPTS = 2` in
+  `classifyPlayerAction`) — still purely AI-driven and still only final
+  after two genuine attempts, just reduces the false-`"unclear"` rate
+  from model-rotation variance.
+- **Wiring**: `perform-action.ts`'s `exploreCharacter` (non-combat
+  resolution) and `engageCharacter` (combat resolution) now build their
+  log via `narrateExplore`/`narrateCombat` instead of static
+  arrays/round-by-round string concatenation; both gained an optional
+  `intentText?` param carrying the player's free text into the prompt.
+  `resolveFreeTextAction(characterId, userId, freeText)` (new, same file)
+  computes the valid-action set from the character's pending-encounter
+  state, calls `classifyPlayerAction`, throws on `"unclear"`, and
+  dispatches to the matching existing action function
+  (explore/train/rest/engage/flee/mercy_spare/mercy_finish), prefixing
+  the result log with the interpretation line. The API route
+  (`actions/route.ts`) accepts a new schema arm,
+  `{freeText: string (1-500 chars)}`, alongside the original discriminated
+  union, routing to `resolveFreeTextAction`. `play/[id]/page.tsx` now
+  shows a prominent free-text `<textarea>` + "Actuar" button (Enter to
+  submit) above the existing action buttons, which are kept but restyled
+  smaller/secondary under an "O usa los botones:" label. **Scoping note**:
+  AI narration was applied to explore/combat *resolution* (the two spots
+  matching the "muy seco" complaint most directly) but not yet to the
+  combat-trigger/threat-intro moment or to `fleeCharacter`/
+  `resolveMercyChoice`'s narrative text, which still use static strings —
+  a pragmatic scope cut for this phase, not a design decision; worth
+  covering in a follow-up pass if the difference is noticeable in play.
+- **Training cooldown** (separate small ask bundled into the same
+  session): additive `Character.lastTrainedAt DateTime?` — null reads as
+  "eligible now" so no existing character is affected. `trainCharacter`
+  checks it against now-minus-30-minutes before calling `trainHaki`,
+  throwing the existing `GameActionError` pattern with a Spanish cooldown
+  message on a too-soon attempt, and sets it to `new Date()` on success.
+  30 minutes was the user's explicit choice among options offered.
+- **Enemy `personality`** (`EnemySpec.personality?: string` in
+  `engine/events.ts`, purely additive/optional): backfilled on the four
+  named/boss enemies in `prisma/seed.ts` (local crime boss, Arlong,
+  Blackbeard's lieutenant, the CP-0 squad) so combat narration can stay
+  in-character for named fights; minor mooks intentionally left without
+  one, narrating competently-generic instead.
+- **Bundled balance fix**: "El mar no perdona" (the water-hazard event
+  from the devil-fruit-weakness work above) dropped from weight 6 to
+  weight 2 in `prisma/seed.ts` — the user found it firing too often once
+  it was live.
+- **Security housekeeping**: the OpenRouter key the user pasted directly
+  in chat now lives only in `.env` (already gitignored) as
+  `OPENROUTER_API_KEY`; a second, Gemini-shaped key they also pasted does
+  not match Google AI Studio's real key format (`AIzaSy...`) and was
+  deliberately not used/built around — flagged to the user as likely the
+  wrong artifact type. `.env.example` documents both `OPENROUTER_API_KEY`
+  and the optional `OPENROUTER_MODELS` override with comments.
+- **Verified**: `models.test.ts` (4), `narrate-prompt.test.ts` (11),
+  `classify-action.test.ts` (13, incl. a retry-then-succeed case and a
+  gives-up-after-two-attempts case added after the live model-rotation
+  finding above) — full suite green, `npx tsc --noEmit` clean. Live,
+  against the real OpenRouter API: `scripts/ai-narration-smoke.ts`
+  (narration is real prose, not the static fallback; classification picks
+  the right action for unambiguous text; a deliberately-bogus API key
+  still falls back safely rather than throwing, for both narration and
+  classification). Live, real browser: `scripts/ai-e2e-smoke.mjs`
+  (register → create character → free-text explore → confirm the
+  "(interpretado como: ...)" line and AI prose render → resolve whatever
+  combat randomly triggered → train → confirm an immediate second train
+  is blocked by the cooldown message → zero unexpected console errors,
+  the two expected 400s from the deliberately-triggered
+  unclear/cooldown paths filtered out of that check on purpose). Local
+  dev DB reset to clean-seeded state afterward.
+- **Deferred, not built**: full multiplayer AI orchestration (turn
+  order, crew presence panel, same-crew narration sharing, free-text
+  separation detection) was part of the user's original ask but
+  explicitly deferred to its own phase — see Roadmap item 1.
 
 ## Conventions to keep matching
 

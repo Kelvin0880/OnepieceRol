@@ -9,11 +9,12 @@ import {
   engageCharacter,
   fleeCharacter,
   resolveMercyChoice,
+  resolveFreeTextAction,
   GameActionError,
 } from "@/lib/game/perform-action";
 import { logError } from "@/lib/log-error";
 
-const schema = z.discriminatedUnion("action", [
+const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("explore") }),
   z.object({ action: z.literal("train") }),
   z.object({ action: z.literal("rest") }),
@@ -23,12 +24,22 @@ const schema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("mercy"), spare: z.boolean() }),
 ]);
 
+// Free text is the primary input path (see resolveFreeTextAction) — the
+// explicit `action` shapes above stay as the reliable button fallback.
+const freeTextSchema = z.object({ freeText: z.string().min(1).max(500) });
+
+const schema = z.union([actionSchema, freeTextSchema]);
+
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const userId = await requireUserId();
     const { id } = await params;
     const parsed = schema.safeParse(await req.json().catch(() => null));
     if (!parsed.success) return NextResponse.json({ error: "Acción inválida." }, { status: 400 });
+
+    if ("freeText" in parsed.data) {
+      return NextResponse.json(await resolveFreeTextAction(id, userId, parsed.data.freeText));
+    }
 
     switch (parsed.data.action) {
       case "explore":

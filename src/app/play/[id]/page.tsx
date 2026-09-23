@@ -209,6 +209,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [matchups, setMatchups] = useState<Record<string, string>>({});
   const [battleError, setBattleError] = useState<string | null>(null);
   const [battleBusy, setBattleBusy] = useState(false);
+  const [freeText, setFreeText] = useState("");
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/characters/${id}`);
@@ -298,7 +299,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     }
   }
 
-  async function doAction(body: Record<string, unknown>) {
+  async function doAction(body: Record<string, unknown>): Promise<boolean> {
     setBusy(true);
     setError(null);
     try {
@@ -310,14 +311,22 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
       const result = await res.json();
       if (!res.ok) {
         setError(result.error ?? "No se pudo completar la acción.");
-        return;
+        return false;
       }
       if (result.log) setFeed((f) => [...result.log, ...f].slice(0, 60));
       if (result.arcIntro) setArcIntro(result.arcIntro);
       await load();
+      return true;
     } finally {
       setBusy(false);
     }
+  }
+
+  async function submitFreeText() {
+    const text = freeText.trim();
+    if (!text || busy) return;
+    const ok = await doAction({ freeText: text });
+    if (ok) setFreeText("");
   }
 
   if (error && !data) {
@@ -415,6 +424,35 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
             </div>
             <p className="text-sm text-ink-dim mb-4">{character.currentIsland.description}</p>
 
+            {!isDead && !isImprisoned && (
+              <div className="mb-4">
+                <label className="text-xs text-ink-dim mb-1 block">¿Qué haces?</label>
+                <textarea
+                  className="w-full bg-sea-deep border border-[--line] rounded px-3 py-2 text-sm outline-none focus:border-gold resize-none"
+                  rows={2}
+                  placeholder={
+                    character.pendingEncounter?.phase === "threat"
+                      ? "Ej: Desenfundo mi espada y cargo contra él sin dudar."
+                      : character.pendingEncounter?.phase === "victory"
+                      ? "Ej: Le perdono la vida y le advierto que no vuelva."
+                      : "Ej: Camino por el muelle preguntando por trabajo."
+                  }
+                  value={freeText}
+                  disabled={busy}
+                  onChange={(e) => setFreeText(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && !e.shiftKey) {
+                      e.preventDefault();
+                      submitFreeText();
+                    }
+                  }}
+                />
+                <button className="btn-gold px-4 py-2 text-sm mt-2" disabled={busy || !freeText.trim()} onClick={submitFreeText}>
+                  Actuar
+                </button>
+              </div>
+            )}
+
             {!isDead && !isImprisoned && character.pendingEncounter?.phase === "threat" && (
               <div className="panel p-3 mb-3" style={{ borderColor: "var(--blood)" }}>
                 <p className="text-sm mb-1">
@@ -423,11 +461,12 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                 <p className={`text-xs mb-3 ${ASSESSMENT_LABEL[character.pendingEncounter.assessment].color}`}>
                   {ASSESSMENT_LABEL[character.pendingEncounter.assessment].text}
                 </p>
+                <p className="text-xs text-ink-dim mb-2">O usa los botones:</p>
                 <div className="flex gap-2">
-                  <button className="btn-gold px-4 py-2 text-sm" disabled={busy} onClick={() => doAction({ action: "engage" })}>
+                  <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "engage" })}>
                     Luchar
                   </button>
-                  <button className="btn-ghost px-4 py-2 text-sm" disabled={busy} onClick={() => doAction({ action: "flee" })}>
+                  <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "flee" })}>
                     Huir
                   </button>
                 </div>
@@ -439,11 +478,12 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                 <p className="text-sm mb-3">
                   <span className="text-gold-bright">{character.pendingEncounter.enemyName}</span> está derrotado y a tu merced. ¿Qué haces?
                 </p>
+                <p className="text-xs text-ink-dim mb-2">O usa los botones:</p>
                 <div className="flex gap-2">
-                  <button className="btn-ghost px-4 py-2 text-sm" disabled={busy} onClick={() => doAction({ action: "mercy", spare: true })}>
+                  <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "mercy", spare: true })}>
                     Perdonar
                   </button>
-                  <button className="btn-gold px-4 py-2 text-sm" disabled={busy} onClick={() => doAction({ action: "mercy", spare: false })}>
+                  <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "mercy", spare: false })}>
                     Rematar
                   </button>
                 </div>
@@ -451,14 +491,15 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
             )}
 
             {!isDead && !isImprisoned && !character.pendingEncounter && (
-              <div className="flex flex-wrap gap-2">
-                <button className="btn-gold px-4 py-2 text-sm" disabled={busy} onClick={() => doAction({ action: "explore" })}>
+              <div className="flex flex-wrap items-center gap-2">
+                <span className="text-xs text-ink-dim">O usa los botones:</span>
+                <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "explore" })}>
                   Explorar
                 </button>
-                <button className="btn-ghost px-4 py-2 text-sm" disabled={busy} onClick={() => doAction({ action: "train" })}>
+                <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "train" })}>
                   Entrenar
                 </button>
-                <button className="btn-ghost px-4 py-2 text-sm" disabled={busy} onClick={() => doAction({ action: "rest" })}>
+                <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "rest" })}>
                   Descansar
                 </button>
               </div>

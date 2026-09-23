@@ -16,6 +16,7 @@ export interface EnemySpec {
   def: number;
   spd: number;
   isBoss?: boolean;
+  personality?: string; // short in-character flavor line, fed to AI narration
 }
 
 export interface EventBody {

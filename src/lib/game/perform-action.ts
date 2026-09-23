@@ -11,7 +11,11 @@ import { toCombatant, generalSkillModifier } from "./derive";
 import { tickWorldIfDue } from "./world-tick";
 import { postNews, handleDeathCheck } from "./death-resolution";
 import { applyBountyOrNotoriety } from "./reputation";
+import { narrateExplore, narrateCombat, getRecentMemory } from "../ai/narrate";
+import { classifyPlayerAction, ActionId } from "../ai/classify-action";
 import { CharacterStatus } from "@prisma/client";
+
+const TRAINING_COOLDOWN_MS = 30 * 60 * 1000;
 
 export class GameActionError extends Error {}
 
@@ -76,6 +80,7 @@ interface StoredEnemy {
   def: number;
   spd: number;
   isBoss: boolean;
+  personality?: string;
 }
 
 interface StoredRewards {
@@ -98,7 +103,7 @@ const emptyResult = (log: string[], newLevel: number): ActionResult => ({
   newsPosted: [],
 });
 
-export async function exploreCharacter(characterId: string, userId: string): Promise<ActionResult> {
+export async function exploreCharacter(characterId: string, userId: string, intentText?: string): Promise<ActionResult> {
   await tickWorldIfDue();
   const character = await loadCharacterOrThrow(characterId, userId);
   if (character.pendingEncounter) {
@@ -161,11 +166,13 @@ export async function exploreCharacter(characterId: string, userId: string): Pro
   const modifier = generalSkillModifier(character);
   const resolution = resolveEvent(rng, body, modifier, character.currentIsland.dangerLevel, character.level, !!character.devilFruitId);
 
-  const log: string[] = [resolution.flavorText, resolution.narrative];
+  const introLog: string[] = [resolution.flavorText, resolution.narrative];
   const newsLog: string[] = [];
 
   // Combat events pause here: the player decides fight-or-flee before
-  // anything is committed to the database.
+  // anything is committed to the database. Not AI-narrated in this phase —
+  // only the resolved outcome (here and in engageCharacter) is, since there's
+  // no final result yet to narrate.
   if (resolution.triggersCombat && resolution.enemy) {
     const playerCombatant = toCombatant(character);
     const tierMultiplier =
@@ -177,6 +184,7 @@ export async function exploreCharacter(characterId: string, userId: string): Pro
       def: resolution.enemy.def,
       spd: resolution.enemy.spd,
       isBoss: !!resolution.enemy.isBoss,
+      personality: resolution.enemy.personality,
     };
     const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
     const assessment = assessThreat(playerCombatant, enemyCombatant);
@@ -194,20 +202,41 @@ export async function exploreCharacter(characterId: string, userId: string): Pro
         characterId: character.id,
         enemyJson: JSON.stringify(enemy),
         rewardsJson: JSON.stringify(rewards),
-        narrative: log.join(" "),
+        narrative: introLog.join(" "),
         assessment,
       },
     });
 
-    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: full.kind.toLowerCase(), text: log.join(" ") } });
+    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: full.kind.toLowerCase(), text: introLog.join(" ") } });
 
     return {
-      ...emptyResult(log, character.level),
+      ...emptyResult(introLog, character.level),
       pendingCombat: { enemyName: enemy.name, assessment, isBoss: enemy.isBoss },
     };
   }
 
   // Non-combat narrative beat: apply everything immediately.
+  const memory = await getRecentMemory(character.id, 8);
+  const log: string[] = await narrateExplore(
+    {
+      characterName: character.name,
+      faction: character.faction,
+      level: character.level,
+      islandName: character.currentIsland.name,
+      islandDescription: character.currentIsland.description,
+      outcomeTier: resolution.outcome,
+      baseFlavorText: resolution.flavorText,
+      baseNarrative: resolution.narrative,
+      berries: resolution.berries,
+      xp: resolution.xp,
+      bounty: resolution.bounty,
+      hpLoss: resolution.hpLoss,
+      intentText,
+      recentMemory: memory,
+    },
+    { characterId: character.id }
+  );
+
   let hpDelta = -resolution.hpLoss;
   let died = false;
   let deathCause: string | undefined;
@@ -270,7 +299,7 @@ function rollCompanionAssist(character: LoadedCharacter, rng: () => number): str
   return rng() < chance ? candidate.name : null;
 }
 
-export async function engageCharacter(characterId: string, userId: string): Promise<ActionResult> {
+export async function engageCharacter(characterId: string, userId: string, intentText?: string): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
   const pending = character.pendingEncounter;
   if (!pending) throw new GameActionError("No tienes ningún enfrentamiento pendiente.");
@@ -291,9 +320,24 @@ export async function engageCharacter(characterId: string, userId: string): Prom
 
   const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
   const combatResult = runCombat(rng, { ...playerCombatant, hp: character.hp, maxHp: character.maxHp }, enemyCombatant);
-  for (const round of combatResult.rounds) {
-    if (round.damage > 0) log.push(`${round.attacker} golpea a ${round.defender} (${round.damage} de daño).`);
-  }
+
+  const memory = await getRecentMemory(character.id, 8);
+  const narrated = await narrateCombat(
+    {
+      characterName: character.name,
+      enemyName: enemy.name,
+      enemyPersonality: enemy.personality,
+      isBoss: enemy.isBoss,
+      rounds: combatResult.rounds,
+      victor: combatResult.victor === "player" ? "player" : "enemy", // a "draw" is treated as a loss below, same as the existing logic
+      playerHpLeft: Math.max(0, combatResult.playerHpLeft),
+      playerMaxHp: character.maxHp,
+      intentText,
+      recentMemory: memory,
+    },
+    { characterId: character.id }
+  );
+  log.push(...narrated);
 
   if (combatResult.victor === "player") {
     log.push(`¡${enemy.name} queda derrotado y a tu merced!`);
@@ -459,6 +503,16 @@ export async function resolveMercyChoice(characterId: string, userId: string, sp
 export async function trainCharacter(characterId: string, userId: string): Promise<ActionResult> {
   await tickWorldIfDue();
   const character = await loadCharacterOrThrow(characterId, userId);
+
+  if (character.lastTrainedAt) {
+    const readyAt = character.lastTrainedAt.getTime() + TRAINING_COOLDOWN_MS;
+    const remainingMs = readyAt - Date.now();
+    if (remainingMs > 0) {
+      const remainingMin = Math.ceil(remainingMs / 60_000);
+      throw new GameActionError(`Necesitas descansar antes de volver a entrenar en serio. Podrás entrenar de nuevo en ${remainingMin} min.`);
+    }
+  }
+
   const rng = liveRng();
 
   const trainArmament = character.armamentHaki <= character.observationHaki;
@@ -475,7 +529,10 @@ export async function trainCharacter(characterId: string, userId: string): Promi
 
   await prisma.character.update({
     where: { id: character.id },
-    data: trainArmament ? { armamentHaki: character.armamentHaki + result.gained } : { observationHaki: character.observationHaki + result.gained },
+    data: {
+      ...(trainArmament ? { armamentHaki: character.armamentHaki + result.gained } : { observationHaki: character.observationHaki + result.gained }),
+      lastTrainedAt: new Date(),
+    },
   });
 
   await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "training", text: log.join(" ") } });
@@ -521,4 +578,76 @@ export async function restCharacter(characterId: string, userId: string): Promis
   const log = ["Descansas y recuperas fuerzas antes de tu próxima aventura."];
   await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "rest", text: log[0] } });
   return { ...emptyResult(log, character.level), hpDelta: healed - character.hp };
+}
+
+const FREE_TEXT_ACTION_LABELS: Record<ActionId, string> = {
+  explore: "Explorar",
+  train: "Entrenar",
+  rest: "Descansar",
+  travel: "Viajar",
+  engage: "Luchar",
+  flee: "Huir",
+  mercy_spare: "Perdonar",
+  mercy_finish: "Rematar",
+};
+
+/**
+ * Free text is the primary input (per the user's explicit choice over a
+ * safer "buttons decide, text only narrates" alternative) — so this is
+ * the one place that decides what actually happens from prose. Safety
+ * rules, all load-bearing:
+ *   1. Only the actions mechanically valid *right now* are ever offered
+ *      to the classifier — it cannot return something nonsensical for
+ *      the current game state.
+ *   2. "unclear" is a hard no-op: no DB write, no turn consumed, the
+ *      player is asked to rephrase or use the fallback buttons.
+ *   3. Every response is prefixed with what was actually understood, so
+ *      a wrong read is immediately visible instead of silently acted on.
+ * `travel` is intentionally excluded from free-text classification: it
+ * needs a target island id the classifier has no way to extract, so it
+ * stays button-only for now.
+ */
+export async function resolveFreeTextAction(characterId: string, userId: string, freeText: string): Promise<ActionResult> {
+  const character = await loadCharacterOrThrow(characterId, userId);
+
+  const validActions: ActionId[] = character.pendingEncounter
+    ? character.pendingEncounter.phase === "threat"
+      ? ["engage", "flee"]
+      : ["mercy_spare", "mercy_finish"]
+    : ["explore", "train", "rest"];
+
+  const { action } = await classifyPlayerAction(freeText, validActions);
+  if (action === "unclear") {
+    throw new GameActionError("No logro entender qué quieres hacer. Prueba a describirlo de otra forma, o usa los botones de abajo.");
+  }
+
+  let result: ActionResult;
+  switch (action) {
+    case "explore":
+      result = await exploreCharacter(characterId, userId, freeText);
+      break;
+    case "train":
+      result = await trainCharacter(characterId, userId);
+      break;
+    case "rest":
+      result = await restCharacter(characterId, userId);
+      break;
+    case "engage":
+      result = await engageCharacter(characterId, userId, freeText);
+      break;
+    case "flee":
+      result = await fleeCharacter(characterId, userId);
+      break;
+    case "mercy_spare":
+      result = await resolveMercyChoice(characterId, userId, true);
+      break;
+    case "mercy_finish":
+      result = await resolveMercyChoice(characterId, userId, false);
+      break;
+    default:
+      // Unreachable given validActions above, kept for exhaustiveness/defense.
+      throw new GameActionError("Esa acción todavía no se puede hacer por texto libre — usa los botones.");
+  }
+
+  return { ...result, log: [`(interpretado como: ${FREE_TEXT_ACTION_LABELS[action]})`, ...result.log] };
 }
