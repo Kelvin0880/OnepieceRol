@@ -1397,7 +1397,7 @@ absolutely everything: **`APLICACION_COMPLETA.md`** — keep it in sync.
 - Routes under `api/characters/[id]/`: `territory`, `buster-call`, `raid`, `black-market`, `stream`, and `prison` op "escape". `GET` returns `jointFight`, `territory`, `busterCall`, `raid`, `blackMarket`, `missions`.
 - Wrappers: `exploreCharacter`/`resolveMercyChoice`/`trainCharacter`/`travelCharacter` wrap `*Inner` functions to feed mission progress (`withMissions`).
 - Schema additions (all additive): JointFight*, Territory, BusterCall, Raid, Alliance, Consequence, Mission, IslandBriefing; `Character.title/knowsTruth`, `Island.tidal/requiresRoadPoneglyphs`, `WorldClock.era`, `Imprisonment.escape*`, `ActorRole.GOROSEI/HIDDEN_RULER`. Production needs the documented Neon push before deploying.
-- Verification scripts: `joint-fight-check`, `guardian-check`, `territory-check`, `escape-buster-check`, `raid-check`, `consequence-check`, `black-market-check`, `missions-check`, `verify-world-expansion` (DB) and `*-ui-check.mjs` / `missions-ui-check.mjs` / `realtime-check.mjs` (browser).mjs` and `roleplay-attack-check.mjs`.
+- Verification scripts: `joint-fight-check`, `guardian-check`, `territory-check`, `escape-buster-check`, `raid-check`, `consequence-check`, `black-market-check`, `missions-check`, `verify-world-expansion` (DB) and `*-ui-check.mjs` / `missions-ui-check.mjs` / `realtime-check.mjs` (browser); also `ai-e2e-smoke.mjs` and `roleplay-attack-check.mjs`.
 - Keep `docs/mapa.html` in sync via `npx tsx scripts/gen-map-islands.ts` (prints ISLANDS entries from the seeded DB).
 
 ## Conventions to keep matching
