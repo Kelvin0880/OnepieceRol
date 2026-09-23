@@ -89,6 +89,10 @@ model Character {
   battleParticipations GroupBattleParticipant[]
 
   poneglyphsRead String @default("[]") // JSON string array of Poneglyph ids read
+  // How actively hunted this character is for what they know — Poneglyphs
+  // are stone, not loot; nobody steals them back, they silence the reader.
+  // Spikes hard on each new Poneglyph, decays slowly with time.
+  poneglyphHeat  Int    @default(0)
 
   imprisonment     Imprisonment?
   pendingEncounter PendingEncounter?

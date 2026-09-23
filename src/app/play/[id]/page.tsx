@@ -131,6 +131,8 @@ interface Character {
   observationHaki: number;
   armamentHaki: number;
   conquerorsHaki: boolean;
+  poneglyphsRead: string;
+  poneglyphHeat: number;
   currentIsland: Island;
   devilFruit: DevilFruit | null;
   equippedWeapon: Weapon | null;
@@ -668,6 +670,15 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                 <span className="text-gold-bright">{character.notoriety.toLocaleString("es-ES")}</span>
               </div>
             )}
+            {character.poneglyphHeat > 0 && (
+              <div className="pt-2 border-t border-[--line]">
+                <div className="flex justify-between text-xs mb-1">
+                  <span className="text-blood">Perseguido</span>
+                  <span className="text-blood">{character.poneglyphHeat}/150</span>
+                </div>
+                <p className="text-xs text-ink-dim">Lo que sabes te hace un objetivo. Explorar puede traer cazadores.</p>
+              </div>
+            )}
           </div>
 
           <div className="panel p-4">
@@ -706,6 +717,14 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
             ) : (
               <p className="text-xs text-ink-dim">Sin arma equipada.</p>
             )}
+            {(() => {
+              const count = (JSON.parse(character.poneglyphsRead || "[]") as string[]).length;
+              return count > 0 ? (
+                <p className="text-xs text-gold mt-2 pt-2 border-t border-[--line]">
+                  Poneglifos descifrados: {count}/4
+                </p>
+              ) : null;
+            })()}
           </div>
 
           {character.companions.length > 0 && (

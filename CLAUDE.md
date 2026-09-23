@@ -33,10 +33,12 @@ creative license on lore/content specifics.
 - SQLite in dev (`prisma/dev.db`, gitignored). Swap `provider` in
   `prisma/schema.prisma` to `"postgresql"` + a real `DATABASE_URL` for
   production (Supabase/Neon free tier both work).
-- **Windows file lock gotcha**: the dev server holds a lock on the Prisma
-  query engine `.dll`. Any `prisma db push` while `npm run dev` is running
-  fails with `EPERM ... query_engine-windows.dll.node.tmp...`. Always stop
-  the dev server first:
+- **Windows file lock gotcha**: the dev server holds a lock on both the
+  Prisma query engine `.dll` and the SQLite file itself. Any
+  `prisma db push` while `npm run dev` is running fails with
+  `EPERM ... query_engine-windows.dll.node.tmp...`, and `npm run db:reset`
+  fails with `EBUSY ... unlink 'prisma\dev.db'`. Always stop the dev
+  server first:
   `powershell -Command "Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id \$_.OwningProcess -Force }"`
 - Auth is custom: `iron-session` (v9 API —
   `getIronSession(await cookies(), sessionOptions)`) plus `bcryptjs`. No
@@ -273,6 +275,28 @@ state — use them instead of writing new one-off DB scripts.
 for the details. Verified live via curl (register → travel the full East
 Blue chain → confirm Whisky Peak refuses entry at level 1 → boost level →
 confirm entry succeeds), not just typechecked.
+
+**Poneglyph pursuit system** (`src/lib/engine/pursuit.ts`,
+`Character.poneglyphHeat`): reading a Poneglyph doesn't just grant lore —
+Poneglyphs are stone, so nobody steals them back, but the power that lost
+the secret wants the reader silenced. `heatAfterReadingPoneglyph` spikes
+`poneglyphHeat` by 50 (capped at 150) each time `resolveMercyChoice` in
+`perform-action.ts` grants one. From then on, every `exploreCharacter`
+call rolls `rollHunterAmbush` (chance scales with heat, capped at 35%)
+*before* picking a normal event — a hit short-circuits straight into a
+`PendingEncounter` against a "Cazador de Poneglifos" whose stats are
+derived from the player's own current combatant (so it's dangerous at
+any stage, not a fixed-tier fight), tagged `isBoss: true` so victory pays
+out through the normal boss reward path. Heat decays by 3 on every
+explore (ambush or not) via `decayPursuitHeat`, so it's real pressure,
+not a permanent debuff. UI: a "Perseguido" meter in the stats panel and a
+"Poneglifos descifrados: N/4" line in the equipment panel, both in
+`play/[id]/page.tsx`. Verified live via curl (force `poneglyphHeat` to
+150 with `scripts/set-poneglyph-heat.ts`, explore until the ambush fires,
+fight it, confirm heat decayed and boss rewards applied) — not just
+typechecked. Only wired to the one placed Poneglyph so far; when the
+other 3 get placed, granting them already runs through this same path
+for free.
 
 ## Conventions to keep matching
 

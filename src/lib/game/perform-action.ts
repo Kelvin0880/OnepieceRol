@@ -6,6 +6,7 @@ import { trainHaki, rollConquerorsHakiAwakening } from "../engine/haki";
 import { bountyReward, berryReward, xpToNextLevel } from "../engine/economy";
 import { assessThreat, attemptFlee, ThreatAssessment } from "../engine/encounter";
 import { canEnterIsland } from "../engine/travel";
+import { rollHunterAmbush, decayPursuitHeat, heatAfterReadingPoneglyph } from "../engine/pursuit";
 import { toCombatant, generalSkillModifier } from "./derive";
 import { tickWorldIfDue } from "./world-tick";
 import { postNews, handleDeathCheck } from "./death-resolution";
@@ -104,6 +105,42 @@ export async function exploreCharacter(characterId: string, userId: string): Pro
     throw new GameActionError("Tienes un enfrentamiento sin resolver. Decide si luchar o huir primero.");
   }
   const rng = liveRng();
+
+  // Holding a Poneglyph's secret makes you a target — before anything
+  // else, roll whether whoever lost that secret has finally caught up.
+  if (rollHunterAmbush(rng, character.poneglyphHeat)) {
+    const playerCombatant = toCombatant(character);
+    const enemy: StoredEnemy = {
+      name: "Cazador de Poneglifos",
+      hp: Math.round(character.maxHp * 1.3),
+      atk: Math.round(playerCombatant.atk * 1.05),
+      def: Math.round(playerCombatant.def * 0.9),
+      spd: playerCombatant.spd,
+      isBoss: true,
+    };
+    const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
+    const assessment = assessThreat(playerCombatant, enemyCombatant);
+    const log = [
+      "Nadie que lee un Poneglifo queda a salvo por mucho tiempo. Una sombra armada te alcanza, enviada por quienes no pueden permitirse que ese secreto siga vivo.",
+    ];
+
+    await prisma.character.update({ where: { id: character.id }, data: { poneglyphHeat: decayPursuitHeat(character.poneglyphHeat) } });
+    await prisma.pendingEncounter.create({
+      data: {
+        characterId: character.id,
+        enemyJson: JSON.stringify(enemy),
+        rewardsJson: JSON.stringify({ berries: 0, xp: 20, bounty: 0, islandDanger: character.currentIsland.dangerLevel } satisfies StoredRewards),
+        narrative: log.join(" "),
+        assessment,
+      },
+    });
+    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "pursuit", text: log.join(" ") } });
+
+    return { ...emptyResult(log, character.level), pendingCombat: { enemyName: enemy.name, assessment, isBoss: true } };
+  }
+  if (character.poneglyphHeat > 0) {
+    await prisma.character.update({ where: { id: character.id }, data: { poneglyphHeat: decayPursuitHeat(character.poneglyphHeat) } });
+  }
 
   const templates = await prisma.eventTemplate.findMany({
     where: {
@@ -393,11 +430,18 @@ export async function resolveMercyChoice(characterId: string, userId: string, sp
       const poneglyph = await prisma.poneglyph.findUnique({ where: { id: rewards.poneglyphId } });
       if (poneglyph) {
         const updated = [...(JSON.parse(character.poneglyphsRead) as string[]), poneglyph.id];
-        await prisma.character.update({ where: { id: character.id }, data: { poneglyphsRead: JSON.stringify(updated) } });
+        const newHeat = heatAfterReadingPoneglyph(character.poneglyphHeat);
+        await prisma.character.update({ where: { id: character.id }, data: { poneglyphsRead: JSON.stringify(updated), poneglyphHeat: newHeat } });
         poneglyphGained = poneglyph.codeName;
         log.push(`Descifras el ${poneglyph.codeName}. Su mensaje quedará grabado en tu memoria para siempre.`);
+        log.push("Pero ese conocimiento tiene un precio: ahora eres alguien a quien hay que silenciar.");
         const headline = `${character.name} descifra un Poneglifo de Ruta`;
-        await postNews(headline, `Pocos en el mundo pueden leer los símbolos antiguos — ${character.name} acaba de hacerlo en ${character.currentIsland.name}.`, "Poneglifos", character.id);
+        await postNews(
+          headline,
+          `Pocos en el mundo pueden leer los símbolos antiguos — ${character.name} acaba de hacerlo en ${character.currentIsland.name}. No tardarán en venir a silenciar a quien sabe demasiado.`,
+          "Poneglifos",
+          character.id
+        );
         newsLog.push(headline);
       }
     }
