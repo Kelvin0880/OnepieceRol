@@ -72,21 +72,38 @@ async function callOnce(
 
 /**
  * Tries each model in order, moving to the next on any failure (timeout,
- * non-2xx, empty content). Only throws once every model has failed —
- * callers (narrate.ts, classify-action.ts) are expected to catch this and
- * fall back to non-AI behavior, never to propagate it to the player.
+ * non-2xx, empty content). Only throws once every model has failed (or the
+ * overall time budget below runs out) — callers (narrate.ts,
+ * classify-action.ts) are expected to catch this and fall back to non-AI
+ * behavior, never to propagate it to the player.
  */
 export async function callOpenRouter(system: string, user: string, options: CallOpenRouterOptions): Promise<string> {
   const { models, timeoutMs = 10_000, jsonMode = false, temperature = 0.9, maxTokens, validate } = options;
   if (models.length === 0) throw new AiUnavailableError("No models configured.");
+
+  // Each attempt used to get its own full fresh timeoutMs, so a run of
+  // several slow/hanging models in a row (found live 2026-09-23: 4 of 5
+  // models timed out on the same request) could make the player wait
+  // models.length * timeoutMs — up to 50s for the 5-model list — before
+  // ever seeing the static fallback line. Cap the whole fallback chain's
+  // wall-clock budget instead of letting each attempt spend its full
+  // allowance regardless of how many already have; later attempts get
+  // whatever time is left, and one that has no meaningful time left is
+  // skipped outright rather than fired with a near-zero timeout.
+  const deadline = Date.now() + timeoutMs * 2;
 
   // Collect every model's failure, not just the last — a single "Last error"
   // hid which of the earlier models 429'd vs. timed out vs. returned junk,
   // found live (2026-09-23) trying to diagnose a production fallback spike.
   const errors: string[] = [];
   for (const model of models) {
+    const remaining = deadline - Date.now();
+    if (remaining < 1000) {
+      errors.push(`${model}: skipped, narration time budget exhausted`);
+      continue;
+    }
     try {
-      return await callOnce(model, system, user, jsonMode, temperature, timeoutMs, maxTokens, validate);
+      return await callOnce(model, system, user, jsonMode, temperature, Math.min(timeoutMs, remaining), maxTokens, validate);
     } catch (err) {
       errors.push(`${model}: ${err instanceof Error ? err.message : String(err)}`);
     }
