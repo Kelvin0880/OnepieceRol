@@ -22,7 +22,9 @@ export const ROLE_RULES =
   "MANO BLANCA: no aproveches detalles que el jugador no especificó. Asume siempre sentido común: su personaje está despierto, alerta, con los ojos abiertos, respirando, con su equipo y reflejos normales; " +
   "nunca inventes que está desprevenido, ciego, de espaldas o indefenso por omisión. " +
   "Toda esquiva, bloqueo o técnica debe ser plausible según el entorno, las capacidades y el resultado dado. " +
-  "En el texto del jugador, lo que va entre comillas es lo que su personaje DICE; el resto son sus acciones o intenciones.";
+  "En el texto del jugador, lo que va entre comillas es lo que su personaje DICE; el resto son sus acciones o intenciones. " +
+  "NO REPITAS AL JUGADOR: su mensaje ya está visible en el chat, así que nunca lo resumas, parafrasees ni reescribas (nada de \"Desenfundas tu espada y atacas...\"). " +
+  "Empieza directamente por lo que ocurre COMO CONSECUENCIA: el resultado, la reacción del entorno, de los NPC o del enemigo. Gasta las palabras en lo nuevo.";
 
 const HARD_RULE =
   "Los números y el resultado (éxito, fallo, daño, recompensas, muerte) ya están decididos y son definitivos. " +
@@ -54,7 +56,7 @@ function memoryBlock(memorySummary?: string, recentMemory?: string[]): string {
 
 function intentBlock(intentText?: string): string {
   if (!intentText) return "";
-  return `\n\nEl jugador describió su acción así: "${intentText}". Tenlo en cuenta al narrar, sin dejar que contradiga el resultado ya decidido.`;
+  return `\n\nEl jugador describió su acción así: "${intentText}". Úsalo solo como contexto: no lo repitas ni lo parafrasees, y no dejes que contradiga el resultado ya decidido.`;
 }
 
 export interface ExploreNarrationInput {
@@ -86,7 +88,7 @@ export function buildExploreNarrationPrompt(input: ExploreNarrationInput): { sys
     `xp +${input.xp}, bounty +${input.bounty}, vida -${input.hpLoss}.` +
     intentBlock(input.intentText) +
     memoryBlock(input.memorySummary, input.recentMemory) +
-    "\n\nNarra esta escena, incorporando de forma natural lo que el jugador describió que hacía.";
+    "\n\nNarra lo que ocurre a continuación sin repetir lo que el jugador ya escribió.";
   return { system, user };
 }
 
@@ -173,7 +175,7 @@ export function buildCombatNarrationPrompt(input: CombatNarrationInput): { syste
     memoryBlock(input.memorySummary, input.recentMemory) +
     (input.concluded
       ? "\n\nNarra el final de este combate como una escena viva, con diálogo si el enemigo tiene personalidad. Si el jugador ganó, el enemigo queda derrotado y a su merced, vivo: su destino lo decide el jugador después."
-      : "\n\nNarra primero la acción del jugador respondiendo exactamente a lo que intentó y con el resultado indicado (impacta o es bloqueada/esquivada, y por qué es plausible). " +
+      : "\n\nNo describas de nuevo lo que el jugador intentó (ya lo escribió): empieza directo por el resultado indicado de su movimiento (impacta o es bloqueado/esquivado, y por qué es plausible)." +
         "Luego narra al enemigo actuando por iniciativa propia, con intención letal acorde a su rango, con el resultado indicado, y una o dos líneas suyas si tiene personalidad. " +
         "Termina dejando la iniciativa al jugador, sin decidir cómo reacciona ni qué hace después.");
   return { system, user };
@@ -346,7 +348,7 @@ export function buildSceneNarrationPrompt(input: SceneNarrationInput): { system:
     memoryBlock(input.memorySummary, undefined) +
     transcriptBlock +
     `\n\nEl jugador hace/dice: "${input.playerText}"` +
-    "\n\nContinúa la escena como narrador.";
+    "\n\nContinúa la escena como narrador. No repitas ni parafrasees lo que el jugador acaba de escribir: tu primera frase ya debe ser lo que pasa DESPUÉS (reacción del entorno o de los NPC).";
   return { system, user };
 }
 
@@ -394,7 +396,7 @@ export function buildPartySceneNarrationPrompt(input: PartySceneNarrationInput):
     (input.memorySummary ? `\n\nLo ocurrido antes en esta escena (resumen): ${input.memorySummary}` : "") +
     transcriptBlock +
     `\n\n${input.actingCharacterName} hace/dice: "${input.playerText}"` +
-    "\n\nContinúa la escena como narrador, dirigiéndote al grupo cuando tenga sentido.";
+    "\n\nContinúa la escena como narrador, dirigiéndote al grupo cuando tenga sentido. No repitas ni parafrasees lo que el jugador acaba de escribir: tu primera frase ya debe ser lo que pasa DESPUÉS.";
   return { system, user };
 }
 

@@ -245,3 +245,20 @@ describe("buildMemoryUpdatePrompt", () => {
     expect(user).toContain("todavía no hay ninguno");
   });
 });
+
+describe("no echo of the player's own action", () => {
+  it("every narrator system prompt forbids repeating the player's message", () => {
+    const explore = buildExploreNarrationPrompt(exploreBase);
+    const scene = buildSceneNarrationPrompt({ characterName: "Kaze", faction: "PIRATE", level: 5, islandName: "X", islandDescription: "Y", playerText: "hola" });
+    for (const p of [explore, scene]) expect(p.system).toContain("NO REPITAS AL JUGADOR");
+  });
+
+  it("the ongoing-combat instruction starts from the result, not from re-describing the move", () => {
+    const p = buildCombatNarrationPrompt({
+      characterName: "Kaze", enemyName: "Bruto", isBoss: false, rounds: [], concluded: false,
+      playerHpLeft: 10, playerMaxHp: 10, enemyHpLeft: 10, enemyMaxHp: 10, intentText: "le lanzo un tajo",
+    });
+    expect(p.user).toContain("No describas de nuevo lo que el jugador intentó");
+    expect(p.user).not.toContain("Narra primero la acción del jugador");
+  });
+});
