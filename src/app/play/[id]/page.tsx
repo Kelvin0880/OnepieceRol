@@ -247,6 +247,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [battleBusy, setBattleBusy] = useState(false);
   const [freeText, setFreeText] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [showGuideModal, setShowGuideModal] = useState(false);
   const sceneEndRef = useRef<HTMLDivElement>(null);
 
   const load = useCallback(async () => {
@@ -418,6 +419,9 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           </p>
         </div>
         <div className="flex gap-2">
+          <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowGuideModal(true)}>
+            Mapa y Guía
+          </button>
           <Link href="/news" className="btn-ghost px-3 py-1.5 text-sm">
             Noticias
           </Link>
@@ -426,6 +430,43 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           </Link>
         </div>
       </div>
+
+      {showGuideModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4"
+          style={{ background: "rgba(0,0,0,0.6)" }}
+          onClick={() => setShowGuideModal(false)}
+        >
+          <div className="panel p-6 max-w-md w-full" onClick={(e) => e.stopPropagation()}>
+            <h3 className="font-display text-xl text-gold-bright mb-2">Mapa y Guía del Jugador</h3>
+            <p className="text-sm text-ink-dim mb-4">
+              Referencia externa (se abre en una pestaña nueva): un mapa interactivo de todas las islas con su peligro,
+              nivel mínimo y conexiones, y la guía completa de cómo se juega — incluyendo cómo se sube de nivel de verdad.
+            </p>
+            <div className="flex flex-col gap-2">
+              <a
+                className="btn-gold px-4 py-2 text-sm text-center"
+                href="https://kelvin0880.github.io/OnepieceRol/mapa.html"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Abrir mapa de ruta
+              </a>
+              <a
+                className="btn-ghost px-4 py-2 text-sm text-center"
+                href="https://kelvin0880.github.io/OnepieceRol/guia.html"
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                Abrir guía del jugador
+              </a>
+            </div>
+            <button className="btn-ghost px-3 py-1.5 text-xs mt-4 w-full" onClick={() => setShowGuideModal(false)}>
+              Cerrar
+            </button>
+          </div>
+        </div>
+      )}
 
       {arcIntro && (
         <div className="panel p-5" style={{ borderColor: "var(--gold)" }}>

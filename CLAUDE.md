@@ -930,6 +930,52 @@ esta isla" list, plus the existing `GroupBattle` challenge system).
   `prisma generate --schema=...production.prisma` → `prisma db push` →
   `prisma generate` back to sqlite) before deploying.
 
+**Interactive route map + player guide on GitHub Pages** (2026-09-23,
+same session as the multiplayer party slice): the user said plainly they
+genuinely don't know how to progress — what each island requires, how
+leveling actually works (they only knew Haki training, not that level
+comes from XP via explore/combat), what's currently in the game at all.
+Asked for a real interactive route map plus an update to a `guia.html`
+they'd made themselves, both hosted on **GitHub Pages** rather than
+served by the Next.js app — explicitly to avoid loading Render for
+reference material that rarely changes, and because the repo is public
+(`Kelvin0880/OnepieceRol`) so Pages is free.
+- **New `docs/` folder**, pages-enabled via `gh api repos/.../pages`
+  pointing at `main` branch, `/docs` path (no separate `gh-pages` branch,
+  no build step — plain static HTML, same self-contained CDN-Tailwind/
+  Font-Awesome style as the user's own `guia.html`). Live at
+  `https://kelvin0880.github.io/OnepieceRol/`.
+  - `docs/mapa.html` — the interactive map: every island's danger,
+    minimum level, faction control, description, and connections is
+    **hand-transcribed from `prisma/seed.ts`'s `islandDefs`/`adjacency`**
+    (not fetched live — this is static reference content, update it by
+    hand whenever islands are added/changed there) rendered as an SVG
+    node graph the user can click through, plus an explicit "cómo subo
+    de nivel" box addressing the exact confusion above (training only
+    raises Haki; level comes from `grantXp`, fed by successful
+    `explore`/combat outcomes).
+  - `docs/guia.html` — the user's own guide, updated with the shared
+    party-scene mechanic and the same leveling clarification, kept in
+    the same visual style they'd already built.
+  - `docs/index.html` — a small landing page linking both.
+- **In-app link**: `play/[id]/page.tsx` gained a "Mapa y Guía" button
+  (header, next to Noticias) opening a small modal with direct links to
+  both pages (`target="_blank"`) — the modal the user explicitly asked
+  for, not a full redesign of in-app help.
+- Verified: `scripts/check-map-page.mjs` (Playwright against the local
+  `file://` HTML — confirms the SVG map renders, node click updates the
+  detail panel with the right island data, zero console errors) and
+  `scripts/check-guide-modal.mjs` (real browser against `npm run dev`,
+  confirms the modal opens and both links point at the live Pages URLs).
+  Pages build confirmed live via `gh api .../pages/builds/latest` polling
+  (`"status":"built"`) and a `curl` 200 on all three URLs before
+  reporting done.
+- **Keep in sync**: if `prisma/seed.ts`'s island list, connections, or
+  Poneglyph placements change, update the `ISLANDS`/`EDGES` data at the
+  top of `docs/mapa.html`'s `<script>` block to match — nothing wires
+  this automatically, by design (a static reference page has no server
+  to call).
+
 ## Conventions to keep matching
 
 - All player-facing text is in Spanish (the user writes in Spanish).
