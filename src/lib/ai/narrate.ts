@@ -23,9 +23,14 @@ import {
   buildIslandBriefingPrompt,
   buildStaticBriefing,
   IslandBriefingInput,
+  directivesBlock,
+  buildRecruitNarrationPrompt,
+  RecruitNarrationInput,
 } from "./narrate-prompt";
 import { callOpenRouter } from "./openrouter-client";
 import { OPENROUTER_MODELS } from "./models";
+import { describeCapabilities } from "../engine/capabilities";
+import { currentStamina } from "../game/combat-prep";
 
 // Long, inspiring scenes need real time to write: a 6+ paragraph reply is normal now.
 const NARRATION_TIMEOUT_MS = 30_000;
@@ -54,6 +59,27 @@ export function isValidNarration(text: string): boolean {
  * Used as short-term context by scene narration and by combat/explore
  * prompts once a scene has some history.
  */
+/** Tone + standing out-of-role notes + the sheet of what the character can really do; never throws (defaults if the row is missing). */
+export async function loadDirectives(characterId: string): Promise<string> {
+  try {
+    const c = await prisma.character.findUnique({
+      where: { id: characterId },
+      include: { devilFruit: { select: { name: true } }, equippedWeapon: { select: { name: true } }, companions: { where: { status: "ALIVE" }, select: { name: true } } },
+    });
+    if (!c) return directivesBlock();
+    const caps = describeCapabilities({
+      name: c.name, level: c.level, armamentHaki: c.armamentHaki, observationHaki: c.observationHaki, conquerorsHaki: c.conquerorsHaki,
+      fruitName: c.devilFruit?.name, fruitMastery: c.fruitMastery, fruitAwakened: c.fruitAwakened, weaponName: c.equippedWeapon?.name,
+      stamina: currentStamina(c), maxStamina: c.maxStamina, hp: c.hp, maxHp: c.maxHp, companions: c.companions.map((n) => n.name),
+    });
+    return `
+
+${caps}${directivesBlock(c.narratorTone, c.oocNotes)}`;
+  } catch {
+    return directivesBlock();
+  }
+}
+
 export async function getRecentScene(characterId: string, take = 12): Promise<string[]> {
   const entries = await prisma.sceneMessage.findMany({
     where: { characterId },
@@ -73,7 +99,8 @@ export async function getRecentScene(characterId: string, take = 12): Promise<st
 export async function narrateExplore(input: ExploreNarrationInput, meta: { characterId: string }): Promise<string[]> {
   const fallback = [input.baseFlavorText, input.baseNarrative];
   try {
-    const { system, user } = buildExploreNarrationPrompt(input);
+    const { system: baseSystem, user } = buildExploreNarrationPrompt(input);
+    const system = baseSystem + (await loadDirectives(meta.characterId));
     const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 1400, validate: isValidNarration });
     return [text.trim()];
   } catch (err) {
@@ -88,7 +115,8 @@ export async function narrateCombat(input: CombatNarrationInput, meta: { charact
     r.damage > 0 ? `${r.attacker} golpea a ${r.defender} (${r.damage} de daño).` : `${r.attacker} ataca a ${r.defender}, pero no logra hacerle daño.`
   );
   try {
-    const { system, user } = buildCombatNarrationPrompt(input);
+    const { system: baseSystem, user } = buildCombatNarrationPrompt(input);
+    const system = baseSystem + (await loadDirectives(meta.characterId));
     const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2500, validate: isValidNarration });
     return [text.trim()];
   } catch (err) {
@@ -100,7 +128,8 @@ export async function narrateCombat(input: CombatNarrationInput, meta: { charact
 /** Narrates a threat appearing (before combat starts). Falls back to the template's static text. */
 export async function narrateEncounterIntro(input: EncounterIntroInput, fallback: string[], meta: { characterId: string }): Promise<string[]> {
   try {
-    const { system, user } = buildEncounterIntroPrompt(input);
+    const { system: baseSystem, user } = buildEncounterIntroPrompt(input);
+    const system = baseSystem + (await loadDirectives(meta.characterId));
     const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 1500, validate: isValidNarration });
     return [text.trim()];
   } catch (err) {
@@ -146,7 +175,8 @@ export async function narrateJointFight(input: JointFightNarrationInput, meta: {
  */
 export async function narrateScene(input: SceneNarrationInput, meta: { characterId: string }): Promise<string> {
   try {
-    const { system, user } = buildSceneNarrationPrompt(input);
+    const { system: baseSystem, user } = buildSceneNarrationPrompt(input);
+    const system = baseSystem + (await loadDirectives(meta.characterId));
     const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2500, validate: isValidNarration });
     return text.trim();
   } catch (err) {
@@ -155,10 +185,28 @@ export async function narrateScene(input: SceneNarrationInput, meta: { character
   }
 }
 
+/** Staging of a recruitment answer (the roll was already decided). Never throws; falls back to a plain line. */
+export async function narrateRecruit(input: RecruitNarrationInput, meta: { characterId: string }): Promise<string> {
+  const fallback = input.accepted
+    ? `${input.npcName} sonríe y asiente: a partir de hoy es tu nakama.`
+    : `${input.npcName} niega despacio: todavía no está listo para zarpar contigo.`;
+  try {
+    const { system: baseSystem, user } = buildRecruitNarrationPrompt(input);
+    const system = baseSystem + (await loadDirectives(meta.characterId));
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 1200, validate: isValidNarration });
+    return text.trim();
+  } catch (err) {
+    await logError("ai/narrate-recruit", err, meta);
+    return fallback;
+  }
+}
+
 /** Same never-throws contract as narrateScene, for a shared party scene (see Party in schema.prisma). */
 export async function narratePartyScene(input: PartySceneNarrationInput, meta: { partyId: string }): Promise<string> {
   try {
-    const { system, user } = buildPartySceneNarrationPrompt(input);
+    const { system: baseSystem, user } = buildPartySceneNarrationPrompt(input);
+    const pact = (await prisma.party.findUnique({ where: { id: meta.partyId }, select: { scenePact: true } }))?.scenePact;
+    const system = baseSystem + directivesBlock("balanced", pact ? `PACTO DE ESCENA acordado por los jugadores fuera de rol (móntalo dentro de la historia con naturalidad, dando protagonismo a todos y respetando lo pactado): ${pact}` : undefined);
     const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2500, validate: isValidNarration });
     return text.trim();
   } catch (err) {

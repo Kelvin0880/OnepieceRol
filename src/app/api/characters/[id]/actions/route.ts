@@ -17,6 +17,7 @@ import {
 import { DuelError } from "@/lib/game/duel";
 import { JointFightError, getOpenJointFightFor } from "@/lib/game/joint-fight";
 import { logError } from "@/lib/log-error";
+import { runOncePerCharacter, ActionInFlightError } from "@/lib/idempotency";
 
 const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("explore") }),
@@ -36,47 +37,88 @@ const freeTextSchema = z.object({ freeText: z.string().min(1).max(6000) });
 
 const schema = z.union([actionSchema, freeTextSchema]);
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+export async function POST(
+  req: NextRequest,
+  { params }: { params: Promise<{ id: string }> },
+) {
   try {
     const userId = await requireUserId();
     const { id } = await params;
-    const parsed = schema.safeParse(await req.json().catch(() => null));
-    if (!parsed.success) return NextResponse.json({ error: "Acción inválida." }, { status: 400 });
-
-    if ("freeText" in parsed.data) {
-      return NextResponse.json(await resolveFreeTextAction(id, userId, parsed.data.freeText));
-    }
-
-    if (await getOpenJointFightFor(id)) {
-      return NextResponse.json({ error: "Estás en plena pelea con tus aliados: describe tu movimiento en el cuadro de texto." }, { status: 400 });
-    }
-
-    switch (parsed.data.action) {
-      case "explore":
-        return NextResponse.json(await exploreCharacter(id, userId));
-      case "train":
-        return NextResponse.json(await trainCharacter(id, userId));
-      case "rest":
-        return NextResponse.json(await restCharacter(id, userId));
-      case "travel":
-        return NextResponse.json(await travelCharacter(id, userId, parsed.data.targetIslandId));
-      case "engage":
-        return NextResponse.json(await engageCharacter(id, userId));
-      case "flee":
-        return NextResponse.json(await fleeCharacter(id, userId));
-      case "mercy":
-        return NextResponse.json(await resolveMercyChoice(id, userId, parsed.data.spare));
-      case "confirm_leave_party":
-        return NextResponse.json(await confirmLeaveParty(id, userId));
-      case "rejoin_party":
-        return NextResponse.json(await rejoinParty(id, userId));
-    }
+    const raw = await req.json().catch(() => null);
+    const parsed = schema.safeParse(raw);
+    if (!parsed.success)
+      return NextResponse.json({ error: "Acción inválida." }, { status: 400 });
+    const rid =
+      typeof raw?.requestId === "string" &&
+      raw.requestId.length >= 8 &&
+      raw.requestId.length <= 64
+        ? raw.requestId
+        : undefined;
+    return await runOncePerCharacter(
+      id,
+      rid ? `${userId}:${rid}` : undefined,
+      () => dispatch(id, userId, parsed.data),
+    )
+      .then((body) => NextResponse.json(body))
+      .catch((err) => handleError(err));
   } catch (err) {
-    if (err instanceof UnauthorizedError) return NextResponse.json({ error: err.message }, { status: 401 });
-    if (err instanceof JointFightError) return NextResponse.json({ error: err.message }, { status: 400 });
-    if (err instanceof DuelError) return NextResponse.json({ error: err.message }, { status: 400 });
-    if (err instanceof GameActionError) return NextResponse.json({ error: err.message }, { status: 400 });
-    await logError("api/characters/[id]/actions", err);
-    return NextResponse.json({ error: "Error inesperado ejecutando la acción." }, { status: 500 });
+    return handleError(err);
   }
+}
+
+type ParsedBody = z.infer<typeof schema>;
+
+async function dispatch(
+  id: string,
+  userId: string,
+  data: ParsedBody,
+): Promise<unknown> {
+  if ("freeText" in data) {
+    return await resolveFreeTextAction(id, userId, data.freeText);
+  }
+
+  if (await getOpenJointFightFor(id)) {
+    throw new GameActionError(
+      "Estás en plena pelea con tus aliados: describe tu movimiento en el cuadro de texto.",
+    );
+  }
+
+  switch (data.action) {
+    case "explore":
+      return await exploreCharacter(id, userId);
+    case "train":
+      return await trainCharacter(id, userId);
+    case "rest":
+      return await restCharacter(id, userId);
+    case "travel":
+      return await travelCharacter(id, userId, data.targetIslandId);
+    case "engage":
+      return await engageCharacter(id, userId);
+    case "flee":
+      return await fleeCharacter(id, userId);
+    case "mercy":
+      return await resolveMercyChoice(id, userId, data.spare);
+    case "confirm_leave_party":
+      return await confirmLeaveParty(id, userId);
+    case "rejoin_party":
+      return await rejoinParty(id, userId);
+  }
+}
+
+async function handleError(err: unknown) {
+  if (err instanceof UnauthorizedError)
+    return NextResponse.json({ error: err.message }, { status: 401 });
+  if (err instanceof ActionInFlightError)
+    return NextResponse.json({ error: err.message }, { status: 409 });
+  if (err instanceof JointFightError)
+    return NextResponse.json({ error: err.message }, { status: 400 });
+  if (err instanceof DuelError)
+    return NextResponse.json({ error: err.message }, { status: 400 });
+  if (err instanceof GameActionError)
+    return NextResponse.json({ error: err.message }, { status: 400 });
+  await logError("api/characters/[id]/actions", err);
+  return NextResponse.json(
+    { error: "Error inesperado ejecutando la acción." },
+    { status: 500 },
+  );
 }

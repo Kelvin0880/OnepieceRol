@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { requireUserId, UnauthorizedError } from "@/lib/require-user";
 import { logError } from "@/lib/log-error";
+import { getCompanionViews } from "@/lib/game/companions";
 import { syncPartyForCharacter, getPartyStateForCharacter } from "@/lib/game/party";
 import { currentStamina } from "@/lib/game/combat-prep";
 import { fatigueLevel, FATIGUE_LABELS } from "@/lib/engine/stamina";
@@ -39,7 +40,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         inventory: true,
         crew: {
           include: {
-            members: { select: { id: true, name: true, level: true, faction: true, status: true, currentIslandId: true, partyId: true, isSeparatedFromParty: true } },
+            members: {
+              select: {
+                id: true, name: true, level: true, faction: true, status: true, currentIslandId: true, partyId: true, isSeparatedFromParty: true,
+                hp: true, maxHp: true, stamina: true, maxStamina: true, staminaUpdatedAt: true, armamentHaki: true, observationHaki: true, conquerorsHaki: true,
+                devilFruit: { select: { name: true } }, equippedWeapon: { select: { name: true } }, currentIsland: { select: { name: true } },
+              },
+            },
           },
         },
         pendingEncounter: true,
@@ -114,6 +121,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
             enemyName: enemySpec.name,
             enemyMaxHp: enemySpec.hp,
             enemyHp: pendingEncounter.enemyHp ?? enemySpec.hp,
+            enemyFatigue: FATIGUE_LABELS[fatigueLevel(pendingEncounter.enemyStamina, 100)],
           };
         })()
       : null;
@@ -131,11 +139,28 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         }
       : null;
 
+    const companions = await getCompanionViews(id, character.level);
+    const pendingCrewInvites = await prisma.crewInvite.count({ where: { toCharacterId: id, status: "PENDING", createdAt: { gt: new Date(Date.now() - 24 * 3600 * 1000) } } });
+    const crewShaped = character.crew
+      ? {
+          ...character.crew,
+          members: character.crew.members.map(({ staminaUpdatedAt, ...m }) => ({
+            ...m,
+            stamina: currentStamina({ stamina: m.stamina, maxStamina: m.maxStamina, staminaUpdatedAt }),
+            devilFruit: m.devilFruit?.name ?? null,
+            weapon: m.equippedWeapon?.name ?? null,
+            islandName: m.currentIsland.name,
+          })),
+        }
+      : null;
     const staminaNow = currentStamina(character);
     const phase = fruitPhase(character.fruitMastery, character.fruitAwakened);
     return NextResponse.json({
       character: {
         ...rest,
+        companions,
+        pendingCrewInvites,
+        crew: crewShaped,
         stamina: staminaNow,
         fatigue: FATIGUE_LABELS[fatigueLevel(staminaNow, character.maxStamina)],
         fruitPhase: character.devilFruit ? FRUIT_PHASE_LABELS[phase] : null,

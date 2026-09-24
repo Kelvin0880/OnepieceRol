@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mulberry32 } from "./rng";
-import { runCombat, Combatant } from "./combat";
+import { runCombat, Combatant, MAX_ROUNDS } from "./combat";
 
 function fighter(overrides: Partial<Combatant> = {}): Combatant {
   return { name: "Luffy", hp: 50, maxHp: 50, atk: 20, def: 10, spd: 15, ...overrides };
@@ -62,7 +62,6 @@ describe("runCombat", () => {
     const rng = mulberry32(1);
     // Equal stats, high HP -> unlikely to resolve in a couple of rounds.
     const result = runCombat(rng, fighter({ hp: 500, maxHp: 500 }), fighter({ name: "Rival", hp: 500, maxHp: 500 }));
-    // 8 rounds * 2 attacks per round = 16 max log entries.
-    expect(result.rounds.length).toBeLessThanOrEqual(16);
+    expect(result.rounds.length).toBeLessThanOrEqual(MAX_ROUNDS * 2);
   });
 });

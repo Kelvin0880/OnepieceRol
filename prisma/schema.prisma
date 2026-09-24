@@ -56,8 +56,8 @@ model Character {
   level      Int @default(1)
   experience Int @default(0)
 
-  hp    Int @default(50)
-  maxHp Int @default(50)
+  hp    Int @default(100)
+  maxHp Int @default(100)
 
   berries Int @default(3000) // starting money, canon-flavored amount
 
@@ -96,6 +96,12 @@ model Character {
   // Spikes hard on each new Poneglyph, decays slowly with time.
   poneglyphHeat  Int    @default(0)
   islandsVisited String @default("[]") // JSON string array of Island ids — gates the once-per-island arc-hook intro
+
+  // Out-of-role controls (game/ooc.ts): how the narrator plays enemies, and
+  // standing feedback the player gave it ("no repitas mi acción"), injected
+  // into every narrator prompt for this character.
+  narratorTone String  @default("balanced") // "balanced" | "lethal" | "story"
+  oocNotes     String?
 
   lastTrainedAt DateTime? // null = never trained under this rule yet, so always eligible
 
@@ -183,6 +189,8 @@ model Party {
   turnIndex        Int                 @default(0)
   memorySummary    String? // silent compaction of older shared-scene messages (game/scene-compaction.ts)
   compactedUntil   DateTime?
+  // Out-of-role agreement between the players ("somos 4 y haremos un 4 vs 4 amistoso"): the narrator stages it in-story.
+  scenePact        String?
   awaitingNarrator Boolean             @default(false) // true right after a human posts, until the AI reply lands — locks out other submits meanwhile; false on creation, since nobody has spoken yet and it's simply turnIndex 0's turn
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt
@@ -291,6 +299,7 @@ model PendingEncounter {
   id          String    @id @default(cuid())
   characterId String    @unique
   character   Character @relation(fields: [characterId], references: [id])
+  enemyStamina Int      @default(100) // enemies tire too: fatigue lowers their atk/def/spd (engine/resilience.ts)
   enemyJson   String // { name, hp, atk, def, spd, isBoss } — hp here is the enemy's MAX hp, never mutated
   rewardsJson String // { berries, xp, bounty, hpLoss, islandDanger, isBoss }
   narrative   String
@@ -372,6 +381,7 @@ model JointFight {
   enemyJson      String // StoredEnemy, already scaled for the group at creation
   enemyHp        Int
   enemyMaxHp     Int
+  enemyStamina   Int                     @default(100) // the enemy tires as the fight drags on
   rewardsJson    String
   stakes         String? // one line for the narrator: what the group is fighting for
   roundStartedAt DateTime                @default(now())
@@ -395,6 +405,7 @@ model JointFightParticipant {
   technique   String     @default("none")
   // Stats for an NPC ally that is not a personal companion (a pledged WorldActor in the final raid): JSON { atk, def, spd }.
   npcStatsJson String?
+  stamina     Int        @default(100) // only tracked for NPC allies; humans use their own Character.stamina
   status      String     @default("FIGHTING") // FIGHTING | DOWN | FLED
   joinedAt    DateTime   @default(now())
 
@@ -444,9 +455,10 @@ model NPCCompanion {
   character   Character       @relation(fields: [characterId], references: [id])
   name        String
   role        String // "Espadachín", "Cocinero", "Médico", "Navegante", "Francotirador", "Arqueóloga", "Carpintero", "Músico", ...
-  hp          Int             @default(30)
-  maxHp       Int             @default(30)
+  hp          Int             @default(60)
+  maxHp       Int             @default(60)
   loyalty     Int             @default(50) // 0-100, affects desertion/rescue behavior
+  personality String? // a short in-character voice line, fed to the narrator
   status      CharacterStatus @default(ALIVE)
   deathCause  String?
   joinedAt    DateTime        @default(now())
@@ -673,6 +685,13 @@ model WorldActor {
   // overflow Character.bounty's Int32. canonWeapon is flavor/display text
   // only — WorldActors never fight directly today. devilFruitId links a
   // canon signature fruit (only ever set on an isSingleton DevilFruit row).
+  // Codex data (2026-09-24): ACTIVE actors act in the world-tick; RETIRED /
+  // DEFEATED / DECEASED ones are lore-only (still shown in the codex). statsJson
+  // = {strength,agility,durability,willpower,intellect} on the same raw scale as
+  // Character; abilitiesJson = string[] of signature techniques/haki.
+  status        String  @default("ACTIVE")
+  statsJson     String?
+  abilitiesJson String?
   factionType  FactionType @default(UNAFFILIATED)
   factionName  String      @default("Desconocida")
   rankLabel    String?
@@ -897,4 +916,46 @@ model Alliance {
   updatedAt    DateTime @updatedAt
 
   @@unique([worldActorId, characterId])
+}
+
+
+// Restore points for out-of-role rollback (game/ooc.ts). snapshotJson holds the
+// character's numbers at that moment; gear is deliberately not restored.
+model Checkpoint {
+  id           String   @id @default(cuid())
+  characterId  String
+  kind         String   @default("auto") // "auto" | "manual"
+  label        String
+  snapshotJson String
+  createdAt    DateTime @default(now())
+
+  @@index([characterId, createdAt])
+}
+
+// Player-filed problems and audit trail of out-of-role actions (rollback/rename/repair/report).
+model OocReport {
+  id          String   @id @default(cuid())
+  characterId String
+  kind        String // "report" | "rollback" | "rename" | "repair" | "undo" | "tone"
+  text        String
+  contextJson String?
+  createdAt   DateTime @default(now())
+
+  @@index([characterId, kind, createdAt])
+}
+
+
+// A crew invitation sent to a specific player character (game/crew.ts). Plain-string ids like the rest of the crew tables.
+model CrewInvite {
+  id              String   @id @default(cuid())
+  crewId          String
+  crewName        String
+  fromCharacterId String
+  fromName        String
+  toCharacterId   String
+  status          String   @default("PENDING") // PENDING | ACCEPTED | DECLINED | CANCELLED
+  createdAt       DateTime @default(now())
+
+  @@index([toCharacterId, status])
+  @@index([crewId, status])
 }

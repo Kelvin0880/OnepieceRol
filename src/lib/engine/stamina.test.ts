@@ -26,3 +26,33 @@ describe("stamina", () => {
     expect(restStamina(90, 100)).toBe(100);
   });
 });
+
+import { clampEffort, effortStaminaCost, staminaLossFromDamage, overexertionHpLoss, EFFORT_STAMINA_COST } from "./stamina";
+
+describe("effort and combat fatigue", () => {
+  it("clamps any classifier output into a valid tier and defaults garbage to an ordinary effort", () => {
+    expect(clampEffort(2)).toBe(2);
+    expect(clampEffort(9)).toBe(3);
+    expect(clampEffort(-4)).toBe(0);
+    expect(clampEffort("x")).toBe(1);
+    expect(clampEffort(undefined)).toBe(1);
+  });
+  it("costs grow with effort and scale with max stamina, never below 1", () => {
+    expect(effortStaminaCost(3, 100)).toBe(EFFORT_STAMINA_COST[3]);
+    expect(effortStaminaCost(3, 200)).toBe(EFFORT_STAMINA_COST[3] * 2);
+    expect(effortStaminaCost(0, 10)).toBe(1);
+    expect(effortStaminaCost(3, 100)).toBeGreaterThan(effortStaminaCost(1, 100));
+  });
+  it("taking damage tires proportionally to max HP", () => {
+    expect(staminaLossFromDamage(0, 100)).toBe(0);
+    expect(staminaLossFromDamage(25, 100)).toBe(10);
+    expect(staminaLossFromDamage(50, 100)).toBeGreaterThan(staminaLossFromDamage(10, 100));
+  });
+  it("overexertion only bites demanding moves on an empty tank, and never kills", () => {
+    expect(overexertionHpLoss(1, 0, 3, 100, 50)).toBe(0);
+    expect(overexertionHpLoss(3, 50, 12, 100, 50)).toBe(0);
+    expect(overexertionHpLoss(3, 2, 12, 100, 50)).toBe(9);
+    expect(overexertionHpLoss(3, 0, 12, 100, 4)).toBe(3);
+    expect(overexertionHpLoss(3, 0, 12, 100, 1)).toBe(0);
+  });
+});

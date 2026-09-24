@@ -1,7 +1,7 @@
 import { Rng } from "./rng";
 import { Combatant, CombatRoundLog, attackOnce } from "./combat";
 
-export const MAX_JOINT_ROUNDS = 12;
+export const MAX_JOINT_ROUNDS = 20;
 export const MAX_ENEMY_ATTACKS_PER_ROUND = 3;
 
 export interface JointFighter {

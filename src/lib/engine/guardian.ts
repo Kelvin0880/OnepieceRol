@@ -21,7 +21,7 @@ export function isActorHome(busyUntil: Date | null, now: Date): boolean {
 /** Combat stats for a canon holder fighting in person, from their 1-100 power level: meant to need a coordinated group, not one player. */
 export function actorCombatStats(powerLevel: number): { hp: number; atk: number; def: number; spd: number } {
   const p = Math.max(1, Math.min(100, powerLevel));
-  return { hp: Math.round(p * 8), atk: Math.round(p * 1.6), def: Math.round(p * 1.05), spd: Math.round(p * 0.75) };
+  return { hp: Math.round(p * 16), atk: Math.round(p * 1.6), def: Math.round(p * 1.05), spd: Math.round(p * 0.75) };
 }
 
 export function guardianMeeting(rng: Rng, actorHome: boolean): "actor" | "subordinate" {

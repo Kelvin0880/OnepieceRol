@@ -6,7 +6,7 @@ import { areHostile, huntBlockReason, HUNT_RESPONSE_WINDOW_MS, HUNT_REPEAT_COOLD
 import { TECHNIQUE_LABELS, TechniqueId } from "../engine/techniques";
 import { classifyPlayerAction } from "../ai/classify-action";
 import { narrateDuel } from "../ai/narrate";
-import { prepareFighter, combatProgressData } from "./combat-prep";
+import { prepareFighter, combatProgressData, characterCapabilityText } from "./combat-prep";
 import { toCombatant } from "./derive";
 import { postNews } from "./death-resolution";
 import { notifyPair } from "./notify";
@@ -285,6 +285,8 @@ async function resolveDuelRoundFor(duelId: string) {
       escapedName: escapedChar?.name,
       lethal: duel.lethal,
       failedFlight,
+      aKit: characterCapabilityText(a),
+      bKit: characterCapabilityText(b),
     },
     { duelId }
   );

@@ -28,6 +28,7 @@ export function toCombatant(character: CharacterWithGear): Combatant {
     fruitEffects: character.devilFruit ? parseFruitEffects(character.devilFruit.effectsJson) : null,
     fruitAwakened: character.fruitAwakened,
     fruitPower: fruitPowerMultiplier(characterFruitPhase(character)),
+    level: character.level,
   };
   return deriveCombatant(input);
 }

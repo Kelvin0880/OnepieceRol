@@ -7,7 +7,10 @@ import { resolveJointRound, scaleEnemyForGroup, JointFighter } from "../engine/j
 import { TECHNIQUE_LABELS, TechniqueId } from "../engine/techniques";
 import { classifyPlayerAction } from "../ai/classify-action";
 import { narrateJointFight, getRecentScene } from "../ai/narrate";
-import { prepareFighter, combatProgressData, PreparedFighter } from "./combat-prep";
+import { companionSheet } from "../engine/companions";
+import { estimateLevel, applyFatigueToCombatant, npcStaminaAfterExchange, npcBaseEffort } from "../engine/resilience";
+import { prepareFighter, combatProgressData, PreparedFighter, characterCapabilityText } from "./combat-prep";
+import { resolveEnemyKit } from "./enemy-kit";
 import { toCombatant } from "./derive";
 import { postNews, handleDeathCheck } from "./death-resolution";
 import { applyBountyOrNotoriety } from "./reputation";
@@ -28,6 +31,7 @@ export interface JointEnemy {
   def: number;
   spd: number;
   isBoss: boolean;
+  level?: number;
   personality?: string;
   worldActorId?: string;
   isActor?: boolean;
@@ -86,8 +90,9 @@ export async function freePartyMemberIds(characterId: string): Promise<string[]>
   return free.includes(me.id) ? free : [me.id, ...free];
 }
 
-function npcCombatant(c: { name: string; hp: number; maxHp: number; loyalty: number }, ownerLevel: number): Combatant {
-  return { name: c.name, hp: c.hp, maxHp: c.maxHp, atk: 10 + ownerLevel * 2 + Math.round(c.loyalty / 10), def: 6 + ownerLevel, spd: 8 + ownerLevel };
+function npcCombatant(c: { name: string; hp: number; maxHp: number; loyalty: number; role: string }, ownerLevel: number): Combatant {
+  const sheet = companionSheet(c.role, ownerLevel, c.loyalty);
+  return { name: c.name, hp: c.hp, maxHp: c.maxHp, atk: sheet.atk, def: sheet.def, spd: sheet.spd, level: sheet.level };
 }
 
 export interface AllyNpc {
@@ -240,7 +245,12 @@ async function resolveJointRoundFor(fightId: string) {
   const enemy = JSON.parse(fight.enemyJson) as JointEnemy;
   const rewards = JSON.parse(fight.rewardsJson) as JointRewards;
   const rng = liveRng();
-  const enemyBase: Combatant = { name: enemy.name, hp: fight.enemyMaxHp, maxHp: fight.enemyMaxHp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
+  const enemyLevel = enemy.level ?? estimateLevel(enemy.atk, enemy.def);
+  // The enemy tires as the fight drags on, exactly like the players do.
+  const enemyBase: Combatant = applyFatigueToCombatant(
+    { name: enemy.name, hp: fight.enemyMaxHp, maxHp: fight.enemyMaxHp, atk: enemy.atk, def: enemy.def, spd: enemy.spd, level: enemyLevel },
+    fight.enemyStamina
+  );
 
   const fighting = fight.participants.filter((p) => p.status === "FIGHTING");
   const chars = new Map<string, NonNullable<Awaited<ReturnType<typeof loadFull>>>>();
@@ -248,8 +258,8 @@ async function resolveJointRoundFor(fightId: string) {
     const c = await loadFull(p.characterId);
     if (c) chars.set(p.characterId, c);
   }
-  const companions = new Map<string, { name: string; loyalty: number; ownerLevel: number }>();
-  for (const c of chars.values()) for (const n of c.companions) companions.set(`${NPC_PREFIX}${n.id}`, { name: n.name, loyalty: n.loyalty, ownerLevel: c.level });
+  const companions = new Map<string, { name: string; loyalty: number; ownerLevel: number; role: string }>();
+  for (const c of chars.values()) for (const n of c.companions) companions.set(`${NPC_PREFIX}${n.id}`, { name: n.name, loyalty: n.loyalty, ownerLevel: c.level, role: n.role });
 
   const fled: string[] = [];
   const failedFlight: string[] = [];
@@ -262,13 +272,13 @@ async function resolveJointRoundFor(fightId: string) {
   for (const p of fighting) {
     if (p.isNpc && p.npcStatsJson) {
       const st = JSON.parse(p.npcStatsJson) as { hp: number; atk: number; def: number; spd: number };
-      fighters.push({ id: p.characterId, hp: p.hp, combatant: { name: p.name, hp: p.hp, maxHp: st.hp, atk: st.atk, def: st.def, spd: st.spd } });
+      fighters.push({ id: p.characterId, hp: p.hp, combatant: applyFatigueToCombatant({ name: p.name, hp: p.hp, maxHp: st.hp, atk: st.atk, def: st.def, spd: st.spd, level: estimateLevel(st.atk, st.def) }, p.stamina) });
       actionsForNarration.push({ name: p.name, text: "lucha junto a la coalición", isNpc: true });
       continue;
     }
     if (p.isNpc) {
       const info = companions.get(p.characterId);
-      const combatant = npcCombatant({ name: p.name, hp: p.hp, maxHp: p.maxHp, loyalty: info?.loyalty ?? 50 }, info?.ownerLevel ?? 1);
+      const combatant = applyFatigueToCombatant(npcCombatant({ name: p.name, hp: p.hp, maxHp: p.maxHp, loyalty: info?.loyalty ?? 50, role: info?.role ?? "" }, info?.ownerLevel ?? 1), p.stamina);
       fighters.push({ id: p.characterId, hp: p.hp, combatant });
       actionsForNarration.push({ name: p.name, text: "lucha junto a su capitán", isNpc: true });
       continue;
@@ -308,7 +318,19 @@ async function resolveJointRoundFor(fightId: string) {
   const outcome = allFled ? null : result.outcome;
 
   for (const r of result.fighters) {
-    await prisma.jointFightParticipant.updateMany({ where: { fightId, characterId: r.id }, data: { hp: r.hpAfter, status: r.down ? "DOWN" : "FIGHTING" } });
+    const part = fighting.find((p) => p.characterId === r.id);
+    const npcTired = part?.isNpc
+      ? {
+          stamina: npcStaminaAfterExchange({
+            stamina: part.stamina,
+            level: fighters.find((f) => f.id === r.id)?.combatant.level,
+            effort: npcBaseEffort(false),
+            damageTaken: Math.max(0, part.hp - r.hpAfter),
+            maxHp: part.maxHp,
+          }),
+        }
+      : {};
+    await prisma.jointFightParticipant.updateMany({ where: { fightId, characterId: r.id }, data: { hp: r.hpAfter, status: r.down ? "DOWN" : "FIGHTING", ...npcTired } });
   }
   if (fled.length) await prisma.jointFightParticipant.updateMany({ where: { fightId, characterId: { in: fled } }, data: { status: "FLED" } });
   await prisma.jointFightParticipant.updateMany({ where: { id: { in: consumedIds } }, data: { action: null, tactic: 0, technique: "none" } });
@@ -316,9 +338,18 @@ async function resolveJointRoundFor(fightId: string) {
   for (const [id, prep] of prepared) {
     const c = chars.get(id)!;
     const after = result.fighters.find((f) => f.id === id);
-    await prisma.character.update({ where: { id }, data: { hp: Math.max(0, after?.hpAfter ?? c.hp), ...combatProgressData(c, prep, rng) } });
+    const startHp = fighting.find((p) => p.characterId === id)?.hp ?? c.hp;
+    await prisma.character.update({ where: { id }, data: { hp: Math.max(0, after?.hpAfter ?? c.hp), ...combatProgressData(c, prep, rng, Math.max(0, startHp - (after?.hpAfter ?? startHp))) } });
   }
 
+  const enemyKitText = (await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId })).text;
+  const allyKits = [
+    ...[...chars.values()].slice(0, 6).map((c) => characterCapabilityText(c)),
+    ...[...companions.entries()].slice(0, 4).map(([, n]) => {
+      const sheet = companionSheet(n.role, n.ownerLevel, n.loyalty);
+      return `NAKAMA ${n.name.toUpperCase()} (${n.role}, nivel ${sheet.level}, ${sheet.rank}): técnicas ${sheet.abilities.join("; ")}. Lucha por ganar con ellas.`;
+    }),
+  ];
   const roster = (await prisma.jointFightParticipant.findMany({ where: { fightId } })).map((p) => ({ name: p.name, hp: p.hp, maxHp: p.maxHp, down: p.status === "DOWN", fled: p.status === "FLED" }));
   const recent = await getRecentScene(fight.participants.find((p) => !p.isNpc)?.characterId ?? "", 4).catch(() => [] as string[]);
   const narration = await narrateJointFight(
@@ -335,6 +366,8 @@ async function resolveJointRoundFor(fightId: string) {
       finished,
       outcome: outcome ?? undefined,
       stakes: fight.stakes ?? undefined,
+      enemyKit: enemyKitText,
+      allyKits,
       recentScene: recent,
     },
     { fightId }
@@ -344,7 +377,19 @@ async function resolveJointRoundFor(fightId: string) {
     ...(guarding.length ? [`Sin decidirse a tiempo, aguantan a la defensiva: ${guarding.join(", ")}.`] : []),
   ];
   await prisma.jointFightMessage.create({ data: { fightId, authorCharacterId: null, authorName: "Narrador", text: [narration, ...extra].join("\n\n") } });
-  await prisma.jointFight.update({ where: { id: fightId }, data: { enemyHp: result.enemyHpAfter } });
+  await prisma.jointFight.update({
+    where: { id: fightId },
+    data: {
+      enemyHp: result.enemyHpAfter,
+      enemyStamina: npcStaminaAfterExchange({
+        stamina: fight.enemyStamina,
+        level: enemyLevel,
+        effort: npcBaseEffort(enemy.isBoss),
+        damageTaken: Math.max(0, fight.enemyHp - result.enemyHpAfter) / Math.max(1, fighters.length),
+        maxHp: fight.enemyMaxHp,
+      }),
+    },
+  });
 
   if (finished) {
     if (outcome === "victory") {

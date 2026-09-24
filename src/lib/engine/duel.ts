@@ -1,7 +1,7 @@
 import { Rng } from "./rng";
 import { Combatant, CombatRoundLog, resolveExchange } from "./combat";
 
-export const MAX_DUEL_ROUNDS = 12;
+export const MAX_DUEL_ROUNDS = 20;
 
 export interface DuelRoundResult {
   aHpAfter: number;

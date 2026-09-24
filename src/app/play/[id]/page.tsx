@@ -2,7 +2,10 @@
 
 import { useEffect, useState, useCallback, useRef, use } from "react";
 import Link from "next/link";
+import OocPanel from "./OocPanel";
+import CrewPanel, { type PanelCompanion, type PanelCrew } from "./CrewPanel";
 import { characterCondition, conditionLabel } from "@/lib/engine/condition";
+import { xpToNextLevel } from "@/lib/engine/economy";
 import { factionTitle, type FactionKey } from "@/lib/engine/progression";
 import { crewNounForFaction } from "@/lib/engine/crew-noun";
 import { CELL_LABELS } from "@/lib/engine/impel-down";
@@ -247,7 +250,6 @@ interface Character {
   devilFruit: DevilFruit | null;
   equippedWeapon: Weapon | null;
   ownedWeapons: Weapon[];
-  companions: Companion[];
   logs: LogEntry[];
   sceneMessages: SceneMsg[];
   deathCause: string | null;
@@ -258,7 +260,10 @@ interface Character {
     enemyHp: number;
     enemyMaxHp: number;
   } | null;
-  crew: Crew | null;
+  crew: PanelCrew | null;
+  companions: PanelCompanion[];
+  isCaptain: boolean;
+  pendingCrewInvites: number;
   imprisonment: Imprisonment | null;
   partyId: string | null;
   isSeparatedFromParty: boolean;
@@ -367,6 +372,8 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [escapePlan, setEscapePlan] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [showGuideModal, setShowGuideModal] = useState(false);
+  const [ooc, setOoc] = useState<{ starter?: string } | null>(null);
+  const [showCrew, setShowCrew] = useState(false);
   const sceneEndRef = useRef<HTMLDivElement>(null);
   const duelBoxRef = useRef<HTMLDivElement>(null);
   const jointBoxRef = useRef<HTMLDivElement>(null);
@@ -502,25 +509,38 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     }
   }
 
+  // A retry of the same action reuses its requestId, so if the first attempt
+  // actually reached the server (slow AI, dropped connection) the server hands
+  // back that result instead of running the turn twice.
+  const pendingRequest = useRef<{ key: string; id: string } | null>(null);
+
   async function doAction(body: Record<string, unknown>): Promise<boolean> {
     setBusy(true);
     setError(null);
+    const key = JSON.stringify(body);
+    if (!pendingRequest.current || pendingRequest.current.key !== key) pendingRequest.current = { key, id: crypto.randomUUID() };
     try {
       const res = await fetch(`/api/characters/${id}/actions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ ...body, requestId: pendingRequest.current.id }),
       });
       const result = await res.json();
       if (!res.ok) {
+        pendingRequest.current = null;
         setError(result.error ?? "No se pudo completar la acción.");
         return false;
       }
+      pendingRequest.current = null;
       if (result.log) setFeed((f) => [...result.log, ...f].slice(0, 60));
       if (result.arcIntro) setArcIntro(result.arcIntro);
       if (result.confirmRequired === "leave_party") setShowLeaveConfirm(true);
       await load();
       return true;
+    } catch {
+      setError("La respuesta tardó demasiado o se cortó la conexión. Tu acción puede haberse procesado: mira la escena. Si no aparece, vuelve a enviar — no se duplicará.");
+      for (const ms of [3000, 9000, 20000]) setTimeout(() => load(), ms);
+      return false;
     } finally {
       setBusy(false);
     }
@@ -598,6 +618,13 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           </p>
         </div>
         <div className="flex gap-2">
+          <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowCrew(true)} data-testid="crew-open-header">
+            {crewNounForFaction(character.faction as FactionKey)}
+            {character.pendingCrewInvites > 0 && <span className="ml-1.5 text-[11px] px-1.5 rounded bg-blood text-white">{character.pendingCrewInvites}</span>}
+          </button>
+          <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setOoc({})} data-testid="ooc-open">
+            Fuera de rol
+          </button>
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowGuideModal(true)}>
             Mapa y Guía
           </button>
@@ -609,6 +636,30 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           </Link>
         </div>
       </div>
+
+      {showCrew && (
+        <CrewPanel
+          characterId={character.id}
+          characterName={character.name}
+          characterLevel={character.level}
+          isCaptain={character.isCaptain}
+          crew={character.crew}
+          companions={character.companions}
+          factionNoun={crewNounForFaction(character.faction as FactionKey)}
+          onClose={() => setShowCrew(false)}
+          onChanged={() => load()}
+        />
+      )}
+
+      {ooc && (
+        <OocPanel
+          characterId={character.id}
+          starter={ooc.starter}
+          onClose={() => setOoc(null)}
+          onChanged={() => load()}
+          onRestoreText={(t) => setFreeText(t)}
+        />
+      )}
 
       {showGuideModal && (
         <div
@@ -728,8 +779,11 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                   {duel.hostile ? "Caza" : "Duelo"} contra {duel.opponentName}
                   {duel.lethal && <span className="ml-2 text-xs px-2 py-0.5 rounded bg-blood text-white align-middle">A MUERTE</span>}
                 </h3>
-                <span className="text-xs text-ink-dim">
+                <span className="text-xs text-ink-dim flex items-center gap-2">
                   {duel.status === "PROPOSED" ? "Reto pendiente" : duel.status === "ACTIVE" ? `Ronda ${duel.round}` : "Terminado"}
+                  <button className="btn-ghost px-2 py-0.5 text-[11px]" onClick={() => setOoc({ starter: "Sobre este duelo (fuera de rol): " })}>
+                    Fuera de rol
+                  </button>
                 </span>
               </div>
               {duel.status !== "PROPOSED" && (
@@ -995,7 +1049,12 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                   Pelea en grupo contra {jointFight.enemy.name}
                   {jointFight.enemy.isBoss && <span className="ml-2 text-xs px-2 py-0.5 rounded bg-blood text-white align-middle">JEFE</span>}
                 </h3>
-                <span className="text-xs text-ink-dim">{jointFight.status === "ACTIVE" ? `Ronda ${jointFight.round}` : jointFight.status === "WON" ? "Victoria" : "Derrota"}</span>
+                <span className="text-xs text-ink-dim flex items-center gap-2">
+                  {jointFight.status === "ACTIVE" ? `Ronda ${jointFight.round}` : jointFight.status === "WON" ? "Victoria" : "Derrota"}
+                  <button className="btn-ghost px-2 py-0.5 text-[11px]" onClick={() => setOoc({ starter: "Sobre esta pelea en grupo (fuera de rol): " })}>
+                    Fuera de rol
+                  </button>
+                </span>
               </div>
               {jointFight.stakes && <p className="text-xs text-ink-dim mb-2">{jointFight.stakes}</p>}
               <div className="mb-3">
@@ -1188,7 +1247,16 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
 
           {!isDead && (
             <div className="panel p-4">
-              <h3 className="font-display text-sm text-ink-dim mb-2">{party ? "Escena compartida" : "Escena"}</h3>
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="font-display text-sm text-ink-dim">{party ? "Escena compartida" : "Escena"}</h3>
+                <button
+                  className="btn-ghost px-2 py-1 text-[11px]"
+                  onClick={() => setOoc({ starter: party ? "Somos varios en la escena y queremos pactar algo: " : "El narrador se equivocó en esto: " })}
+                  data-testid="ooc-scene"
+                >
+                  Fuera de rol
+                </button>
+              </div>
               <div className="flex flex-col gap-3 max-h-[520px] overflow-y-auto scrollbar-thin pr-1">
                 {party ? (
                   <>
@@ -1440,6 +1508,12 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               </span>
             </div>
             <StatBar label="Vida" value={character.hp} max={character.maxHp} color="var(--blood)" />
+            <div data-testid="xp-bar">
+              <StatBar label={`Experiencia (nivel ${character.level} → ${character.level + 1})`} value={character.experience} max={xpToNextLevel(character.level)} color="var(--gold)" />
+              <p className="text-[11px] text-ink-dim mt-0.5">
+                Faltan {Math.max(0, xpToNextLevel(character.level) - character.experience)} XP para el nivel {character.level + 1}. Se gana explorando y venciendo enemigos; entrenar no da nivel, sube el Haki.
+              </p>
+            </div>
             <div>
               <StatBar label={`Estamina (${character.fatigue})`} value={character.stamina} max={character.maxStamina} color="#4a90c2" />
               {character.stamina < character.maxStamina * 0.25 && (
@@ -1530,119 +1604,44 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
             })()}
           </div>
 
-          {character.companions.length > 0 && (
-            <div className="panel p-4">
-              <h3 className="font-display text-sm text-ink-dim mb-2">Compañeros de a bordo</h3>
-              <div className="flex flex-col gap-2">
+          <div className="panel p-4" data-testid="crew-summary">
+            <div className="flex items-center justify-between mb-2">
+              <h3 className="font-display text-sm text-ink-dim">{crewNounForFaction(character.faction as FactionKey)}</h3>
+              <button className="btn-gold px-3 py-1 text-xs" onClick={() => setShowCrew(true)} data-testid="crew-open">
+                Abrir panel
+                {character.pendingCrewInvites > 0 && <span className="ml-1.5 text-[11px] px-1.5 rounded bg-blood text-white">{character.pendingCrewInvites}</span>}
+              </button>
+            </div>
+            {character.crew ? (
+              <div className="flex flex-col gap-1">
+                <p className="text-sm text-gold-bright">{character.crew.name}</p>
+                <p className="text-xs text-ink-dim">
+                  {character.crew.members.length} miembro{character.crew.members.length === 1 ? "" : "s"} · Barco: {character.crew.shipName}
+                </p>
+                {!party &&
+                  character.isSeparatedFromParty &&
+                  character.crew.members.some((m) => m.id !== character.id && m.status === "ALIVE" && m.currentIslandId === character.currentIsland.id) && (
+                    <button className="btn-gold px-3 py-1.5 text-xs mt-1" disabled={busy} onClick={() => doAction({ action: "rejoin_party" })}>
+                      Unirme al grupo
+                    </button>
+                  )}
+              </div>
+            ) : (
+              <p className="text-xs text-ink-dim">Sin tripulación. Ábrela para fundar una, aceptar invitaciones o unirte con un código.</p>
+            )}
+            {character.companions.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-[--line] flex flex-col gap-1" data-testid="companion-summary">
+                <p className="text-xs text-ink-dim">Nakamas NPC (siempre a tu nivel):</p>
                 {character.companions.map((c) => (
-                  <div key={c.id} className="text-sm flex justify-between">
+                  <div key={c.id} className="text-xs flex justify-between">
                     <span className={c.status !== "ALIVE" ? "text-blood line-through" : ""}>
-                      {c.name} · {c.role}
+                      {c.name} · {c.role} · Nv. {c.level}
                     </span>
                     <span className="text-ink-dim">
                       {c.hp}/{c.maxHp}
                     </span>
                   </div>
                 ))}
-              </div>
-            </div>
-          )}
-
-          <div className="panel p-4">
-            <h3 className="font-display text-sm text-ink-dim mb-2">{crewNounForFaction(character.faction as FactionKey)}</h3>
-            {character.crew ? (
-              <div className="flex flex-col gap-2">
-                <p className="text-sm text-gold-bright">{character.crew.name}</p>
-                <p className="text-xs text-ink-dim">{character.crew.flagDesc}</p>
-                <p className="text-xs text-ink-dim">Barco: {character.crew.shipName}</p>
-                <div className="mt-1 flex flex-col gap-1">
-                  {character.crew.members.map((m) => {
-                    const presence =
-                      m.id === character.id
-                        ? null
-                        : m.status !== "ALIVE"
-                        ? null
-                        : m.partyId && m.partyId === character.partyId
-                        ? "contigo ahora"
-                        : m.currentIslandId === character.currentIsland.id
-                        ? "en esta isla, por su cuenta"
-                        : "en otra isla";
-                    return (
-                      <div key={m.id} className="text-sm flex justify-between">
-                        <span className={m.status !== "ALIVE" ? "text-blood line-through" : ""}>
-                          {m.name} {m.id === character.crew!.captainId && <span className="text-gold text-xs">★</span>}
-                        </span>
-                        <span className="text-ink-dim text-xs">
-                          Nv. {m.level}
-                          {presence && ` · ${presence}`}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-                {!party &&
-                  character.isSeparatedFromParty &&
-                  character.crew.members.some((m) => m.id !== character.id && m.status === "ALIVE" && m.currentIslandId === character.currentIsland.id) && (
-                    <button className="btn-gold px-3 py-1.5 text-xs" disabled={busy} onClick={() => doAction({ action: "rejoin_party" })}>
-                      Unirme al grupo
-                    </button>
-                  )}
-                <div className="mt-2 pt-2 border-t border-[--line]">
-                  <p className="text-xs text-ink-dim mb-1">Código de invitación:</p>
-                  <p className="text-xs font-mono text-gold select-all break-all">{character.crew.inviteCode}</p>
-                </div>
-                {crewError && <p className="text-blood text-xs">{crewError}</p>}
-                <button className="btn-ghost px-3 py-1.5 text-xs mt-2" disabled={crewBusy} onClick={() => doCrewAction({ op: "leave" })}>
-                  Abandonar
-                </button>
-              </div>
-            ) : (
-              <div className="flex flex-col gap-4">
-                <div>
-                  <p className="text-xs text-ink-dim mb-2">Fundar una nueva:</p>
-                  <input
-                    className="w-full bg-sea-deep border border-[--line] rounded px-2 py-1.5 text-sm mb-1.5 outline-none focus:border-gold"
-                    placeholder="Nombre"
-                    value={crewName}
-                    onChange={(e) => setCrewName(e.target.value)}
-                  />
-                  <input
-                    className="w-full bg-sea-deep border border-[--line] rounded px-2 py-1.5 text-sm mb-1.5 outline-none focus:border-gold"
-                    placeholder="Emblema / descripción"
-                    value={crewFlag}
-                    onChange={(e) => setCrewFlag(e.target.value)}
-                  />
-                  <input
-                    className="w-full bg-sea-deep border border-[--line] rounded px-2 py-1.5 text-sm mb-2 outline-none focus:border-gold"
-                    placeholder="Nombre del barco (opcional)"
-                    value={crewShip}
-                    onChange={(e) => setCrewShip(e.target.value)}
-                  />
-                  <button
-                    className="btn-gold px-3 py-1.5 text-xs w-full"
-                    disabled={crewBusy || crewName.trim().length < 2}
-                    onClick={() => doCrewAction({ op: "create", name: crewName, flagDesc: crewFlag, shipName: crewShip })}
-                  >
-                    Fundar
-                  </button>
-                </div>
-                <div className="pt-3 border-t border-[--line]">
-                  <p className="text-xs text-ink-dim mb-2">Unirse con código:</p>
-                  <input
-                    className="w-full bg-sea-deep border border-[--line] rounded px-2 py-1.5 text-sm mb-2 outline-none focus:border-gold"
-                    placeholder="Código de invitación"
-                    value={joinCode}
-                    onChange={(e) => setJoinCode(e.target.value)}
-                  />
-                  <button
-                    className="btn-ghost px-3 py-1.5 text-xs w-full"
-                    disabled={crewBusy || joinCode.trim().length < 2}
-                    onClick={() => doCrewAction({ op: "join", inviteCode: joinCode })}
-                  >
-                    Unirse
-                  </button>
-                </div>
-                {crewError && <p className="text-blood text-xs mt-2">{crewError}</p>}
               </div>
             )}
           </div>

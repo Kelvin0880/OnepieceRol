@@ -13,6 +13,8 @@
  * both directions — the narrator must not do either to the player, and the
  * NPCs it voices must not either. Appended to every narrator system prompt.
  */
+import { PLAY_TO_WIN_RULE } from "../engine/enemy-kit";
+
 export const ROLE_RULES =
   "REGLAS DE ROL INNEGOCIABLES (Mano Negra / Mano Blanca). " +
   "MANO NEGRA: nunca decidas por el jugador. Lo que el jugador escribe es su INTENCIÓN, no un hecho: no des por logrado ningún golpe, daño ni efecto de su acción salvo lo que el motor ya resolvió y se te indica. " +
@@ -23,6 +25,7 @@ export const ROLE_RULES =
   "nunca inventes que está desprevenido, ciego, de espaldas o indefenso por omisión. " +
   "Toda esquiva, bloqueo o técnica debe ser plausible según el entorno, las capacidades y el resultado dado. " +
   "En el texto del jugador, lo que va entre comillas es lo que su personaje DICE; el resto son sus acciones o intenciones. " +
+  "NOMBRES PROPIOS: todo personaje que inventes (tabernero, guardia, marinero, niño, rival, cazarrecompensas...) debe tener un nombre propio con sabor One Piece la primera vez que aparece; nunca lo dejes como \"un hombre\" o \"el tabernero\" a secas, y reutiliza ese mismo nombre después. " +
   "NO REPITAS AL JUGADOR: su mensaje ya está visible en el chat, así que nunca lo resumas, parafrasees ni reescribas (nada de \"Desenfundas tu espada y atacas...\"). " +
   "Empieza directamente por lo que ocurre COMO CONSECUENCIA: el resultado, la reacción del entorno, de los NPC o del enemigo. Gasta las palabras en lo nuevo.";
 
@@ -44,6 +47,7 @@ const COMBAT_STYLE_RULE =
   "Escribe en español, con un tono oscuro de piratas de One Piece, evocador y con tensión real. " +
   "Narra el combate como una escena EXTENSA y viva (varios párrafos), no como una lista de golpes: movimiento, terreno, respiración, lo que arriesga cada bando. " +
   "Si el enemigo tiene una personalidad definida, dale diálogo en su propia voz durante la pelea. " +
+  PLAY_TO_WIN_RULE + " " +
   LENGTH_RULE + " " +
   "Responde solo con la narración en prosa, sin JSON, sin encabezados, sin listas, sin markdown.";
 
@@ -82,13 +86,14 @@ export function buildExploreNarrationPrompt(input: ExploreNarrationInput): { sys
   const user =
     `Personaje: ${input.characterName} (nivel ${input.level}, facción ${input.faction}).\n` +
     `Isla: ${input.islandName} — ${input.islandDescription}\n` +
-    `Situación base: ${input.baseFlavorText}\n` +
+    `Situación base (algo que se cruza en el camino, NO el tema principal): ${input.baseFlavorText}\n` +
     `Resultado ya decidido: ${input.outcomeTier} — ${input.baseNarrative}\n` +
     `Cambios numéricos (definitivos, no los alteres): berries ${input.berries >= 0 ? "+" : ""}${input.berries}, ` +
     `xp +${input.xp}, bounty +${input.bounty}, vida -${input.hpLoss}.` +
     intentBlock(input.intentText) +
     memoryBlock(input.memorySummary, input.recentMemory) +
-    "\n\nNarra lo que ocurre a continuación sin repetir lo que el jugador ya escribió.";
+    "\n\nLO PRINCIPAL es el hilo de la escena y lo que el jugador propone: hazlo avanzar de forma coherente con lo que se venía hablando y haciendo (si va a un barco, a un lugar o tras una pista, narra eso). " +
+    "La situación base solo se integra si encaja o como un giro breve, sin abandonar el hilo ni cambiar de tema. Narra lo que ocurre a continuación sin repetir lo que el jugador ya escribió.";
   return { system, user };
 }
 
@@ -123,6 +128,15 @@ export interface CombatNarrationInput {
   technique?: { label: string; downgradedReason?: string };
   /** Physical condition of the player, only set when not fully fresh. */
   fatigue?: string;
+  /** The fight ended because the round cap was hit with both still standing (nobody was knocked out). */
+  endedByExhaustion?: boolean;
+  /** The enemy's physical condition, only set when not fresh. */
+  enemyFatigue?: string;
+  /** Full repertoire of the enemy (engine/enemy-kit.ts describeEnemyKit): play all of it, invent nothing else. */
+  enemyKit?: string;
+  /** Experience of each side: the veteran endures more, the rookie breaks sooner. */
+  playerLevel?: number;
+  enemyLevel?: number;
 }
 
 /** One engine result, in words: hits and misses both matter, since a block is a fact the narrator must not lose. */
@@ -153,7 +167,9 @@ export function buildCombatNarrationPrompt(input: CombatNarrationInput): { syste
   const system = `${HARD_RULE} ${COMBAT_STYLE_RULE} Este es un combate ${input.isBoss ? "importante, contra un enemigo formidable" : "menor"} — ajusta la intensidad de la prosa a eso.`;
   const roundLines = input.rounds.map((r, i) => `${i + 1}. ${describeRound(r)}`).join("\n");
   const outcomeLine = input.concluded
-    ? `El combate termina en este intercambio: gana ${input.victor === "player" ? input.characterName : input.enemyName}.`
+    ? input.endedByExhaustion
+      ? `El combate termina por agotamiento: ambos siguen en pie pero ya no pueden más, y ${input.victor === "player" ? input.characterName : input.enemyName} lleva la mejor parte (menos herido). Narra ese final de forma clara: nadie cayó inconsciente, uno cede terreno y se declara vencido.`
+      : `El combate termina en este intercambio: gana ${input.victor === "player" ? input.characterName : input.enemyName}.`
     : "El combate sigue — ninguno de los dos ha caído todavía, vendrán más intercambios.";
   const techniqueLine = input.technique
     ? input.technique.downgradedReason
@@ -161,8 +177,20 @@ export function buildCombatNarrationPrompt(input: CombatNarrationInput): { syste
       : `El jugador recurre a: ${input.technique.label}.`
     : "";
   const user =
-    `Personaje del jugador: ${input.characterName}${input.fatigue ? ` (${input.fatigue})` : ""}.\n` +
-    `Enemigo: ${input.enemyName}${input.enemyPersonality ? ` — personalidad: ${input.enemyPersonality}` : ""}.\n` +
+    `Personaje del jugador: ${input.characterName}${input.fatigue ? ` (${input.fatigue})` : ""}${input.playerLevel ? `, nivel ${input.playerLevel}` : ""}.\n` +
+    `Enemigo: ${input.enemyName}${input.enemyPersonality ? ` — personalidad: ${input.enemyPersonality}` : ""}${input.enemyLevel ? `, nivel ${input.enemyLevel}` : ""}${input.enemyFatigue ? ` (${input.enemyFatigue})` : ""}.\n` +
+    (input.fatigue
+      ? `El cuerpo de ${input.characterName} está ${input.fatigue}: CUALQUIER cosa que intente le sale peor (más lenta, torpe, débil o corta), aunque el plan sea bueno; muéstralo en el cuerpo y en el resultado, y no lo narres como si estuviera fresco.\n`
+      : "") +
+    (input.enemyFatigue
+      ? `${input.enemyName} está ${input.enemyFatigue}: sus movimientos pierden precisión y fuerza, y eso se nota.\n`
+      : input.fatigue
+      ? `${input.enemyName} conserva aliento: si el resultado indicado lo permite, puede aprovechar el cansancio de ${input.characterName} para presionar o contraatacar con claridad.\n`
+      : "") +
+    (input.playerLevel && input.enemyLevel && Math.abs(input.playerLevel - input.enemyLevel) >= 5
+      ? `Hay una diferencia de experiencia clara (${input.playerLevel} vs ${input.enemyLevel}): quien tiene más nivel aguanta golpes y esfuerzo con más entereza; deja que se note sin cambiar el resultado del motor.\n`
+      : "") +
+    (input.enemyKit ? `${input.enemyKit}\n` : "") +
     (input.grudgeContext ? `${input.grudgeContext}\n` : "") +
     (input.openingStrike
       ? `${input.characterName} acaba de iniciar la agresión contra ${input.enemyName}, que estaba en la escena: su reacción debe ser coherente con quién es y con lo que estaba haciendo un instante antes.\n`
@@ -176,7 +204,7 @@ export function buildCombatNarrationPrompt(input: CombatNarrationInput): { syste
     (input.concluded
       ? "\n\nNarra el final de este combate como una escena viva, con diálogo si el enemigo tiene personalidad. Si el jugador ganó, el enemigo queda derrotado y a su merced, vivo: su destino lo decide el jugador después."
       : "\n\nNo describas de nuevo lo que el jugador intentó (ya lo escribió): empieza directo por el resultado indicado de su movimiento (impacta o es bloqueado/esquivado, y por qué es plausible)." +
-        "Luego narra al enemigo actuando por iniciativa propia, con intención letal acorde a su rango, con el resultado indicado, y una o dos líneas suyas si tiene personalidad. " +
+        "Luego narra al enemigo actuando por iniciativa propia, según su personalidad, motivos y rango (siempre buscando GANAR: matar, capturar o someter según quién sea, usando todo su repertorio), con el resultado indicado, y una o dos líneas suyas si tiene personalidad. " +
         "Termina dejando la iniciativa al jugador, sin decidir cómo reacciona ni qué hace después.");
   return { system, user };
 }
@@ -237,6 +265,9 @@ export interface DuelNarrationInput {
   lethal?: boolean;
   /** Fighters who tried to flee this round and failed — narrate the failed attempt. */
   failedFlight?: string[];
+  /** What each fighter can really do (engine/capabilities.ts): play all of it, nothing beyond. */
+  aKit?: string;
+  bKit?: string;
 }
 
 /** 1-vs-1 player duel: the AI only narrates what the engine resolved for BOTH fighters' simultaneous moves. */
@@ -255,6 +286,8 @@ export function buildDuelNarrationPrompt(input: DuelNarrationInput): { system: s
     `${input.bName} intentó: "${input.bAction}"${input.bTechnique ? ` (usando ${input.bTechnique})` : ""}.\n` +
     `Resultado, en orden, ya decidido (definitivo):\n${roundLines || "(ningún golpe)"}\n` +
     `Vida: ${input.aName} ${input.aHp}/${input.aMax}; ${input.bName} ${input.bHp}/${input.bMax}.\n` +
+    (input.aKit ? `${input.aKit}\n` : "") +
+    (input.bKit ? `${input.bKit}\n` : "") +
     (input.lethal ? "Es un duelo A MUERTE: tono grave, sin contemplaciones.\n" : "") +
     (input.failedFlight && input.failedFlight.length > 0 ? `Intentó huir y NO lo logró: ${input.failedFlight.join(", ")}.
 ` : "") +
@@ -281,6 +314,9 @@ export interface JointFightNarrationInput {
   outcome?: "victory" | "defeat";
   /** Context of what the group is fighting for ("proteger el Poneglifo", "tomar la isla"...). */
   stakes?: string;
+  /** Full repertoire of the enemy, and of each ally that has one (NPC nakamas, pledged actors). */
+  enemyKit?: string;
+  allyKits?: string[];
   recentScene?: string[];
 }
 
@@ -301,6 +337,8 @@ export function buildJointFightNarrationPrompt(input: JointFightNarrationInput):
   const user =
     `Ronda ${input.round} contra ${input.enemyName}${input.enemyPersonality ? ` — personalidad: ${input.enemyPersonality}` : ""} (${input.isBoss ? "enemigo formidable" : "enemigo común"}).\n` +
     (input.stakes ? `Lo que está en juego: ${input.stakes}\n` : "") +
+    (input.enemyKit ? `${input.enemyKit}\n` : "") +
+    (input.allyKits && input.allyKits.length ? `${input.allyKits.join("\n")}\n` : "") +
     `Lo que intentó cada aliado:\n${actionLines}\n` +
     `Resultado, EN ESTE ORDEN, ya decidido (definitivo):\n${roundLines || "(ningún golpe)"}\n` +
     `Vida del grupo: ${rosterLine}. Vida de ${input.enemyName}: ${input.enemyHp}/${input.enemyMaxHp}.\n` +
@@ -528,4 +566,56 @@ export function buildStaticBriefing(input: IslandBriefingInput): string {
     `Para progresar, esto es lo que se te ofrece: ${input.missions.map((m) => `«${m.title}» — ${m.brief}`).join(" ")}`,
   ];
   return parts.filter(Boolean).join("\n\n");
+}
+
+/** How the narrator plays the world's antagonists for this character (set out of role). */
+export function toneDirective(tone?: string): string {
+  switch (tone) {
+    case "lethal":
+      return "TONO DEL NARRADOR — LETAL: el mundo es peligroso y los enemigos combaten con intención de matar; casi nadie perdona, los riesgos se sienten reales. Sigue sin cambiar ningún resultado del motor.";
+    case "story":
+      return "TONO DEL NARRADOR — HISTORIA: prioriza la aventura y el drama. Los enemigos tienen motivos, dudas y personalidad: antes y después de la pelea hablan, se burlan, ofrecen tratos; ya en pleno combate luchan por ganar con todo. Sigue sin cambiar ningún resultado del motor.";
+    default:
+      return "TONO DEL NARRADOR — EQUILIBRADO: los enemigos actúan según su carácter y su rango (unos matan, otros intimidan, capturan, negocian o se retiran). No busques matar al jugador por defecto ni lo protejas: manda el resultado del motor.";
+  }
+}
+
+/** Tone + the player's standing out-of-role feedback, appended to a narrator's system prompt. */
+export function directivesBlock(tone?: string, notes?: string | null): string {
+  let block = `
+
+${toneDirective(tone)}`;
+  if (notes && notes.trim()) block += `
+
+INDICACIONES FUERA DE ROL DEL JUGADOR (respétalas siempre, son sobre tu forma de narrar): ${notes.trim().slice(0, 800)}`;
+  return block;
+}
+
+export interface RecruitNarrationInput {
+  characterName: string;
+  npcName: string;
+  role: string;
+  accepted: boolean;
+  islandName: string;
+  recentScene?: string[];
+}
+
+/** The persuasion roll was decided by the engine; the narrator only stages the answer of the NPC. */
+export function buildRecruitNarrationPrompt(input: RecruitNarrationInput): { system: string; user: string } {
+  const system =
+    "Eres el narrador de un rol de piratas de One Piece. Un jugador acaba de invitar a un personaje no jugador a unirse a su tripulación como nakama. " +
+    "El resultado ya está decidido por el motor y es definitivo: narra la respuesta del PNJ con voz y motivos propios, sin cambiarlo. " +
+    "No inventes números, poderes ni objetos. No decidas nada del jugador más allá de lo que escribió. No reveles que eres una IA. " +
+    ROLE_RULES +
+    " " +
+    SCENE_STYLE_RULE;
+  const transcript = input.recentScene && input.recentScene.length > 0 ? `\n\nLo que ha pasado en esta escena hasta ahora:\n${input.recentScene.join("\n")}` : "";
+  const user =
+    `${input.characterName} (isla: ${input.islandName}) invita a ${input.npcName} (${input.role}) a unirse a su tripulación.\n` +
+    (input.accepted
+      ? `Resultado decidido: ${input.npcName} ACEPTA. Narra el momento con emoción y deja claro que desde ahora es su nakama y qué aporta (${input.role}).`
+      : `Resultado decidido: ${input.npcName} RECHAZA (por ahora). Narra sus razones con respeto y deja la puerta abierta, sin hostilidad.`) +
+    transcript +
+    "\n\nNo repitas lo que el jugador escribió: empieza por la reacción de la otra persona.";
+  return { system, user };
 }

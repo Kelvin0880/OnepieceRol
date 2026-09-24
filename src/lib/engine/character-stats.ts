@@ -16,6 +16,7 @@ export interface CharacterStatsInput {
   fruitAwakened: boolean;
   /** Phase multiplier on the fruit's bonuses (fruit-mastery.ts). Defaults to 1 for callers that don't track mastery. */
   fruitPower?: number;
+  level?: number;
 }
 
 /**
@@ -42,5 +43,6 @@ export function deriveCombatant(input: CharacterStatsInput): Combatant {
     atk: input.strength + input.weaponAtkBonus + Math.round(fruitMod.atk * fruitScale) + armamentBonus + conquerorBonus,
     def: Math.round(input.durability * 0.8) + Math.round(fruitMod.def * fruitScale) + observationBonus,
     spd: input.agility + Math.round(fruitMod.spd * fruitScale),
+    ...(input.level !== undefined ? { level: input.level } : {}),
   };
 }

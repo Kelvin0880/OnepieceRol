@@ -75,7 +75,7 @@ describe("standing and pledges", () => {
   it("allies are strong but weaker than the same actor as an enemy", () => {
     const a = allyStats(90);
     expect(a.atk).toBeGreaterThan(30);
-    expect(a.hp).toBeLessThan(90 * 8);
+    expect(a.hp).toBeLessThan(90 * 16);
   });
 });
 

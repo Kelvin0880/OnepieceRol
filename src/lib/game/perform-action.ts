@@ -1,24 +1,24 @@
 import { prisma } from "../db";
 import { liveRng } from "../engine/rng";
 import { pickEventTemplate, resolveEvent, parseEventBody, EventBody } from "../engine/events";
+import { maybeAutoCheckpoint } from "./ooc";
+import { dangerBlockReason } from "../engine/safety";
+import { recruitCompanion, CompanionError } from "./companions";
+import { resolveEnemyKit } from "./enemy-kit";
+import { estimateLevel, applyFatigueToCombatant, npcStaminaAfterExchange, npcBaseEffort } from "../engine/resilience";
+import type { EffortLevel } from "../engine/stamina";
 import { resolveExchange, MAX_ROUNDS, Combatant } from "../engine/combat";
 import { trainHaki, rollConquerorsHakiAwakening } from "../engine/haki";
 import { trainFruitMastery, canAwaken, FRUIT_PHASE_LABELS, fruitPhase } from "../engine/fruit-mastery";
 import { TechniqueId, TECHNIQUE_LABELS } from "../engine/techniques";
 import { buildSceneEnemy, tierXp, EnemyTier } from "../engine/scene-enemy";
-import { FATIGUE_LABELS, restStamina, spendStamina } from "../engine/stamina";
+import { FATIGUE_LABELS, fatigueLevel, restStamina, spendStamina } from "../engine/stamina";
 import { prepareFighter, combatProgressData, currentStamina } from "./combat-prep";
 import { bountyReward, berryReward, xpToNextLevel } from "../engine/economy";
 import { assessThreat, attemptFlee, ThreatAssessment } from "../engine/encounter";
 import { canEnterIsland, travelWaitMs, TRAVEL_STAMINA_COST, tideStatus, knowsTheRoad } from "../engine/travel";
 import { rollHunterAmbush, decayPursuitHeat, heatAfterReadingPoneglyph } from "../engine/pursuit";
-import {
-  recordGrudgeIncident,
-  recordMercyIncident,
-  decayGrudgesForCharacter,
-  rollGrudgeAmbushForCharacter,
-  getGrudgeContextForNarration,
-} from "./grudges";
+import { recordGrudgeIncident, recordMercyIncident, decayGrudgesForCharacter, rollGrudgeAmbushForCharacter, getGrudgeContextForNarration } from "./grudges";
 import { toCombatant, generalSkillModifier } from "./derive";
 import { tickWorldIfDue } from "./world-tick";
 import { getOpenDuelFor, submitDuelAction } from "./duel";
@@ -33,15 +33,7 @@ import { DEVIL_FRUIT_CATALOG } from "./devil-fruit-catalog";
 import { applyBountyOrNotoriety } from "./reputation";
 import { narrateExplore, narrateEncounterIntro, narrateCombat, narrateScene, narratePartyScene, getRecentScene, updateCharacterMemory } from "../ai/narrate";
 import { classifyPlayerAction, ActionId } from "../ai/classify-action";
-import {
-  beginPartyTurn,
-  advancePartyTurn,
-  releasePartyTurnLock,
-  writePartyMessage,
-  echoToParty,
-  confirmLeaveParty as partyConfirmLeaveParty,
-  rejoinParty as partyRejoinParty,
-} from "./party";
+import { beginPartyTurn, advancePartyTurn, releasePartyTurnLock, writePartyMessage, echoToParty, confirmLeaveParty as partyConfirmLeaveParty, rejoinParty as partyRejoinParty } from "./party";
 import { CharacterStatus } from "@prisma/client";
 import { addStanding } from "./alliance";
 import { recordMissionEvent } from "./missions";
@@ -60,13 +52,18 @@ type LoadedCharacter = Awaited<ReturnType<typeof loadCharacterOrThrow>>;
 async function loadCharacterOrThrow(characterId: string, userId: string) {
   const character = await prisma.character.findUnique({
     where: { id: characterId },
-    include: { devilFruit: true, equippedWeapon: true, currentIsland: true, companions: true, pendingEncounter: true },
+    include: {
+      devilFruit: true,
+      equippedWeapon: true,
+      currentIsland: true,
+      companions: true,
+      pendingEncounter: true,
+    },
   });
   if (!character || character.userId !== userId) throw new GameActionError("Personaje no encontrado.");
   if (character.status !== CharacterStatus.ALIVE) throw new GameActionError("Este personaje ya no puede actuar.");
   return character;
 }
-
 
 export interface ActionResult {
   log: string[];
@@ -82,7 +79,11 @@ export interface ActionResult {
   poneglyphGained?: string;
   newsPosted: string[];
   conquerorsHakiAwakened?: boolean;
-  pendingCombat?: { enemyName: string; assessment: ThreatAssessment; isBoss: boolean };
+  pendingCombat?: {
+    enemyName: string;
+    assessment: ThreatAssessment;
+    isBoss: boolean;
+  };
   awaitingMercyChoice?: { enemyName: string };
   /** Set when free text read as wanting to leave a shared party scene — a real confirm step, nothing mutated yet. */
   confirmRequired?: "leave_party";
@@ -110,8 +111,13 @@ export async function tryDropFruit(characterId: string, newsLog: string[]): Prom
       isSingleton: false,
     },
   });
-  await prisma.character.update({ where: { id: characterId }, data: { devilFruitId: fruit.id } });
-  const character = await prisma.character.findUnique({ where: { id: characterId } });
+  await prisma.character.update({
+    where: { id: characterId },
+    data: { devilFruitId: fruit.id },
+  });
+  const character = await prisma.character.findUnique({
+    where: { id: characterId },
+  });
   const headline = `¡${character?.name} despierta el poder de la ${fruit.name}!`;
   await postNews(headline, `Un poder que pocos podrán igualar acaba de entrar en juego en los mares.`, "Frutas", characterId);
   newsLog.push(headline);
@@ -125,6 +131,8 @@ interface StoredEnemy {
   def: number;
   spd: number;
   isBoss: boolean;
+  /** Experience level (soaks damage, tires slower). Absent on older enemies: estimated from atk/def. */
+  level?: number;
   personality?: string;
   worldActorId?: string;
   /** The holder themself, not the subordinate standing in — see game/guardian.ts. */
@@ -167,7 +175,13 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
   if (staminaNow < MIN_STAMINA_TO_ADVENTURE) {
     throw new GameActionError("Estás exhausto: tu cuerpo no da para más aventuras por ahora. Descansa antes de volver a salir.");
   }
-  await prisma.character.update({ where: { id: character.id }, data: { stamina: spendStamina(staminaNow, EXPLORE_STAMINA_COST), staminaUpdatedAt: new Date() } });
+  await prisma.character.update({
+    where: { id: character.id },
+    data: {
+      stamina: spendStamina(staminaNow, EXPLORE_STAMINA_COST),
+      staminaUpdatedAt: new Date(),
+    },
+  });
 
   // Holding a Poneglyph's secret makes you a target — before anything
   // else, roll whether whoever lost that secret has finally caught up.
@@ -181,28 +195,49 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
       spd: playerCombatant.spd,
       isBoss: true,
     };
-    const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
+    const enemyCombatant: Combatant = {
+      name: enemy.name,
+      hp: enemy.hp,
+      maxHp: enemy.hp,
+      atk: enemy.atk,
+      def: enemy.def,
+      spd: enemy.spd,
+    };
     const assessment = assessThreat(playerCombatant, enemyCombatant);
-    const log = [
-      "Nadie que lee un Poneglifo queda a salvo por mucho tiempo. Una sombra armada te alcanza, enviada por quienes no pueden permitirse que ese secreto siga vivo.",
-    ];
+    const log = ["Nadie que lee un Poneglifo queda a salvo por mucho tiempo. Una sombra armada te alcanza, enviada por quienes no pueden permitirse que ese secreto siga vivo."];
 
-    await prisma.character.update({ where: { id: character.id }, data: { poneglyphHeat: decayPursuitHeat(character.poneglyphHeat) } });
+    await prisma.character.update({
+      where: { id: character.id },
+      data: { poneglyphHeat: decayPursuitHeat(character.poneglyphHeat) },
+    });
     await prisma.pendingEncounter.create({
       data: {
         characterId: character.id,
         enemyJson: JSON.stringify(enemy),
-        rewardsJson: JSON.stringify({ berries: 0, xp: 20, bounty: 0, islandDanger: character.currentIsland.dangerLevel } satisfies StoredRewards),
+        rewardsJson: JSON.stringify({
+          berries: 0,
+          xp: 20,
+          bounty: 0,
+          islandDanger: character.currentIsland.dangerLevel,
+        } satisfies StoredRewards),
         narrative: log.join(" "),
         assessment,
       },
     });
-    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "pursuit", text: log.join(" ") } });
+    await prisma.gameLogEntry.create({
+      data: { characterId: character.id, kind: "pursuit", text: log.join(" ") },
+    });
 
-    return { ...emptyResult(log, character.level), pendingCombat: { enemyName: enemy.name, assessment, isBoss: true } };
+    return {
+      ...emptyResult(log, character.level),
+      pendingCombat: { enemyName: enemy.name, assessment, isBoss: true },
+    };
   }
   if (character.poneglyphHeat > 0) {
-    await prisma.character.update({ where: { id: character.id }, data: { poneglyphHeat: decayPursuitHeat(character.poneglyphHeat) } });
+    await prisma.character.update({
+      where: { id: character.id },
+      data: { poneglyphHeat: decayPursuitHeat(character.poneglyphHeat) },
+    });
   }
 
   // A grudge-holder's own subordinate may come looking for you, independent
@@ -224,7 +259,14 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
       personality: grudgeAmbush.worldActorPersonality ?? undefined,
       worldActorId: grudgeAmbush.worldActorId,
     };
-    const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
+    const enemyCombatant: Combatant = {
+      name: enemy.name,
+      hp: enemy.hp,
+      maxHp: enemy.hp,
+      atk: enemy.atk,
+      def: enemy.def,
+      spd: enemy.spd,
+    };
     const assessment = assessThreat(playerCombatant, enemyCombatant);
     const log = [`${grudgeAmbush.worldActorName} no olvidó lo ocurrido: ${grudgeAmbush.lastIncidentNote}. Uno de sus hombres te encuentra de nuevo.`];
 
@@ -232,41 +274,97 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
       data: {
         characterId: character.id,
         enemyJson: JSON.stringify(enemy),
-        rewardsJson: JSON.stringify({ berries: 0, xp: 25, bounty: 0, islandDanger: character.currentIsland.dangerLevel } satisfies StoredRewards),
+        rewardsJson: JSON.stringify({
+          berries: 0,
+          xp: 25,
+          bounty: 0,
+          islandDanger: character.currentIsland.dangerLevel,
+        } satisfies StoredRewards),
         narrative: log.join(" "),
         assessment,
       },
     });
-    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "grudge", text: log.join(" ") } });
+    await prisma.gameLogEntry.create({
+      data: { characterId: character.id, kind: "grudge", text: log.join(" ") },
+    });
 
-    return { ...emptyResult(log, character.level), pendingCombat: { enemyName: enemy.name, assessment, isBoss: true } };
+    return {
+      ...emptyResult(log, character.level),
+      pendingCombat: { enemyName: enemy.name, assessment, isBoss: true },
+    };
   }
 
   const thread = await rollConsequenceForExplore(character, toCombatant(character), character.currentIsland.dangerLevel, rng);
   if (thread?.encounter) {
     const e = thread.encounter;
-    const enemy: StoredEnemy = { name: e.enemyName, ...e.stats, isBoss: true, worldActorId: e.worldActorId, consequenceStage: e.consequenceStage };
-    const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
+    const enemy: StoredEnemy = {
+      name: e.enemyName,
+      ...e.stats,
+      isBoss: true,
+      worldActorId: e.worldActorId,
+      consequenceStage: e.consequenceStage,
+    };
+    const enemyCombatant: Combatant = {
+      name: enemy.name,
+      hp: enemy.hp,
+      maxHp: enemy.hp,
+      atk: enemy.atk,
+      def: enemy.def,
+      spd: enemy.spd,
+    };
     const assessment = assessThreat(toCombatant(character), enemyCombatant);
     await prisma.pendingEncounter.create({
       data: {
         characterId: character.id,
         enemyJson: JSON.stringify(enemy),
-        rewardsJson: JSON.stringify({ berries: 0, xp: 30 * e.consequenceStage, bounty: 0, islandDanger: character.currentIsland.dangerLevel } satisfies StoredRewards),
+        rewardsJson: JSON.stringify({
+          berries: 0,
+          xp: 30 * e.consequenceStage,
+          bounty: 0,
+          islandDanger: character.currentIsland.dangerLevel,
+        } satisfies StoredRewards),
         narrative: thread.log.join(" "),
         assessment,
       },
     });
-    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "consequence", text: thread.log.join(" ") } });
-    return { ...emptyResult(thread.log, character.level), pendingCombat: { enemyName: enemy.name, assessment, isBoss: true } };
+    await prisma.gameLogEntry.create({
+      data: {
+        characterId: character.id,
+        kind: "consequence",
+        text: thread.log.join(" "),
+      },
+    });
+    return {
+      ...emptyResult(thread.log, character.level),
+      pendingCombat: { enemyName: enemy.name, assessment, isBoss: true },
+    };
   }
   if (thread) {
     const gained = await grantXp(character.experience, character.level, thread.xp ?? 0);
-    await prisma.character.update({ where: { id: character.id }, data: { berries: character.berries + (thread.berries ?? 0), experience: gained.xp, level: gained.level } });
+    await prisma.character.update({
+      where: { id: character.id },
+      data: {
+        berries: character.berries + (thread.berries ?? 0),
+        experience: gained.xp,
+        level: gained.level,
+      },
+    });
     const newsLog: string[] = [];
     if (thread.reputation) await applyBountyOrNotoriety(character, character.faction === "PIRATE" || character.faction === "BOUNTY_HUNTER" ? thread.reputation * 1_000_000 : thread.reputation * 10, newsLog, "Tributo por tu fama");
-    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "consequence", text: thread.log.join(" ") } });
-    return { ...emptyResult(thread.log, character.level), berriesDelta: thread.berries ?? 0, xpDelta: thread.xp ?? 0, leveledUp: gained.leveledUp, newLevel: gained.level };
+    await prisma.gameLogEntry.create({
+      data: {
+        characterId: character.id,
+        kind: "consequence",
+        text: thread.log.join(" "),
+      },
+    });
+    return {
+      ...emptyResult(thread.log, character.level),
+      berriesDelta: thread.berries ?? 0,
+      xpDelta: thread.xp ?? 0,
+      leveledUp: gained.leveledUp,
+      newLevel: gained.level,
+    };
   }
 
   const templates = await prisma.eventTemplate.findMany({
@@ -297,8 +395,7 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
   // no final result yet to narrate.
   if (resolution.triggersCombat && resolution.enemy) {
     const playerCombatant = toCombatant(character);
-    const tierMultiplier =
-      resolution.outcome === "critical_success" ? 0.7 : resolution.outcome === "success" ? 0.85 : resolution.outcome === "fail" ? 1 : 1.25;
+    const tierMultiplier = resolution.outcome === "critical_success" ? 0.7 : resolution.outcome === "success" ? 0.85 : resolution.outcome === "fail" ? 1 : 1.25;
     let enemy: StoredEnemy = {
       name: resolution.enemy.name,
       hp: resolution.enemy.hp,
@@ -311,17 +408,32 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
     };
     // A Poneglyph's guardian is whoever the holder's schedule says: the
     // subordinate when they're away, usually the holder themself when home.
-    let guardianRewards: { berries: number; xp: number; bounty: number } | null = null;
+    let guardianRewards: {
+      berries: number;
+      xp: number;
+      bounty: number;
+    } | null = null;
     if (body.poneglyphId && enemy.worldActorId) {
       const g = await applyGuardianPresence(enemy, rng);
       enemy = g.enemy;
       if (g.note) introLog.push(g.note);
       if (g.enemy.isActor) {
         const base = guardianBaseRewards(body);
-        guardianRewards = { berries: base.berries * ACTOR_REWARD_MULTIPLIER, xp: base.xp * ACTOR_REWARD_MULTIPLIER, bounty: base.bounty * ACTOR_REWARD_MULTIPLIER };
+        guardianRewards = {
+          berries: base.berries * ACTOR_REWARD_MULTIPLIER,
+          xp: base.xp * ACTOR_REWARD_MULTIPLIER,
+          bounty: base.bounty * ACTOR_REWARD_MULTIPLIER,
+        };
       }
     }
-    const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
+    const enemyCombatant: Combatant = {
+      name: enemy.name,
+      hp: enemy.hp,
+      maxHp: enemy.hp,
+      atk: enemy.atk,
+      def: enemy.def,
+      spd: enemy.spd,
+    };
     const assessment = assessThreat(playerCombatant, enemyCombatant);
     // The threat is introduced by the narrator in the context of what the
     // player was actually doing — never a disconnected canned line.
@@ -363,11 +475,21 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
       },
     });
 
-    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: full.kind.toLowerCase(), text: introLog.join(" ") } });
+    await prisma.gameLogEntry.create({
+      data: {
+        characterId: character.id,
+        kind: full.kind.toLowerCase(),
+        text: introLog.join(" "),
+      },
+    });
 
     return {
       ...emptyResult(introLog, character.level),
-      pendingCombat: { enemyName: enemy.name, assessment, isBoss: enemy.isBoss },
+      pendingCombat: {
+        enemyName: enemy.name,
+        assessment,
+        isBoss: enemy.isBoss,
+      },
     };
   }
 
@@ -421,16 +543,31 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
     leveledUp = result.leveledUp;
     newLevel = result.level;
     if (leveledUp) log.push(`¡Subes de nivel! Ahora eres nivel ${newLevel}.`);
-    await prisma.character.update({ where: { id: character.id }, data: { experience: result.xp, level: result.level } });
+    await prisma.character.update({
+      where: { id: character.id },
+      data: { experience: result.xp, level: result.level },
+    });
   }
 
   if (!died) {
     const newHp = Math.max(0, Math.min(character.maxHp, character.hp + hpDelta));
-    await prisma.character.update({ where: { id: character.id }, data: { hp: newHp, berries: Math.max(0, character.berries + resolution.berries) } });
+    await prisma.character.update({
+      where: { id: character.id },
+      data: {
+        hp: newHp,
+        berries: Math.max(0, character.berries + resolution.berries),
+      },
+    });
     await applyBountyOrNotoriety(character, resolution.bounty, newsLog);
   }
 
-  await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: full.kind.toLowerCase(), text: log.join(" ") } });
+  await prisma.gameLogEntry.create({
+    data: {
+      characterId: character.id,
+      kind: full.kind.toLowerCase(),
+      text: log.join(" "),
+    },
+  });
 
   return {
     log,
@@ -477,7 +614,11 @@ export async function engageCharacter(
   userId: string,
   intentText?: string,
   tacticModifier = 0,
-  opts: { technique?: TechniqueId; openingStrike?: boolean } = {}
+  opts: {
+    technique?: TechniqueId;
+    openingStrike?: boolean;
+    effort?: EffortLevel;
+  } = {}
 ): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
   const pending = character.pendingEncounter;
@@ -494,39 +635,53 @@ export async function engageCharacter(
 
   // Technique (haki/fruit), tactic and fatigue are folded into one Combatant
   // by the engine layer — the classifier only proposed them, code decided.
-  const prepared = prepareFighter(character, opts.technique ?? "none", tacticModifier);
+  const prepared = prepareFighter(character, opts.technique ?? "none", tacticModifier, character.hp, opts.effort);
   let playerCombatant = prepared.combatant;
   const assistName = pending.phase === "threat" && enemy.isBoss ? rollCompanionAssist(character, rng) : null;
   if (assistName) {
-    playerCombatant = { ...playerCombatant, atk: Math.round(playerCombatant.atk * 1.15) };
+    playerCombatant = {
+      ...playerCombatant,
+      atk: Math.round(playerCombatant.atk * 1.15),
+    };
     log.push(`${assistName} se lanza a tu lado para ayudarte contra ${enemy.name}.`);
   }
 
-  const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
+  const enemyLevel = enemy.level ?? estimateLevel(enemy.atk, enemy.def);
+  const enemyStaminaBefore = pending.enemyStamina;
+  // A tired enemy hits, defends and moves worse — and a fresh one can punish an exhausted player.
+  const enemyCombatant: Combatant = applyFatigueToCombatant(
+    {
+      name: enemy.name,
+      hp: enemy.hp,
+      maxHp: enemy.hp,
+      atk: enemy.atk,
+      def: enemy.def,
+      spd: enemy.spd,
+      level: enemyLevel,
+    },
+    enemyStaminaBefore
+  );
   const enemyHpBefore = pending.enemyHp ?? enemy.hp;
   const roundNumber = pending.roundNumber + 1;
 
-  const { aHpAfter: playerHpAfter, bHpAfter: enemyHpAfter, log: roundLog } = resolveExchange(
-    rng,
-    roundNumber,
-    { ...playerCombatant, hp: character.hp, maxHp: character.maxHp },
-    character.hp,
-    enemyCombatant,
-    enemyHpBefore
-  );
+  const { aHpAfter: exchangeHpAfter, bHpAfter: enemyHpAfter, log: roundLog } = resolveExchange(rng, roundNumber, { ...playerCombatant, hp: character.hp, maxHp: character.maxHp }, character.hp, enemyCombatant, enemyHpBefore);
 
+  // Straining on an empty tank tears something — never lethal by itself, and only if the exchange left the player standing.
+  const playerHpAfter = exchangeHpAfter > 0 ? Math.max(1, exchangeHpAfter - prepared.strainHp) : exchangeHpAfter;
+  const damageTaken = Math.max(0, character.hp - exchangeHpAfter);
+  const enemyStaminaAfter = npcStaminaAfterExchange({
+    stamina: enemyStaminaBefore,
+    level: enemyLevel,
+    effort: npcBaseEffort(enemy.isBoss),
+    damageTaken: Math.max(0, enemyHpBefore - enemyHpAfter),
+    maxHp: enemy.hp,
+  });
+  if (prepared.strainHp > 0 && exchangeHpAfter > 0) log.push("Forzar el cuerpo sin aliento te pasa factura: sientes un tirón que te hace daño.");
   const concluded = playerHpAfter <= 0 || enemyHpAfter <= 0 || roundNumber >= MAX_ROUNDS;
   // Same tie-break runCombat always used when rounds ran out with both still standing.
-  const victor: "player" | "enemy" | undefined = !concluded
-    ? undefined
-    : enemyHpAfter <= 0 && playerHpAfter > 0
-    ? "player"
-    : playerHpAfter <= 0 && enemyHpAfter > 0
-    ? "enemy"
-    : enemyHpAfter < playerHpAfter
-    ? "player"
-    : "enemy"; // draw or ran out of rounds evenly: same "healthier side wins" rule runCombat used, loss-leaning on an exact tie
+  const victor: "player" | "enemy" | undefined = !concluded ? undefined : enemyHpAfter <= 0 && playerHpAfter > 0 ? "player" : playerHpAfter <= 0 && enemyHpAfter > 0 ? "enemy" : enemyHpAfter < playerHpAfter ? "player" : "enemy"; // draw or ran out of rounds evenly: same "healthier side wins" rule runCombat used, loss-leaning on an exact tie
 
+  const enemyKitText = (await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId })).text;
   const scene = await getRecentScene(character.id, 10);
   const grudgeContext = enemy.worldActorId ? await getGrudgeContextForNarration(enemy.worldActorId, character.id) : null;
   const narrated = await narrateCombat(
@@ -538,6 +693,7 @@ export async function engageCharacter(
       rounds: roundLog,
       concluded,
       victor,
+      endedByExhaustion: concluded && playerHpAfter > 0 && enemyHpAfter > 0,
       playerHpLeft: Math.max(0, playerHpAfter),
       playerMaxHp: character.maxHp,
       enemyHpLeft: Math.max(0, enemyHpAfter),
@@ -548,12 +704,18 @@ export async function engageCharacter(
       openingStrike: opts.openingStrike,
       technique:
         opts.technique && opts.technique !== "none"
-          ? { label: TECHNIQUE_LABELS[opts.technique], downgradedReason: prepared.effect.downgraded ? prepared.effect.downgradeReason : undefined }
+          ? {
+              label: TECHNIQUE_LABELS[opts.technique],
+              downgradedReason: prepared.effect.downgraded ? prepared.effect.downgradeReason : undefined,
+            }
           : undefined,
       fatigue: prepared.fatigue !== "fresh" ? FATIGUE_LABELS[prepared.fatigue] : undefined,
+      enemyFatigue: fatigueLevel(enemyStaminaBefore, 100) !== "fresh" ? FATIGUE_LABELS[fatigueLevel(enemyStaminaBefore, 100)] : undefined,
+      playerLevel: character.level,
+      enemyLevel,
+      enemyKit: enemyKitText,
       grudgeContext: grudgeContext
-        ? `${enemy.name} ya se enfrentó a este personaje antes y no lo olvida: ${grudgeContext.text}.` +
-          (grudgeContext.critical ? " La situación se ha vuelto crítica para ellos — podrían amenazar con pedir refuerzos." : "")
+        ? `${enemy.name} ya se enfrentó a este personaje antes y no lo olvida: ${grudgeContext.text}.` + (grudgeContext.critical ? " La situación se ha vuelto crítica para ellos — podrían amenazar con pedir refuerzos." : "")
         : undefined,
     },
     { characterId: character.id }
@@ -562,7 +724,7 @@ export async function engageCharacter(
 
   if (concluded && victor === "player") {
     log.push(`¡${enemy.name} queda derrotado y a tu merced!`);
-    const progress = combatProgressData(character, prepared, rng);
+    const progress = combatProgressData(character, prepared, rng, damageTaken);
     const growth: Record<string, unknown> = {};
     const mastery = progress.fruitMastery ?? character.fruitMastery;
     if (progress.fruitMastery !== undefined && fruitPhase(character.fruitMastery, false) !== fruitPhase(mastery, false)) {
@@ -571,7 +733,13 @@ export async function engageCharacter(
     const hpRatio = playerHpAfter / character.maxHp;
     // A fight that pushed you to the edge is the breaking point both an
     // Awakening and (rarely) Conqueror's Haki wait for.
-    if (character.devilFruitId && canAwaken(mastery, character.fruitAwakened, { enemyIsBoss: enemy.isBoss, playerHpRatio: hpRatio })) {
+    if (
+      character.devilFruitId &&
+      canAwaken(mastery, character.fruitAwakened, {
+        enemyIsBoss: enemy.isBoss,
+        playerHpRatio: hpRatio,
+      })
+    ) {
       growth.fruitAwakened = true;
       log.push("En el límite de tus fuerzas, algo se rompe y despierta: tu fruta alcanza el Despertar.");
       const headline = `${character.name} logra el Despertar de su Akuma no Mi`;
@@ -585,26 +753,52 @@ export async function engageCharacter(
       await postNews(headline, `Los presentes juran haber sentido una presión aplastante emanar de ${character.name}.`, "Frutas", character.id, "major");
       newsLog.push(headline);
     }
-    await prisma.character.update({ where: { id: character.id }, data: { hp: Math.max(1, playerHpAfter), ...progress, ...growth } });
+    await prisma.character.update({
+      where: { id: character.id },
+      data: { hp: Math.max(1, playerHpAfter), ...progress, ...growth },
+    });
     // Keep the pending encounter around, now representing "awaiting mercy choice".
-    await prisma.pendingEncounter.update({ where: { characterId: character.id }, data: { phase: "victory", enemyHp: Math.max(0, enemyHpAfter), roundNumber } });
-    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
+    await prisma.pendingEncounter.update({
+      where: { characterId: character.id },
+      data: {
+        phase: "victory",
+        enemyHp: Math.max(0, enemyHpAfter),
+        enemyStamina: enemyStaminaAfter,
+        roundNumber,
+      },
+    });
+    await prisma.gameLogEntry.create({
+      data: { characterId: character.id, kind: "combat", text: log.join(" ") },
+    });
     // Fire-and-forget: Render runs a persistent Node process (not per-request
     // serverless), so this keeps running after the response is sent, and
     // updateCharacterMemory never throws — a slow/failed summary never
     // delays or breaks the player's actual turn.
     void updateCharacterMemory(character.id, character.memorySummary, `${character.name} venció a ${enemy.name} en combate${enemy.isBoss ? " (un enemigo formidable)" : ""}.`);
-    return { ...emptyResult(log, character.level), awaitingMercyChoice: { enemyName: enemy.name } };
+    return {
+      ...emptyResult(log, character.level),
+      awaitingMercyChoice: { enemyName: enemy.name },
+    };
   }
 
   if (concluded && victor === "enemy") {
     log.push(`${enemy.name} te derrota.`);
     const deathCheck = await handleDeathCheck(character, playerHpAfter, `Cayó en combate contra ${enemy.name}.`, newsLog);
-    await prisma.pendingEncounter.delete({ where: { characterId: character.id } });
+    await prisma.pendingEncounter.delete({
+      where: { characterId: character.id },
+    });
     if (!deathCheck.died) {
-      await prisma.character.update({ where: { id: character.id }, data: { hp: deathCheck.finalHp, ...combatProgressData(character, prepared, rng) } });
+      await prisma.character.update({
+        where: { id: character.id },
+        data: {
+          hp: deathCheck.finalHp,
+          ...combatProgressData(character, prepared, rng, damageTaken),
+        },
+      });
     }
-    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
+    await prisma.gameLogEntry.create({
+      data: { characterId: character.id, kind: "combat", text: log.join(" ") },
+    });
     if (!deathCheck.died) {
       void updateCharacterMemory(character.id, character.memorySummary, `${character.name} perdió un combate contra ${enemy.name} y sobrevivió malherido.`);
     }
@@ -624,16 +818,33 @@ export async function engageCharacter(
   }
 
   // Neither side down yet — persist the round state and wait for the player's next move.
-  await prisma.character.update({ where: { id: character.id }, data: { hp: Math.max(0, playerHpAfter), ...combatProgressData(character, prepared, rng) } });
+  await prisma.character.update({
+    where: { id: character.id },
+    data: {
+      hp: Math.max(0, playerHpAfter),
+      ...combatProgressData(character, prepared, rng, damageTaken),
+    },
+  });
   await prisma.pendingEncounter.update({
     where: { characterId: character.id },
-    data: { phase: "fighting", enemyHp: Math.max(0, enemyHpAfter), roundNumber },
+    data: {
+      phase: "fighting",
+      enemyHp: Math.max(0, enemyHpAfter),
+      enemyStamina: enemyStaminaAfter,
+      roundNumber,
+    },
   });
-  await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
+  await prisma.gameLogEntry.create({
+    data: { characterId: character.id, kind: "combat", text: log.join(" ") },
+  });
   return {
     ...emptyResult(log, character.level),
     hpDelta: playerHpAfter - character.hp,
-    pendingCombat: { enemyName: enemy.name, assessment: pending.assessment as ThreatAssessment, isBoss: enemy.isBoss },
+    pendingCombat: {
+      enemyName: enemy.name,
+      assessment: pending.assessment as ThreatAssessment,
+      isBoss: enemy.isBoss,
+    },
   };
 }
 
@@ -655,7 +866,13 @@ export async function attackCharacter(
   characterId: string,
   userId: string,
   freeText: string,
-  opts: { target?: string; tier?: EnemyTier; technique?: TechniqueId; tacticModifier?: number } = {}
+  opts: {
+    target?: string;
+    tier?: EnemyTier;
+    technique?: TechniqueId;
+    tacticModifier?: number;
+    effort?: EffortLevel;
+  } = {}
 ): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
   if (character.pendingEncounter) throw new GameActionError("Ya estás en medio de un enfrentamiento.");
@@ -664,7 +881,15 @@ export async function attackCharacter(
   const name = cleanTargetName(opts.target);
   const playerBase = toCombatant(character);
   const built = buildSceneEnemy(name, { ...playerBase, hp: character.maxHp, maxHp: character.maxHp }, tier);
-  const enemy: StoredEnemy = { name, hp: built.maxHp, atk: built.atk, def: built.def, spd: built.spd, isBoss: tier === "elite" };
+  const enemy: StoredEnemy = {
+    name,
+    hp: built.maxHp,
+    atk: built.atk,
+    def: built.def,
+    spd: built.spd,
+    isBoss: tier === "elite",
+    level: built.level,
+  };
   const assessment = assessThreat(playerBase, built);
 
   // With crewmates sharing the scene, the fight is everyone's: they each act every round.
@@ -674,18 +899,36 @@ export async function attackCharacter(
       kind: "party",
       characterIds: allies,
       enemy,
-      rewards: { berries: 0, xp: tierXp(tier), bounty: 0, islandDanger: character.currentIsland.dangerLevel },
+      rewards: {
+        berries: 0,
+        xp: tierXp(tier),
+        bounty: 0,
+        islandDanger: character.currentIsland.dangerLevel,
+      },
       stakes: `${character.name} ha atacado a ${name}.`,
-      opening: { characterId: character.id, text: freeText, tactic: opts.tacticModifier ?? 0, technique: opts.technique ?? "none" },
+      opening: {
+        characterId: character.id,
+        text: freeText,
+        tactic: opts.tacticModifier ?? 0,
+        technique: opts.technique ?? "none",
+      },
     });
-    return { ...emptyResult(started.log.length ? started.log : [`${character.name} ataca a ${name} y sus nakamas se suman: la pelea es de todos. Esperando los movimientos de cada uno.`], character.level), jointFight: true };
+    return {
+      ...emptyResult(started.log.length ? started.log : [`${character.name} ataca a ${name} y sus nakamas se suman: la pelea es de todos. Esperando los movimientos de cada uno.`], character.level),
+      jointFight: true,
+    };
   }
 
   await prisma.pendingEncounter.create({
     data: {
       characterId: character.id,
       enemyJson: JSON.stringify(enemy),
-      rewardsJson: JSON.stringify({ berries: 0, xp: tierXp(tier), bounty: 0, islandDanger: character.currentIsland.dangerLevel } satisfies StoredRewards),
+      rewardsJson: JSON.stringify({
+        berries: 0,
+        xp: tierXp(tier),
+        bounty: 0,
+        islandDanger: character.currentIsland.dangerLevel,
+      } satisfies StoredRewards),
       narrative: `${character.name} ataca a ${name}.`,
       assessment,
       phase: "fighting",
@@ -694,7 +937,7 @@ export async function attackCharacter(
     },
   });
 
-  return engageCharacter(characterId, userId, freeText, opts.tacticModifier ?? 0, { technique: opts.technique, openingStrike: true });
+  return engageCharacter(characterId, userId, freeText, opts.tacticModifier ?? 0, { technique: opts.technique, openingStrike: true, effort: opts.effort });
 }
 
 export async function fleeCharacter(characterId: string, userId: string): Promise<ActionResult> {
@@ -708,11 +951,20 @@ export async function fleeCharacter(characterId: string, userId: string): Promis
 
   const enemy = JSON.parse(pending.enemyJson) as StoredEnemy;
   const playerCombatant = toCombatant(character);
-  const enemyCombatant: Combatant = { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd };
+  const enemyCombatant: Combatant = {
+    name: enemy.name,
+    hp: enemy.hp,
+    maxHp: enemy.hp,
+    atk: enemy.atk,
+    def: enemy.def,
+    spd: enemy.spd,
+  };
   const flee = attemptFlee(rng, playerCombatant, enemyCombatant);
 
   if (flee.success) {
-    await prisma.pendingEncounter.delete({ where: { characterId: character.id } });
+    await prisma.pendingEncounter.delete({
+      where: { characterId: character.id },
+    });
     const log = [`Logras escabullirte de ${enemy.name} sin que te alcance.`];
     const newsLog: string[] = [];
     let bountyDelta = 0;
@@ -731,29 +983,41 @@ export async function fleeCharacter(characterId: string, userId: string): Promis
       });
       bountyDelta = Math.round(bountyReward(character.currentIsland.dangerLevel, character.level, true) * 0.25);
       const headline = `${character.name} escapa de ${enemy.name}`;
-      await postNews(
-        headline,
-        `${character.name} logró escabullirse de ${enemy.name} tras un enfrentamiento tenso. No parece ser algo que se olvide fácilmente.`,
-        "Tripulaciones",
-        character.id
-      );
+      await postNews(headline, `${character.name} logró escabullirse de ${enemy.name} tras un enfrentamiento tenso. No parece ser algo que se olvide fácilmente.`, "Tripulaciones", character.id);
       newsLog.push(headline);
       if (bountyDelta > 0) await applyBountyOrNotoriety(character, bountyDelta, newsLog, `Escapó de ${enemy.name}`);
     }
 
-    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "flee", text: log[0] } });
-    return { ...emptyResult(log, character.level), bountyDelta, newsPosted: newsLog };
+    await prisma.gameLogEntry.create({
+      data: { characterId: character.id, kind: "flee", text: log[0] },
+    });
+    return {
+      ...emptyResult(log, character.level),
+      bountyDelta,
+      newsPosted: newsLog,
+    };
   }
 
   const log = [`No logras escapar de ${enemy.name}, que te alcanza mientras huyes. No queda más remedio que luchar.`];
-  await prisma.character.update({ where: { id: character.id }, data: { hp: Math.max(0, character.hp - flee.hpLoss) } });
+  await prisma.character.update({
+    where: { id: character.id },
+    data: { hp: Math.max(0, character.hp - flee.hpLoss) },
+  });
 
   if (character.hp - flee.hpLoss <= 0) {
     const newsLog: string[] = [];
     const deathCheck = await handleDeathCheck(character, character.hp - flee.hpLoss, `Cayó intentando huir de ${enemy.name}.`, newsLog);
-    await prisma.pendingEncounter.delete({ where: { characterId: character.id } });
-    if (!deathCheck.died) await prisma.character.update({ where: { id: character.id }, data: { hp: deathCheck.finalHp } });
-    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "flee", text: log.join(" ") } });
+    await prisma.pendingEncounter.delete({
+      where: { characterId: character.id },
+    });
+    if (!deathCheck.died)
+      await prisma.character.update({
+        where: { id: character.id },
+        data: { hp: deathCheck.finalHp },
+      });
+    await prisma.gameLogEntry.create({
+      data: { characterId: character.id, kind: "flee", text: log.join(" ") },
+    });
     return {
       log,
       berriesDelta: 0,
@@ -768,11 +1032,17 @@ export async function fleeCharacter(characterId: string, userId: string): Promis
     };
   }
 
-  await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "flee", text: log.join(" ") } });
+  await prisma.gameLogEntry.create({
+    data: { characterId: character.id, kind: "flee", text: log.join(" ") },
+  });
   return {
     ...emptyResult(log, character.level),
     hpDelta: -flee.hpLoss,
-    pendingCombat: { enemyName: enemy.name, assessment: pending.assessment as ThreatAssessment, isBoss: enemy.isBoss },
+    pendingCombat: {
+      enemyName: enemy.name,
+      assessment: pending.assessment as ThreatAssessment,
+      isBoss: enemy.isBoss,
+    },
   };
 }
 
@@ -790,14 +1060,14 @@ async function resolveMercyChoiceInner(characterId: string, userId: string, spar
   const mercyMultiplier = spare ? 0.7 : 1;
   const berriesDelta = rewards.berries + Math.round(berryReward(rewards.islandDanger, enemy.isBoss) * mercyMultiplier);
   const baseBounty = rewards.bounty + bountyReward(rewards.islandDanger, character.level, enemy.isBoss);
-  const bountyDelta =
-    character.faction === "PIRATE" || character.faction === "BOUNTY_HUNTER"
-      ? Math.round(baseBounty * mercyMultiplier)
-      : Math.round((baseBounty / 20_000) * mercyMultiplier);
+  const bountyDelta = character.faction === "PIRATE" || character.faction === "BOUNTY_HUNTER" ? Math.round(baseBounty * mercyMultiplier) : Math.round((baseBounty / 20_000) * mercyMultiplier);
   const xpDelta = rewards.xp + 10;
 
   if (enemy.isBoss || enemy.worldActorId || enemy.consequenceStage) {
-    await recordConsequence(character.id, enemy, spare ? "spared" : "killed", { id: character.currentIslandId, name: character.currentIsland.name });
+    await recordConsequence(character.id, enemy, spare ? "spared" : "killed", {
+      id: character.currentIslandId,
+      name: character.currentIsland.name,
+    });
   }
 
   if (spare) {
@@ -847,7 +1117,11 @@ async function resolveMercyChoiceInner(characterId: string, userId: string, spar
 
   await prisma.character.update({
     where: { id: character.id },
-    data: { experience: result.xp, level: result.level, berries: Math.max(0, character.berries + berriesDelta) },
+    data: {
+      experience: result.xp,
+      level: result.level,
+      berries: Math.max(0, character.berries + berriesDelta),
+    },
   });
   await applyBountyOrNotoriety(character, bountyDelta, newsLog);
 
@@ -856,21 +1130,57 @@ async function resolveMercyChoiceInner(characterId: string, userId: string, spar
     poneglyphGained = await grantPoneglyphRead(character, rewards.poneglyphId, log, newsLog);
   }
 
-  await prisma.pendingEncounter.delete({ where: { characterId: character.id } });
-  await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
+  await prisma.pendingEncounter.delete({
+    where: { characterId: character.id },
+  });
+  await prisma.gameLogEntry.create({
+    data: { characterId: character.id, kind: "combat", text: log.join(" ") },
+  });
 
-  const mercyEvent =
-    `${character.name} ${spare ? "perdonó" : "remató"} a ${enemy.name} tras vencerlo.` +
-    (poneglyphGained ? ` Además descifró el ${poneglyphGained}.` : "");
+  const mercyEvent = `${character.name} ${spare ? "perdonó" : "remató"} a ${enemy.name} tras vencerlo.` + (poneglyphGained ? ` Además descifró el ${poneglyphGained}.` : "");
   void updateCharacterMemory(character.id, character.memorySummary, mercyEvent);
 
-  return { log, berriesDelta, xpDelta, bountyDelta, hpDelta: 0, leveledUp, newLevel, died: false, newsPosted: newsLog, poneglyphGained };
+  return {
+    log,
+    berriesDelta,
+    xpDelta,
+    bountyDelta,
+    hpDelta: 0,
+    leveledUp,
+    newLevel,
+    died: false,
+    newsPosted: newsLog,
+    poneglyphGained,
+  };
+}
+
+/** Rest and serious training need calm: asks the game layer what is happening and lets engine/safety.ts refuse. */
+async function assertSafeToRecover(character: LoadedCharacter, what: "descansar" | "entrenar"): Promise<void> {
+  const [duel, joint, buster] = await Promise.all([
+    getOpenDuelFor(character.id),
+    getOpenJointFightFor(character.id),
+    prisma.busterCall.findFirst({
+      where: { islandId: character.currentIslandId, status: "ACTIVE" },
+      select: { id: true },
+    }),
+  ]);
+  const reason = dangerBlockReason(
+    {
+      hasPendingEncounter: !!character.pendingEncounter,
+      activeDuel: duel?.status === "ACTIVE",
+      hostileChallengePending: !!duel && duel.status === "PROPOSED" && duel.hostile && duel.opponentId === character.id,
+      inJointFight: !!joint,
+      busterCallOnIsland: !!buster,
+    },
+    what
+  );
+  if (reason) throw new GameActionError(reason);
 }
 
 async function trainCharacterInner(characterId: string, userId: string, focus: "armament" | "observation" | "fruit" | "auto" = "auto"): Promise<ActionResult> {
   await tickWorldIfDue();
   const character = await loadCharacterOrThrow(characterId, userId);
-  if (character.pendingEncounter) throw new GameActionError("No puedes entrenar con un enfrentamiento sin resolver.");
+  await assertSafeToRecover(character, "entrenar");
 
   if (character.lastTrainedAt) {
     const readyAt = character.lastTrainedAt.getTime() + TRAINING_COOLDOWN_MS;
@@ -902,7 +1212,14 @@ async function trainCharacterInner(characterId: string, userId: string, focus: "
   }
 
   const log: string[] = [];
-  const data: { armamentHaki?: number; observationHaki?: number; fruitMastery?: number; lastTrainedAt: Date; stamina: number; staminaUpdatedAt: Date } = {
+  const data: {
+    armamentHaki?: number;
+    observationHaki?: number;
+    fruitMastery?: number;
+    lastTrainedAt: Date;
+    stamina: number;
+    staminaUpdatedAt: Date;
+  } = {
     lastTrainedAt: new Date(),
     stamina: spendStamina(staminaNow, TRAIN_STAMINA_COST),
     staminaUpdatedAt: new Date(),
@@ -933,16 +1250,14 @@ async function trainCharacterInner(characterId: string, userId: string, focus: "
   }
 
   await prisma.character.update({ where: { id: character.id }, data });
-  await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "training", text: log.join(" ") } });
+  await prisma.gameLogEntry.create({
+    data: { characterId: character.id, kind: "training", text: log.join(" ") },
+  });
 
   return emptyResult(log, character.level);
 }
 
-async function travelCharacterInner(
-  characterId: string,
-  userId: string,
-  targetIslandId: string
-): Promise<{ log: string[]; arcIntro?: { islandName: string; hook: string } }> {
+async function travelCharacterInner(characterId: string, userId: string, targetIslandId: string): Promise<{ log: string[]; arcIntro?: { islandName: string; hook: string } }> {
   const character = await loadCharacterOrThrow(characterId, userId);
   if (character.pendingEncounter) throw new GameActionError("No puedes zarpar con un enfrentamiento sin resolver.");
   if (await getOpenDuelFor(character.id)) throw new GameActionError("No puedes zarpar en mitad de un duelo.");
@@ -950,7 +1265,9 @@ async function travelCharacterInner(
   if (!connections.includes(targetIslandId)) {
     throw new GameActionError("Esa isla no es alcanzable directamente desde tu posición actual.");
   }
-  const target = await prisma.island.findUnique({ where: { id: targetIslandId } });
+  const target = await prisma.island.findUnique({
+    where: { id: targetIslandId },
+  });
   if (!target) throw new GameActionError("Isla desconocida.");
   if (!canEnterIsland(character.level, target.minLevelToEnter)) {
     throw new GameActionError(`${target.name} es demasiado peligrosa todavía. Necesitas al menos nivel ${target.minLevelToEnter} para sobrevivir allí.`);
@@ -960,7 +1277,12 @@ async function travelCharacterInner(
     if (!tide.open) throw new GameActionError(`${target.name} está sumergida bajo las mareas ahora mismo. Volverá a emerger en ${Math.ceil(tide.msUntilChange / 60_000)} min.`);
   }
   if (target.requiresRoadPoneglyphs) {
-    const roadIds = (await prisma.poneglyph.findMany({ where: { kind: "Road" }, select: { id: true } })).map((p) => p.id);
+    const roadIds = (
+      await prisma.poneglyph.findMany({
+        where: { kind: "Road" },
+        select: { id: true },
+      })
+    ).map((p) => p.id);
     if (!knowsTheRoad(JSON.parse(character.poneglyphsRead) as string[], roadIds)) {
       throw new GameActionError(`Nadie sabe cómo llegar a ${target.name}. Solo quien haya leído los cuatro Poneglifos de Ruta puede trazar el rumbo.`);
     }
@@ -971,13 +1293,24 @@ async function travelCharacterInner(
   // crossing itself wears you down.
   if (character.crewId) {
     const mates = await prisma.character.findMany({
-      where: { crewId: character.crewId, id: { not: character.id }, status: "ALIVE", currentIslandId: character.currentIslandId },
-      select: { id: true, name: true, pendingEncounter: { select: { id: true } } },
+      where: {
+        crewId: character.crewId,
+        id: { not: character.id },
+        status: "ALIVE",
+        currentIslandId: character.currentIslandId,
+      },
+      select: {
+        id: true,
+        name: true,
+        pendingEncounter: { select: { id: true } },
+      },
     });
-    const busyMate = mates.find((m) => m.pendingEncounter) ?? (await (async () => {
-      for (const m of mates) if (await getOpenDuelFor(m.id)) return m;
-      return undefined;
-    })());
+    const busyMate =
+      mates.find((m) => m.pendingEncounter) ??
+      (await (async () => {
+        for (const m of mates) if (await getOpenDuelFor(m.id)) return m;
+        return undefined;
+      })());
     if (busyMate) throw new GameActionError(`No puedes zarpar todavía: ${busyMate.name} sigue con un enfrentamiento sin resolver y la tripulación no se separa así.`);
   }
   const waitMs = travelWaitMs(character.lastTravelAt, target.dangerLevel);
@@ -1001,28 +1334,45 @@ async function travelCharacterInner(
     },
   });
   const line = `Zarpas de ${character.currentIsland.name} y desembarcas en ${target.name}.`;
-  await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "travel", text: line } });
+  await prisma.gameLogEntry.create({
+    data: { characterId: character.id, kind: "travel", text: line },
+  });
 
   const revealed = target.requiresRoadPoneglyphs && !character.knowsTruth;
   if (revealed) {
-    await prisma.character.update({ where: { id: character.id }, data: { knowsTruth: true } });
+    await prisma.character.update({
+      where: { id: character.id },
+      data: { knowsTruth: true },
+    });
     await postNews(`${character.name} llega a Laugh Tale`, truthNewsBody(character.name), "Gobierno Mundial", character.id, "major");
   }
 
-  return { log: revealed ? [line, `— ${ONE_PIECE_TRUTH_TITLE} —`, ONE_PIECE_TRUTH] : [line], arcIntro: firstVisit && target.arcHook ? { islandName: target.name, hook: target.arcHook } : undefined };
+  return {
+    log: revealed ? [line, `— ${ONE_PIECE_TRUTH_TITLE} —`, ONE_PIECE_TRUTH] : [line],
+    arcIntro: firstVisit && target.arcHook ? { islandName: target.name, hook: target.arcHook } : undefined,
+  };
 }
 
 export async function restCharacter(characterId: string, userId: string): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
-  if (character.pendingEncounter) throw new GameActionError("No puedes descansar con un enfrentamiento sin resolver.");
+  await assertSafeToRecover(character, "descansar");
   const healed = Math.min(character.maxHp, character.hp + Math.round(character.maxHp * 0.4));
   await prisma.character.update({
     where: { id: character.id },
-    data: { hp: healed, stamina: restStamina(currentStamina(character), character.maxStamina), staminaUpdatedAt: new Date() },
+    data: {
+      hp: healed,
+      stamina: restStamina(currentStamina(character), character.maxStamina),
+      staminaUpdatedAt: new Date(),
+    },
   });
   const log = ["Descansas y recuperas fuerzas y aliento antes de tu próxima aventura."];
-  await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "rest", text: log[0] } });
-  return { ...emptyResult(log, character.level), hpDelta: healed - character.hp };
+  await prisma.gameLogEntry.create({
+    data: { characterId: character.id, kind: "rest", text: log[0] },
+  });
+  return {
+    ...emptyResult(log, character.level),
+    hpDelta: healed - character.hp,
+  };
 }
 
 /**
@@ -1076,10 +1426,28 @@ export async function sneakPoneglyph(characterId: string, userId: string, freeTe
   if (!guardian) throw new GameActionError("Este Poneglifo no tiene ninguna ruta de acceso conocida.");
 
   const now = new Date();
-  const actor = guardian.enemy.worldActorId ? await prisma.worldActor.findUnique({ where: { id: guardian.enemy.worldActorId } }) : null;
+  const actor = guardian.enemy.worldActorId
+    ? await prisma.worldActor.findUnique({
+        where: { id: guardian.enemy.worldActorId },
+      })
+    : null;
   const home = actor ? isActorHome(actor.busyUntil, now) : false;
-  const grudge = actor ? await prisma.grudge.findUnique({ where: { worldActorId_characterId: { worldActorId: actor.id, characterId: character.id } } }) : null;
-  const difficulty = stealthDifficulty({ islandDanger: island.dangerLevel, actorHome: home, poneglyphHeat: character.poneglyphHeat, grudgeHeat: grudge?.heat ?? 0 });
+  const grudge = actor
+    ? await prisma.grudge.findUnique({
+        where: {
+          worldActorId_characterId: {
+            worldActorId: actor.id,
+            characterId: character.id,
+          },
+        },
+      })
+    : null;
+  const difficulty = stealthDifficulty({
+    islandDanger: island.dangerLevel,
+    actorHome: home,
+    poneglyphHeat: character.poneglyphHeat,
+    grudgeHeat: grudge?.heat ?? 0,
+  });
   const modifier = stealthModifier({
     agility: character.agility,
     intellect: character.intellect,
@@ -1089,7 +1457,13 @@ export async function sneakPoneglyph(characterId: string, userId: string, freeTe
   });
   const rng = liveRng();
   const result = attemptStealthRead(rng, modifier, difficulty);
-  await prisma.character.update({ where: { id: character.id }, data: { stamina: spendStamina(staminaNow, STEALTH_STAMINA_COST), staminaUpdatedAt: new Date() } });
+  await prisma.character.update({
+    where: { id: character.id },
+    data: {
+      stamina: spendStamina(staminaNow, STEALTH_STAMINA_COST),
+      staminaUpdatedAt: new Date(),
+    },
+  });
 
   const newsLog: string[] = [];
   const tier = result === "clean" ? "critical_success" : result === "noticed" ? "success" : result === "spotted" ? "fail" : "critical_fail";
@@ -1097,10 +1471,10 @@ export async function sneakPoneglyph(characterId: string, userId: string, freeTe
     result === "clean"
       ? "Te deslizas entre las sombras hasta el Poneglifo, lo lees sin que nadie lo note y sales como llegaste."
       : result === "noticed"
-      ? "Consigues leer el Poneglifo, pero al salir un centinela cree ver una silueta escurrirse entre las columnas."
-      : result === "spotted"
-      ? "Un paso en falso, un destello, y la alarma corre por el lugar antes de que llegues a la piedra."
-      : "Justo cuando alargas la mano hacia la piedra, alguien te está esperando: te habían visto entrar desde el principio.";
+        ? "Consigues leer el Poneglifo, pero al salir un centinela cree ver una silueta escurrirse entre las columnas."
+        : result === "spotted"
+          ? "Un paso en falso, un destello, y la alarma corre por el lugar antes de que llegues a la piedra."
+          : "Justo cuando alargas la mano hacia la piedra, alguien te está esperando: te habían visto entrar desde el principio.";
   const memory = await getRecentScene(character.id, 8);
   const hpLoss = result === "caught" ? Math.round(character.maxHp * CAUGHT_HP_FRACTION) : 0;
   const log = await narrateExplore(
@@ -1136,11 +1510,22 @@ export async function sneakPoneglyph(characterId: string, userId: string, freeTe
     }
     const xp = result === "clean" ? 120 : 70;
     const lvl = await grantXp(character.experience, character.level, xp);
-    await prisma.character.update({ where: { id: character.id }, data: { experience: lvl.xp, level: lvl.level } });
+    await prisma.character.update({
+      where: { id: character.id },
+      data: { experience: lvl.xp, level: lvl.level },
+    });
     if (lvl.leveledUp) log.push(`¡Subes de nivel! Ahora eres nivel ${lvl.level}.`);
-    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "stealth", text: log.join(" ") } });
+    await prisma.gameLogEntry.create({
+      data: { characterId: character.id, kind: "stealth", text: log.join(" ") },
+    });
     void updateCharacterMemory(character.id, character.memorySummary, `${character.name} se coló en ${island.name} y descifró un Poneglifo${result === "clean" ? " sin ser visto" : ", aunque alguien vio una silueta"}.`);
-    return { ...emptyResult(log, lvl.level), xpDelta: xp, leveledUp: lvl.leveledUp, poneglyphGained: codeName, newsPosted: newsLog };
+    return {
+      ...emptyResult(log, lvl.level),
+      xpDelta: xp,
+      leveledUp: lvl.leveledUp,
+      poneglyphGained: codeName,
+      newsPosted: newsLog,
+    };
   }
 
   // Spotted or caught: the guardian comes out. Same fight as exploring would bring.
@@ -1160,19 +1545,42 @@ export async function sneakPoneglyph(characterId: string, userId: string, freeTe
   const enemy: StoredEnemy = g.enemy;
   if (g.note) log.push(g.note);
   const playerCombatant = toCombatant(character);
-  const assessment = assessThreat(playerCombatant, { name: enemy.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd });
+  const assessment = assessThreat(playerCombatant, {
+    name: enemy.name,
+    hp: enemy.hp,
+    maxHp: enemy.hp,
+    atk: enemy.atk,
+    def: enemy.def,
+    spd: enemy.spd,
+  });
   await prisma.pendingEncounter.create({
     data: {
       characterId: character.id,
       enemyJson: JSON.stringify(enemy),
-      rewardsJson: JSON.stringify({ berries: base.berries * mult, xp: base.xp * mult, bounty: base.bounty * mult, islandDanger: island.dangerLevel, poneglyphId: guardian.poneglyphId } satisfies StoredRewards),
+      rewardsJson: JSON.stringify({
+        berries: base.berries * mult,
+        xp: base.xp * mult,
+        bounty: base.bounty * mult,
+        islandDanger: island.dangerLevel,
+        poneglyphId: guardian.poneglyphId,
+      } satisfies StoredRewards),
       narrative: log.join(" "),
       assessment,
     },
   });
-  if (hpLoss > 0) await prisma.character.update({ where: { id: character.id }, data: { hp: Math.max(1, character.hp - hpLoss) } });
-  await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "stealth", text: log.join(" ") } });
-  return { ...emptyResult(log, character.level), hpDelta: -hpLoss, pendingCombat: { enemyName: enemy.name, assessment, isBoss: true } };
+  if (hpLoss > 0)
+    await prisma.character.update({
+      where: { id: character.id },
+      data: { hp: Math.max(1, character.hp - hpLoss) },
+    });
+  await prisma.gameLogEntry.create({
+    data: { characterId: character.id, kind: "stealth", text: log.join(" ") },
+  });
+  return {
+    ...emptyResult(log, character.level),
+    hpDelta: -hpLoss,
+    pendingCombat: { enemyName: enemy.name, assessment, isBoss: true },
+  };
 }
 
 const FREE_TEXT_ACTION_LABELS: Record<ActionId, string> = {
@@ -1188,6 +1596,7 @@ const FREE_TEXT_ACTION_LABELS: Record<ActionId, string> = {
   mercy_spare: "Perdonar",
   mercy_finish: "Rematar",
   leave_party: "Separarse del grupo",
+  recruit: "Reclutar",
 };
 
 /** Confirms a leave_party read from free text — the actual state change (see party.ts's confirmLeaveParty). */
@@ -1246,8 +1655,10 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
   const begin = await beginPartyTurn(character.id);
   if (!begin.ok) throw new GameActionError(begin.reason);
 
-  const validActions: ActionId[] = ["narrate", "explore", "attack", "train", "rest", "leave_party", ...(canSneak(character) ? (["sneak"] as ActionId[]) : [])];
-  const partyClassified = await classifyPlayerAction(freeText, validActions, { sceneContext: begin.recentLines.slice(-2).join(" ").slice(-700) });
+  const validActions: ActionId[] = ["narrate", "explore", "attack", "recruit", "train", "rest", "leave_party", ...(canSneak(character) ? (["sneak"] as ActionId[]) : [])];
+  const partyClassified = await classifyPlayerAction(freeText, validActions, {
+    sceneContext: begin.recentLines.slice(-2).join(" ").slice(-700),
+  });
   const { action } = partyClassified;
 
   if (action === "unclear") {
@@ -1291,44 +1702,69 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
 
   let result: ActionResult;
   let sharedLine: string;
-  switch (action) {
-    case "explore":
-      result = await exploreCharacter(character.id, character.userId, freeText);
-      sharedLine = result.pendingCombat
-        ? `${character.name} se topa con problemas mientras exploraba por su cuenta — ¡combate!`
-        : `${character.name} explora por su cuenta y vuelve con algo que contar.`;
-      break;
-    case "attack":
-      result = await attackCharacter(character.id, character.userId, freeText, {
-        target: partyClassified.target,
-        tier: partyClassified.targetTier,
-        technique: partyClassified.technique,
-        tacticModifier: partyClassified.tacticModifier,
-      });
-      sharedLine = result.jointFight
-        ? `${character.name} se lanza contra ${partyClassified.target ?? "alguien de la escena"} y sus nakamas entran en la pelea: ¡el combate es de todos!`
-        : `${character.name} se lanza a la pelea contra ${partyClassified.target ?? "alguien de la escena"}: ${result.log.join(" ").slice(0, 600)}`;
-      break;
-    case "sneak":
-      result = await sneakPoneglyph(character.id, character.userId, freeText, partyClassified.tacticModifier);
-      sharedLine = `${character.name} se aparta del grupo para infiltrarse a escondidas hacia el Poneglifo.`;
-      break;
-    case "train":
-      result = await trainCharacter(character.id, character.userId, partyClassified.trainFocus);
-      sharedLine = `${character.name} se aparta un momento a entrenar.`;
-      break;
-    case "rest":
-    default:
-      result = await restCharacter(character.id, character.userId);
-      sharedLine = `${character.name} se toma un respiro para descansar.`;
-      break;
+  try {
+    switch (action) {
+      case "explore":
+        result = await exploreCharacter(character.id, character.userId, freeText);
+        sharedLine = result.pendingCombat ? `${character.name} se topa con problemas mientras exploraba por su cuenta — ¡combate!` : `${character.name} explora por su cuenta y vuelve con algo que contar.`;
+        break;
+      case "attack":
+        result = await attackCharacter(character.id, character.userId, freeText, {
+          target: partyClassified.target,
+          tier: partyClassified.targetTier,
+          technique: partyClassified.technique,
+          tacticModifier: partyClassified.tacticModifier,
+          effort: partyClassified.effort,
+        });
+        sharedLine = result.jointFight
+          ? `${character.name} se lanza contra ${partyClassified.target ?? "alguien de la escena"} y sus nakamas entran en la pelea: ¡el combate es de todos!`
+          : `${character.name} se lanza a la pelea contra ${partyClassified.target ?? "alguien de la escena"}: ${result.log.join(" ").slice(0, 600)}`;
+        break;
+      case "sneak":
+        result = await sneakPoneglyph(character.id, character.userId, freeText, partyClassified.tacticModifier);
+        sharedLine = `${character.name} se aparta del grupo para infiltrarse a escondidas hacia el Poneglifo.`;
+        break;
+      case "recruit": {
+        try {
+          const r = await recruitCompanion(character.id, character.userId, {
+            target: partyClassified.target,
+            role: partyClassified.recruitRole,
+            tier: partyClassified.targetTier,
+            tacticModifier: partyClassified.tacticModifier,
+          });
+          result = emptyResult(r.log, character.level);
+          sharedLine = r.accepted ? `${character.name} invita a ${r.companionName} a la tripulación y ${r.companionName} acepta.` : `${character.name} intenta reclutar a alguien de la escena, sin éxito por ahora.`;
+        } catch (err) {
+          if (err instanceof CompanionError) throw new GameActionError(err.message);
+          throw err;
+        }
+        break;
+      }
+      case "train":
+        result = await trainCharacter(character.id, character.userId, partyClassified.trainFocus);
+        sharedLine = `${character.name} se aparta un momento a entrenar.`;
+        break;
+      case "rest":
+      default:
+        result = await restCharacter(character.id, character.userId);
+        sharedLine = `${character.name} se toma un respiro para descansar.`;
+        break;
+    }
+  } catch (err) {
+    // An action that fails (training cooldown, no room for a nakama...) must not leave the whole group waiting on a narrator that will never answer.
+    await releasePartyTurnLock(begin.partyId);
+    throw err;
   }
 
   const finalLog = [`(interpretado como: ${FREE_TEXT_ACTION_LABELS[action]})`, ...result.log];
   await prisma.sceneMessage.createMany({
     data: [
       { characterId: character.id, role: "player", text: freeText },
-      { characterId: character.id, role: "narrator", text: finalLog.join("\n\n") },
+      {
+        characterId: character.id,
+        role: "narrator",
+        text: finalLog.join("\n\n"),
+      },
     ],
   });
   await writePartyMessage(begin.partyId, character.id, character.name, freeText);
@@ -1352,7 +1788,9 @@ async function escalateToJointFight(character: LoadedCharacter, freeText: string
   if (allies.length < 2) return null;
   const enemy = JSON.parse(pending.enemyJson) as StoredEnemy;
   const rewards = JSON.parse(pending.rewardsJson) as StoredRewards;
-  await prisma.pendingEncounter.delete({ where: { characterId: character.id } });
+  await prisma.pendingEncounter.delete({
+    where: { characterId: character.id },
+  });
   try {
     const started = await startJointFight({
       kind: "party",
@@ -1360,13 +1798,30 @@ async function escalateToJointFight(character: LoadedCharacter, freeText: string
       enemy,
       rewards,
       stakes: pending.narrative,
-      opening: { characterId: character.id, text: freeText, tactic: tacticModifier, technique: technique ?? "none" },
+      opening: {
+        characterId: character.id,
+        text: freeText,
+        tactic: tacticModifier,
+        technique: technique ?? "none",
+      },
     });
-    return { ...emptyResult(started.log.length ? started.log : [`${character.name} planta cara a ${enemy.name} y sus nakamas se suman a la pelea. Esperando los movimientos de cada uno.`], character.level), jointFight: true };
+    return {
+      ...emptyResult(started.log.length ? started.log : [`${character.name} planta cara a ${enemy.name} y sus nakamas se suman a la pelea. Esperando los movimientos de cada uno.`], character.level),
+      jointFight: true,
+    };
   } catch (err) {
     // Couldn't gather the group (someone got busy): put the solo encounter back exactly as it was.
     await prisma.pendingEncounter.create({
-      data: { characterId: character.id, enemyJson: pending.enemyJson, rewardsJson: pending.rewardsJson, narrative: pending.narrative, assessment: pending.assessment, phase: pending.phase, enemyHp: pending.enemyHp, roundNumber: pending.roundNumber },
+      data: {
+        characterId: character.id,
+        enemyJson: pending.enemyJson,
+        rewardsJson: pending.rewardsJson,
+        narrative: pending.narrative,
+        assessment: pending.assessment,
+        phase: pending.phase,
+        enemyHp: pending.enemyHp,
+        roundNumber: pending.roundNumber,
+      },
     });
     return null;
   }
@@ -1374,12 +1829,16 @@ async function escalateToJointFight(character: LoadedCharacter, freeText: string
 
 /** The narrator's most recent message — lets the classifier work out who "el primero que se me acerque" refers to. */
 async function lastNarratorLine(characterId: string): Promise<string | undefined> {
-  const last = await prisma.sceneMessage.findFirst({ where: { characterId, role: "narrator" }, orderBy: { createdAt: "desc" } });
+  const last = await prisma.sceneMessage.findFirst({
+    where: { characterId, role: "narrator" },
+    orderBy: { createdAt: "desc" },
+  });
   return last?.text.slice(-700);
 }
 
 export async function resolveFreeTextAction(characterId: string, userId: string, freeText: string): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
+  void maybeAutoCheckpoint(character.id, userId, "antes de actuar");
 
   // A live duel takes over the input: your text IS your move for the round.
   const openDuel = await getOpenDuelFor(character.id);
@@ -1402,9 +1861,11 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
     ? character.pendingEncounter.phase === "victory"
       ? ["mercy_spare", "mercy_finish"]
       : ["engage", "flee"] // both "threat" (first commit) and "fighting" (ongoing exchanges) share this set
-    : ["narrate", "explore", "attack", "train", "rest", ...(canSneak(character) ? (["sneak"] as ActionId[]) : [])];
+    : ["narrate", "explore", "attack", "recruit", "train", "rest", ...(canSneak(character) ? (["sneak"] as ActionId[]) : [])];
 
-  const classified = await classifyPlayerAction(freeText, validActions, { sceneContext: await lastNarratorLine(character.id) });
+  const classified = await classifyPlayerAction(freeText, validActions, {
+    sceneContext: await lastNarratorLine(character.id),
+  });
   const { action, tacticModifier } = classified;
   if (action === "unclear") {
     throw new GameActionError("No logro entender qué quieres hacer. Prueba a describirlo de otra forma, o usa los botones de abajo.");
@@ -1424,11 +1885,27 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
         tier: classified.targetTier,
         technique: classified.technique,
         tacticModifier,
+        effort: classified.effort,
       });
       break;
     case "sneak":
       result = await sneakPoneglyph(characterId, userId, freeText, tacticModifier);
       break;
+    case "recruit": {
+      try {
+        const r = await recruitCompanion(characterId, userId, {
+          target: classified.target,
+          role: classified.recruitRole,
+          tier: classified.targetTier,
+          tacticModifier,
+        });
+        result = emptyResult(r.log, character.level);
+      } catch (err) {
+        if (err instanceof CompanionError) throw new GameActionError(err.message);
+        throw err;
+      }
+      break;
+    }
     case "train":
       result = await trainCharacter(characterId, userId, classified.trainFocus);
       break;
@@ -1438,7 +1915,12 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
     case "engage": {
       // Committing to a threat while crewmates share the scene pulls them in too.
       const escalated = character.pendingEncounter?.phase === "threat" ? await escalateToJointFight(character, freeText, tacticModifier, classified.technique) : null;
-      result = escalated ?? (await engageCharacter(characterId, userId, freeText, tacticModifier, { technique: classified.technique }));
+      result =
+        escalated ??
+        (await engageCharacter(characterId, userId, freeText, tacticModifier, {
+          technique: classified.technique,
+          effort: classified.effort,
+        }));
       break;
     }
     case "flee":
@@ -1479,9 +1961,7 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
   // fighting" the group should see the headline.
   if (character.partyId) {
     // Crewmates should be able to read a fight as it happens, not just its verdict.
-    const line = result.pendingCombat
-      ? `${character.name} sigue en combate: ${result.log.join(" ").slice(0, 500)}`
-      : summarizeCombatForParty(action, character.name, result);
+    const line = result.pendingCombat ? `${character.name} sigue en combate: ${result.log.join(" ").slice(0, 500)}` : summarizeCombatForParty(action, character.name, result);
     await echoToParty(character.partyId, line);
   }
 
@@ -1508,6 +1988,8 @@ export async function trainCharacter(characterId: string, userId: string, focus:
 
 export async function travelCharacter(characterId: string, userId: string, targetIslandId: string): Promise<{ log: string[]; arcIntro?: { islandName: string; hook: string } }> {
   const result = await travelCharacterInner(characterId, userId, targetIslandId);
-  const target = await prisma.island.findUnique({ where: { id: targetIslandId } });
+  const target = await prisma.island.findUnique({
+    where: { id: targetIslandId },
+  });
   return withMissions(characterId, result, target ? [{ kind: "travel", destination: target.name }] : []);
 }

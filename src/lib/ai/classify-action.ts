@@ -2,6 +2,7 @@ import { callOpenRouter } from "./openrouter-client";
 import { OPENROUTER_MODELS } from "./models";
 import { EnemyTier, isEnemyTier } from "../engine/scene-enemy";
 import { TechniqueId, isTechniqueId } from "../engine/techniques";
+import { EffortLevel, clampEffort } from "../engine/stamina";
 
 /**
  * Free text now decides which mechanical action fires — in a game with
@@ -38,7 +39,7 @@ import { TechniqueId, isTechniqueId } from "../engine/techniques";
  *    "keep the game playable during an outage" path, not a substitute
  *    for the model's judgment on phrasing it did manage to see.
  */
-export type ActionId = "narrate" | "explore" | "train" | "rest" | "travel" | "attack" | "sneak" | "engage" | "flee" | "mercy_spare" | "mercy_finish" | "leave_party";
+export type ActionId = "narrate" | "explore" | "train" | "rest" | "travel" | "attack" | "sneak" | "engage" | "flee" | "mercy_spare" | "mercy_finish" | "leave_party" | "recruit";
 
 export type TrainFocus = "armament" | "observation" | "fruit" | "auto";
 const TRAIN_FOCUSES: TrainFocus[] = ["armament", "observation", "fruit", "auto"];
@@ -68,8 +69,12 @@ export interface ClassifyResult {
    *  - trainFocus: for "train", what the player wants to train.
    */
   technique?: TechniqueId;
+  /** How physically demanding the described move is (0-3); code prices it in stamina. */
+  effort?: EffortLevel;
   target?: string;
   targetTier?: EnemyTier;
+  /** For "recruit": the specialty the player named or implied for the new nakama (cook, navigator...). */
+  recruitRole?: string;
   trainFocus?: TrainFocus;
 }
 
@@ -82,6 +87,7 @@ function clampTacticModifier(n: number): number {
 
 const KEYWORD_RULES: Array<{ action: ActionId; pattern: RegExp }> = [
   { action: "leave_party", pattern: /me separo|voy solo|me alejo|por mi cuenta|me bajo del (barco|grupo)/i },
+  { action: "recruit", pattern: /[uú]nete a m[ií]|te (acepto|recluto|invito) (como|a mi)|(mi|nuestra) (nakama|tripulaci)|s[eé] (mi|nuestro) (nakama|cociner|navegante|m[eé]dic)|quiero que (vengas|te unas)/i },
   { action: "sneak", pattern: /sigil|me cuelo|me col[ao]|a escondidas|sin ser vist|infiltr|furtiv|de puntillas|en las sombras/i },
   { action: "flee", pattern: /huy|corr|escap|retroced/i },
   { action: "attack", pattern: /\b(atac[oa]|apu[ñn]al|degüell|desenv?ain[oa]|desenfund|le (corto|pego|disparo|clavo)|intent[oa] (cortar|matar|golpear))/i },
@@ -113,7 +119,9 @@ function keywordClassify(freeText: string, validActions: ActionId[]): ActionId |
 const TECHNIQUE_GUIDANCE =
   `"technique": ${'"none"'} si solo pelea de forma normal; "armament" si describe endurecer su cuerpo/arma con Haki de Armadura; "observation" si describe sentir/prever los movimientos con Haki de Observación; ` +
   '"conqueror" si describe liberar el Haki del Rey / una presencia aplastante; "fruit" si describe usar activamente el poder de su Fruta del Diablo. ' +
-  "Solo lo que el jugador describa claramente — no lo supongas.";
+  "Solo lo que el jugador describa claramente — no lo supongas. " +
+  '"effort": un entero de 0 a 3 que mide el ESFUERZO FÍSICO de lo descrito, con sentido común: 0 = hablar, observar o mantener la guardia; 1 = un golpe, esquiva o bloqueo normal; 2 = un ataque potente, una carrera, un combo o aguantar un impacto fuerte; 3 = esfuerzo máximo (técnica devastadora, saltos enormes, cargar con todo). ' +
+  "No lo decides tú si funciona — solo cuánto cansa intentarlo.";
 
 function buildClassifyPrompt(freeText: string, validActions: ActionId[], sceneContext?: string): { system: string; user: string } {
   const narrateIsDefault = validActions.includes("narrate");
@@ -124,11 +132,14 @@ function buildClassifyPrompt(freeText: string, validActions: ActionId[], sceneCo
       "Usa 'narrate' (pura interacción de rol, sin dados) para CUALQUIER texto que no sea claramente entrenar físicamente/técnicas, descansar/dormir, " +
       "ni una decisión arriesgada y decisiva de avanzar la trama (como 'exploro la isla a fondo', 'me interno en la jungla a buscar algo', 'busco pelea con quien sea', 'me arriesgo a robar esto'). " +
       "Esas decisiones arriesgadas y decisivas van en 'explore' (salir a buscar peligro u oportunidad SIN un objetivo concreto). " +
+      (validActions.includes("recruit")
+        ? "Si el jugador invita a un personaje NO jugador concreto de la escena a unirse a su tripulación o a acompañarlo como nakama (\"Jorge, únete a mí\", \"te acepto en mi barco\"), usa 'recruit' e incluye: \"target\" (el NOMBRE del PNJ tal como aparece en la escena reciente), \"role\" (su especialidad si el jugador la dijo o la escena la establece: cocinero, navegante, médico, espadachín, francotirador, músico, carpintero, erudito...; vacío si no), \"target_tier\" (weak/average/tough/elite según lo poderoso u orgulloso que parezca ese PNJ) y \"tactic_modifier\" (qué tan convincente, honesta o bien pensada es la propuesta: 0 = normal). Solo si es una invitación real y no una simple charla. " 
+        : "") +
       "Si el jugador ejecuta (o declara que ejecuta) violencia física o un ataque armado directo contra alguien concreto presente en la escena (atacar, apuñalar, disparar, desenfundar para herir, golpear, emboscar), usa 'attack' — NUNCA 'explore' para eso. " +
       "Insultos, retos o amenazas SOLO de palabra, sin pasar a la acción física, son 'narrate'. " +
       "Cuando la acción sea 'attack' incluye también: \"target\" (una descripción corta de a quién ataca, tomada de la escena reciente si el jugador no lo nombra, p. ej. \"el hombre de la gorra y el parche\"), " +
       "\"target_tier\" (weak, average, tough o elite según lo que la escena sugiera de esa persona: un borracho o matón de taberna = weak/average, un veterano curtido = tough, un capitán/oficial/élite = elite), " +
-      "\"technique\" y \"tactic_modifier\" (ver abajo). " +
+      "\"technique\", \"tactic_modifier\" y \"effort\" (ver abajo). " +
       (validActions.includes("sneak")
         ? "En esta isla hay un Poneglifo custodiado: si el jugador describe colarse, infiltrarse, acercarse a escondidas o sin ser visto hasta el Poneglifo para leerlo, usa 'sneak' e incluye " +
           `"tactic_modifier" (entero entre ${MIN_TACTIC_MODIFIER} y ${MAX_TACTIC_MODIFIER}: qué tan ingenioso y verosímil es su plan de infiltración; 0 = un intento normal). Si en cambio ataca a los guardias de frente, es 'attack'. `
@@ -152,6 +163,7 @@ function buildClassifyPrompt(freeText: string, validActions: ActionId[], sceneCo
     `Responde EXCLUSIVAMENTE con un objeto JSON como {"action": "..."}${isCombatChoice ? ' (y "tactic_modifier" cuando aplique, ver abajo)' : ""} usando uno de estos valores exactos para "action": ${validActions.join(", ")}, ` +
     `o {"action": "unclear"} ${narrateIsDefault || isCombatChoice ? "SOLO si el texto es literalmente ininteligible o no dice nada" : "si el texto realmente no tiene relación con ninguna"}. ` +
     guidance +
+    (narrateIsDefault ? " " + TECHNIQUE_GUIDANCE : "") +
     " No añadas explicación, ni markdown, ni texto extra: responde solo el JSON, nada más.";
   const user =
     `Acciones válidas ahora mismo: ${validActions.join(", ")}.` +
@@ -169,9 +181,14 @@ function parseClassifyResponse(raw: string, validActions: ActionId[]): Omit<Clas
     const rawModifier = Number(parsed?.tactic_modifier);
     if ((action === "engage" || action === "attack" || action === "sneak") && Number.isFinite(rawModifier)) result.tacticModifier = clampTacticModifier(rawModifier);
     if ((action === "engage" || action === "attack") && isTechniqueId(parsed?.technique) && parsed.technique !== "none") result.technique = parsed.technique;
-    if (action === "attack") {
+    if ((action === "engage" || action === "attack") && parsed?.effort !== undefined) result.effort = clampEffort(parsed.effort);
+    if (action === "attack" || action === "recruit") {
       if (typeof parsed?.target === "string" && parsed.target.trim()) result.target = parsed.target.trim().slice(0, 80);
       if (isEnemyTier(parsed?.target_tier)) result.targetTier = parsed.target_tier;
+    }
+    if (action === "recruit") {
+      if (typeof parsed?.role === "string" && parsed.role.trim()) result.recruitRole = parsed.role.trim().slice(0, 40);
+      if (Number.isFinite(rawModifier)) result.tacticModifier = clampTacticModifier(rawModifier);
     }
     if (action === "train" && TRAIN_FOCUSES.includes(parsed?.focus)) result.trainFocus = parsed.focus;
     return result;

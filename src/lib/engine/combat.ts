@@ -1,5 +1,6 @@
 import { Rng } from "./rng";
 import { skillCheck } from "./checks";
+import { soakDamage } from "./resilience";
 
 export interface Combatant {
   name: string;
@@ -8,6 +9,8 @@ export interface Combatant {
   atk: number;
   def: number;
   spd: number;
+  /** Experience: higher levels soak more damage and tire slower (engine/resilience.ts). Absent = no adjustment. */
+  level?: number;
 }
 
 export interface CombatRoundLog {
@@ -27,7 +30,7 @@ export interface CombatResult {
   enemyHpLeft: number;
 }
 
-export const MAX_ROUNDS = 8;
+export const MAX_ROUNDS = 14; // hp base doubled to 100: fights last longer, so the cap rose with it
 
 export function attackOnce(rng: Rng, attacker: Combatant, defender: Combatant): { damage: number; outcome: CombatRoundLog["outcome"]; roll: number } {
   const defenderDifficulty = 40 + defender.def;
@@ -40,7 +43,7 @@ export function attackOnce(rng: Rng, attacker: Combatant, defender: Combatant): 
     damage = Math.round(attacker.atk * 0.3 + Math.max(0, check.margin) * 0.15);
   }
 
-  return { damage, outcome: check.outcome, roll: check.roll };
+  return { damage: soakDamage(damage, defender.level), outcome: check.outcome, roll: check.roll };
 }
 
 /**

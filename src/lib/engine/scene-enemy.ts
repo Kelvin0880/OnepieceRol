@@ -26,6 +26,8 @@ export function tierXp(tier: EnemyTier): number {
   return TIER_MULTIPLIERS[tier].xp;
 }
 
+const TIER_LEVEL: Record<EnemyTier, number> = { weak: 0.5, average: 0.8, tough: 1, elite: 1.3 };
+
 export function buildSceneEnemy(name: string, player: Combatant, tier: EnemyTier): Combatant {
   const m = TIER_MULTIPLIERS[tier];
   const hp = Math.max(10, Math.round(player.maxHp * m.hp));
@@ -36,5 +38,6 @@ export function buildSceneEnemy(name: string, player: Combatant, tier: EnemyTier
     atk: Math.max(4, Math.round(player.atk * m.atk)),
     def: Math.max(2, Math.round(player.def * m.def)),
     spd: Math.max(2, Math.round(player.spd * m.spd)),
+    level: Math.max(1, Math.round((player.level ?? 1) * TIER_LEVEL[tier])),
   };
 }

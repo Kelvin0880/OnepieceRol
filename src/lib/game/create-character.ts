@@ -1,3 +1,4 @@
+import { maybeAutoCheckpoint } from "./ooc";
 import { prisma } from "../db";
 import { Faction, WeaponGrade } from "@prisma/client";
 import { findCommonWeapon } from "./common-gear";
@@ -94,6 +95,8 @@ export async function createCharacter(userId: string, name: string, faction: Fac
       text: `${trimmed} pone un pie en ${island.name}, con nada más que ${archetype.starterWeaponName.toLowerCase()} y la determinación de escribir su propia leyenda.`,
     },
   });
+
+  await maybeAutoCheckpoint(character.id, userId, "Inicio de tu leyenda", true);
 
   return character;
 }
