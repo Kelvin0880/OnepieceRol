@@ -86,7 +86,7 @@ misericordia, texto libre) · `combat-prep` (estamina + técnica + fatiga → co
 ### 4.1 Personaje
 - **Facciones jugables (5):** Pirata (progreso = recompensa), Marine (rango), Revolucionario, Cazarrecompensas y **CP-0 / Gobierno Mundial** (los tres últimos = notoriedad/mérito).
 - **Arquetipos (4):** Espadachín (FUE 8 AGI 9 RES 6 VOL 5 INT 4, espada de acero), Luchador (9/6/9/5/3, nudillos), Tirador (5/8/5/5/9, pistola de chispa), Fuerza Bruta (10/4/10/4/4, hacha).
-- **Estadísticas:** fuerza, agilidad, resistencia, voluntad (alimenta el Haki), intelecto (alimenta la fruta). Nivel/XP (con **barra de experiencia** en la ficha), **vida base 100**, berries (3000 al inicio), recompensa/notoriedad.
+- **Estadísticas:** fuerza, agilidad, resistencia, voluntad (alimenta el Haki), intelecto (alimenta la fruta). Nivel/XP (con **barra de experiencia** y **barra de rango** —título actual, siguiente y lo que falta— en la ficha y en la lista de personajes), **vida base 100**, berries (3000 al inicio), recompensa/notoriedad.
 - **Islas de inicio:** Pirata → Pueblo Foosha; Marine → Cuartel Marine G-5; Revolucionario → Isla Baltigo; Cazarrecompensas → Isla Gecko; CP-0 → Loguetown.
 - **Estados:** `ALIVE`, `DEAD`, `RETIRED`, `IMPRISONED`. Borrado voluntario de personaje con limpieza en cascada (`delete-character`).
 - **Condición física** (`condition`): Ileso ≥90% · Rasguñado ≥60% · Herido ≥35% · Malherido ≥15% · Al borde de la muerte.

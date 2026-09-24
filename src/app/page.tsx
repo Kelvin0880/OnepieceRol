@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from "react";
 import Link from "next/link";
-import { factionTitle, type FactionKey } from "@/lib/engine/progression";
+import { factionTitle, rankProgress, type FactionKey } from "@/lib/engine/progression";
 
 type FactionId = FactionKey;
 
@@ -189,7 +189,18 @@ export default function HomePage() {
                 <div className="font-display text-lg">
                   {c.name} <span className="text-ink-dim text-sm font-body">— Nv. {c.level}</span>
                 </div>
-                <div className="text-xs text-gold">{factionTitle(c.faction, c.bounty, c.notoriety)}</div>
+                <div className="text-xs text-gold" data-testid="rank-title">{factionTitle(c.faction, c.bounty, c.notoriety)}</div>
+                {(() => {
+                  const r = rankProgress(c.faction, c.bounty, c.notoriety);
+                  return r.target !== null ? (
+                    <div className="mt-1 w-40" title={`${r.metric}: ${r.value.toLocaleString("es-ES")} / ${r.target.toLocaleString("es-ES")} para «${r.nextTitle}»`}>
+                      <div className="h-1 rounded bg-black/30 overflow-hidden">
+                        <div className="h-full" style={{ width: `${Math.max(r.fraction > 0 ? 3 : 0, r.fraction * 100)}%`, background: "var(--gold)" }} />
+                      </div>
+                      <div className="text-[10px] text-ink-dim">→ {r.nextTitle}</div>
+                    </div>
+                  ) : null;
+                })()}
                 <div className="text-sm text-ink-dim">
                   {FACTION_LABEL[c.faction]} · {c.currentIsland.name}
                   {c.status !== "ALIVE" && <span className="text-blood"> · {c.status === "DEAD" ? "Caído" : c.status}</span>}

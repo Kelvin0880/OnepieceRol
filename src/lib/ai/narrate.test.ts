@@ -28,3 +28,15 @@ describe("isValidNarration", () => {
     expect(isValidNarration("USER SAFETY: SAFE")).toBe(false);
   });
 });
+
+import { isValidSummaryJson } from "./narrate";
+
+describe("isValidSummaryJson", () => {
+  it("accepts a JSON summary and rejects moderation artifacts, prose and empty summaries", () => {
+    expect(isValidSummaryJson('{"summary":"Kirito conoció a Max y prometió volver al puerto."}')).toBe(true);
+    expect(isValidSummaryJson("User Safety: safe")).toBe(false);
+    expect(isValidSummaryJson('{"summary":""}')).toBe(false);
+    expect(isValidSummaryJson('{"other":"x"}')).toBe(false);
+    expect(isValidSummaryJson("Aquí tienes el resumen…")).toBe(false);
+  });
+});

@@ -500,6 +500,11 @@ fatiga que un nivel 1 con el mismo golpe. Vale para ti, para tus aliados y
 para los enemigos: los enemigos también se cansan.
 Descansar y entrenar solo se puede sin peligro: nada de descansar en mitad
 de una pelea, un duelo, una caza o con una Buster Call sobre la isla.
+Tu RANGO también tiene barra: ves tu título actual, el siguiente y cuánto te
+falta (recompensa para piratas; mérito, influencia o reputación para el
+resto). Con recompensa pero sin cartel aún, pone "Aún sin cartel oficial" (el
+primer cartel del Gobierno llega a 1.000.000). Subir de rango es automático y
+sale en las noticias.
 Debajo de tu vida ves la barra de EXPERIENCIA: cuánto falta para el
 siguiente nivel. El nivel se gana explorando y venciendo enemigos; entrenar
 sube el Haki, no el nivel.

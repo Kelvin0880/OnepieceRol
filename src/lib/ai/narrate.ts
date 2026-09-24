@@ -32,6 +32,7 @@ import {
 import { callOpenRouter } from "./openrouter-client";
 import { OPENROUTER_MODELS } from "./models";
 import { describeCapabilities } from "../engine/capabilities";
+import { rankProgress, type FactionKey } from "../engine/progression";
 import { currentStamina } from "../game/combat-prep";
 
 // Long, inspiring scenes need real time to write: a 6+ paragraph reply is normal now.
@@ -73,6 +74,10 @@ export async function loadDirectives(characterId: string): Promise<string> {
       name: c.name, level: c.level, armamentHaki: c.armamentHaki, observationHaki: c.observationHaki, conquerorsHaki: c.conquerorsHaki,
       fruitName: c.devilFruit?.name, fruitMastery: c.fruitMastery, fruitAwakened: c.fruitAwakened, weaponName: c.equippedWeapon?.name,
       stamina: currentStamina(c), maxStamina: c.maxStamina, hp: c.hp, maxHp: c.maxHp, companions: c.companions.map((n) => n.name),
+      rank: (() => {
+        const r = rankProgress((c.faction === "CP0" ? "CP0" : c.faction) as FactionKey, c.bounty, c.notoriety);
+        return r.nextTitle ? `${r.title} (le faltan ${r.remaining?.toLocaleString("es-ES")} de ${r.metric.toLowerCase()} para ${r.nextTitle})` : `${r.title} (el escalón más alto)`;
+      })(),
     });
     // Dynamic import: game/world-arcs imports this module for its own narration.
     const presence = await import("../game/world-arcs").then((m) => m.worldPresenceFor(c.currentIslandId)).catch(() => "");
@@ -221,6 +226,16 @@ export async function narratePartyScene(input: PartySceneNarrationInput, meta: {
   }
 }
 
+/** A memory summary must be JSON with a real "summary" string: a free model sometimes answers with a moderation artifact ("User Safety: safe"), which must count as a failed model, not as the summary. */
+export function isValidSummaryJson(text: string): boolean {
+  try {
+    const parsed = JSON.parse(text);
+    return typeof parsed?.summary === "string" && parsed.summary.trim().length > 10;
+  } catch {
+    return false;
+  }
+}
+
 /** Rejects malformed JSON or missing fields the same way isValidNarration rejects garbage prose — treated as a failed model, moves to the next one. */
 function isValidNewsJson(text: string): boolean {
   try {
@@ -307,7 +322,7 @@ export async function summarizeTranscript(currentSummary: string | null, lines: 
         "(nombres de NPC y lo que quieren, promesas, deudas, conflictos abiertos, lugares, decisiones del jugador):\n" +
         lines.join("\n")
     );
-    const raw = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, jsonMode: true, temperature: 0.3, timeoutMs: 20_000, maxTokens: 700 });
+    const raw = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, jsonMode: true, temperature: 0.3, timeoutMs: 20_000, maxTokens: 700, validate: isValidSummaryJson });
     const parsed = JSON.parse(raw);
     const summary = typeof parsed?.summary === "string" ? parsed.summary.trim() : "";
     return summary ? summary.slice(0, MEMORY_SUMMARY_MAX_CHARS) : null;
@@ -337,6 +352,7 @@ export async function updateCharacterMemory(characterId: string, currentSummary:
       temperature: 0.3,
       timeoutMs: MEMORY_TIMEOUT_MS,
       maxTokens: 350,
+      validate: isValidSummaryJson,
     });
     const parsed = JSON.parse(raw);
     const summary = typeof parsed?.summary === "string" ? parsed.summary.trim() : "";

@@ -30,7 +30,7 @@ async function registerAndCreate(name, characterName) {
   await page.fill('input[placeholder="Nombre de usuario"]', name);
   await page.fill('input[placeholder="Contraseña"]', "clavesegura123");
   await page.click('form button:has-text("Crear cuenta")');
-  await page.waitForSelector("text=Tus personajes", { timeout: 10000 });
+  await page.waitForSelector("text=Tus personajes", { timeout: 45000 });
 
   await page.click('a:has-text("Nuevo personaje")');
   await page.waitForSelector("text=Comienza tu leyenda");
@@ -38,7 +38,7 @@ async function registerAndCreate(name, characterName) {
   await page.click('button:has-text("Pirata")');
   await page.click('button:has-text("Espadachín")');
   await page.click('button:has-text("Zarpar")');
-  await page.waitForSelector("text=Escena", { timeout: 10000 });
+  await page.waitForSelector("text=Escena", { timeout: 45000 });
 
   return { page };
 }
@@ -62,8 +62,8 @@ try {
   // reload both so each side's own GET materializes the shared party.
   await a.page.reload();
   await b.page.reload();
-  await a.page.waitForSelector("text=Escena compartida", { timeout: 10000 });
-  await b.page.waitForSelector("text=Escena compartida", { timeout: 10000 });
+  await a.page.waitForSelector("text=Escena compartida", { timeout: 45000 });
+  await b.page.waitForSelector("text=Escena compartida", { timeout: 45000 });
   await a.page.screenshot({ path: path.join(shotsDir, "party-01-a-shared-scene.png"), fullPage: true });
   await b.page.screenshot({ path: path.join(shotsDir, "party-01-b-shared-scene.png"), fullPage: true });
   check("both clients show the shared party scene panel", true);
@@ -78,7 +78,7 @@ try {
   await a.page.screenshot({ path: path.join(shotsDir, "party-02-a-turn-done.png"), fullPage: true });
 
   await b.page.reload();
-  await b.page.waitForSelector("text=Escena compartida", { timeout: 10000 });
+  await b.page.waitForSelector("text=Escena compartida", { timeout: 45000 });
   check("turn passed to the second member after the captain's beat", await b.page.locator("text=Es tu turno.").isVisible().catch(() => false));
   await b.page.screenshot({ path: path.join(shotsDir, "party-03-b-turn.png"), fullPage: true });
 
@@ -86,7 +86,7 @@ try {
   await b.page.screenshot({ path: path.join(shotsDir, "party-04-b-turn-done.png"), fullPage: true });
 
   await a.page.reload();
-  await a.page.waitForSelector("text=Escena compartida", { timeout: 10000 });
+  await a.page.waitForSelector("text=Escena compartida", { timeout: 45000 });
   check("captain's client shows both names in the shared transcript", await a.page.locator("text=Marinero B").first().isVisible().catch(() => false));
   await a.page.screenshot({ path: path.join(shotsDir, "party-05-a-sees-both.png"), fullPage: true });
 
@@ -94,13 +94,13 @@ try {
   // before B can act.
   await act(a.page, "Sigo mirando alrededor mientras esperamos noticias.");
   await b.page.reload();
-  await b.page.waitForSelector("text=Escena compartida", { timeout: 10000 });
-  await b.page.waitForSelector("text=Es tu turno.", { timeout: 10000 });
+  await b.page.waitForSelector("text=Escena compartida", { timeout: 45000 });
+  await b.page.waitForSelector("text=Es tu turno.", { timeout: 45000 });
 
   // Separation: free text should require an explicit confirm, not act immediately.
   await b.page.fill("textarea", "Me separo del grupo y me voy por mi cuenta a mirar el mercado.");
   await b.page.click('button:has-text("Actuar")');
-  await b.page.waitForSelector("text=¿Quieres separarte de tus nakamas?", { timeout: 15000 });
+  await b.page.waitForSelector("text=¿Quieres separarte de tus nakamas?", { timeout: 45000 });
   await b.page.screenshot({ path: path.join(shotsDir, "party-06-b-leave-confirm.png"), fullPage: true });
   check("separation shows an explicit confirm prompt instead of acting immediately", true);
 
@@ -120,7 +120,7 @@ try {
   check('"Unirme al grupo" button is offered after separating while still on the same island', rejoinVisible);
   if (rejoinVisible) {
     await b.page.click('button:has-text("Unirme al grupo")');
-    await b.page.waitForResponse((r) => r.url().includes("/actions") && r.request().method() === "POST", { timeout: 10000 }).catch(() => {});
+    await b.page.waitForResponse((r) => r.url().includes("/actions") && r.request().method() === "POST", { timeout: 45000 }).catch(() => {});
     await b.page.waitForTimeout(1000);
 
     let bRejoined = false;

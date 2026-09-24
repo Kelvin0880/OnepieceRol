@@ -6,7 +6,7 @@ import OocPanel from "./OocPanel";
 import CrewPanel, { type PanelCompanion, type PanelCrew } from "./CrewPanel";
 import { characterCondition, conditionLabel } from "@/lib/engine/condition";
 import { xpToNextLevel } from "@/lib/engine/economy";
-import { factionTitle, type FactionKey } from "@/lib/engine/progression";
+import { factionTitle, rankProgress, type FactionKey } from "@/lib/engine/progression";
 import { crewNounForFaction } from "@/lib/engine/crew-noun";
 import { CELL_LABELS } from "@/lib/engine/impel-down";
 
@@ -269,6 +269,10 @@ interface Character {
   isSeparatedFromParty: boolean;
 }
 
+interface AdminHint {
+  pending: number;
+}
+
 interface WorldEventHere {
   arcId: string;
   title: string;
@@ -312,6 +316,7 @@ interface JointFightState {
 
 interface StateResponse {
   worldEvent: WorldEventHere | null;
+  admin: AdminHint | null;
   character: Character;
   connectedIslands: Island[];
   othersHere: OtherHere[];
@@ -659,6 +664,12 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowGuideModal(true)}>
             Mapa y Guía
           </button>
+          {data.admin && (
+            <Link href="/admin" className={`px-3 py-1.5 text-sm ${data.admin.pending > 0 ? "btn-gold" : "btn-ghost"}`} data-testid="admin-header-link">
+              Administración
+              {data.admin.pending > 0 && <span className="ml-1.5 text-[11px] px-1.5 rounded bg-blood text-white">{data.admin.pending}</span>}
+            </Link>
+          )}
           <Link href="/codex" className="btn-ghost px-3 py-1.5 text-sm">
             Códice
           </Link>
@@ -1595,6 +1606,26 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               <span className="text-ink-dim">Berries</span>
               <span className="text-gold-bright">฿ {character.berries.toLocaleString("es-ES")}</span>
             </div>
+            {(() => {
+              const r = rankProgress(character.faction as FactionKey, character.bounty, character.notoriety);
+              const fmt = (n: number) => n.toLocaleString("es-ES");
+              return (
+                <div data-testid="rank-progress">
+                  <div className="flex justify-between text-xs text-ink-dim mb-0.5">
+                    <span>Rango: <span className="text-gold-bright">{r.title}</span></span>
+                    <span>{r.nextTitle ? `→ ${r.nextTitle}` : "cima"}</span>
+                  </div>
+                  <div className="h-2 rounded bg-black/30 overflow-hidden">
+                    <div className="h-full transition-all" style={{ width: `${Math.max(r.fraction > 0 ? 2 : 0, r.fraction * 100)}%`, background: "var(--gold)" }} />
+                  </div>
+                  <p className="text-[11px] text-ink-dim mt-0.5">
+                    {r.target !== null
+                      ? `${r.metric}: ${fmt(r.value)} / ${fmt(r.target)} · faltan ${fmt(r.remaining ?? 0)} para «${r.nextTitle}». El ascenso es automático y sale en las noticias.`
+                      : `${r.metric}: ${fmt(r.value)} · has llegado al escalón más alto.`}
+                  </p>
+                </div>
+              );
+            })()}
             {character.faction === "PIRATE" && (
               <div className="flex justify-between text-sm">
                 <span className="text-ink-dim">Recompensa</span>

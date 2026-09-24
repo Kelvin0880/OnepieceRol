@@ -7,6 +7,8 @@ import {
   factionTitle,
   crossedPirateTier,
   crossedMarineTier,
+  rankProgress,
+  UNPOSTED_TITLE,
 } from "./progression";
 
 describe("pirateBountyTitle", () => {
@@ -22,6 +24,7 @@ describe("pirateBountyTitle", () => {
       // Re-deriving index by scanning is fine here: just assert monotonic non-decrease in rank ordinal.
       const ordinal = [
         "Sin recompensa",
+        UNPOSTED_TITLE,
         "Novato de la Grand Line",
         "Pirata de interés",
         "Superrookie",
@@ -39,7 +42,8 @@ describe("pirateBountyTitle", () => {
 
   it("exact threshold values land on the new tier, not the previous one", () => {
     expect(pirateBountyTitle(1_000_000)).toBe("Novato de la Grand Line");
-    expect(pirateBountyTitle(999_999)).toBe("Sin recompensa");
+    expect(pirateBountyTitle(999_999)).toBe(UNPOSTED_TITLE); // has a bounty, the poster is just not printed yet
+    expect(pirateBountyTitle(0)).toBe("Sin recompensa");
   });
 });
 
@@ -86,5 +90,50 @@ describe("crossedPirateTier / crossedMarineTier", () => {
 
   it("does not report a crossing when moving backward", () => {
     expect(crossedPirateTier(5_000_000, 1_000_000)).toBeNull();
+  });
+});
+
+describe("rankProgress", () => {
+  it("a pirate with a small bounty is not 'without bounty' and sees the road to the first poster", () => {
+    expect(pirateBountyTitle(1050)).toBe(UNPOSTED_TITLE);
+    expect(pirateBountyTitle(0)).toBe("Sin recompensa");
+    const p = rankProgress("PIRATE", 1050, 0);
+    expect(p.title).toBe(UNPOSTED_TITLE);
+    expect(p.nextTitle).toBe("Novato de la Grand Line");
+    expect(p.target).toBe(1_000_000);
+    expect(p.remaining).toBe(1_000_000 - 1050);
+    expect(p.fraction).toBeGreaterThan(0);
+    expect(p.fraction).toBeLessThan(0.01);
+  });
+  it("progress is measured inside the current tier and matches the tier the news would announce", () => {
+    const p = rankProgress("PIRATE", 5_500_000, 0);
+    expect(p.title).toBe("Novato de la Grand Line");
+    expect(p.floor).toBe(1_000_000);
+    expect(p.target).toBe(10_000_000);
+    expect(p.fraction).toBeCloseTo((5_500_000 - 1_000_000) / 9_000_000, 5);
+    expect(crossedPirateTier(9_999_999, 10_000_000)?.title).toBe(p.nextTitle);
+  });
+  it("non-pirate factions read notoriety, with their own labels", () => {
+    const m = rankProgress("MARINE", 999_999_999, 120);
+    expect(m.title).toBe("Marine Raso");
+    expect(m.nextTitle).toBe("Cabo");
+    expect(m.remaining).toBe(30);
+    expect(m.metric).toBe("Mérito");
+    expect(rankProgress("CP0", 0, 0).metric).toBe("Confianza del Gobierno");
+    expect(rankProgress("BOUNTY_HUNTER", 0, 10).nextTitle).toBe("Cazador de gremio");
+  });
+  it("at the top of the ladder there is nothing left to climb", () => {
+    const top = rankProgress("PIRATE", 6_000_000_000, 0);
+    expect(top.nextTitle).toBeNull();
+    expect(top.target).toBeNull();
+    expect(top.remaining).toBeNull();
+    expect(top.fraction).toBe(1);
+  });
+  it("never yields a fraction outside 0..1, even with odd input", () => {
+    for (const v of [-50, 0, 1, 49, 50, 51, 99_999_999_999]) {
+      const p = rankProgress("MARINE", 0, v);
+      expect(p.fraction).toBeGreaterThanOrEqual(0);
+      expect(p.fraction).toBeLessThanOrEqual(1);
+    }
   });
 });

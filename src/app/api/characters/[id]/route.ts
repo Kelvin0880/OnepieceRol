@@ -4,6 +4,7 @@ import { requireUserId, UnauthorizedError } from "@/lib/require-user";
 import { logError } from "@/lib/log-error";
 import { getCompanionViews } from "@/lib/game/companions";
 import { getWorldEventForCharacter } from "@/lib/game/world-arcs";
+import { sessionIsAdmin } from "@/lib/require-user";
 import { syncPartyForCharacter, getPartyStateForCharacter } from "@/lib/game/party";
 import { currentStamina } from "@/lib/game/combat-prep";
 import { fatigueLevel, FATIGUE_LABELS } from "@/lib/engine/stamina";
@@ -143,6 +144,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 
     const companions = await getCompanionViews(id, character.level);
     const worldEvent = await getWorldEventForCharacter(id);
+    // Only the owner learns that a canon death/capture is waiting for their verdict.
+    const admin = (await sessionIsAdmin()) ? { pending: await prisma.worldArc.count({ where: { status: "AWAITING_CONSENT" } }) } : null;
     const pendingCrewInvites = await prisma.crewInvite.count({ where: { toCharacterId: id, status: "PENDING", createdAt: { gt: new Date(Date.now() - 24 * 3600 * 1000) } } });
     const crewShaped = character.crew
       ? {
@@ -185,6 +188,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       blackMarket,
       missions,
       worldEvent,
+      admin,
     });
   } catch (err) {
     if (err instanceof UnauthorizedError) return NextResponse.json({ error: err.message }, { status: 401 });

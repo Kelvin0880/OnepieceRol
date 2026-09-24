@@ -85,7 +85,11 @@ function tierFor(value: number, tiers: Tier[]): Tier {
   return current;
 }
 
+/** Below the first official poster (1,000,000) a pirate with some bounty is not "without bounty": the World Government just has not printed a poster yet. */
+export const UNPOSTED_TITLE = "Aún sin cartel oficial";
+
 export function pirateBountyTitle(bounty: number): string {
+  if (bounty > 0 && bounty < PIRATE_BOUNTY_TIERS[1].threshold) return UNPOSTED_TITLE;
   return tierFor(bounty, PIRATE_BOUNTY_TIERS).title;
 }
 
@@ -142,4 +146,51 @@ export function crossedPirateTier(before: number, after: number): Tier | null {
 
 export function crossedMarineTier(before: number, after: number): Tier | null {
   return crossedTier(before, after, MARINE_RANK_TIERS);
+}
+
+export interface RankProgress {
+  /** What the number measures, for the label ("Recompensa", "Mérito"...). */
+  metric: string;
+  title: string;
+  nextTitle: string | null;
+  value: number;
+  /** Threshold of the current tier and of the next one (null at the top). */
+  floor: number;
+  target: number | null;
+  /** 0..1 progress inside the current tier (1 at the top). */
+  fraction: number;
+  remaining: number | null;
+}
+
+function tiersFor(faction: FactionKey): Tier[] {
+  switch (faction) {
+    case "PIRATE": return PIRATE_BOUNTY_TIERS;
+    case "MARINE": return MARINE_RANK_TIERS;
+    case "REVOLUTIONARY": return REVOLUTIONARY_TIERS;
+    case "BOUNTY_HUNTER": return BOUNTY_HUNTER_TIERS;
+    case "CP0": return CP0_TIERS;
+  }
+}
+
+const METRIC: Record<FactionKey, string> = { PIRATE: "Recompensa", MARINE: "Mérito", REVOLUTIONARY: "Influencia", BOUNTY_HUNTER: "Reputación de gremio", CP0: "Confianza del Gobierno" };
+
+/** How far you are inside your current rank and what is left for the next one — the same numbers that trigger the promotion news. */
+export function rankProgress(faction: FactionKey, bounty: number, notoriety: number): RankProgress {
+  const tiers = tiersFor(faction);
+  const value = faction === "PIRATE" ? bounty : notoriety;
+  const idx = tiers.reduce((best, t, i) => (value >= t.threshold ? i : best), 0);
+  const next = tiers[idx + 1] ?? null;
+  const floor = tiers[idx].threshold;
+  const title = factionTitle(faction, bounty, notoriety);
+  if (!next) return { metric: METRIC[faction], title, nextTitle: null, value, floor, target: null, fraction: 1, remaining: null };
+  return {
+    metric: METRIC[faction],
+    title,
+    nextTitle: next.title,
+    value,
+    floor,
+    target: next.threshold,
+    fraction: Math.max(0, Math.min(1, (value - floor) / (next.threshold - floor))),
+    remaining: Math.max(0, next.threshold - value),
+  };
 }

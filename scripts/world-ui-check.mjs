@@ -88,6 +88,11 @@ try {
   const ownerCreated = (await owner.page.textContent("body")).includes("Tus personajes");
   check("the owner account (exact name) can register", ownerCreated);
 
+  // the owner is told, on the play screen itself, that a verdict is waiting
+  await makeCharacter(owner.page, `Dueno${stamp}`, "Pirata");
+  await owner.page.waitForSelector('[data-testid="admin-header-link"]');
+  check("the owner sees an Administración link with a badge when a verdict is pending", (await owner.page.textContent('[data-testid="admin-header-link"]')).match(/\d/) !== null);
+
   // news page: world events section, chapter cards with a location pin, admin link
   await owner.page.goto("http://localhost:3000/news");
   await owner.page.waitForSelector('[data-testid="world-events"]');

@@ -15,7 +15,7 @@ export async function askOocAssistant(ctx: OocPromptContext, playerText: string,
       maxTokens: 700,
       temperature: 0.4,
       jsonMode: true,
-      validate: (t) => t.trim().length > 2,
+      validate: (t) => t.trim().length > 2 && !/^(user safety|safety:)/i.test(t.trim()),
     });
     return parseOocReply(raw);
   } catch (err) {
