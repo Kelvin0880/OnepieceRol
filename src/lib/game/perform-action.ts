@@ -1690,12 +1690,7 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
     await writePartyMessage(begin.partyId, character.id, character.name, freeText);
     await writePartyMessage(begin.partyId, null, "Narrador", text);
     await advancePartyTurn(begin.partyId);
-    await prisma.sceneMessage.createMany({
-      data: [
-        { characterId: character.id, role: "player", text: freeText },
-        { characterId: character.id, role: "narrator", text },
-      ],
-    });
+    await prisma.sceneMessage.createMany({ data: exchangeRows(character.id, freeText, text) });
     void maybeCompactPartyScene(begin.partyId);
     return emptyResult([text], character.level);
   }
@@ -1757,16 +1752,7 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
   }
 
   const finalLog = [`(interpretado como: ${FREE_TEXT_ACTION_LABELS[action]})`, ...result.log];
-  await prisma.sceneMessage.createMany({
-    data: [
-      { characterId: character.id, role: "player", text: freeText },
-      {
-        characterId: character.id,
-        role: "narrator",
-        text: finalLog.join("\n\n"),
-      },
-    ],
-  });
+  await prisma.sceneMessage.createMany({ data: exchangeRows(character.id, freeText, finalLog.join("\n\n")) });
   await writePartyMessage(begin.partyId, character.id, character.name, freeText);
   await writePartyMessage(begin.partyId, null, "Narrador", sharedLine);
   await advancePartyTurn(begin.partyId);
@@ -1834,6 +1820,15 @@ async function lastNarratorLine(characterId: string): Promise<string | undefined
     orderBy: { createdAt: "desc" },
   });
   return last?.text.slice(-700);
+}
+
+/** The player's line is stamped a few ms before the narrator's reply: equal timestamps used to shuffle the transcript, so the narrator sometimes answered the wrong message. */
+function exchangeRows(characterId: string, playerText: string, narratorText: string) {
+  const now = Date.now();
+  return [
+    { characterId, role: "player", text: playerText, createdAt: new Date(now - 5) },
+    { characterId, role: "narrator", text: narratorText, createdAt: new Date(now) },
+  ];
 }
 
 export async function resolveFreeTextAction(characterId: string, userId: string, freeText: string): Promise<ActionResult> {
@@ -1945,12 +1940,7 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
   // The full chat transcript — every free-text action, mechanical or pure
   // roleplay alike — so the scene panel and future narration prompts see
   // the whole conversation, not just the mechanical summary (Bitácora).
-  await prisma.sceneMessage.createMany({
-    data: [
-      { characterId, role: "player", text: freeText },
-      { characterId, role: "narrator", text: finalLog.join("\n\n") },
-    ],
-  });
+  await prisma.sceneMessage.createMany({ data: exchangeRows(characterId, freeText, finalLog.join("\n\n")) });
 
   // Silent, background, never awaited: keeps long sessions in context without a token blow-up.
   void maybeCompactCharacterScene(characterId);

@@ -11,6 +11,7 @@ export type OocProposal =
   | { type: "rename"; name: string }
   | { type: "rename_crew"; name: string }
   | { type: "undo_last" }
+  | { type: "clear_scene" }
   | { type: "rollback" }
   | { type: "repair" }
   | { type: "set_tone"; tone: NarratorTone }
@@ -24,6 +25,7 @@ export const OOC_PROPOSAL_LABELS: Record<OocProposal["type"], string> = {
   rename: "Cambiar el nombre del personaje",
   rename_crew: "Cambiar el nombre de la tripulación",
   undo_last: "Deshacer la última respuesta del narrador",
+  clear_scene: "Limpiar la escena (empezar con la pantalla y el contexto reciente en blanco)",
   rollback: "Volver al último punto de restauración",
   repair: "Reparar valores inválidos (vida, aguante...)",
   set_tone: "Cambiar el tono del narrador",
@@ -76,7 +78,7 @@ const OOC_SYSTEM =
   "NO puedes: dar berries, niveles, objetos, frutas ni habilidades; revivir a un personaje muerto; cambiar el resultado de una tirada o pelea; ni saltarte la muerte permanente. Si te lo piden, explica con amabilidad por qué no y ofrece la alternativa válida (rollback a un punto anterior si está vivo, reporte del fallo, indicación al narrador). " +
   "Nunca digas que ya hiciste algo: solo PROPONES una acción y el jugador la confirma con un botón. " +
   "Herramientas que puedes proponer (una como máximo por respuesta, solo si de verdad ayuda): " +
-  'rename {name} — renombrar al personaje; rename_crew {name} — renombrar la tripulación (solo el capitán); undo_last — borrar el último intercambio de la escena (para reescribirlo); ' +
+  'rename {name} — renombrar al personaje; rename_crew {name} — renombrar la tripulación (solo el capitán); undo_last — borrar el último intercambio de la escena (para reescribirlo); clear_scene — limpiar la escena: vacía la pantalla y el contexto reciente del narrador (conserva el resumen de la historia), útil si el narrador se lía o ignora al jugador; ' +
   "rollback — volver al último punto de restauración (solo vivo, libre, fuera de duelos/peleas en grupo, máximo 3 al día); repair — corregir valores imposibles (vida/aguante fuera de rango) o desatascar; " +
   'set_tone {tone: "balanced"|"lethal"|"story"} — cómo actúan los enemigos; add_note {note} — indicación permanente para el narrador ("no repitas mi acción", "los NPC hablan más corto"); clear_notes; ' +
   "report {text} — enviar un reporte de fallo para el desarrollador; set_pact {text} — pacto de escena entre jugadores que el narrador debe montar dentro del rol (ej. \"somos 4, hacemos un 4 vs 4 amistoso en la plaza con público\"); clear_pact. " +
@@ -123,6 +125,7 @@ export function sanitizeProposal(a: unknown): OocProposal | null {
       return v.ok ? { type: x.type, name: v.name } : null;
     }
     case "undo_last":
+    case "clear_scene":
     case "rollback":
     case "repair":
     case "clear_notes":

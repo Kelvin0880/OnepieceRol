@@ -130,10 +130,12 @@ describe("buildCombatNarrationPrompt", () => {
     expect(boss.system).not.toBe(minor.system);
   });
 
-  it("asks for an extensive scene with dialogue, not a short blurb", () => {
-    const { system } = buildCombatNarrationPrompt(combatBase);
-    expect(system).toMatch(/extensa/i);
+  it("asks for a short, plain reply sized to the player's message, still allowing dialogue", () => {
+    const { system, user, maxTokens } = buildCombatNarrationPrompt({ ...combatBase, concluded: false, intentText: "Golpeo" });
     expect(system).toMatch(/diálogo/);
+    expect(user).toMatch(/EXTENSIÓN DE ESTA RESPUESTA: breve/);
+    expect(user).toMatch(/ACCIÓN ACTUAL/);
+    expect(maxTokens).toBeLessThan(400);
   });
 
   it("includes the persistent memory summary when provided", () => {

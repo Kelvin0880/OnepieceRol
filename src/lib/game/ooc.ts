@@ -20,6 +20,7 @@ import { getOpenDuelFor } from "./duel";
 import { getOpenJointFightFor } from "./joint-fight";
 import { notifyCharacters } from "../realtime";
 import { notifyParty } from "./notify";
+import { maybeCompactCharacterScene } from "./scene-compaction";
 
 export class OocError extends Error {}
 
@@ -148,7 +149,7 @@ export async function rollbackToCheckpoint(characterId: string, userId: string, 
   await prisma.$transaction([
     prisma.character.update({
       where: { id: characterId },
-      data: { ...plan.data, staminaUpdatedAt: new Date(), memorySummary: memory, sceneCompactedUntil: compactedUntil, timelineEpoch: { increment: 1 } },
+      data: { ...plan.data, staminaUpdatedAt: new Date(), memorySummary: memory, sceneCompactedUntil: compactedUntil, sceneClearedAt: null, timelineEpoch: { increment: 1 } },
     }),
     prisma.pendingEncounter.deleteMany({ where: { characterId } }),
     prisma.sceneMessage.deleteMany({ where: after }),
@@ -225,6 +226,18 @@ export async function undoLastExchange(characterId: string, userId: string) {
   await prisma.oocReport.create({ data: { characterId, kind: "undo", text: "Deshizo el último intercambio de la escena" } });
   notifyCharacters([characterId], "ooc");
   return { message: "Borré la última respuesta del narrador. Tu mensaje vuelve a la caja para que lo reescribas.", restoredText: player?.text ?? null };
+}
+
+/** Fresh screen and fresh short-term context; the long-term summary of the story stays, and what was not yet summarised is folded into it in the background. */
+export async function clearScene(characterId: string, userId: string) {
+  const c = await loadOwned(characterId, userId);
+  if (c.pendingEncounter) throw new OocError("Hay una pelea en curso: termínala antes de limpiar la escena.");
+  if (c.partyId && !c.isSeparatedFromParty) throw new OocError("En escena compartida no se puede limpiar: otros jugadores la están leyendo.");
+  void maybeCompactCharacterScene(characterId, { force: true });
+  await prisma.character.update({ where: { id: characterId }, data: { sceneClearedAt: new Date() } });
+  await prisma.oocReport.create({ data: { characterId, kind: "undo", text: "Limpió la escena" } });
+  notifyCharacters([characterId], "ooc");
+  return { message: "Escena limpia. El narrador conserva el resumen de tu historia pero empieza sin el chat reciente: escribe lo que haces ahora." };
 }
 
 export async function renameCharacter(characterId: string, userId: string, rawName: string) {
@@ -322,6 +335,7 @@ export async function applyOocAction(characterId: string, userId: string, action
     case "rename": return renameCharacter(characterId, userId, action.name);
     case "rename_crew": return renameCrew(characterId, userId, action.name);
     case "undo_last": return undoLastExchange(characterId, userId);
+    case "clear_scene": return clearScene(characterId, userId);
     case "rollback": return rollbackToCheckpoint(characterId, userId);
     case "repair": return repairCharacter(characterId, userId);
     case "set_tone": return setNarratorTone(characterId, userId, action.tone);

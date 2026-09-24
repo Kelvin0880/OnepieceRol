@@ -643,7 +643,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
 
   return (
     <main className="flex-1 w-full max-w-6xl mx-auto p-4 md:p-6 flex flex-col gap-4">
-      <div className="flex items-center justify-between">
+      <div className="flex flex-wrap items-center justify-between gap-3">
         <div>
           <h1 className="font-display text-2xl text-gold-bright">{character.name}</h1>
           <p className="text-sm text-gold">
@@ -653,7 +653,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
             {FACTION_LABEL[character.faction]} · Nv. {character.level} · {character.currentIsland.name}
           </p>
         </div>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowCrew(true)} data-testid="crew-open-header">
             {crewNounForFaction(character.faction as FactionKey)}
             {character.pendingCrewInvites > 0 && <span className="ml-1.5 text-[11px] px-1.5 rounded bg-blood text-white">{character.pendingCrewInvites}</span>}
@@ -1167,7 +1167,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               {jointFight.status === "ACTIVE" && jointFight.me?.status === "FIGHTING" && (
                 <p className="text-xs text-ink-dim">
                   {jointFight.me.submitted
-                    ? "Movimiento enviado. Esperando a tus aliados (si alguien tarda más de 2 minutos, se cubre y la ronda se resuelve)."
+                    ? "Movimiento enviado. Esperando a tus aliados: cada quien responde a su ritmo, la ronda se resuelve cuando todos han movido."
                     : "Describe tu movimiento abajo (lo que intentas, no lo que consigues). Cuando todos hayáis movido, el motor lo resuelve a la vez. Puedes escribir que huyes: se decide por velocidad."}
                 </p>
               )}

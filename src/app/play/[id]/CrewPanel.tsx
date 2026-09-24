@@ -221,7 +221,7 @@ export default function CrewPanel({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "rgba(0,0,0,0.65)" }} onClick={onClose} data-testid="crew-panel">
-      <div className="panel p-4 w-full max-w-3xl max-h-[92vh] overflow-y-auto flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
+      <div className="panel p-4 w-full max-w-3xl max-h-[92vh] overflow-y-auto flex flex-col gap-3 [&>*]:shrink-0" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-2">
           <div className="flex items-center gap-3">
             {crew?.hasEmblem && (

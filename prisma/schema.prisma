@@ -124,6 +124,8 @@ model Character {
   // Silent context compaction (game/scene-compaction.ts): scene messages up to
   // this instant have already been folded into memorySummary.
   sceneCompactedUntil DateTime?
+  /** "Limpiar escena": messages before this stay stored (memory keeps the story) but leave the screen and the narrator's short-term window. */
+  sceneClearedAt      DateTime?
 
   // Devil fruit progression (see engine/fruit-mastery.ts): 0-100 mastery,
   // plus an explicit awakening flag that needs a breaking-point event, not

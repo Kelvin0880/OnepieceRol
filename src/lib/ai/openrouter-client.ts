@@ -22,7 +22,12 @@ export interface CallOpenRouterOptions {
    * model in the fallback list, never surface the bad content.
    */
   validate?: (text: string) => boolean;
+  /** The preferred model gets this head start before the backup is also fired; a failure of the preferred one starts the backup at once. 0 = fire both together. */
+  hedgeDelayMs?: number;
 }
+
+/** Quality beats speed: the first (paid) model normally answers alone, the free ones only join when it is slow or failing. */
+const DEFAULT_HEDGE_DELAY_MS = 7000;
 
 /** Accepts a caller-supplied AbortController (instead of always making its own) so a race between two calls can cancel the loser. */
 async function callOnce(
@@ -81,25 +86,39 @@ function raceModels(
   timeoutMs: number,
   maxTokens: number | undefined,
   validate: ((text: string) => boolean) | undefined,
-  errors: string[]
+  errors: string[],
+  hedgeDelayMs: number
 ): Promise<string | null> {
   if (raceModels.length === 0) return Promise.resolve(null);
   const controllers = raceModels.map(() => new AbortController());
 
   return new Promise((resolve) => {
     let remaining = raceModels.length;
-    raceModels.forEach((model, i) => {
-      callOnce(model, system, user, jsonMode, temperature, timeoutMs, maxTokens, validate, controllers[i])
+    let done = false;
+    const started = new Set<number>();
+    const timers: ReturnType<typeof setTimeout>[] = [];
+    const start = (i: number) => {
+      if (done || started.has(i)) return;
+      started.add(i);
+      callOnce(raceModels[i], system, user, jsonMode, temperature, timeoutMs, maxTokens, validate, controllers[i])
         .then((text) => {
+          done = true;
+          timers.forEach(clearTimeout);
           controllers.forEach((c, j) => j !== i && c.abort());
           resolve(text);
         })
         .catch((err) => {
-          errors.push(`${model}: ${err instanceof Error ? err.message : String(err)}`);
+          errors.push(`${raceModels[i]}: ${err instanceof Error ? err.message : String(err)}`);
           remaining--;
           if (remaining === 0) resolve(null);
+          else raceModels.forEach((_, k) => start(k));
         });
+    };
+    start(0);
+    raceModels.forEach((_, i) => {
+      if (i > 0) timers.push(setTimeout(() => start(i), i * hedgeDelayMs));
     });
+    if (hedgeDelayMs <= 0) raceModels.forEach((_, i) => start(i));
   });
 }
 
@@ -124,7 +143,7 @@ function raceModels(
  * time-budget skip rule as before.
  */
 export async function callOpenRouter(system: string, user: string, options: CallOpenRouterOptions): Promise<string> {
-  const { models, timeoutMs = 10_000, jsonMode = false, temperature = 0.9, maxTokens, validate } = options;
+  const { models, timeoutMs = 10_000, jsonMode = false, temperature = 0.9, maxTokens, validate, hedgeDelayMs = DEFAULT_HEDGE_DELAY_MS } = options;
   if (models.length === 0) throw new AiUnavailableError("No models configured.");
 
   // Collect every model's failure, not just the last — a single "Last error"
@@ -133,7 +152,7 @@ export async function callOpenRouter(system: string, user: string, options: Call
   const errors: string[] = [];
 
   const raceCount = Math.min(2, models.length);
-  const raced = await raceModels(models.slice(0, raceCount), system, user, jsonMode, temperature, timeoutMs, maxTokens, validate, errors);
+  const raced = await raceModels(models.slice(0, raceCount), system, user, jsonMode, temperature, timeoutMs, maxTokens, validate, errors, hedgeDelayMs);
   if (raced !== null) return raced;
 
   // Both raced attempts failed — fall through to any remaining models

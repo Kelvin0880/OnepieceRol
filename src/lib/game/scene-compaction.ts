@@ -26,7 +26,7 @@ function clip(text: string): string {
   return text.length > LINE_MAX_CHARS ? `${text.slice(0, LINE_MAX_CHARS)}…` : text;
 }
 
-export async function maybeCompactCharacterScene(characterId: string): Promise<void> {
+export async function maybeCompactCharacterScene(characterId: string, opts: { force?: boolean } = {}): Promise<void> {
   if (inFlight.has(characterId)) return;
   inFlight.add(characterId);
   try {
@@ -36,8 +36,8 @@ export async function maybeCompactCharacterScene(characterId: string): Promise<v
       where: { characterId, ...(character.sceneCompactedUntil ? { createdAt: { gt: character.sceneCompactedUntil } } : {}) },
       orderBy: { createdAt: "asc" },
     });
-    if (!shouldCompact(messages.length)) return;
-    const older = messages.slice(0, messages.length - KEEP_RECENT_MESSAGES);
+    if (opts.force ? messages.length < 2 : !shouldCompact(messages.length)) return;
+    const older = opts.force ? messages : messages.slice(0, messages.length - KEEP_RECENT_MESSAGES);
     const lines = older.map((m) => (m.role === "player" ? `[Jugador]: ${clip(m.text)}` : `[Narrador]: ${clip(m.text)}`));
     const summary = await summarizeTranscript(character.memorySummary, lines, { characterId });
     if (!summary) return;

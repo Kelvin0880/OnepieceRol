@@ -14,6 +14,14 @@
  * NPCs it voices must not either. Appended to every narrator system prompt.
  */
 import { PLAY_TO_WIN_RULE } from "../engine/enemy-kit";
+import { planLength, currentActionBlock, type BeatKind } from "../engine/narration-length";
+
+/** A built prompt plus the token budget matching its length plan. */
+export interface PromptOut {
+  system: string;
+  user: string;
+  maxTokens: number;
+}
 
 export const ROLE_RULES =
   "REGLAS DE ROL INNEGOCIABLES (Mano Negra / Mano Blanca). " +
@@ -27,7 +35,8 @@ export const ROLE_RULES =
   "En el texto del jugador, lo que va entre comillas es lo que su personaje DICE; el resto son sus acciones o intenciones. " +
   "NOMBRES PROPIOS: todo personaje que inventes (tabernero, guardia, marinero, niño, rival, cazarrecompensas...) debe tener un nombre propio con sabor One Piece la primera vez que aparece; nunca lo dejes como \"un hombre\" o \"el tabernero\" a secas, y reutiliza ese mismo nombre después. " +
   "NO REPITAS AL JUGADOR: su mensaje ya está visible en el chat, así que nunca lo resumas, parafrasees ni reescribas (nada de \"Desenfundas tu espada y atacas...\"). " +
-  "Empieza directamente por lo que ocurre COMO CONSECUENCIA: el resultado, la reacción del entorno, de los NPC o del enemigo. Gasta las palabras en lo nuevo.";
+  "Empieza directamente por lo que ocurre COMO CONSECUENCIA: el resultado, la reacción del entorno, de los NPC o del enemigo. Gasta las palabras en lo nuevo. " +
+  "LITERALIDAD: lo que el jugador escribe en su acción es exactamente lo que es; no lo amplíes, no le des más contexto ni lo reinterpretes, y responde siempre a su mensaje MÁS RECIENTE, nunca a uno anterior.";
 
 const HARD_RULE =
   "Los números y el resultado (éxito, fallo, daño, recompensas, muerte) ya están decididos y son definitivos. " +
@@ -36,16 +45,14 @@ const HARD_RULE =
   ROLE_RULES;
 
 const STYLE_RULE =
-  "Escribe en español, con un tono oscuro de piratas de One Piece, evocador pero directo. " +
-  "Responde solo con la narración en prosa (2-4 párrafos; más si la escena es interesante), sin JSON, sin encabezados, sin listas, sin markdown.";
+  "Escribe en español, con un tono de piratas de One Piece, sencillo y directo. " +
+  "Responde solo con la narración en prosa, sin JSON, sin encabezados, sin listas, sin markdown.";
 
-const LENGTH_RULE =
-  "EXTENSIÓN: no seas escueto. Cuando la escena sea intensa, emocionante o dé pie a inspirarse (una pelea, un giro, un encuentro importante), extiéndete todo lo que haga falta — " +
-  "de 5 a 8 párrafos si la ocasión lo merece —: ambiente, detalles sensoriales, diálogos de los NPC con voz propia, reacciones del entorno. Deja siempre margen para que el jugador responda.";
+const LENGTH_RULE = "Respeta al pie de la letra la línea EXTENSIÓN del mensaje: es corto por defecto y solo se alarga cuando la escena lo exige.";
 
 const COMBAT_STYLE_RULE =
   "Escribe en español, con un tono oscuro de piratas de One Piece, evocador y con tensión real. " +
-  "Narra el combate como una escena EXTENSA y viva (varios párrafos), no como una lista de golpes: movimiento, terreno, respiración, lo que arriesga cada bando. " +
+  "Narra el combate con claridad, no como una lista de golpes: qué se ve, qué se siente, lo que arriesga cada bando; sin adornos innecesarios. " +
   "Si el enemigo tiene una personalidad definida, dale diálogo en su propia voz durante la pelea. " +
   PLAY_TO_WIN_RULE + " " +
   LENGTH_RULE + " " +
@@ -56,11 +63,6 @@ function memoryBlock(memorySummary?: string, recentMemory?: string[]): string {
   if (memorySummary) block += `\n\nLo que se recuerda de este personaje hasta ahora: ${memorySummary}`;
   if (recentMemory && recentMemory.length > 0) block += `\n\nLo más reciente (de más antiguo a más reciente):\n- ${recentMemory.join("\n- ")}`;
   return block;
-}
-
-function intentBlock(intentText?: string): string {
-  if (!intentText) return "";
-  return `\n\nEl jugador describió su acción así: "${intentText}". Úsalo solo como contexto: no lo repitas ni lo parafrasees, y no dejes que contradiga el resultado ya decidido.`;
 }
 
 export interface ExploreNarrationInput {
@@ -81,7 +83,8 @@ export interface ExploreNarrationInput {
   memorySummary?: string;
 }
 
-export function buildExploreNarrationPrompt(input: ExploreNarrationInput): { system: string; user: string } {
+export function buildExploreNarrationPrompt(input: ExploreNarrationInput): PromptOut {
+  const plan = planLength("action", input.intentText ?? "");
   const system = `${HARD_RULE} ${STYLE_RULE}`;
   const user =
     `Personaje: ${input.characterName} (nivel ${input.level}, facción ${input.faction}).\n` +
@@ -90,11 +93,12 @@ export function buildExploreNarrationPrompt(input: ExploreNarrationInput): { sys
     `Resultado ya decidido: ${input.outcomeTier} — ${input.baseNarrative}\n` +
     `Cambios numéricos (definitivos, no los alteres): berries ${input.berries >= 0 ? "+" : ""}${input.berries}, ` +
     `xp +${input.xp}, bounty +${input.bounty}, vida -${input.hpLoss}.` +
-    intentBlock(input.intentText) +
     memoryBlock(input.memorySummary, input.recentMemory) +
-    "\n\nLO PRINCIPAL es el hilo de la escena y lo que el jugador propone: hazlo avanzar de forma coherente con lo que se venía hablando y haciendo (si va a un barco, a un lugar o tras una pista, narra eso). " +
-    "La situación base solo se integra si encaja o como un giro breve, sin abandonar el hilo ni cambiar de tema. Narra lo que ocurre a continuación sin repetir lo que el jugador ya escribió.";
-  return { system, user };
+    "\n\nLO PRINCIPAL es lo que el jugador propone en su ACCIÓN ACTUAL: hazlo avanzar de forma coherente con lo que se venía hablando (si va a un barco, a un lugar o tras una pista, narra eso). " +
+    "La situación base solo se integra si encaja o como un giro breve, sin abandonar el hilo ni cambiar de tema." +
+    (input.intentText ? currentActionBlock(input.intentText) : "") +
+    `\n\n${plan.instruction}`;
+  return { system, user, maxTokens: plan.maxTokens };
 }
 
 export interface CombatRoundInput {
@@ -163,7 +167,8 @@ export function describeRound(r: CombatRoundInput): string {
  * hand the turn back. `concluded` decides whether to invite the next move or
  * narrate the fight's actual end.
  */
-export function buildCombatNarrationPrompt(input: CombatNarrationInput): { system: string; user: string } {
+export function buildCombatNarrationPrompt(input: CombatNarrationInput): PromptOut {
+  const plan = planLength(input.concluded ? "combat_end" : "combat_round", input.intentText ?? "");
   const system = `${HARD_RULE} ${COMBAT_STYLE_RULE} Este es un combate ${input.isBoss ? "importante, contra un enemigo formidable" : "menor"} — ajusta la intensidad de la prosa a eso.`;
   const roundLines = input.rounds.map((r, i) => `${i + 1}. ${describeRound(r)}`).join("\n");
   const outcomeLine = input.concluded
@@ -199,14 +204,15 @@ export function buildCombatNarrationPrompt(input: CombatNarrationInput): { syste
     `Resultado de este intercambio, EN ESTE ORDEN, ya decidido por el motor (definitivo, no lo alteres ni lo reordenes):\n${roundLines || "(ningún golpe)"}\n` +
     `Vida de ${input.characterName}: ${input.playerHpLeft}/${input.playerMaxHp}. Vida de ${input.enemyName}: ${input.enemyHpLeft}/${input.enemyMaxHp}.\n` +
     outcomeLine +
-    intentBlock(input.intentText) +
     memoryBlock(input.memorySummary, input.recentMemory) +
     (input.concluded
-      ? "\n\nNarra el final de este combate como una escena viva, con diálogo si el enemigo tiene personalidad. Si el jugador ganó, el enemigo queda derrotado y a su merced, vivo: su destino lo decide el jugador después."
+      ? "\n\nNarra el final de este combate con claridad, con una línea de diálogo si el enemigo tiene personalidad. Si el jugador ganó, el enemigo queda derrotado y a su merced, vivo: su destino lo decide el jugador después."
       : "\n\nNo describas de nuevo lo que el jugador intentó (ya lo escribió): empieza directo por el resultado indicado de su movimiento (impacta o es bloqueado/esquivado, y por qué es plausible)." +
         "Luego narra al enemigo actuando por iniciativa propia, según su personalidad, motivos y rango (siempre buscando GANAR: matar, capturar o someter según quién sea, usando todo su repertorio), con el resultado indicado, y una o dos líneas suyas si tiene personalidad. " +
-        "Termina dejando la iniciativa al jugador, sin decidir cómo reacciona ni qué hace después.");
-  return { system, user };
+        "Termina dejando la iniciativa al jugador, sin decidir cómo reacciona ni qué hace después.") +
+    (input.intentText ? currentActionBlock(input.intentText) : "") +
+    `\n\n${plan.instruction}`;
+  return { system, user, maxTokens: plan.maxTokens };
 }
 
 export interface EncounterIntroInput {
@@ -224,7 +230,8 @@ export interface EncounterIntroInput {
 }
 
 /** The moment a threat shows up (before any combat): narrated, ties into what the player was doing, decides nothing. */
-export function buildEncounterIntroPrompt(input: EncounterIntroInput): { system: string; user: string } {
+export function buildEncounterIntroPrompt(input: EncounterIntroInput): PromptOut {
+  const plan = planLength("intro", input.intentText ?? "");
   const system =
     "Eres el narrador de un rol de piratas de One Piece. Narra la aparición de una amenaza en medio de lo que el jugador estaba haciendo. " +
     "NO resuelvas ningún combate, no des golpes ni daño: solo presenta al enemigo y la tensión, y deja la decisión de qué hacer (luchar, huir, hablar) al jugador. " +
@@ -237,11 +244,12 @@ export function buildEncounterIntroPrompt(input: EncounterIntroInput): { system:
     `Personaje: ${input.characterName} (${input.faction}). Isla: ${input.islandName} — ${input.islandDescription}\n` +
     `La amenaza: ${input.enemyName}${input.enemyPersonality ? ` (${input.enemyPersonality})` : ""}. Situación base: ${input.situation}\n` +
     `Lectura de peligro respecto al jugador: ${input.threat}.` +
-    intentBlock(input.intentText) +
     memoryBlock(input.memorySummary, undefined) +
     transcriptBlock +
-    "\n\nNarra cómo aparece o se revela esta amenaza, y termina preguntando implícitamente qué hace el jugador.";
-  return { system, user };
+    "\n\nNarra cómo aparece o se revela esta amenaza, y termina preguntando implícitamente qué hace el jugador." +
+    (input.intentText ? currentActionBlock(input.intentText) : "") +
+    `\n\n${plan.instruction}`;
+  return { system, user, maxTokens: plan.maxTokens };
 }
 
 export interface DuelNarrationInput {
@@ -271,7 +279,8 @@ export interface DuelNarrationInput {
 }
 
 /** 1-vs-1 player duel: the AI only narrates what the engine resolved for BOTH fighters' simultaneous moves. */
-export function buildDuelNarrationPrompt(input: DuelNarrationInput): { system: string; user: string } {
+export function buildDuelNarrationPrompt(input: DuelNarrationInput): PromptOut {
+  const plan = planLength(input.finished ? "combat_end" : "combat_round", `${input.aAction} ${input.bAction}`);
   const system =
     "Eres el narrador de un duelo 1 contra 1 entre dos jugadores en un rol de piratas de One Piece. Ambos actuaron a la vez; el motor ya resolvió el resultado. " +
     "Tu único trabajo es narrar ese resultado con justicia hacia ambos, sin favorecer a nadie ni cambiar quién golpea o falla. " +
@@ -295,8 +304,9 @@ export function buildDuelNarrationPrompt(input: DuelNarrationInput): { system: s
       ? `${input.escapedName} logra escapar del duelo: nadie gana ni muere. Narra la huida con verosimilitud.`
       : input.finished
       ? `El duelo termina aquí: gana ${input.winnerName}. Narra el desenlace y cómo queda el perdedor (${input.lethal ? "abatido, a merced del vencedor" : "fuera de combate, vivo"}).`
-      : "El duelo continúa: termina la narración dejando a ambos listos para su siguiente movimiento.");
-  return { system, user };
+      : "El duelo continúa: termina la narración dejando a ambos listos para su siguiente movimiento.") +
+    `\n\n${plan.instruction}`;
+  return { system, user, maxTokens: plan.maxTokens };
 }
 
 export interface JointFightNarrationInput {
@@ -321,7 +331,8 @@ export interface JointFightNarrationInput {
 }
 
 /** N-vs-1 fight: the AI narrates one shared beat covering EVERY participant's simultaneous move and the enemy's answers. */
-export function buildJointFightNarrationPrompt(input: JointFightNarrationInput): { system: string; user: string } {
+export function buildJointFightNarrationPrompt(input: JointFightNarrationInput): PromptOut {
+  const plan = planLength(input.finished ? "combat_end" : "group", "");
   const system =
     "Eres el narrador de una pelea en grupo de un rol de piratas de One Piece: varios aliados contra un mismo enemigo. Todos actuaron a la vez; el motor ya resolvió cada golpe. " +
     "Narra UNA sola escena coral y viva que dé protagonismo a cada participante según lo que intentó y el resultado indicado, sin favorecer a nadie ni cambiar quién golpea, falla o cae. " +
@@ -347,8 +358,9 @@ export function buildJointFightNarrationPrompt(input: JointFightNarrationInput):
         ? `El combate termina: el grupo derrota a ${input.enemyName}. Narra el desenlace coral.`
         : `El combate termina: ${input.enemyName} vence al grupo. Narra la derrota sin decidir quién muere (eso lo resuelve el motor después).`
       : "El combate continúa: termina dejando a todos listos para su siguiente movimiento.") +
-    transcriptBlock;
-  return { system, user };
+    transcriptBlock +
+    `\n\n${plan.instruction}`;
+  return { system, user, maxTokens: plan.maxTokens };
 }
 
 export interface SceneNarrationInput {
@@ -376,7 +388,8 @@ const SCENE_STYLE_RULE =
   "Responde solo con la narración en prosa, sin JSON, sin encabezados, sin listas, sin markdown.";
 
 /** Pure roleplay turns — no engine call, no stat changes, just the AI acting as game master and reacting to the player. */
-export function buildSceneNarrationPrompt(input: SceneNarrationInput): { system: string; user: string } {
+export function buildSceneNarrationPrompt(input: SceneNarrationInput): PromptOut {
+  const plan = planLength("chat", input.playerText);
   const system = `${SCENE_HARD_RULE} ${SCENE_STYLE_RULE}`;
   const transcriptBlock =
     input.recentScene && input.recentScene.length > 0 ? `\n\nLo que ha pasado en esta escena hasta ahora:\n${input.recentScene.join("\n")}` : "";
@@ -385,9 +398,10 @@ export function buildSceneNarrationPrompt(input: SceneNarrationInput): { system:
     `Isla: ${input.islandName} — ${input.islandDescription}` +
     memoryBlock(input.memorySummary, undefined) +
     transcriptBlock +
-    `\n\nEl jugador hace/dice: "${input.playerText}"` +
-    "\n\nContinúa la escena como narrador. No repitas ni parafrasees lo que el jugador acaba de escribir: tu primera frase ya debe ser lo que pasa DESPUÉS (reacción del entorno o de los NPC).";
-  return { system, user };
+    "\n\nContinúa la escena como narrador. Tu primera frase ya debe ser lo que pasa DESPUÉS (reacción del entorno o de los NPC)." +
+    currentActionBlock(input.playerText) +
+    `\n\n${plan.instruction}`;
+  return { system, user, maxTokens: plan.maxTokens };
 }
 
 export interface PartyMemberInfo {
@@ -423,7 +437,8 @@ const PARTY_SCENE_HARD_RULE =
  * solo play, to keep AI-call volume flat per the project's rate-limit
  * discipline (see classify-action.ts).
  */
-export function buildPartySceneNarrationPrompt(input: PartySceneNarrationInput): { system: string; user: string } {
+export function buildPartySceneNarrationPrompt(input: PartySceneNarrationInput): PromptOut {
+  const plan = planLength("chat", input.playerText);
   const system = `${PARTY_SCENE_HARD_RULE} ${SCENE_STYLE_RULE}`;
   const rosterLine = input.partyRoster.map((m) => `${m.name} (nivel ${m.level}, ${m.faction})`).join(", ");
   const transcriptBlock =
@@ -433,9 +448,10 @@ export function buildPartySceneNarrationPrompt(input: PartySceneNarrationInput):
     `Isla: ${input.islandName} — ${input.islandDescription}` +
     (input.memorySummary ? `\n\nLo ocurrido antes en esta escena (resumen): ${input.memorySummary}` : "") +
     transcriptBlock +
-    `\n\n${input.actingCharacterName} hace/dice: "${input.playerText}"` +
-    "\n\nContinúa la escena como narrador, dirigiéndote al grupo cuando tenga sentido. No repitas ni parafrasees lo que el jugador acaba de escribir: tu primera frase ya debe ser lo que pasa DESPUÉS.";
-  return { system, user };
+    "\n\nContinúa la escena como narrador, dirigiéndote al grupo cuando tenga sentido. Tu primera frase ya debe ser lo que pasa DESPUÉS." +
+    currentActionBlock(input.playerText, input.actingCharacterName) +
+    `\n\n${plan.instruction}`;
+  return { system, user, maxTokens: plan.maxTokens };
 }
 
 export interface NewsNarrationInput {
@@ -604,7 +620,8 @@ export interface RecruitNarrationInput {
 }
 
 /** The persuasion roll was decided by the engine; the narrator only stages the answer of the NPC. */
-export function buildRecruitNarrationPrompt(input: RecruitNarrationInput): { system: string; user: string } {
+export function buildRecruitNarrationPrompt(input: RecruitNarrationInput): PromptOut {
+  const plan = planLength("recruit", "");
   const system =
     "Eres el narrador de un rol de piratas de One Piece. Un jugador acaba de invitar a un personaje no jugador a unirse a su tripulación como nakama. " +
     "El resultado ya está decidido por el motor y es definitivo: narra la respuesta del PNJ con voz y motivos propios, sin cambiarlo. " +
@@ -619,8 +636,9 @@ export function buildRecruitNarrationPrompt(input: RecruitNarrationInput): { sys
       ? `Resultado decidido: ${input.npcName} ACEPTA. Narra el momento con emoción y deja claro que desde ahora es su nakama y qué aporta (${input.role}).`
       : `Resultado decidido: ${input.npcName} RECHAZA (por ahora). Narra sus razones con respeto y deja la puerta abierta, sin hostilidad.`) +
     transcript +
-    "\n\nNo repitas lo que el jugador escribió: empieza por la reacción de la otra persona.";
-  return { system, user };
+    "\n\nNo repitas lo que el jugador escribió: empieza por la reacción de la otra persona." +
+    `\n\n${plan.instruction}`;
+  return { system, user, maxTokens: plan.maxTokens };
 }
 
 

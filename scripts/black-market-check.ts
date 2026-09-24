@@ -27,7 +27,14 @@ async function main() {
     const offer = fresh!.offers[i % fresh!.offers.length];
     await prisma.character.update({ where: { id: c.id }, data: { berries: 5_000_000, hp: 100, devilFruitId: null } });
     const before = await prisma.character.findUniqueOrThrow({ where: { id: c.id } });
-    const r = await buyFromBlackMarket(c.id, u.id, offer.id as never);
+    let r;
+    try {
+      r = await buyFromBlackMarket(c.id, u.id, offer.id as never);
+    } catch (e) {
+      // the blade is refused (before paying) once the weapon is already as good
+      assert(e instanceof BlackMarketError && offer.id === "blade", "only the blade can be refused, and with a proper error");
+      continue;
+    }
     const after = await prisma.character.findUniqueOrThrow({ where: { id: c.id } });
     assert(after.berries === before.berries - offer.price, "the price is always paid");
     if (r.sting) {

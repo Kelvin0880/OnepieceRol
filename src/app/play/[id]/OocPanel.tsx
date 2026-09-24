@@ -27,6 +27,7 @@ const PROPOSAL_LABELS: Record<string, string> = {
   rename: "Cambiar el nombre del personaje",
   rename_crew: "Cambiar el nombre de la tripulación",
   undo_last: "Deshacer la última respuesta del narrador",
+  clear_scene: "Limpiar la escena (pantalla y contexto reciente en blanco)",
   rollback: "Volver al último punto de restauración",
   repair: "Reparar valores inválidos",
   set_tone: "Cambiar el tono del narrador",
@@ -205,7 +206,7 @@ export default function OocPanel({
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "rgba(0,0,0,0.65)" }} onClick={onClose} data-testid="ooc-panel">
-      <div className="panel p-4 w-full max-w-2xl max-h-[92vh] overflow-y-auto flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
+      <div className="panel p-4 w-full max-w-2xl max-h-[92vh] overflow-y-auto flex flex-col gap-3 [&>*]:shrink-0" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-2">
           <div>
             <h3 className="font-display text-xl text-gold-bright">Fuera de rol</h3>
@@ -348,6 +349,9 @@ export default function OocPanel({
               <div className="flex gap-2 flex-wrap">
                 <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => apply({ type: "undo_last" })} data-testid="ooc-undo">
                   Deshacer última respuesta
+                </button>
+                <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => apply({ type: "clear_scene" })} data-testid="ooc-clear-scene">
+                  Limpiar escena
                 </button>
                 <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => apply({ type: "repair" })} data-testid="ooc-repair">
                   Reparar valores / desatascar

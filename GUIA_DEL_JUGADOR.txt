@@ -425,11 +425,18 @@ escalan con tu nivel: cuanto más fuerte eres, más piden y más pagan.
 Cumplirlas da berries, XP y la confianza del poder de la isla, que
 luego sirve para el asalto final. Las ves en el panel "Panorama y misiones".
 
+LONGITUD DE LAS RESPUESTAS
+El narrador ajusta el largo a lo que escribes: una pregunta o una acción simple
+recibe una respuesta corta y directa; solo se extiende con giros importantes,
+el final de una pelea o cuando tú desarrollas mucho la escena. Habla claro y sin
+floritura. Lo que escribes es lo que es: no lo repite ni le añade contexto.
+
 PELEAS EN GRUPO
 Si tu tripulación está contigo y atacas a una amenaza, la pelea se
 vuelve conjunta: todos describís vuestro movimiento cada ronda y se
 resuelve a la vez. El enemigo crece con el número de luchadores. Tus
-compañeros NPC también pelean. Quien tarda más de 2 minutos, guarda.
+compañeros NPC también pelean. No hay reloj: cada quien responde a su
+ritmo y la ronda se resuelve cuando todos han movido.
 
 GUARDIANES Y SIGILO
 Los Poneglifos los guardan personajes reales. Si el guardián está en
@@ -526,6 +533,8 @@ guarda. Sirve para:
  - Elegir el tono del narrador: equilibrado, letal o historia.
  - PACTOS DE ESCENA: "somos 4 y haremos un 4 vs 4 amistoso en la plaza";
    el narrador lo monta dentro del rol para todos.
+ - Limpiar la escena: vacía la pantalla y el contexto reciente del narrador
+   (conserva el resumen de tu historia). Úsalo si el narrador se lía o te ignora.
  - Deshacer la última respuesta (si no movió números), reparar valores raros,
    reportar un fallo al desarrollador.
 La IA solo PROPONE; tú confirmas con un botón. No puede darte objetos,

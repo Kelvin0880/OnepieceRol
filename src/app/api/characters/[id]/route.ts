@@ -55,7 +55,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         pendingEncounter: true,
         imprisonment: true,
         logs: { orderBy: { createdAt: "desc" }, take: 30 },
-        sceneMessages: { orderBy: { createdAt: "asc" }, take: 60 },
+        sceneMessages: { orderBy: { createdAt: "desc" }, take: 60 },
       },
     });
     if (!character || character.userId !== userId) {
@@ -166,6 +166,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({
       character: {
         ...rest,
+        sceneMessages: character.sceneMessages.filter((m) => !character.sceneClearedAt || m.createdAt > character.sceneClearedAt).reverse(),
         companions,
         pendingCrewInvites,
         crew: crewShaped,

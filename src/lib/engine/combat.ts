@@ -30,7 +30,7 @@ export interface CombatResult {
   enemyHpLeft: number;
 }
 
-export const MAX_ROUNDS = 14; // hp base doubled to 100: fights last longer, so the cap rose with it
+export const MAX_ROUNDS = 60; // only a stalemate guard: stamina and HP end fights long before this
 
 export function attackOnce(rng: Rng, attacker: Combatant, defender: Combatant): { damage: number; outcome: CombatRoundLog["outcome"]; roll: number } {
   const defenderDifficulty = 40 + defender.def;

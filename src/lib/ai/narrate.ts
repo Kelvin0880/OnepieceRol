@@ -92,9 +92,10 @@ ${presence}` : ""}${directivesBlock(c.narratorTone, c.oocNotes)}`;
 }
 
 export async function getRecentScene(characterId: string, take = 12): Promise<string[]> {
+  const ch = await prisma.character.findUnique({ where: { id: characterId }, select: { sceneClearedAt: true } });
   const entries = await prisma.sceneMessage.findMany({
-    where: { characterId },
-    orderBy: { createdAt: "desc" },
+    where: { characterId, ...(ch?.sceneClearedAt ? { createdAt: { gt: ch.sceneClearedAt } } : {}) },
+    orderBy: [{ createdAt: "desc" }, { role: "asc" }],
     take,
   });
   // Long posts stay complete on screen, but only their tail rides along as prompt context.
@@ -110,9 +111,9 @@ export async function getRecentScene(characterId: string, take = 12): Promise<st
 export async function narrateExplore(input: ExploreNarrationInput, meta: { characterId: string }): Promise<string[]> {
   const fallback = [input.baseFlavorText, input.baseNarrative];
   try {
-    const { system: baseSystem, user } = buildExploreNarrationPrompt(input);
+    const { system: baseSystem, user, maxTokens } = buildExploreNarrationPrompt(input);
     const system = baseSystem + (await loadDirectives(meta.characterId));
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 1400, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
     return [text.trim()];
   } catch (err) {
     await logError("ai/narrate-explore", err, meta);
@@ -126,9 +127,9 @@ export async function narrateCombat(input: CombatNarrationInput, meta: { charact
     r.damage > 0 ? `${r.attacker} golpea a ${r.defender} (${r.damage} de daño).` : `${r.attacker} ataca a ${r.defender}, pero no logra hacerle daño.`
   );
   try {
-    const { system: baseSystem, user } = buildCombatNarrationPrompt(input);
+    const { system: baseSystem, user, maxTokens } = buildCombatNarrationPrompt(input);
     const system = baseSystem + (await loadDirectives(meta.characterId));
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2500, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
     return [text.trim()];
   } catch (err) {
     await logError("ai/narrate-combat", err, meta);
@@ -139,9 +140,9 @@ export async function narrateCombat(input: CombatNarrationInput, meta: { charact
 /** Narrates a threat appearing (before combat starts). Falls back to the template's static text. */
 export async function narrateEncounterIntro(input: EncounterIntroInput, fallback: string[], meta: { characterId: string }): Promise<string[]> {
   try {
-    const { system: baseSystem, user } = buildEncounterIntroPrompt(input);
+    const { system: baseSystem, user, maxTokens } = buildEncounterIntroPrompt(input);
     const system = baseSystem + (await loadDirectives(meta.characterId));
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 1500, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
     return [text.trim()];
   } catch (err) {
     await logError("ai/narrate-encounter-intro", err, meta);
@@ -155,8 +156,8 @@ export async function narrateDuel(input: DuelNarrationInput, meta: { duelId: str
     .map((r) => (r.damage > 0 ? `${r.attacker} golpea a ${r.defender} (${r.damage} de daño).` : `${r.attacker} ataca a ${r.defender}, pero no le hace daño.`))
     .join(" ");
   try {
-    const { system, user } = buildDuelNarrationPrompt(input);
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2500, validate: isValidNarration });
+    const { system, user, maxTokens } = buildDuelNarrationPrompt(input);
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
     return text.trim();
   } catch (err) {
     await logError("ai/narrate-duel", err, meta);
@@ -169,8 +170,8 @@ export async function narrateJointFight(input: JointFightNarrationInput, meta: {
     .map((r) => (r.damage > 0 ? `${r.attacker} golpea a ${r.defender} (${r.damage} de daño).` : `${r.attacker} ataca a ${r.defender}, pero no le hace daño.`))
     .join(" ");
   try {
-    const { system, user } = buildJointFightNarrationPrompt(input);
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2500, validate: isValidNarration });
+    const { system, user, maxTokens } = buildJointFightNarrationPrompt(input);
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
     return text.trim();
   } catch (err) {
     await logError("ai/narrate-joint-fight", err, meta);
@@ -186,9 +187,9 @@ export async function narrateJointFight(input: JointFightNarrationInput, meta: {
  */
 export async function narrateScene(input: SceneNarrationInput, meta: { characterId: string }): Promise<string> {
   try {
-    const { system: baseSystem, user } = buildSceneNarrationPrompt(input);
+    const { system: baseSystem, user, maxTokens } = buildSceneNarrationPrompt(input);
     const system = baseSystem + (await loadDirectives(meta.characterId));
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2500, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
     return text.trim();
   } catch (err) {
     await logError("ai/narrate-scene", err, meta);
@@ -202,9 +203,9 @@ export async function narrateRecruit(input: RecruitNarrationInput, meta: { chara
     ? `${input.npcName} sonríe y asiente: a partir de hoy es tu nakama.`
     : `${input.npcName} niega despacio: todavía no está listo para zarpar contigo.`;
   try {
-    const { system: baseSystem, user } = buildRecruitNarrationPrompt(input);
+    const { system: baseSystem, user, maxTokens } = buildRecruitNarrationPrompt(input);
     const system = baseSystem + (await loadDirectives(meta.characterId));
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 1200, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
     return text.trim();
   } catch (err) {
     await logError("ai/narrate-recruit", err, meta);
@@ -215,10 +216,10 @@ export async function narrateRecruit(input: RecruitNarrationInput, meta: { chara
 /** Same never-throws contract as narrateScene, for a shared party scene (see Party in schema.prisma). */
 export async function narratePartyScene(input: PartySceneNarrationInput, meta: { partyId: string }): Promise<string> {
   try {
-    const { system: baseSystem, user } = buildPartySceneNarrationPrompt(input);
+    const { system: baseSystem, user, maxTokens } = buildPartySceneNarrationPrompt(input);
     const pact = (await prisma.party.findUnique({ where: { id: meta.partyId }, select: { scenePact: true } }))?.scenePact;
     const system = baseSystem + directivesBlock("balanced", pact ? `PACTO DE ESCENA acordado por los jugadores fuera de rol (móntalo dentro de la historia con naturalidad, dando protagonismo a todos y respetando lo pactado): ${pact}` : undefined);
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2500, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
     return text.trim();
   } catch (err) {
     await logError("ai/narrate-party-scene", err, meta);

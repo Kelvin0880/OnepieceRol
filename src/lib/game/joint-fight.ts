@@ -47,8 +47,6 @@ export interface JointRewards {
 
 export type JointFightKind = "party" | "poneglyph" | "conquest" | "raid" | "arc";
 
-/** After this long without everyone answering, the slow ones simply guard and the round resolves. */
-export const ROUND_TIMEOUT_MS = 120_000;
 const STALE_FIGHT_MS = 45 * 60 * 1000;
 const RECENT_FINISHED_MS = 15 * 60 * 1000;
 const FLEE_FAILED_TACTIC = -10;
@@ -218,20 +216,8 @@ async function advanceIfReady(fightId: string) {
   if (!fight || fight.status !== "ACTIVE") return { log: ["La pelea ya terminó."], waiting: false };
   const humans = fight.participants.filter((p) => !p.isNpc && p.status === "FIGHTING");
   const pending = humans.filter((p) => !p.action);
-  const timedOut = Date.now() - fight.roundStartedAt.getTime() > ROUND_TIMEOUT_MS && pending.length < humans.length;
-  if (pending.length === 0 || timedOut) return resolveJointRoundFor(fightId);
+  if (pending.length === 0) return resolveJointRoundFor(fightId);
   return { log: [`Movimiento registrado. Esperando a: ${pending.map((p) => p.name).join(", ")}.`], waiting: true };
-}
-
-/** Called from the state poll: a stalled round (someone went quiet) resolves itself. */
-async function resolveIfStale(fightId: string) {
-  const fight = await prisma.jointFight.findUnique({ where: { id: fightId }, include: { participants: true } });
-  if (!fight || fight.status !== "ACTIVE") return;
-  const humans = fight.participants.filter((p) => !p.isNpc && p.status === "FIGHTING");
-  const answered = humans.filter((p) => p.action).length;
-  if (answered > 0 && answered < humans.length && Date.now() - fight.roundStartedAt.getTime() > ROUND_TIMEOUT_MS) {
-    await resolveJointRoundFor(fightId);
-  }
 }
 
 async function resolveJointRoundFor(fightId: string) {
@@ -509,10 +495,9 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
   if (closing.length) await prisma.jointFightMessage.create({ data: { fightId, authorCharacterId: null, authorName: "Narrador", text: closing.join(" ") } });
 }
 
-/** What the play page needs to render the joint-fight panel for one character (also nudges a stalled round forward). */
+/** What the play page needs to render the joint-fight panel for one character. Rounds have no clock: everyone answers at their own pace. */
 export async function getJointFightStateForCharacter(characterId: string) {
   const open = await getOpenJointFightFor(characterId);
-  if (open) await resolveIfStale(open.id);
   const fight =
     (open ? await prisma.jointFight.findUnique({ where: { id: open.id } }) : null) ??
     (await prisma.jointFight.findFirst({

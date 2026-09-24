@@ -36,6 +36,8 @@ export async function getBlackMarketState(characterId: string) {
   return { offers, msToRefresh: msToNextWindow(now), deals: await dealsThisWindow(c.id, now) };
 }
 
+const CONTRABAND_BLADE_ATK = 12;
+
 export async function buyFromBlackMarket(characterId: string, userId: string, offerId: OfferId) {
   const c = await prisma.character.findUnique({ where: { id: characterId }, include: { currentIsland: true } });
   if (!c || c.userId !== userId) throw new BlackMarketError("Personaje no encontrado.");
@@ -47,6 +49,9 @@ export async function buyFromBlackMarket(characterId: string, userId: string, of
   const price = offerPrice(offerId, { bounty: c.bounty, notoriety: c.notoriety, faction: c.faction });
   if (c.berries < price) throw new BlackMarketError(`Cuesta ฿ ${price.toLocaleString("es-ES")} y no los tienes.`);
   if (offerId === "fruit" && c.devilFruitId) throw new BlackMarketError("Ya cargas con el poder de una fruta: otra te mataría.");
+  // A character holds a single weapon row (Weapon.ownerId is unique): the contraband blade upgrades a weaker one in place and is refused, before paying, when yours is already as good.
+  const ownedWeapon = offerId === "blade" ? await prisma.weapon.findFirst({ where: { ownerId: c.id } }) : null;
+  if (ownedWeapon && ownedWeapon.atkBonus >= CONTRABAND_BLADE_ATK) throw new BlackMarketError("Ya llevas un arma igual o mejor que esa hoja: no te sirve de nada.");
 
   const rng = liveRng();
   const prior = await dealsThisWindow(c.id, now);
@@ -71,8 +76,10 @@ export async function buyFromBlackMarket(characterId: string, userId: string, of
       break;
     }
     case "blade": {
-      await prisma.weapon.create({ data: { name: "Hoja de contrabando", kind: "Katana", grade: WeaponGrade.NONE, description: "Una espada robada de un arsenal de la Marina.", atkBonus: 12, basePrice: 60_000, ownerId: c.id } });
-      log.push("Recibes una hoja de contrabando, envuelta en trapos. Equípala desde tu inventario.");
+      const blade = { name: "Hoja de contrabando", kind: "Katana", grade: WeaponGrade.NONE, description: "Una espada robada de un arsenal de la Marina.", atkBonus: CONTRABAND_BLADE_ATK, basePrice: 60_000 };
+      if (ownedWeapon) await prisma.weapon.update({ where: { id: ownedWeapon.id }, data: blade });
+      else await prisma.weapon.create({ data: { ...blade, ownerId: c.id } });
+      log.push(ownedWeapon ? `Cambias tu ${ownedWeapon.name} por una hoja de contrabando, envuelta en trapos.` : "Recibes una hoja de contrabando, envuelta en trapos.");
       break;
     }
     case "pardon": {

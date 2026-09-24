@@ -94,10 +94,31 @@ describe("callOpenRouter", () => {
     vi.stubGlobal("fetch", fetchMock);
 
     const start = Date.now();
-    const text = await callOpenRouter("sys", "user", { models: ["model-a", "model-b"], timeoutMs: 5000 });
+    const text = await callOpenRouter("sys", "user", { models: ["model-a", "model-b"], timeoutMs: 5000, hedgeDelayMs: 0 });
     const elapsed = Date.now() - start;
 
     expect(text).toBe("respuesta rápida");
     expect(elapsed).toBeLessThan(500); // nowhere near model-a's 5s timeout
+  });
+
+  it("lets the preferred model answer alone when it is fast (the backup never fires)", async () => {
+    const fetchMock = vi.fn().mockImplementation(async () => okResponse("respuesta de calidad"));
+    vi.stubGlobal("fetch", fetchMock);
+    const text = await callOpenRouter("sys", "user", { models: ["model-a", "model-b"], timeoutMs: 5000, hedgeDelayMs: 300 });
+    await new Promise((r) => setTimeout(r, 400));
+    expect(text).toBe("respuesta de calidad");
+    expect(fetchMock).toHaveBeenCalledTimes(1);
+  });
+
+  it("starts the backup at once when the preferred model fails", async () => {
+    const fetchMock = vi.fn().mockImplementation(async (_u: string, init: RequestInit) => {
+      if ((init.body as string).includes("model-a")) return { ok: false, status: 500, text: async () => "boom", json: async () => ({}) };
+      return okResponse("respaldo");
+    });
+    vi.stubGlobal("fetch", fetchMock);
+    const start = Date.now();
+    const text = await callOpenRouter("sys", "user", { models: ["model-a", "model-b"], timeoutMs: 5000, hedgeDelayMs: 4000 });
+    expect(text).toBe("respaldo");
+    expect(Date.now() - start).toBeLessThan(1000);
   });
 });

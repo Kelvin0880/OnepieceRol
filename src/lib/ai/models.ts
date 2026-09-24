@@ -19,9 +19,16 @@
  * that reliably get a real timeout slice; the 3 free named models stay as
  * extra (free) tries afterward if it also somehow fails.
  */
+/**
+ * Paid model FIRST (2026-09-24): the free router hands each call to a random
+ * free model, so quality swung wildly turn to turn (answering the wrong
+ * message, ignoring the action). gpt-4o-mini costs fractions of a cent a
+ * turn and follows instructions reliably; the free models are only the
+ * backup that joins when it is slow (see hedgeDelayMs) or fails.
+ */
 const DEFAULT_MODELS = [
-  "openrouter/free",
   "openai/gpt-4o-mini",
+  "openrouter/free",
   "google/gemma-4-31b-it:free",
   "qwen/qwen3.8-27b:free",
   "nvidia/nemotron-3-super-120b-a12b:free",
