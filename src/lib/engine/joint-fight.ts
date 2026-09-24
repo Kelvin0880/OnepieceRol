@@ -1,7 +1,7 @@
 import { Rng } from "./rng";
 import { Combatant, CombatRoundLog, attackOnce } from "./combat";
 
-export const MAX_JOINT_ROUNDS = 60;
+export const MAX_JOINT_ROUNDS = Number.POSITIVE_INFINITY; // live fights end only by HP or fleeing
 export const MAX_ENEMY_ATTACKS_PER_ROUND = 3;
 
 export interface JointFighter {

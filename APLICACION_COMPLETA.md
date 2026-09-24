@@ -254,7 +254,7 @@ Fase 3: Orange Town y Villa Syrup (East Blue, nivel 1), Ohara (Paradise, 14), Ma
 - **Modelo**: `openai/gpt-4o-mini` (de pago) va primero y los gratis solo entran de respaldo tras `hedgeDelayMs` (7 s) o si el primero falla; antes `openrouter/free` respondía con un modelo aleatorio distinto cada vez.
 - **Limpiar escena** (`clear_scene`, `Character.sceneClearedAt`): vacía pantalla y ventana reciente del narrador, conserva `memorySummary` y pliega en segundo plano lo que faltaba por resumir. Un rollback lo reinicia.
 - **Bug del historial**: el estado del personaje cargaba las 60 mensajes MÁS ANTIGUOS; pasada la escena 60 la pantalla dejaba de mostrar lo nuevo. Ahora carga los 60 últimos.
-- **Rondas sin reloj**: las peleas conjuntas ya no cubren al que tarda 2 minutos; cada quien responde a su ritmo. Los topes de ronda (`MAX_ROUNDS`, duelos, peleas conjuntas) subieron a 60 y son solo una guarda anti-estancamiento.
+- **Rondas sin reloj**: las peleas conjuntas ya no cubren al que tarda 2 minutos; cada quien responde a su ritmo. Las peleas en vivo (solo, duelos, grupo) NO tienen tope de rondas: terminan por vida, huida o rendición (`MAX_ROUNDS` = 60 solo acota las simulaciones automáticas sin jugadores).
 - **Móvil**: los paneles modales tenían hijos que se encogían y se solapaban, y la cabecera de la ficha no envolvía (ensanchaba la página a 590 px). `scripts/polish-ui-check.mjs` mide 390 px en todas las pantallas.
 
 ## 6. Modelo de datos (Prisma)

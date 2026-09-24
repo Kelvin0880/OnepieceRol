@@ -1,7 +1,7 @@
 import { Rng } from "./rng";
 import { Combatant, CombatRoundLog, resolveExchange } from "./combat";
 
-export const MAX_DUEL_ROUNDS = 60;
+export const MAX_DUEL_ROUNDS = Number.POSITIVE_INFINITY; // live fights end only by HP, fleeing or yielding
 
 export interface DuelRoundResult {
   aHpAfter: number;

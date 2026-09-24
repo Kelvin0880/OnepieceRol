@@ -7,7 +7,7 @@ import { recruitCompanion, CompanionError } from "./companions";
 import { resolveEnemyKit } from "./enemy-kit";
 import { estimateLevel, applyFatigueToCombatant, npcStaminaAfterExchange, npcBaseEffort } from "../engine/resilience";
 import type { EffortLevel } from "../engine/stamina";
-import { resolveExchange, MAX_ROUNDS, Combatant } from "../engine/combat";
+import { resolveExchange, Combatant } from "../engine/combat";
 import { trainHaki, rollConquerorsHakiAwakening } from "../engine/haki";
 import { trainFruitMastery, canAwaken, FRUIT_PHASE_LABELS, fruitPhase } from "../engine/fruit-mastery";
 import { TechniqueId, TECHNIQUE_LABELS } from "../engine/techniques";
@@ -677,7 +677,7 @@ export async function engageCharacter(
     maxHp: enemy.hp,
   });
   if (prepared.strainHp > 0 && exchangeHpAfter > 0) log.push("Forzar el cuerpo sin aliento te pasa factura: sientes un tirón que te hace daño.");
-  const concluded = playerHpAfter <= 0 || enemyHpAfter <= 0 || roundNumber >= MAX_ROUNDS;
+  const concluded = playerHpAfter <= 0 || enemyHpAfter <= 0;
   // Same tie-break runCombat always used when rounds ran out with both still standing.
   const victor: "player" | "enemy" | undefined = !concluded ? undefined : enemyHpAfter <= 0 && playerHpAfter > 0 ? "player" : playerHpAfter <= 0 && enemyHpAfter > 0 ? "enemy" : enemyHpAfter < playerHpAfter ? "player" : "enemy"; // draw or ran out of rounds evenly: same "healthier side wins" rule runCombat used, loss-leaning on an exact tie
 
