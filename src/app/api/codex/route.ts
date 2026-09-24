@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { whereLabel } from "@/lib/engine/actor-movement";
+import { actorStyleNames } from "@/lib/engine/actor-styles";
 
 /** Public codex of the canon cast. A character moving in secret never reveals where they are. */
 export async function GET() {
@@ -34,6 +35,7 @@ export async function GET() {
       devilFruit: a.devilFruit,
       stats: a.statsJson ? JSON.parse(a.statsJson) : null,
       abilities: a.abilitiesJson ? (JSON.parse(a.abilitiesJson) as string[]) : [],
+      styles: actorStyleNames(a.name),
       home: a.homeIslandId ? islandName.get(a.homeIslandId) ?? null : null,
       location: a.status === "ACTIVE" ? whereOf(a).name : null,
       locationKind: a.status === "ACTIVE" ? whereOf(a).kind : null,

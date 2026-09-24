@@ -39,6 +39,7 @@ export interface PanelCompanion {
   abilities: string[];
   nextAbilityAtLevel: number | null;
   personality: string | null;
+  belongings: string[];
 }
 
 export interface PanelCrew {
@@ -377,6 +378,7 @@ export default function CrewPanel({
                     Ataque {c.atk} · Defensa {c.def} · Velocidad {c.spd}
                   </p>
                   <p className="text-[11px] text-gold">Habilidades: {c.abilities.join(" · ")}</p>
+                  <p className="text-[11px] text-ink-dim" data-testid="companion-belongings">Lleva: {c.belongings.join(", ")}</p>
                   {c.nextAbilityAtLevel && <p className="text-[11px] text-ink-dim">Nueva habilidad al nivel {c.nextAbilityAtLevel}.</p>}
                   {c.status === "ALIVE" && (
                     <button className="btn-ghost px-2 py-1 text-[11px] self-start" disabled={busy} onClick={() => op({ op: "dismiss_companion", companionId: c.id })}>

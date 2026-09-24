@@ -51,8 +51,8 @@ log("== unit tests + types");
 record("vitest", run("npx", ["vitest", "run"], 300000));
 record("tsc", run("npx", ["tsc", "--noEmit"], 300000));
 
-const dbChecks = ["ooc-rollback", "world-arcs", "joint-fight", "guardian", "territory", "escape-buster", "consequence", "black-market", "missions", "grudge", "hunt", "impel", "compaction-travel", "prison-logic", "delete-character", "world-news", "raid"];
-const browserFirst = ["battle-smoke", "crew-smoke", "ooc-crew-ui-check", "world-ui-check", "polish-ui-check"]; // need a clean DB each
+const dbChecks = ["ooc-rollback", "world-arcs", "joint-fight", "guardian", "territory", "escape-buster", "consequence", "black-market", "missions", "grudge", "hunt", "impel", "compaction-travel", "prison-logic", "delete-character", "world-news", "raid", "attributes-inventory", "styles", "coliseum"];
+const browserFirst = ["battle-smoke", "crew-smoke", "ooc-crew-ui-check", "world-ui-check", "polish-ui-check", "features-ui-check"]; // need a clean DB each
 const browserRest = quick ? [] : ["ai-e2e-smoke", "combat-rounds-check", "roleplay-attack-check", "duel-smoke", "party-multiplayer-smoke", "joint-fight-ui-check", "grudge-ui-check", "missions-ui-check", "realtime-check", "prison-ui-check", "raid-ui-check", "world-panels-ui-check", "check-news-page", "delete-character-ui-check"];
 
 log("== DB checks");

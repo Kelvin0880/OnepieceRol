@@ -118,7 +118,7 @@ function keywordClassify(freeText: string, validActions: ActionId[]): ActionId |
 
 const TECHNIQUE_GUIDANCE =
   `"technique": ${'"none"'} si solo pelea de forma normal; "armament" si describe endurecer su cuerpo/arma con Haki de Armadura; "observation" si describe sentir/prever los movimientos con Haki de Observación; ` +
-  '"conqueror" si describe liberar el Haki del Rey / una presencia aplastante; "fruit" si describe usar activamente el poder de su Fruta del Diablo. ' +
+  '"conqueror" si describe liberar el Haki del Rey / una presencia aplastante; "fruit" si describe usar activamente el poder de su Fruta del Diablo; "style" si describe usar un ESTILO de combate o una técnica con nombre (Santoryu, Oni Giri, Rankyaku, Diable Jambe, Electro, Ryusoken...) o pelear con dos o tres armas. ' +
   "Solo lo que el jugador describa claramente — no lo supongas. " +
   '"effort": un entero de 0 a 3 que mide el ESFUERZO FÍSICO de lo descrito, con sentido común: 0 = hablar, observar o mantener la guardia; 1 = un golpe, esquiva o bloqueo normal; 2 = un ataque potente, una carrera, un combo o aguantar un impacto fuerte; 3 = esfuerzo máximo (técnica devastadora, saltos enormes, cargar con todo). ' +
   "No lo decides tú si funciona — solo cuánto cansa intentarlo.";

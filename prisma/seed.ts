@@ -3,6 +3,8 @@ import { DEVIL_FRUIT_CATALOG } from "../src/lib/game/devil-fruit-catalog";
 
 import { ACTOR_PROFILES, FRUIT_ASSIGNMENTS, profileStatsJson } from "../src/lib/game/world-actor-profiles";
 import { EXTRA_ACTORS } from "../src/lib/game/world-actor-extra";
+import { MORE_ACTORS, RELOCATIONS } from "../src/lib/game/world-actor-more";
+import { styleAbilityLines, actorStyleNames } from "../src/lib/engine/actor-styles";
 
 const prisma = new PrismaClient();
 
@@ -396,6 +398,78 @@ async function main() {
         "Lo que se cocina en el laboratorio podría cambiar el equilibrio del mundo. El Gobierno lo sabe, los piratas lo saben, y por eso la isla nunca duerme tranquila.",
     },
     {
+      key: "jaya",
+      name: "Jaya",
+      sea: Sea.PARADISE,
+      danger: 5,
+      minLevel: 9,
+      factionControl: "Sin gobierno (Ciudad Mock y Ciudad Ley)",
+      description:
+        "Una isla partida en dos: la Ciudad Mock, donde los piratas beben, cantan y se roban, y la Ciudad Ley, donde la Marina sueña con que algún día se calmen. En la selva, un buscador de oro jura que la Ciudad de Oro existió.",
+      arcHook:
+        "Un mapa de Jaya cambia de manos cada semana. Dicen que quien lo sigue hasta el final se cruza con la cuerda que llevaba al cielo.",
+    },
+    {
+      key: "longRing",
+      name: "Long Ring Long Land",
+      sea: Sea.PARADISE,
+      danger: 6,
+      minLevel: 11,
+      factionControl: "Sin gobierno (isla de duelos)",
+      description:
+        "Una isla de llanuras larguísimas y bosques que parecen no acabar, famosa por los duelos donde se apuesta el orgullo, la tripulación y, con frecuencia, el barco entero.",
+      arcHook:
+        "Un capitán con mucha labia ofrece un duelo a cualquier recién llegado. Las reglas cambian a mitad de partida y solo le da la razón el árbitro.",
+    },
+    {
+      key: "thrillerBark",
+      name: "Thriller Bark",
+      sea: Sea.PARADISE,
+      danger: 8,
+      minLevel: 16,
+      factionControl: "Sin gobierno (barco fantasma de Moria)",
+      description:
+        "Un barco del tamaño de una isla, cubierto de niebla y cementerios, donde los muertos caminan y una sombra más grande que todos vigila desde la torre. Aquí se robó, y aquí se vuelve a robar.",
+      arcHook:
+        "La niebla no se levanta desde hace semanas. Los marineros que se acercan vuelven sin sombra y sin ganas de contar qué les pasó.",
+    },
+    {
+      key: "amazonLily",
+      name: "Amazon Lily",
+      sea: Sea.PARADISE,
+      danger: 8,
+      minLevel: 20,
+      factionControl: "Reino Kuja (solo mujeres)",
+      description:
+        "La isla de las guerreras Kuja: bosques enormes, serpientes gigantes y una emperatriz que no permite que ningún hombre pise su reino más de lo imprescindible. Los forasteros aprenden a hablar bajito.",
+      arcHook:
+        "Las Kuja vigilan la costa día y noche. Un extraño acaba de aparecer entre las rocas, y la emperatriz aún no decide si hablar con él o ejecutarlo.",
+    },
+    {
+      key: "kuraigana",
+      name: "Isla Kuraigana",
+      sea: Sea.PARADISE,
+      danger: 9,
+      minLevel: 27,
+      factionControl: "Sin gobierno (castillo de un espadachín)",
+      description:
+        "Una isla de niebla, cuervos y un castillo en ruinas donde vive un espadachín que solo se levanta por los duelos que le interesan. Nadie llega por casualidad.",
+      arcHook:
+        "El espadachín no recibe visitas, pero de vez en cuando deja una espada clavada en la puerta de quien le haya intrigado. Es una invitación, no un regalo.",
+    },
+    {
+      key: "elbaf",
+      name: "Elbaf",
+      sea: Sea.NEW_WORLD,
+      danger: 10,
+      minLevel: 34,
+      factionControl: "Guerreros de Elbaf (gigantes)",
+      description:
+        "La tierra de los gigantes: bosques colosales, árboles como montañas y guerreros que llevan generaciones peleando por un honor que ya casi nadie sabe explicar. Los humanos aquí son los que caben en una mano.",
+      arcHook:
+        "Dos gigantes legendarios llevan décadas luchando por una promesa que ninguno recuerda. Alguien ha prometido a los forasteros una respuesta si logran reconciliarlos.",
+    },
+    {
       key: "laughTale",
       name: "Laugh Tale",
       sea: Sea.NEW_WORLD,
@@ -438,6 +512,12 @@ async function main() {
     ohara: ["waterSeven"],
     marineford: ["sabaody", "eniesLobby"],
     dressrosa: ["wholeCake", "zou", "egghead"],
+    jaya: ["alabasta", "skypiea"],
+    longRing: ["skypiea", "waterSeven"],
+    thrillerBark: ["waterSeven", "sabaody"],
+    amazonLily: ["sabaody", "impelDown"],
+    kuraigana: ["whiskyPeak", "thrillerBark"],
+    elbaf: ["wano", "wholeCake"],
     zou: ["dressrosa", "wano"],
     egghead: ["punkHazard", "dressrosa"],
     marineG5: ["foosha", "loguetown"],
@@ -448,23 +528,23 @@ async function main() {
     conomi: ["baratie", "loguetown"],
     loguetown: ["conomi", "marineG5", "gecko", "reverseMountain"],
     reverseMountain: ["loguetown", "whiskyPeak"],
-    whiskyPeak: ["reverseMountain", "littleGarden"],
+    whiskyPeak: ["reverseMountain", "littleGarden", "kuraigana"],
     littleGarden: ["whiskyPeak", "alabasta", "drum"],
     drum: ["littleGarden", "alabasta"],
-    alabasta: ["littleGarden", "drum", "graveyardIsland", "eniesLobby", "skypiea", "waterSeven"],
-    skypiea: ["alabasta"],
-    waterSeven: ["alabasta", "eniesLobby", "sabaody", "ohara"],
-    sabaody: ["waterSeven", "fishMan", "marineford"],
+    alabasta: ["littleGarden", "drum", "graveyardIsland", "eniesLobby", "skypiea", "waterSeven", "jaya"],
+    skypiea: ["alabasta", "jaya", "longRing"],
+    waterSeven: ["alabasta", "eniesLobby", "sabaody", "ohara", "longRing", "thrillerBark"],
+    sabaody: ["waterSeven", "fishMan", "marineford", "thrillerBark", "amazonLily"],
     fishMan: ["sabaody", "punkHazard"],
     punkHazard: ["fishMan", "wholeCake", "egghead"],
-    wholeCake: ["punkHazard", "wano", "dressrosa"],
-    wano: ["wholeCake", "laughTale", "zou"],
+    wholeCake: ["punkHazard", "wano", "dressrosa", "elbaf"],
+    wano: ["wholeCake", "laughTale", "zou", "elbaf"],
     laughTale: ["wano"],
     graveyardIsland: ["alabasta", "abyss"],
     abyss: ["graveyardIsland"],
     eniesLobby: ["alabasta", "waterSeven", "impelDown", "maryGeoise", "marineford"],
     maryGeoise: ["eniesLobby"],
-    impelDown: ["eniesLobby"],
+    impelDown: ["eniesLobby", "amazonLily"],
   };
 
   for (const [key, neighborKeys] of Object.entries(adjacency)) {
@@ -1215,7 +1295,7 @@ async function main() {
       where: { id: row.id },
       data: {
         statsJson: profileStatsJson(prof),
-        abilitiesJson: JSON.stringify(prof.ab),
+        abilitiesJson: JSON.stringify([...prof.ab, ...styleAbilityLines(a.name)]),
         homeIslandId: islandIdOf(prof.home),
         ...(fruitId ? { devilFruitId: fruitId } : {}),
         // Never move someone on a reseed: only place actors that have no location yet.
@@ -1223,7 +1303,7 @@ async function main() {
       },
     });
   }
-  for (const e of EXTRA_ACTORS) {
+  for (const e of [...EXTRA_ACTORS, ...MORE_ACTORS]) {
     const fruitId = e.devilFruitName ? fruitsByName[e.devilFruitName]?.id : undefined;
     const common = {
       personality: e.personality,
@@ -1235,7 +1315,7 @@ async function main() {
       canonBounty: e.canonBounty,
       canonWeapon: e.canonWeapon,
       statsJson: profileStatsJson(e.profile),
-      abilitiesJson: JSON.stringify(e.profile.ab),
+      abilitiesJson: JSON.stringify([...e.profile.ab, ...styleAbilityLines(e.name)]),
       homeIslandId: islandIdOf(e.profile.home),
       status: e.status ?? "ACTIVE",
       ...(fruitId ? { devilFruitId: fruitId } : {}),
@@ -1247,6 +1327,16 @@ async function main() {
       create: { name: e.name, role: e.role, ...common, currentIslandId: islandIdOf(e.profile.home), locationHidden: !!e.profile.hidden, locationUpdatedAt: new Date() },
     });
     worldActors[e.name] = row;
+  }
+
+  // One-time corrections of where a few canon characters live (only applied when the actor still sits at its old place).
+  for (const [actorName, islandKey] of Object.entries(RELOCATIONS)) {
+    const actor = worldActors[actorName] as { id: string; currentIslandId?: string | null } | undefined;
+    const target = islands[islandKey];
+    if (!actor || !target) continue;
+    const fresh = await prisma.worldActor.findUnique({ where: { id: actor.id } });
+    if (fresh?.homeIslandId === target.id) continue;
+    await prisma.worldActor.update({ where: { id: actor.id }, data: { homeIslandId: target.id, currentIslandId: target.id, locationKind: "island", seaFromIslandId: null, seaToIslandId: null, locationHidden: false, locationUpdatedAt: new Date() } });
   }
 
   // ---------- World event templates (background simulation) ----------
@@ -1513,28 +1603,6 @@ async function main() {
         onFail: { text: ["Te pierdes un rato y vuelves con las manos vacías, pero ileso."], hpLoss: [0, 5] },
         onCriticalFail: { text: ["Caes en una trampa oxidada y te haces daño de verdad."], hpLoss: [10, 25] },
         fruitDropChance: 0.015,
-      },
-    },
-    {
-      kind: EventKind.EXPLORATION,
-      minDanger: 1,
-      maxDanger: 10,
-      weight: 2,
-      title: "El mar no perdona",
-      body: {
-        flavorTexts: [
-          "Un tablón podrido cede bajo tus pies junto al muelle y el agua se cierra sobre ti.",
-          "Una ola te arrastra mar adentro antes de que puedas reaccionar.",
-          "En el forcejeo por subir al bote, alguien te empuja por la borda.",
-        ],
-        onCriticalSuccess: { text: ["Logras aferrarte a un cabo justo a tiempo, apenas mojado."], xp: [5, 10] },
-        onSuccess: { text: ["Consigues salir del agua por tus propios medios, empapado pero ileso."], hpLoss: [0, 6] },
-        onFail: { text: ["El agua se cierra sobre ti. A duras penas alguien logra sacarte a tiempo, con los pulmones ardiendo."], hpLoss: [15, 28] },
-        onCriticalFail: {
-          text: ["Te hundes como una piedra. Para cuando por fin te sacan del agua, apenas respiras."],
-          hpLoss: [38, 50],
-        },
-        waterHazard: true,
       },
     },
     {
@@ -1991,6 +2059,13 @@ async function main() {
     { island: "zou", kind: EventKind.COMBAT, title: "La prueba de los mink", weight: 9, min: 9, max: 9, flavor: "Un guerrero mink te espera en la entrada de la ciudad-bosque: solo quien demuestre valor cruzará.", crit: "Superas su prueba con honor y te ofrece un lugar junto al fuego.", ok: "Lo derrotas en duelo limpio y te deja pasar sin rencor.", fail: "Se mueve con una velocidad eléctrica y te lanza fuera del camino.", critFail: "Un relámpago te sacude y se te cortan hasta las palabras.", enemy: { name: "Guerrero mink", hp: 260, atk: 54, def: 30, spd: 44, personality: "orgulloso y sincero, respeta a quien pelea de frente" } },
     { island: "egghead", kind: EventKind.COMBAT, title: "Los guardianes del laboratorio", weight: 9, min: 10, max: 10, flavor: "Unas máquinas enormes se alinean en el puente de cristal: cada intruso es un dato que quiere procesar.", crit: "Encuentras su fallo lógico y las apagas una a una.", ok: "Las destrozas antes de que sellen el paso.", fail: "Te clavan a la pared con rayos que ni siquiera se ven.", critFail: "Un pulso de energía te deja de rodillas sin saber de dónde vino.", enemy: { name: "Guardianes mecánicos", hp: 340, atk: 60, def: 40, spd: 42, personality: "fríos y precisos, calculan tu siguiente movimiento antes de que lo pienses" } },
 
+    { island: "jaya", kind: EventKind.COMBAT, title: "Duelo en la Ciudad Mock", weight: 10, min: 5, max: 5, flavor: "Un pirata borracho te reta en mitad de la taberna: en Ciudad Mock cualquier mirada larga acaba en pelea.", crit: "Lo desarmas con una jugada tan limpia que la taberna entera te brinda una ronda.", ok: "Lo sacas por la puerta sin romper nada de valor.", fail: "Te pilla desprevenido y acabas tirado sobre una mesa.", critFail: "Su compañero te golpea por la espalda con una jarra y todo se apaga un momento.", enemy: { name: "Pirata borracho de Ciudad Mock", hp: 160, atk: 26, def: 14, spd: 22, personality: "bravucón y sin nada que perder" } },
+    { island: "jaya", kind: EventKind.SOCIAL, title: "El buscador de oro", weight: 9, min: 5, max: 5, flavor: "Un hombre de risa fuerte te enseña un mapa y jura que la Ciudad de Oro existió, aunque toda la isla se ría de él.", crit: "Te da una pista de verdad: alguien está mintiendo sobre esa leyenda desde hace décadas.", ok: "Te cuenta su historia entera y te invita a un plato caliente.", fail: "Te toma por un cazador de fortuna y se cierra en banda.", critFail: "Te confunde con un espía de la Marina y te persigue con una ballesta.", xp: [10, 26], hurt: [0, 5] },
+    { island: "longRing", kind: EventKind.COMBAT, title: "El duelo de las reglas cambiantes", weight: 10, min: 6, max: 6, flavor: "Un capitán con más labia que fuerza te propone un duelo cortés: las reglas cambian según le conviene y lo arbitran sus propios hombres.", crit: "Descubres el truco a tiempo y lo derrotas sin que pueda quejarse.", ok: "Ganas un duelo que casi no se puede ganar.", fail: "Te tiende la trampa perfecta y pierdes una ronda por una regla inventada.", critFail: "Sus hombres te rodean y te quitan hasta el aliento.", enemy: { name: "Capitán fanfarrón de Long Ring", hp: 220, atk: 32, def: 22, spd: 28, personality: "presumido, tramposo y con demasiada confianza" } },
+    { island: "thrillerBark", kind: EventKind.COMBAT, title: "Los muertos de la niebla", weight: 10, min: 8, max: 8, flavor: "De la niebla sale una fila de cuerpos que caminan sin sombra: alguien los ha traído de vuelta para pelear.", crit: "Descubres cuál de ellos guía al resto y lo apartas: los demás se desploman.", ok: "Los detienes sin perder demasiado en el camino.", fail: "Te rodean y cada golpe te deja más cansado.", critFail: "Te atrapan un instante y te roban el aliento.", enemy: { name: "Zombis de Thriller Bark", hp: 360, atk: 44, def: 28, spd: 24, personality: "cuerpos sin voluntad que obedecen a quien tiene su sombra" } },
+    { island: "amazonLily", kind: EventKind.COMBAT, title: "La guardia Kuja", weight: 10, min: 8, max: 8, flavor: "Una patrulla de guerreras Kuja te cierra el paso: los hombres no son bienvenidos y las preguntas se hacen con arco.", crit: "Las convences de que no eres una amenaza con una jugada que no se esperaban.", ok: "Las desarmas sin herir a nadie y sin perder tu palabra.", fail: "Te ganan con destreza y te envían de vuelta al mar con una advertencia.", critFail: "Una flecha te clava la manga a un árbol y te dejan un rato pensando.", enemy: { name: "Patrulla Kuja", hp: 340, atk: 46, def: 28, spd: 40, personality: "orgullosas, precisas y desconfiadas" } },
+    { island: "kuraigana", kind: EventKind.COMBAT, title: "El castillo de los cuervos", weight: 10, min: 9, max: 9, flavor: "Entre la niebla, un espadachín sin prisa te mira desde lo alto del castillo: solo baja si le interesas.", crit: "Un solo intercambio basta para que te reconozca y te deje seguir con vida.", ok: "Aguantas su primera embestida y eso ya es un logro.", fail: "Te derriba con un gesto y se vuelve a su silla.", critFail: "Una corriente cortante te tumba antes de ver qué la mandó.", enemy: { name: "Espadachín de Kuraigana", hp: 500, atk: 58, def: 36, spd: 48, personality: "aburrido, exigente y letal" } },
+    { island: "elbaf", kind: EventKind.COMBAT, title: "El duelo de los gigantes", weight: 10, min: 10, max: 10, flavor: "Dos guerreros de Elbaf chocan sus armas mientras el bosque tiembla: pelean por un honor que ya nadie recuerda.", crit: "Te haces oír entre los gigantes y logras que detengan la pelea un instante.", ok: "Sobrevives a un golpe que rompe el suelo y te ganas su respeto.", fail: "Te lanzan a varios metros de una sacudida.", critFail: "Un tronco caído te aplasta la pierna y tardas en moverte.", enemy: { name: "Guerrero gigante de Elbaf", hp: 700, atk: 70, def: 46, spd: 24, personality: "honorable, terco y tremendamente fuerte" } },
     { island: "drum", kind: EventKind.SOCIAL, title: "La doctora de la montaña", weight: 10, min: 7, max: 7, flavor: "Subes por la nieve hasta el hospital de la cima, donde una anciana de risa inquietante te mira de arriba abajo como quien ya sabe qué te duele.", crit: "La doctora te ofrece un tratamiento que casi ningún forastero recibe: te sientes más fuerte que nunca.", ok: "Te cura las heridas viejas y te cobra con un recado que resulta útil.", fail: "Te despacha con una receta amarga y una carcajada.", critFail: "Su medicina 'de prueba' te deja ardiendo de fiebre un buen rato.", xp: [12, 30], hurt: [0, 6] },
     { island: "drum", kind: EventKind.COMBAT, title: "Los lobos de nieve", weight: 9, min: 7, max: 7, flavor: "Una manada de lobos de nieve gigantes te cierra el paso: no atacan por hambre, sino porque algo más grande los empuja hacia el pueblo.", crit: "Los dispersas y descubres qué los espantaba: un rastro de caza furtiva que puedes denunciar.", ok: "Rechazas la manada y la nieve se traga sus huellas.", fail: "Los lobos te rodean y solo el frío te salva de una mordida peor.", critFail: "Uno te derriba en la ventisca y te arrastra unos metros antes de soltarte.", enemy: { name: "Manada de lobos de nieve", hp: 190, atk: 30, def: 18, spd: 32, personality: "bestias hambrientas que solo entienden la fuerza" } },
     { island: "skypiea", kind: EventKind.EXPLORATION, title: "El mar de algodón", weight: 10, min: 8, max: 8, flavor: "Caminas sobre nubes que soportan tu peso a duras penas. Abajo se ve el mar; arriba, un sol que no parece el mismo.", crit: "Encuentras una antigua ofrenda de oro que los Sacerdotes no habían reclamado.", ok: "Cruzas la nube sin incidentes y con algo de botín en el bolsillo.", fail: "Te hundes hasta la cintura y pierdes un buen rato saliendo.", critFail: "La nube cede del todo y te salva un ángel de la casualidad... no del golpe.", loot: [400, 1600], xp: [12, 28], hurt: [0, 14] },

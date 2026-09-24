@@ -3,6 +3,8 @@ import { prisma } from "@/lib/db";
 import { requireUserId, UnauthorizedError } from "@/lib/require-user";
 import { logError } from "@/lib/log-error";
 import { getCompanionViews } from "@/lib/game/companions";
+import { syncAttributePoints } from "@/lib/game/attributes";
+import { getColiseumState } from "@/lib/game/coliseum";
 import { getWorldEventForCharacter } from "@/lib/game/world-arcs";
 import { sessionIsAdmin } from "@/lib/require-user";
 import { syncPartyForCharacter, getPartyStateForCharacter } from "@/lib/game/party";
@@ -30,6 +32,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     // tickWorldIfDue, no cron/background job. Cheap: scoped to this one
     // character's crew, not a world-wide scan.
     await syncPartyForCharacter(id);
+    await syncAttributePoints(id);
 
     const character = await prisma.character.findUnique({
       where: { id },
@@ -73,6 +76,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const busterCall = await getBusterCallState(id);
     const raid = await getRaidState(id);
     const blackMarket = await getBlackMarketState(id);
+    const coliseumFull = await getColiseumState(id);
+    const coliseum = coliseumFull?.tournament ? { status: coliseumFull.tournament.status, kindLabel: coliseumFull.tournament.kindLabel, prize: coliseumFull.tournament.prize.label, startsAt: coliseumFull.tournament.startsAt, onDressrosa: coliseumFull.onDressrosa, registered: !!coliseumFull.me, round: coliseumFull.tournament.roundLabel } : null;
     await ensureIslandMissions(id);
     const missions = await getMissionState(id);
     const connections = JSON.parse(character.currentIsland.connections) as string[];
@@ -187,6 +192,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       busterCall,
       raid,
       blackMarket,
+      coliseum,
       missions,
       worldEvent,
       admin,

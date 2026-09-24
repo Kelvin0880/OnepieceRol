@@ -26,6 +26,8 @@ import { maybeCompactCharacterScene, maybeCompactPartyScene } from "./scene-comp
 import { postNews, handleDeathCheck } from "./death-resolution";
 import { grantPoneglyphRead } from "./poneglyph";
 import { grantXp } from "./xp";
+import { grantLoot, storeFruitInBag } from "./inventory";
+import { intellectTacticEdge } from "../engine/attributes";
 import { applyGuardianPresence, guardianBaseRewards, markActorDefeated, findPoneglyphGuardian, ACTOR_REWARD_MULTIPLIER } from "./guardian";
 import { isActorHome, stealthDifficulty, stealthModifier, attemptStealthRead, STEALTH_HEAT, STEALTH_STAMINA_COST, CAUGHT_HP_FRACTION } from "../engine/guardian";
 import { getOpenJointFightFor, submitJointAction, startJointFight, freePartyMemberIds } from "./joint-fight";
@@ -58,6 +60,8 @@ async function loadCharacterOrThrow(characterId: string, userId: string) {
       currentIsland: true,
       companions: true,
       pendingEncounter: true,
+      styles: true,
+      ownedWeapons: { where: { wielded: true } },
     },
   });
   if (!character || character.userId !== userId) throw new GameActionError("Personaje no encontrado.");
@@ -111,16 +115,13 @@ export async function tryDropFruit(characterId: string, newsLog: string[]): Prom
       isSingleton: false,
     },
   });
-  await prisma.character.update({
-    where: { id: characterId },
-    data: { devilFruitId: fruit.id },
-  });
-  const character = await prisma.character.findUnique({
-    where: { id: characterId },
-  });
-  const headline = `¡${character?.name} despierta el poder de la ${fruit.name}!`;
-  await postNews(headline, `Un poder que pocos podrán igualar acaba de entrar en juego en los mares.`, "Frutas", characterId);
-  newsLog.push(headline);
+  // The fruit is FOUND, not eaten: it goes to the bag and the player decides whether to bite it (game/inventory.ts eatFruit).
+  const stored = await storeFruitInBag(characterId, fruit);
+  if (!stored) {
+    await prisma.devilFruit.delete({ where: { id: fruit.id } });
+    return undefined;
+  }
+  newsLog.push(`${(await prisma.character.findUnique({ where: { id: characterId }, select: { name: true } }))?.name ?? "Alguien"} encuentra la ${fruit.name}.`);
   return fruit.name;
 }
 
@@ -528,11 +529,12 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
   }
 
   let fruitGained: string | undefined;
-  if (!died && resolution.fruitDropRolled && !character.devilFruitId) {
+  if (!died && resolution.fruitDropRolled) {
     fruitGained = await tryDropFruit(character.id, newsLog);
     if (fruitGained) {
-      log.push(`Sientes un poder extraño recorrer tu cuerpo: has obtenido la ${fruitGained}.`);
-      log.push("Pero el mar te rechaza para siempre: nunca más podrás nadar.");
+      log.push(`¡Encuentras una Fruta del Diablo: la ${fruitGained}! La guardas en la mochila. En el Inventario decides si te la comes: quien la muerde no podrá volver a nadar, y solo se puede comer una.`);
+    } else {
+      log.push("Tocas una fruta de forma extraña, pero no tienes dónde guardarla y la pierdes entre las olas.");
     }
   }
 
@@ -559,6 +561,10 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
       },
     });
     await applyBountyOrNotoriety(character, resolution.bounty, newsLog);
+    if (resolution.outcome === "success" || resolution.outcome === "critical_success") {
+      const found = await grantLoot(character.id, character.currentIsland.dangerLevel, resolution.outcome);
+      if (found) log.push(found);
+    }
   }
 
   await prisma.gameLogEntry.create({
@@ -635,7 +641,7 @@ export async function engageCharacter(
 
   // Technique (haki/fruit), tactic and fatigue are folded into one Combatant
   // by the engine layer — the classifier only proposed them, code decided.
-  const prepared = prepareFighter(character, opts.technique ?? "none", tacticModifier, character.hp, opts.effort);
+  const prepared = prepareFighter(character, opts.technique ?? "none", tacticModifier, character.hp, opts.effort, intentText ?? "");
   let playerCombatant = prepared.combatant;
   const assistName = pending.phase === "threat" && enemy.isBoss ? rollCompanionAssist(character, rng) : null;
   if (assistName) {
@@ -1155,7 +1161,7 @@ async function resolveMercyChoiceInner(characterId: string, userId: string, spar
 }
 
 /** Rest and serious training need calm: asks the game layer what is happening and lets engine/safety.ts refuse. */
-async function assertSafeToRecover(character: LoadedCharacter, what: "descansar" | "entrenar"): Promise<void> {
+async function assertSafeToRecover(character: LoadedCharacter, what: "descansar" | "entrenar" | "usar objetos"): Promise<void> {
   const [duel, joint, buster] = await Promise.all([
     getOpenDuelFor(character.id),
     getOpenJointFightFor(character.id),
@@ -1175,6 +1181,11 @@ async function assertSafeToRecover(character: LoadedCharacter, what: "descansar"
     what
   );
   if (reason) throw new GameActionError(reason);
+}
+
+/** For other game modules (inventory): refuses with the same danger rules as resting. */
+export async function assertCalm(characterId: string, userId: string, what: "usar objetos"): Promise<void> {
+  await assertSafeToRecover(await loadCharacterOrThrow(characterId, userId), what);
 }
 
 async function trainCharacterInner(characterId: string, userId: string, focus: "armament" | "observation" | "fruit" | "auto" = "auto"): Promise<ActionResult> {
@@ -1861,7 +1872,9 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
   const classified = await classifyPlayerAction(freeText, validActions, {
     sceneContext: await lastNarratorLine(character.id),
   });
-  const { action, tacticModifier } = classified;
+  const { action } = classified;
+  // A sharp mind turns the same described plan into a slightly better roll (bounded, the dice still rule).
+  const tacticModifier = classified.tacticModifier + intellectTacticEdge(character.intellect);
   if (action === "unclear") {
     throw new GameActionError("No logro entender qué quieres hacer. Prueba a describirlo de otra forma, o usa los botones de abajo.");
   }

@@ -139,7 +139,7 @@
 
 <header>
   <h1><i class="fas fa-map-marked-alt"></i> GRAND LINE RPG — MAPA DE RUTA</h1>
-  <p>Las 33 islas jugables de hoy, sus conexiones, y qué te espera en cada una.</p>
+  <p>Las 39 islas jugables de hoy, sus conexiones, y qué te espera en cada una.</p>
   <a class="back" href="index.html"><i class="fas fa-arrow-left"></i> Volver</a>
 </header>
 
@@ -172,7 +172,7 @@
 
   <div class="map-wrap">
     <div class="map-card">
-      <svg id="routeMap" viewBox="0 0 1700 790" xmlns="http://www.w3.org/2000/svg"></svg>
+      <svg id="routeMap" viewBox="0 0 1700 850" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
     <div class="detail-card" id="detailCard">
       <p class="empty"><i class="fas fa-hand-pointer"></i><br>Haz clic en una isla del mapa para ver su ficha.</p>
@@ -288,9 +288,29 @@ const ISLANDS = [
   { key: "egghead", name: "Isla Egghead", sea: "New World", danger: 10, minLevel: 36, faction: "Gobierno Mundial (Laboratorio de Vegapunk)", poneglyph: false, x: 960, y: 735,
     desc: "La isla del futuro: torres de cristal, robots por las calles y un laboratorio flotante donde se decide lo que la humanidad será capaz de hacer. Tiene más vigilancia que cualquier prisión, y todo el mundo quiere entrar.",
     hook: "Lo que se cocina en el laboratorio podría cambiar el equilibrio del mundo. El Gobierno lo sabe, los piratas lo saben, y por eso la isla nunca duerme tranquila." },
+  { key: "jaya", name: "Jaya", sea: "Paradise", danger: 5, minLevel: 9, faction: "Sin gobierno (Ciudad Mock y Ciudad Ley)", poneglyph: false, x: 1360, y: 210,
+    desc: "Una isla partida en dos: la Ciudad Mock, donde los piratas beben, cantan y se roban, y la Ciudad Ley, donde la Marina sueña con que algún día se calmen. En la selva, un buscador de oro jura que la Ciudad de Oro existió.",
+    hook: "Un mapa de Jaya cambia de manos cada semana. Dicen que quien lo sigue hasta el final se cruza con la cuerda que llevaba al cielo." },
+  { key: "longRing", name: "Long Ring Long Land", sea: "Paradise", danger: 6, minLevel: 11, faction: "Sin gobierno (isla de duelos)", poneglyph: false, x: 1200, y: 70,
+    desc: "Una isla de llanuras larguísimas y bosques que parecen no acabar, famosa por los duelos donde se apuesta el orgullo, la tripulación y, con frecuencia, el barco entero.",
+    hook: "Un capitán con mucha labia ofrece un duelo a cualquier recién llegado. Las reglas cambian a mitad de partida y solo le da la razón el árbitro." },
+  { key: "thrillerBark", name: "Thriller Bark", sea: "Paradise", danger: 8, minLevel: 16, faction: "Sin gobierno (barco fantasma de Moria)", poneglyph: false, x: 1250, y: 730,
+    desc: "Un barco del tamaño de una isla, cubierto de niebla y cementerios, donde los muertos caminan y una sombra más grande que todos vigila desde la torre. Aquí se robó, y aquí se vuelve a robar.",
+    hook: "La niebla no se levanta desde hace semanas. Los marineros que se acercan vuelven sin sombra y sin ganas de contar qué les pasó." },
+  { key: "amazonLily", name: "Amazon Lily", sea: "Paradise", danger: 8, minLevel: 20, faction: "Reino Kuja (solo mujeres)", poneglyph: false, x: 1550, y: 640,
+    desc: "La isla de las guerreras Kuja: bosques enormes, serpientes gigantes y una emperatriz que no permite que ningún hombre pise su reino más de lo imprescindible. Los forasteros aprenden a hablar bajito.",
+    hook: "Las Kuja vigilan la costa día y noche. Un extraño acaba de aparecer entre las rocas, y la emperatriz aún no decide si hablar con él o ejecutarlo." },
+  { key: "kuraigana", name: "Isla Kuraigana", sea: "Paradise", danger: 9, minLevel: 27, faction: "Sin gobierno (castillo de un espadachín)", poneglyph: false, x: 1040, y: 200,
+    desc: "Una isla de niebla, cuervos y un castillo en ruinas donde vive un espadachín que solo se levanta por los duelos que le interesan. Nadie llega por casualidad.",
+    hook: "El espadachín no recibe visitas, pero de vez en cuando deja una espada clavada en la puerta de quien le haya intrigado. Es una invitación, no un regalo." },
+  { key: "elbaf", name: "Elbaf", sea: "New World", danger: 10, minLevel: 34, faction: "Guerreros de Elbaf (gigantes)", poneglyph: false, x: 400, y: 735,
+    desc: "La tierra de los gigantes: bosques colosales, árboles como montañas y guerreros que llevan generaciones peleando por un honor que ya casi nadie sabe explicar. Los humanos aquí son los que caben en una mano.",
+    hook: "Dos gigantes legendarios llevan décadas luchando por una promesa que ninguno recuerda. Alguien ha prometido a los forasteros una respuesta si logran reconciliarlos." },
 ];
 
 const EDGES = [
+  ["jaya","alabasta"], ["jaya","skypiea"], ["longRing","skypiea"], ["longRing","waterSeven"], ["thrillerBark","waterSeven"], ["thrillerBark","sabaody"],
+  ["amazonLily","sabaody"], ["amazonLily","impelDown"], ["kuraigana","whiskyPeak"], ["kuraigana","thrillerBark"], ["elbaf","wano"], ["elbaf","wholeCake"],
   ["foosha","shimotsuki"], ["foosha","marineG5"], ["foosha","baltigo"], ["foosha","orangeTown"], ["orangeTown","shimotsuki"],
   ["marineG5","loguetown"], ["gecko","shimotsuki"], ["gecko","loguetown"],
   ["shimotsuki","baratie"], ["shimotsuki","syrup"], ["baratie","syrup"], ["baratie","conomi"], ["conomi","loguetown"],

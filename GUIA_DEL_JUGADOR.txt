@@ -425,6 +425,51 @@ escalan con tu nivel: cuanto más fuerte eres, más piden y más pagan.
 Cumplirlas da berries, XP y la confianza del poder de la isla, que
 luego sirve para el asalto final. Las ves en el panel "Panorama y misiones".
 
+ATRIBUTOS Y NIVEL
+Cada nivel te da 2 puntos de atributo para repartir en la tarjeta "Atributos"
+(botones + y −, luego "Confirmar reparto"). Fuerza = más daño; Agilidad =
+golpeas antes y huyes mejor; Resistencia = menos daño y +3 de vida máxima por
+punto; Voluntad = Haki más rápido, resistes la muerte y +2 de aguante por punto;
+Intelecto = mejores tácticas (mejora tus tiradas en combate), domina antes la
+fruta y convence mejor. Hay un tope por nivel para que nadie lo ponga todo en
+una sola cosa. El narrador conoce tus atributos y los de todos los personajes.
+
+INVENTARIO
+El botón "Inventario" tiene tres pestañas: Mochila (objetos, se usan o se venden),
+Equipo (armas, fruta, Poneglifos) y Mercader (vendajes, raciones, botiquines,
+Log Pose...). Explorar con éxito puede dejarte objetos. Mochila de 24 huecos.
+Los objetos curan vida o aguante, bajan la persecución por Poneglifos o dan
+botín; no se pueden usar en mitad de una pelea.
+
+FRUTAS DEL DIABLO
+Una fruta que encuentras, compras o ganas NO se come sola: va a tu mochila
+con su nombre. Tú decides: comerla (el mar te rechaza para siempre y solo se
+puede una), venderla o guardarla. Comer pide confirmación.
+
+ESTILOS DE COMBATE
+El botón "Estilos" muestra los que conoces, con rango (Iniciado, Practicante,
+Adepto, Maestro, Gran Maestro) y técnicas que se desbloquean con la maestría.
+Se aprenden en escuelas concretas y tu facción abre unas y cierra otras:
+Ittoryu (Shimotsuki, Loguetown) → Nitoryu (dos espadas) → Santoryu (tres,
+en Wano o Kuraigana); Pierna Negra (Baratie); Rokushiki (CP-0 y Marina);
+Esgrima Marina y Puño del Acorazado (Marina); Ryusoken y Newkama Kenpo
+(revolucionarios, Baltigo); Karate Hombre-Pez y Hasshoken (Isla Gyojin);
+Electro (Zou); Kitsunebi (Wano); Dials (Skypiea); Esgrima de estocada
+(Dressrosa). Puedes empuñar hasta 3 armas: con Nitoryu o Santoryu las extra
+rinden casi igual que la principal; sin él son torpes. En combate escribe el
+nombre de una técnica ("uso Oni Giri") y gasta aguante, suma poder y sube tu
+maestría. Cada personaje canon tiene su propio estilo.
+
+COLISEO DE DRESSROSA
+De vez en cuando el coliseo convoca un torneo (armas, fruta o oro). Se anuncia
+en Noticias unas 3 horas antes, con el premio. Solo se inscribe quien esté en
+Dressrosa, y tiene que seguir allí al cerrar la inscripción. El sorteo es
+totalmente al azar (gladiadores de la isla cubren los huecos), los combates no
+son letales y cada ronda se resuelve cada 15 minutos: antes puedes escribir una
+estrategia que inclina el combate. Cada victoria da experiencia y queda en tu
+bitácora; el campeón recibe el premio en su Inventario (un arma se equipa, una
+fruta se decide si se come). Todo aparece en Noticias, categoría Coliseo.
+
 LONGITUD DE LAS RESPUESTAS
 El narrador ajusta el largo a lo que escribes: una pregunta o una acción simple
 recibe una respuesta corta y directa; solo se extiende con giros importantes,

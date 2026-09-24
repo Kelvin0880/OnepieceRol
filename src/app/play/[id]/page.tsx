@@ -2,6 +2,10 @@
 
 import { useEffect, useState, useCallback, useRef, use } from "react";
 import Link from "next/link";
+import AttributesCard from "./AttributesCard";
+import InventoryPanel from "./InventoryPanel";
+import StylesPanel from "./StylesPanel";
+import ColiseumPanel from "./ColiseumPanel";
 import OocPanel from "./OocPanel";
 import CrewPanel, { type PanelCompanion, type PanelCrew } from "./CrewPanel";
 import { characterCondition, conditionLabel } from "@/lib/engine/condition";
@@ -234,6 +238,7 @@ interface Character {
   durability: number;
   willpower: number;
   intellect: number;
+  attributePoints: number;
   observationHaki: number;
   armamentHaki: number;
   conquerorsHaki: boolean;
@@ -329,6 +334,7 @@ interface StateResponse {
   busterCall: BusterCallState | null;
   raid: RaidState | null;
   blackMarket: BlackMarketState | null;
+  coliseum: { status: string; kindLabel: string; prize: string; startsAt: string; onDressrosa: boolean; registered: boolean; round: string | null } | null;
   missions: MissionsState | null;
   error?: string;
 }
@@ -395,6 +401,9 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [ooc, setOoc] = useState<{ starter?: string } | null>(null);
   const [showCrew, setShowCrew] = useState(false);
+  const [showInventory, setShowInventory] = useState(false);
+  const [showStyles, setShowStyles] = useState(false);
+  const [showColiseum, setShowColiseum] = useState(false);
   const sceneEndRef = useRef<HTMLDivElement>(null);
   const duelBoxRef = useRef<HTMLDivElement>(null);
   const jointBoxRef = useRef<HTMLDivElement>(null);
@@ -622,7 +631,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     );
   }
 
-  const { character, connectedIslands, party, duel, jointFight, territory, busterCall, raid, blackMarket, missions } = data;
+  const { character, connectedIslands, party, duel, jointFight, territory, busterCall, raid, blackMarket, coliseum, missions } = data;
   const duelActive = duel?.status === "ACTIVE";
   const jointActive = jointFight?.status === "ACTIVE";
   const isDead = character.status === "DEAD";
@@ -658,6 +667,18 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
             {crewNounForFaction(character.faction as FactionKey)}
             {character.pendingCrewInvites > 0 && <span className="ml-1.5 text-[11px] px-1.5 rounded bg-blood text-white">{character.pendingCrewInvites}</span>}
           </button>
+          {(coliseum || character.currentIsland.name === "Dressrosa") && (
+            <button className={coliseum && coliseum.onDressrosa && coliseum.status === "ANNOUNCED" && !coliseum.registered ? "btn-gold px-3 py-1.5 text-sm" : "btn-ghost px-3 py-1.5 text-sm"} onClick={() => setShowColiseum(true)} data-testid="coliseum-open">
+              Coliseo
+            </button>
+          )}
+          <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowStyles(true)} data-testid="styles-open">
+            Estilos
+          </button>
+          <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowInventory(true)} data-testid="inventory-open">
+            Inventario
+            {(character.attributePoints ?? 0) > 0 && <span className="ml-1.5 text-[11px] px-1.5 rounded bg-blood text-white" title="Puntos de atributo por repartir">{character.attributePoints}</span>}
+          </button>
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setOoc({})} data-testid="ooc-open">
             Fuera de rol
           </button>
@@ -681,6 +702,12 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           </Link>
         </div>
       </div>
+
+      {showColiseum && <ColiseumPanel characterId={character.id} onClose={() => setShowColiseum(false)} onChanged={() => load()} />}
+
+      {showStyles && <StylesPanel characterId={character.id} onClose={() => setShowStyles(false)} onChanged={() => load()} />}
+
+      {showInventory && <InventoryPanel characterId={character.id} onClose={() => setShowInventory(false)} onChanged={() => load()} />}
 
       {showCrew && (
         <CrewPanel
@@ -1651,13 +1678,13 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
 
           <div className="panel p-4">
             <h3 className="font-display text-sm text-ink-dim mb-2">Atributos</h3>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-1 text-sm">
-              <span>Fuerza: {character.strength}</span>
-              <span>Agilidad: {character.agility}</span>
-              <span>Resistencia: {character.durability}</span>
-              <span>Voluntad: {character.willpower}</span>
-              <span>Intelecto: {character.intellect}</span>
-            </div>
+            <AttributesCard
+              characterId={character.id}
+              level={character.level}
+              points={character.attributePoints ?? 0}
+              values={{ strength: character.strength, agility: character.agility, durability: character.durability, willpower: character.willpower, intellect: character.intellect }}
+              onChanged={() => load()}
+            />
             <div className="mt-3 pt-3 border-t border-[--line] flex flex-col gap-2">
               <StatBar label="Haki de Observación" value={character.observationHaki} max={100} color="var(--gold)" />
               <StatBar label="Haki de Armadura" value={character.armamentHaki} max={100} color="var(--gold)" />

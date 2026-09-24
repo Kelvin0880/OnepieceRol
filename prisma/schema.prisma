@@ -126,6 +126,12 @@ model Character {
   sceneCompactedUntil DateTime?
   /** "Limpiar escena": messages before this stay stored (memory keeps the story) but leave the screen and the narrator's short-term window. */
   sceneClearedAt      DateTime?
+  /** Unspent attribute points, and the level up to which points were already granted (lazy grant, see game/attributes.ts). */
+  attributePoints     Int       @default(0)
+  attrLevelGranted    Int       @default(1)
+  /** The combat style chosen as the main one (engine/styles.ts activeStyle); null = the strongest that fits what is wielded. */
+  styleFocusId        String?
+  styles              CharacterStyle[]
 
   // Devil fruit progression (see engine/fruit-mastery.ts): 0-100 mastery,
   // plus an explicit awakening flag that needs a breaking-point event, not
@@ -498,7 +504,9 @@ model Weapon {
   specialJson String? // special ability payload, engine-interpreted
   basePrice   Int         @default(500)
 
-  ownerId    String?    @unique
+  ownerId    String?
+  /** Held in an off hand as well as the equipped main weapon (up to 3 wielded in total). */
+  wielded    Boolean    @default(false)
   owner      Character? @relation("OwnedWeapons", fields: [ownerId], references: [id])
   equippedOn Character? @relation("EquippedWeapon")
 
@@ -831,6 +839,8 @@ model WorldClock {
   // Separate, much rarer cadence for the periodic canon-bounty roundup
   // (tickBountyDigestIfDue in world-tick.ts) — null means it has never run.
   lastDigestAt DateTime?
+  // When the last Coliseum tournament was announced (game/coliseum.ts); null = never.
+  lastTournamentAt DateTime?
   // The world's current age. Flips to "Nueva Era" when a final raid topples the hidden ruler (game/raid.ts).
   era          String    @default("Era del Olvido")
 }
@@ -1008,4 +1018,58 @@ model WorldArc {
   updatedAt     DateTime  @updatedAt
 
   @@index([status])
+}
+
+
+/** A combat style a character has learned (engine/styles.ts) and how well they have mastered it. */
+model CharacterStyle {
+  id            String    @id @default(cuid())
+  characterId   String
+  character     Character @relation(fields: [characterId], references: [id])
+  styleId       String
+  mastery       Int       @default(5)
+  lastTrainedAt DateTime?
+  createdAt     DateTime  @default(now())
+
+  @@unique([characterId, styleId])
+}
+
+
+// ---------- Dressrosa Coliseum tournaments (engine/coliseum.ts, game/coliseum.ts) ----------
+
+model Tournament {
+  id             String            @id @default(cuid())
+  kind           String // weapons | fruit | gold
+  status         String // ANNOUNCED | RUNNING | FINISHED | CANCELLED
+  prizeJson      String
+  announcedAt    DateTime          @default(now())
+  startsAt       DateTime
+  round          Int               @default(0)
+  size           Int               @default(0)
+  roundEndsAt    DateTime?
+  /// JSON: one array per round, each match { a, b (entry ids), winner?, aHp?, bHp?, walkover? }
+  bracketJson    String            @default("[]")
+  championName   String?
+  championEntryId String?
+  finishedAt     DateTime?
+  entries        TournamentEntry[]
+}
+
+model TournamentEntry {
+  id           String     @id @default(cuid())
+  tournamentId String
+  tournament   Tournament @relation(fields: [tournamentId], references: [id])
+  characterId  String?
+  name         String
+  isNpc        Boolean    @default(false)
+  npcLevel     Int?
+  npcNamed     Boolean    @default(false)
+  /// REGISTERED | ACTIVE | ELIMINATED | CHAMPION | WITHDRAWN
+  status       String     @default("REGISTERED")
+  strategy     String?
+  roundOut     Int?
+  createdAt    DateTime   @default(now())
+
+  @@index([tournamentId])
+  @@index([characterId])
 }

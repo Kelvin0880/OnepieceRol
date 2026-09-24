@@ -52,7 +52,7 @@ export class BattleError extends Error {}
 async function loadCharacterFull(characterId: string) {
   const character = await prisma.character.findUnique({
     where: { id: characterId },
-    include: { devilFruit: true, equippedWeapon: true, currentIsland: true, companions: true, crew: true },
+    include: { devilFruit: true, equippedWeapon: true, currentIsland: true, companions: true, crew: true, styles: true, ownedWeapons: { where: { wielded: true } } },
   });
   if (!character) throw new BattleError("Personaje no encontrado.");
   return character;
@@ -143,7 +143,7 @@ export async function respondToBattle(defendingCharacterId: string, userId: stri
   const matchups = JSON.parse(battle.matchupsJson) as Matchup[];
   const participants = await prisma.character.findMany({
     where: { id: { in: [...matchups.map((m) => m.aId), ...matchups.map((m) => m.bId)] } },
-    include: { devilFruit: true, equippedWeapon: true, currentIsland: true, companions: true },
+    include: { devilFruit: true, equippedWeapon: true, currentIsland: true, companions: true, styles: true, ownedWeapons: { where: { wielded: true } } },
   });
   const byId = new Map(participants.map((p) => [p.id, p]));
 

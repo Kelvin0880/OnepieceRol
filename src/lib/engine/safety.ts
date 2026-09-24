@@ -12,7 +12,7 @@ export interface DangerContext {
   busterCallOnIsland: boolean;
 }
 
-export function dangerBlockReason(ctx: DangerContext, what: "descansar" | "entrenar"): string | null {
+export function dangerBlockReason(ctx: DangerContext, what: "descansar" | "entrenar" | "usar objetos"): string | null {
   if (ctx.hasPendingEncounter) return `No puedes ${what} con un enfrentamiento sin resolver: primero sal de esa situación.`;
   if (ctx.activeDuel) return `No puedes ${what} en mitad de un duelo.`;
   if (ctx.inJointFight) return `No puedes ${what} en plena pelea con tus aliados.`;

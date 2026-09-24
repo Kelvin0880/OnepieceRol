@@ -201,9 +201,9 @@ try {
   check("Shanks shows his canon bounty, abilities and stats", shanks.includes("4.048.900.000") && shanks.includes("Gryphon") && shanks.includes("Fuerza"));
   await cx.fill('[data-testid="codex-search"]', "");
   await cx.click('[data-testid="codex-history"]');
-  await cx.fill('[data-testid="codex-search"]', "Kaido");
+  await cx.fill('[data-testid="codex-search"]', "Newgate");
   await cx.waitForSelector('[data-testid="codex-card"]');
-  check("lore-only characters live under 'historia' (Kaido: defeated, no location)", (await cx.textContent('[data-testid="codex-card"]')).includes("Derrotado") && (await cx.locator('[data-testid="codex-location"]').count()) === 0);
+  check("lore-only characters live under 'historia' (Barbablanca: deceased, no location)", (await cx.textContent('[data-testid="codex-card"]')).includes("Fallecido") && (await cx.locator('[data-testid="codex-location"]').count()) === 0);
   await cx.screenshot({ path: path.join(shots, "world-08-codex.png"), fullPage: true });
   const hidden = await cx.evaluate(async () => (await (await fetch("/api/codex")).json()).actors.filter((a) => a.name === "Monkey D. Dragon")[0]);
   check("a character moving in secret never reveals a location (Dragon: Ubicación desconocida)", hidden.location === "Ubicación desconocida" && hidden.locationKind === "unknown");

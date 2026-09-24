@@ -7,7 +7,9 @@ import { masteryGainFromUse } from "../engine/fruit-mastery";
 import { Rng } from "../engine/rng";
 import { staminaCostAtLevel } from "../engine/resilience";
 import { describeCapabilities } from "../engine/capabilities";
-import { toCombatant, characterFruitPhase, CharacterWithGear } from "./derive";
+import { toCombatant, characterFruitPhase, wieldedWeapons, CharacterWithGear } from "./derive";
+import { chooseTechnique, styleForText, styleGrowthFromUse, getStyle, describeStyles, type StyleUse } from "../engine/styles";
+import { prisma } from "../db";
 
 /** Stamina right now: the stored value plus whatever passively regenerated since it was last written. */
 export function currentStamina(character: Pick<Character, "stamina" | "maxStamina" | "staminaUpdatedAt">): number {
@@ -33,8 +35,14 @@ export interface PreparedFighter {
  * bonus, and fatigue. The engine then rolls with this; the AI never sees a
  * "power level", only the resulting hits and misses.
  */
-export function prepareFighter(character: CharacterWithGear, technique: TechniqueId, tacticModifier: number, hp = character.hp, effort: EffortLevel = DEFAULT_COMBAT_EFFORT): PreparedFighter {
+export function prepareFighter(character: CharacterWithGear, technique: TechniqueId, tacticModifier: number, hp = character.hp, effort: EffortLevel = DEFAULT_COMBAT_EFFORT, styleText = ""): PreparedFighter {
   const staminaBefore = currentStamina(character);
+  let styleCtx: StyleUse | null = null;
+  if (technique === "style") {
+    const known = (character.styles ?? []).map((s) => ({ id: s.styleId, mastery: s.mastery }));
+    const pick = styleForText(known, styleText, wieldedWeapons(character).length, character.styleFocusId);
+    if (pick) styleCtx = chooseTechnique(pick.def, pick.mastery, styleText);
+  }
   const fruitBase = character.devilFruit
     ? fruitCombatModifier(parseFruitEffects(character.devilFruit.effectsJson), character.fruitAwakened)
     : null;
@@ -45,9 +53,11 @@ export function prepareFighter(character: CharacterWithGear, technique: Techniqu
     fruitBase,
     fruitPhase: characterFruitPhase(character),
     stamina: staminaBefore,
+    style: styleCtx,
   });
 
   const base = toCombatant(character);
+  const stylePierce = effect.used === "style" && effect.styleUse ? (getStyle(effect.styleUse.styleId)?.mods.pierce ?? 0) * 0.25 : 0;
   const fatigue = fatigueLevel(staminaBefore, character.maxStamina);
   const mult = FATIGUE_MULTIPLIERS[fatigue];
   const combatant: Combatant = {
@@ -56,6 +66,7 @@ export function prepareFighter(character: CharacterWithGear, technique: Techniqu
     atk: Math.max(1, Math.round((base.atk + effect.atk + tacticModifier) * mult.atk)),
     def: Math.max(1, Math.round((base.def + effect.def + Math.round(tacticModifier / 2)) * mult.def)),
     spd: Math.max(1, Math.round((base.spd + effect.spd) * mult.spd)),
+    ...(((base.pierce ?? 0) + stylePierce) > 0 ? { pierce: Math.min(0.5, (base.pierce ?? 0) + stylePierce) } : {}),
   };
   const effortCost = effortStaminaCost(effort, character.maxStamina);
   // Experience makes every action cheaper: a veteran spends less breath on the same move.
@@ -82,6 +93,10 @@ export function combatProgressData(character: Character, prepared: PreparedFight
     const gain = masteryGainFromUse(rng, character.fruitMastery, character.intellect);
     if (gain > 0) data.fruitMastery = character.fruitMastery + gain;
   }
+  if (used === "style" && prepared.effect.styleUse && styleGrowthFromUse(rng, styleMasteryNow(character, prepared.effect.styleUse.styleId)) > 0) {
+    // Fire-and-forget: mastery from use is a bonus and must never block or break the fight that earned it.
+    void bumpStyleMastery(character.id, prepared.effect.styleUse.styleId);
+  }
   if (used === "armament") {
     const gain = hakiGrowthFromUse(rng, used, character.armamentHaki);
     if (gain > 0) data.armamentHaki = character.armamentHaki + gain;
@@ -93,6 +108,18 @@ export function combatProgressData(character: Character, prepared: PreparedFight
   return data;
 }
 
+function styleMasteryNow(character: Character & { styles?: { styleId: string; mastery: number }[] }, styleId: string): number {
+  return character.styles?.find((s) => s.styleId === styleId)?.mastery ?? 100;
+}
+
+async function bumpStyleMastery(characterId: string, styleId: string): Promise<void> {
+  try {
+    await prisma.characterStyle.updateMany({ where: { characterId, styleId, mastery: { lt: 100 } }, data: { mastery: { increment: 1 } } });
+  } catch {
+    // best effort
+  }
+}
+
 /** Everything this character can genuinely do right now, as text for the narrator (used by duels and group fights). */
 export function characterCapabilityText(character: CharacterWithGear, companions: string[] = []): string {
   return describeCapabilities({
@@ -100,5 +127,6 @@ export function characterCapabilityText(character: CharacterWithGear, companions
     conquerorsHaki: character.conquerorsHaki, fruitName: character.devilFruit?.name, fruitMastery: character.fruitMastery,
     fruitAwakened: character.fruitAwakened, weaponName: character.equippedWeapon?.name, stamina: currentStamina(character),
     maxStamina: character.maxStamina, hp: character.hp, maxHp: character.maxHp, companions,
+    styles: describeStyles((character.styles ?? []).map((s) => ({ id: s.styleId, mastery: s.mastery })), wieldedWeapons(character).length, wieldedWeapons(character).map((w) => w.name)),
   });
 }

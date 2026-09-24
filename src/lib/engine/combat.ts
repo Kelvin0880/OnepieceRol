@@ -11,6 +11,8 @@ export interface Combatant {
   spd: number;
   /** Experience: higher levels soak more damage and tire slower (engine/resilience.ts). Absent = no adjustment. */
   level?: number;
+  /** Fraction (0-0.5) of the defender's defence this attacker ignores: vibration, claw and internal-shock styles. */
+  pierce?: number;
 }
 
 export interface CombatRoundLog {
@@ -33,7 +35,7 @@ export interface CombatResult {
 export const MAX_ROUNDS = 60; // only a stalemate guard: stamina and HP end fights long before this
 
 export function attackOnce(rng: Rng, attacker: Combatant, defender: Combatant): { damage: number; outcome: CombatRoundLog["outcome"]; roll: number } {
-  const defenderDifficulty = 40 + defender.def;
+  const defenderDifficulty = 40 + Math.round(defender.def * (1 - Math.max(0, Math.min(0.5, attacker.pierce ?? 0))));
   const check = skillCheck(rng, attacker.atk, defenderDifficulty);
 
   let damage = 0;

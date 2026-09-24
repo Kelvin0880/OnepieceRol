@@ -55,7 +55,7 @@ const FLEE_TOKEN = "__flee__";
 const NPC_PREFIX = "npc:";
 
 const loadFull = (id: string) =>
-  prisma.character.findUnique({ where: { id }, include: { devilFruit: true, equippedWeapon: true, currentIsland: true, companions: true } });
+  prisma.character.findUnique({ where: { id }, include: { devilFruit: true, equippedWeapon: true, currentIsland: true, companions: true, styles: true, ownedWeapons: { where: { wielded: true } } } });
 
 /** The active joint fight this character is part of (fighting or downed), lazily cancelling abandoned ones. */
 export async function getOpenJointFightFor(characterId: string) {
@@ -289,7 +289,7 @@ async function resolveJointRoundFor(fightId: string) {
       tactic = GUARD_TACTIC;
       text = "se cubre y aguanta, sin decidirse a tiempo";
     }
-    const prep = prepareFighter(c, p.technique as TechniqueId, tactic, p.hp);
+    const prep = prepareFighter(c, p.technique as TechniqueId, tactic, p.hp, undefined, p.action ?? "");
     prepared.set(p.characterId, prep);
     fighters.push({ id: p.characterId, hp: p.hp, combatant: { ...prep.combatant, hp: p.hp, maxHp: c.maxHp } });
     actionsForNarration.push({ name: p.name, text, technique: p.technique !== "none" ? TECHNIQUE_LABELS[p.technique as TechniqueId] : undefined });

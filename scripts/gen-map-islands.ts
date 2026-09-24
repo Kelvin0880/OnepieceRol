@@ -15,14 +15,22 @@ const NEW: Record<string, { key: string; x: number; y: number }> = {
   "Laugh Tale": { key: "laughTale", x: 560, y: 650 },
   "Isla Abismo": { key: "abyss", x: 1620, y: 110 },
   "Mary Geoise": { key: "maryGeoise", x: 1620, y: 400 },
+  Jaya: { key: "jaya", x: 1360, y: 210 },
+  "Long Ring Long Land": { key: "longRing", x: 1200, y: 70 },
+  "Thriller Bark": { key: "thrillerBark", x: 1250, y: 730 },
+  "Amazon Lily": { key: "amazonLily", x: 1550, y: 640 },
+  "Isla Kuraigana": { key: "kuraigana", x: 1040, y: 200 },
+  Elbaf: { key: "elbaf", x: 400, y: 735 },
 };
+
+const ONLY = new Set(["Jaya", "Long Ring Long Land", "Thriller Bark", "Amazon Lily", "Isla Kuraigana", "Elbaf"]);
 
 async function main() {
   const rows = await prisma.island.findMany({ include: { poneglyph: true } });
   const out: string[] = [];
   for (const r of rows) {
     const n = NEW[r.name];
-    if (!n) continue;
+    if (!n || !ONLY.has(r.name)) continue;
     out.push(
       `  { key: ${JSON.stringify(n.key)}, name: ${JSON.stringify(r.name)}, sea: ${JSON.stringify(r.sea === "NEW_WORLD" ? "New World" : r.sea)}, danger: ${r.dangerLevel}, minLevel: ${r.minLevelToEnter}, faction: ${JSON.stringify(r.factionControl)}, poneglyph: ${r.hasPoneglyph}${r.poneglyph ? `, poneglyphName: ${JSON.stringify(r.poneglyph.codeName)}` : ""}, x: ${n.x}, y: ${n.y},\n    desc: ${JSON.stringify(r.description)},\n    hook: ${JSON.stringify(r.arcHook ?? "")} },`
     );

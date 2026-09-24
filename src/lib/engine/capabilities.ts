@@ -18,6 +18,12 @@ export interface CapabilitySheet {
   companions: string[];
   /** "Título · te faltan N para X" — the standing the world sees. */
   rank?: string;
+  /** describeAttributes(): the five attributes in words. */
+  attributes?: string;
+  /** describeInventory(): what the backpack holds. */
+  inventory?: string;
+  /** describeStyles(): the weapons in hand and the combat styles really known. */
+  styles?: string;
 }
 
 function hakiWord(v: number): string {
@@ -48,6 +54,9 @@ export function describeCapabilities(c: CapabilitySheet): string {
   const fatigue = fatigueLevel(c.stamina, c.maxStamina);
   parts.push(`estado: ${FATIGUE_LABELS[fatigue]} (aguante ${c.stamina}/${c.maxStamina}, vida ${c.hp}/${c.maxHp})`);
   if (c.rank) parts.push(`rango: ${c.rank}`);
+  if (c.attributes) parts.push(`atributos: ${c.attributes}`);
+  if (c.inventory) parts.push(c.inventory);
+  if (c.styles) parts.push(c.styles);
   if (c.companions.length) parts.push(`nakamas a su lado: ${c.companions.join(", ")}`);
   return `CAPACIDADES REALES DE ${c.name.toUpperCase()} (fuente de verdad: no narres que hace o usa nada que exceda esto, ni olvides lo que sí tiene; un cuerpo fatigado rinde peor y se nota): ${parts.join("; ")}.`;
 }

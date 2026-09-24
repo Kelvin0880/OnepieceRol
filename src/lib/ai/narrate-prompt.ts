@@ -694,3 +694,36 @@ export function buildWorldEventPrompt(input: WorldEventNarrationInput): { system
     "\nEscribe el titular y el cuerpo.";
   return { system, user };
 }
+
+export interface ColiseumMatchInput {
+  a: string;
+  b: string;
+  winner: string;
+  aHpPct: number;
+  bHpPct: number;
+  walkover?: boolean;
+}
+
+export interface ColiseumNarrationInput {
+  roundLabel: string;
+  matches: ColiseumMatchInput[];
+  prize: string;
+  finalRound: boolean;
+  champion?: string;
+}
+
+/** A round of the Dressrosa Coliseum: every result is already decided (and non-lethal); the narrator only stages the crowd and the fights. */
+export function buildColiseumPrompt(input: ColiseumNarrationInput): PromptOut {
+  const words = Math.min(300, 70 + input.matches.length * 30);
+  const system =
+    "Eres el cronista del Coliseo de Dressrosa en un rol de piratas de One Piece. Los resultados de cada combate ya están decididos y son definitivos: cuéntalos con ritmo, sin cambiarlos. " +
+    "Es un torneo de gladiadores NO letal: nadie muere ni queda mutilado, los derrotados salen del arena por su propio pie o en camilla. No inventes combates, participantes ni premios que no se te den. " +
+    "Usa los nombres tal cual. No reveles que eres una IA. Escribe en español, con lenguaje sencillo, sin listas ni markdown. " +
+    `EXTENSIÓN: alrededor de ${words} palabras como máximo; una o dos frases por combate y una mención al público.`;
+  const lines = input.matches.map((m, i) => `${i + 1}. ${m.a} vs ${m.b}: ${m.walkover ? `${m.winner} avanza porque su rival no se presentó` : `gana ${m.winner} (salud final: ${m.a} ${m.aHpPct}%, ${m.b} ${m.bHpPct}%)`}`).join("\n");
+  const user =
+    `${input.roundLabel}.\nResultados ya decididos:\n${lines}\n` +
+    `Premio del torneo: ${input.prize}.\n` +
+    (input.finalRound && input.champion ? `Es la FINAL: ${input.champion} es el campeón y se lleva el premio. Cierra con la ceremonia.` : "Termina anunciando que los ganadores pasan a la siguiente ronda.");
+  return { system, user, maxTokens: Math.round(words * 2.6) + 80 };
+}

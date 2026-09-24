@@ -54,7 +54,7 @@ async function main() {
   const kizaru = await prisma.worldActor.findUniqueOrThrow({ where: { name: "Kizaru" }, include: { devilFruit: true } });
   check(kizaru.devilFruit?.name === "Pika Pika no Mi", "Kizaru still holds the Pika Pika no Mi");
   const kaido = await prisma.worldActor.findUniqueOrThrow({ where: { name: "Kaido" }, include: { devilFruit: true } });
-  check(kaido.status === "DEFEATED" && !!kaido.devilFruit, "Kaido is defeated (lore) but keeps his signature fruit");
+  check(kaido.status === "ACTIVE" && !!kaido.devilFruit, "Kaido is active again (the owner keeps him alive) with his signature fruit");
   const bounties = await prisma.worldActor.count({ where: { canonBounty: { not: null } } });
   check(bounties >= 40, `many characters carry a canon bounty (${bounties})`);
 

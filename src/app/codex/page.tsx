@@ -31,6 +31,7 @@ interface Actor {
   devilFruit: { name: string; englishName: string; type: string; rarity: string } | null;
   stats: Stats | null;
   abilities: string[];
+  styles?: string[];
   home: string | null;
   location: string | null;
   locationKind: string | null;
@@ -119,6 +120,11 @@ function ActorCard({ a }: { a: Actor }) {
           <Bar label="Haki de Observación" value={a.stats.observationHaki} />
           <div className="text-[10px] text-ink-dim self-end">Haki del Rey: {a.stats.conquerorsHaki ? "sí" : "no"}</div>
         </div>
+      )}
+      {a.styles && a.styles.length > 0 && (
+        <p className="text-xs text-gold" data-testid="codex-styles">
+          Estilo de combate: {a.styles.join(" · ")}
+        </p>
       )}
       {a.abilities.length > 0 && (
         <div>

@@ -38,7 +38,7 @@ const RECENT_FINISHED_MS = 15 * 60 * 1000;
 const FLEE_FAILED_TACTIC = -10;
 
 async function loadFighter(characterId: string) {
-  return prisma.character.findUnique({ where: { id: characterId }, include: { devilFruit: true, equippedWeapon: true, currentIsland: true, companions: true } });
+  return prisma.character.findUnique({ where: { id: characterId }, include: { devilFruit: true, equippedWeapon: true, currentIsland: true, companions: true, styles: true, ownedWeapons: { where: { wielded: true } } } });
 }
 
 /** The duel (if any) this character is currently tied up in: proposed or actively being fought. Lazily expires abandoned ones. */
@@ -243,8 +243,8 @@ async function resolveDuelRoundFor(duelId: string) {
     }
   }
 
-  const aPrep = prepareFighter(a, duel.challengerTechnique as TechniqueId, aTactic, aHp);
-  const bPrep = prepareFighter(b, duel.opponentTechnique as TechniqueId, bTactic, bHp);
+  const aPrep = prepareFighter(a, duel.challengerTechnique as TechniqueId, aTactic, aHp, undefined, duel.challengerAction ?? "");
+  const bPrep = prepareFighter(b, duel.opponentTechnique as TechniqueId, bTactic, bHp, undefined, duel.opponentAction ?? "");
 
   if (escaped) {
     finished = true;

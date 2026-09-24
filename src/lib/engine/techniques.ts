@@ -1,4 +1,5 @@
 import { Rng } from "./rng";
+import type { StyleUse } from "./styles";
 import { FruitPhase, fruitPowerMultiplier, fruitStaminaMultiplier } from "./fruit-mastery";
 
 /**
@@ -9,9 +10,9 @@ import { FruitPhase, fruitPowerMultiplier, fruitStaminaMultiplier } from "./frui
  * in code — a requested technique that can't be used silently downgrades to
  * "none" and the narrator is told so.
  */
-export type TechniqueId = "none" | "armament" | "observation" | "conqueror" | "fruit";
+export type TechniqueId = "none" | "armament" | "observation" | "conqueror" | "fruit" | "style";
 
-export const TECHNIQUE_IDS: TechniqueId[] = ["none", "armament", "observation", "conqueror", "fruit"];
+export const TECHNIQUE_IDS: TechniqueId[] = ["none", "armament", "observation", "conqueror", "fruit", "style"];
 
 export const TECHNIQUE_LABELS: Record<TechniqueId, string> = {
   none: "combate básico",
@@ -19,6 +20,7 @@ export const TECHNIQUE_LABELS: Record<TechniqueId, string> = {
   observation: "Haki de Observación",
   conqueror: "Haki del Rey",
   fruit: "poder de la Akuma no Mi",
+  style: "estilo de combate",
 };
 
 export function isTechniqueId(value: unknown): value is TechniqueId {
@@ -33,6 +35,8 @@ export interface TechniqueContext {
   fruitBase: { atk: number; def: number; spd: number } | null;
   fruitPhase: FruitPhase;
   stamina: number;
+  /** The style technique the player's text calls for, already resolved by the game layer; null when none fits what is wielded. */
+  style?: StyleUse | null;
 }
 
 export interface TechniqueEffect {
@@ -40,6 +44,7 @@ export interface TechniqueEffect {
   used: TechniqueId;
   downgraded: boolean;
   downgradeReason?: string;
+  styleUse?: StyleUse;
   atk: number;
   def: number;
   spd: number;
@@ -70,6 +75,9 @@ function baseCostAndBonus(id: TechniqueId, ctx: TechniqueContext): { cost: numbe
         spd: Math.round(ctx.fruitBase.spd * scale),
       };
     }
+    case "style":
+      if (!ctx.style) return { cost: 0, atk: 0, def: 0, spd: 0, unavailable: "no domina ningún estilo de combate que funcione con lo que empuña ahora" };
+      return { cost: ctx.style.cost, atk: ctx.style.atk, def: ctx.style.def, spd: ctx.style.spd };
     default:
       return { cost: BASIC_COST, atk: 0, def: 0, spd: 0 };
   }
@@ -83,7 +91,7 @@ export function resolveTechnique(requested: TechniqueId, ctx: TechniqueContext):
   if (wanted.cost > ctx.stamina) {
     return { requested, used: "none", downgraded: true, downgradeReason: "no le queda aliento para sostener la técnica", atk: 0, def: 0, spd: 0, staminaCost: BASIC_COST };
   }
-  return { requested, used: requested, downgraded: false, atk: wanted.atk, def: wanted.def, spd: wanted.spd, staminaCost: wanted.cost };
+  return { requested, used: requested, downgraded: false, ...(requested === "style" && ctx.style ? { styleUse: ctx.style } : {}), atk: wanted.atk, def: wanted.def, spd: wanted.spd, staminaCost: wanted.cost };
 }
 
 /** Haki also grows from being used under pressure, not only from the training button. */

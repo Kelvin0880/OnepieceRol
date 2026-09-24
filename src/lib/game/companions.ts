@@ -1,3 +1,4 @@
+import { belongingsFor } from "../engine/inventory";
 import { prisma } from "../db";
 import { CharacterStatus } from "@prisma/client";
 import { liveRng } from "../engine/rng";
@@ -24,6 +25,8 @@ export interface CompanionView {
   abilities: string[];
   nextAbilityAtLevel: number | null;
   personality: string | null;
+  /** What this nakama carries (engine/inventory.ts belongingsFor): shown on the card and told to the narrator. */
+  belongings: string[];
 }
 
 const ABILITY_LEVELS = [1, 5, 12];
@@ -62,6 +65,7 @@ export async function getCompanionViews(characterId: string, ownerLevel: number)
       abilities: sheet.abilities,
       nextAbilityAtLevel: ABILITY_LEVELS.find((l) => l > ownerLevel) ?? null,
       personality: c.personality,
+      belongings: belongingsFor(c.role),
     };
   });
 }
