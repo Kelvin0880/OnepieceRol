@@ -52,8 +52,9 @@ try {
   await page.screenshot({ path: path.join(shotsDir, "grudge-01-ambush.png"), fullPage: true });
 
   check("grudge-ambush encounter shows the lieutenant's name", await page.locator("text=Lugarteniente de Barbanegra").first().isVisible().catch(() => false));
-  const hpBefore = await page.locator("text=320/320").isVisible().catch(() => false);
-  check("enemy starts at the reused snapshot's full HP (320/320)", hpBefore);
+  const seededHp = Number(execSync('npx tsx scripts/print-seeded-hp.ts "La guardia personal de Barbanegra"', { cwd: process.cwd() }).toString().trim());
+  const hpBefore = await page.locator(`text=${seededHp}/${seededHp}`).first().isVisible().catch(() => false);
+  check(`enemy starts at the reused snapshot's full HP (${seededHp}/${seededHp})`, hpBefore);
 
   await page.fill("textarea", "Desenfundo mi arma y me preparo para el segundo asalto.");
   await page.click('button:has-text("Actuar")');

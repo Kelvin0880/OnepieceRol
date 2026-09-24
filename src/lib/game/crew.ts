@@ -1,5 +1,6 @@
 import { prisma } from "../db";
-import { crewNounForFaction } from "../engine/crew-noun";
+import { crewNounForFaction, factionCanHaveCrew, SOLO_FACTION_REASON } from "../engine/crew-noun";
+import { parseEmblemDataUrl } from "../engine/crew-emblem";
 import { inviteBlockReason, inviteExpired, INVITE_TTL_MS } from "../engine/crew-invite";
 import { notifyCharacters } from "../realtime";
 
@@ -13,6 +14,7 @@ async function loadOwnedCharacter(characterId: string, userId: string) {
 
 export async function createCrew(characterId: string, userId: string, name: string, flagDesc: string, shipName?: string) {
   const character = await loadOwnedCharacter(characterId, userId);
+  if (!factionCanHaveCrew(character.faction)) throw new CrewError(SOLO_FACTION_REASON);
   if (character.crewId) throw new CrewError(`Ya perteneces a una ${crewNounForFaction(character.faction).toLowerCase()}. Abandónala primero.`);
 
   const trimmedName = name.trim();
@@ -40,6 +42,7 @@ export async function createCrew(characterId: string, userId: string, name: stri
 
 export async function joinCrew(characterId: string, userId: string, inviteCode: string) {
   const character = await loadOwnedCharacter(characterId, userId);
+  if (!factionCanHaveCrew(character.faction)) throw new CrewError(SOLO_FACTION_REASON);
   if (character.crewId) throw new CrewError(`Ya perteneces a una ${crewNounForFaction(character.faction).toLowerCase()}. Abandónala primero.`);
 
   const crew = await prisma.crew.findUnique({ where: { inviteCode: inviteCode.trim() }, include: { members: true } });
@@ -86,6 +89,7 @@ async function crewMemberIds(crewId: string): Promise<string[]> {
 /** Players who could be invited right now: alive, no crew, same faction — those on your island first, or by name. */
 export async function findCrewCandidates(characterId: string, userId: string, name?: string) {
   const me = await loadOwnedCharacter(characterId, userId);
+  if (!factionCanHaveCrew(me.faction)) return [];
   const query = name?.trim();
   const rows = await prisma.character.findMany({
     where: {
@@ -126,6 +130,7 @@ export async function inviteToCrew(characterId: string, userId: string, target: 
   if (target.characterId) targetChar = await prisma.character.findUnique({ where: { id: target.characterId } });
   else if (target.name?.trim()) targetChar = await prisma.character.findFirst({ where: { name: target.name.trim() } });
   if (!targetChar) throw new CrewError("No encuentro a ese jugador. Escribe su nombre exacto o elígelo de la lista.");
+  if (!factionCanHaveCrew(targetChar.faction)) throw new CrewError(SOLO_FACTION_REASON);
 
   const pending = crew ? await prisma.crewInvite.count({ where: { crewId: crew.id, status: "PENDING" } }) : 0;
   const dup = crew ? await prisma.crewInvite.findFirst({ where: { crewId: crew.id, toCharacterId: targetChar.id, status: "PENDING" } }) : null;
@@ -191,4 +196,20 @@ export async function kickCrewMember(characterId: string, userId: string, target
   await prisma.gameLogEntry.create({ data: { characterId: target.id, kind: "crew", text: "El capitán te ha expulsado de la tripulación." } });
   notifyCharacters([target.id, ...(await crewMemberIds(me.crewId))], "crew-changed");
   return { message: `${target.name} ya no forma parte de la tripulación.` };
+}
+
+/** Captain-only: sets (or removes, with null) the crew flag image. The image is validated as a real, small raster picture. */
+export async function setCrewEmblem(characterId: string, userId: string, dataUrl: string | null) {
+  const me = await loadOwnedCharacter(characterId, userId);
+  if (!me.crewId) throw new CrewError("No tienes tripulación.");
+  if (!me.isCaptain) throw new CrewError("Solo el capitán puede cambiar la bandera.");
+  if (dataUrl === null) {
+    await prisma.crew.update({ where: { id: me.crewId }, data: { flagImage: null, flagImageType: null, flagImageUpdatedAt: null } });
+  } else {
+    const parsed = parseEmblemDataUrl(dataUrl);
+    if (!parsed.ok) throw new CrewError(parsed.reason);
+    await prisma.crew.update({ where: { id: me.crewId }, data: { flagImage: new Uint8Array(parsed.bytes), flagImageType: parsed.mime, flagImageUpdatedAt: new Date() } });
+  }
+  notifyCharacters(await crewMemberIds(me.crewId), "crew-changed");
+  return { message: dataUrl === null ? "Bandera eliminada." : "Bandera actualizada." };
 }

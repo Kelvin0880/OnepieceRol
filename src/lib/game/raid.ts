@@ -76,7 +76,7 @@ async function finalizeCrown(raid: Raid): Promise<Raid> {
   }
   await prisma.worldClock.upsert({ where: { id: 1 }, create: { id: 1, era: NEW_ERA }, update: { era: NEW_ERA } });
   await prisma.raid.update({ where: { id: raid.id }, data: { finalBlowCharacterId: winnerId ?? raid.finalBlowCharacterId } });
-  await postNews("Empieza la Nueva Era", newEraNewsBody(kingName), "Gobierno Mundial", winnerId ?? undefined, "major");
+  await postNews("Empieza la Nueva Era", newEraNewsBody(kingName), "Gobierno Mundial", winnerId ?? undefined, "major", { locationName: "Mary Geoise" });
   notifyCharacters(participants, "raid");
   return prisma.raid.findUniqueOrThrow({ where: { id: raid.id } });
 }

@@ -3,6 +3,7 @@ import { z } from "zod";
 import { prisma } from "@/lib/db";
 import { hashPassword } from "@/lib/auth";
 import { getSession } from "@/lib/session";
+import { isAdminLookalike } from "@/lib/admin";
 
 const schema = z.object({
   username: z.string().trim().min(3).max(20).regex(/^[a-zA-Z0-9_]+$/, "Solo letras, números y guiones bajos."),
@@ -16,6 +17,8 @@ export async function POST(req: NextRequest) {
   }
 
   const { username, password } = parsed.data;
+  // A name that differs from the owner's only by case could be mistaken for the owner.
+  if (isAdminLookalike(username)) return NextResponse.json({ error: "Ese nombre de usuario está reservado." }, { status: 409 });
   const existing = await prisma.user.findUnique({ where: { username } });
   if (existing) {
     return NextResponse.json({ error: "Ese nombre de usuario ya está en uso." }, { status: 409 });

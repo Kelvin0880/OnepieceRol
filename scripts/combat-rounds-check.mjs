@@ -69,8 +69,14 @@ try {
   check("round 1 resolved into either an ongoing fight or a win — not stuck", stillThreatOrFighting1);
   await shot(page, "combat-02-round1.png");
 
-  const enemyDamaged = !(await page.locator("text=25/25").isVisible().catch(() => false));
-  check("enemy HP bar changed after round 1 (combat is genuinely incremental)", enemyDamaged);
+  // A single exchange can legitimately miss (the dice decide), so allow up to three rounds before asserting the bar moved.
+  let enemyDamaged = !(await page.locator("text=25/25").isVisible().catch(() => false));
+  for (let extra = 0; !enemyDamaged && extra < 2; extra++) {
+    if (await page.locator("text=está derrotado y a tu merced").isVisible().catch(() => false)) break;
+    await act(page, "Insisto con otro ataque, buscando su guardia baja.");
+    enemyDamaged = !(await page.locator("text=25/25").isVisible().catch(() => false));
+  }
+  check("enemy HP bar changes within the first rounds (combat is genuinely incremental)", enemyDamaged);
 
   // Keep fighting through several more rounds until it resolves.
   let resolved = await page.locator("text=está derrotado y a tu merced").isVisible().catch(() => false);

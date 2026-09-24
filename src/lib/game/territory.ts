@@ -65,7 +65,7 @@ async function revertToPower(t: Territory, why: string): Promise<Territory> {
       lastPressureAt: new Date(),
     },
   });
-  await postNews(`${actor?.name ?? "El antiguo poder"} recupera ${island?.name ?? "la isla"}`, why, "Guerra", undefined, "major");
+  await postNews(`${actor?.name ?? "El antiguo poder"} recupera ${island?.name ?? "la isla"}`, why, "Guerra", undefined, "major", { locationName: island?.name, islandId: island?.id });
   return updated;
 }
 
@@ -373,7 +373,7 @@ export async function handleConquestSettled(fight: SettledConquestFight): Promis
     if (next) {
       await prisma.territory.update({ where: { id: raw.id }, data: { status: "CONQUEST", stage: next, contributionsJson: JSON.stringify(contributions), lastActivityAt: new Date() } });
       lines.push(`Se rompe ${STAGE_LABELS[stage]}. Siguiente frente: ${STAGE_LABELS[next]}.`);
-      await postNews(`${island.name} se tambalea`, `Un asalto ha roto ${STAGE_LABELS[stage]} de ${raw.ownerName} en ${island.name}. La resistencia empieza a resquebrajarse.`, "Guerra", undefined, "normal");
+      await postNews(`${island.name} se tambalea`, `Un asalto ha roto ${STAGE_LABELS[stage]} de ${raw.ownerName} en ${island.name}. La resistencia empieza a resquebrajarse.`, "Guerra", undefined, "normal", { locationName: island.name, islandId: island.id });
     } else {
       await prisma.territory.update({
         where: { id: raw.id },

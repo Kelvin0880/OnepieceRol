@@ -81,6 +81,7 @@ export async function markActorDefeated(actorId: string, defeatedBy: string, isl
     `Testigos aseguran que ${actor.name} tuvo que replegarse tras enfrentarse en persona a ${defeatedBy}. Nadie duda de que querrá cobrárselo, pero por ahora sus dominios quedan en manos de subordinados.`,
     "Guerra",
     undefined,
-    "major"
+    "major",
+    { locationName: islandName }
   );
 }

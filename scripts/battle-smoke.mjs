@@ -5,6 +5,7 @@
 import { chromium } from "playwright";
 import path from "path";
 import fs from "fs";
+import { foundCrew, joinCrewByCode } from "./lib/crew-ui.mjs";
 
 const shotsDir = path.resolve(process.cwd(), "shots");
 fs.mkdirSync(shotsDir, { recursive: true });
@@ -45,26 +46,12 @@ try {
   const b2 = await registerAndCreate("b2", "Beta Dos", "Luchador Cuerpo a Cuerpo");
 
   // Found crews.
-  await a1.page.fill('input[placeholder="Nombre"]', "Crew Alfa " + Date.now());
-  await a1.page.fill('input[placeholder="Emblema / descripción"]', "Bandera de prueba A");
-  await a1.page.click('button:has-text("Fundar")');
-  await a1.page.waitForSelector("text=Código de invitación");
-  const codeA = (await a1.page.locator("p.font-mono.text-gold").innerText()).trim();
-
-  await b1.page.fill('input[placeholder="Nombre"]', "Crew Beta " + Date.now());
-  await b1.page.fill('input[placeholder="Emblema / descripción"]', "Bandera de prueba B");
-  await b1.page.click('button:has-text("Fundar")');
-  await b1.page.waitForSelector("text=Código de invitación");
-  const codeB = (await b1.page.locator("p.font-mono.text-gold").innerText()).trim();
+  const codeA = await foundCrew(a1.page, "Crew Alfa " + Date.now(), "Bandera de prueba A");
+  const codeB = await foundCrew(b1.page, "Crew Beta " + Date.now(), "Bandera de prueba B");
 
   // Join.
-  await a2.page.fill('input[placeholder="Código de invitación"]', codeA);
-  await a2.page.click('button:has-text("Unirse")');
-  await a2.page.waitForSelector("text=Alfa Uno");
-
-  await b2.page.fill('input[placeholder="Código de invitación"]', codeB);
-  await b2.page.click('button:has-text("Unirse")');
-  await b2.page.waitForSelector("text=Beta Uno");
+  await joinCrewByCode(a2.page, codeA);
+  await joinCrewByCode(b2.page, codeB);
 
   // A1 refreshes to see presence + the challenge button.
   await a1.page.reload();

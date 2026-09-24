@@ -100,6 +100,15 @@ try {
   await pa.click('button:has-text("Puntos de restauración")');
   const row = pa.locator('[data-testid="ooc-points"] > div', { hasText: "Antes de entrenar" });
   await row.locator('[data-testid="ooc-rollback"]').click();
+  await pa.waitForSelector('[data-testid="rollback-warning"]');
+  const warn = await pa.textContent('[data-testid="rollback-warning"]');
+  check("a rollback first shows a warning that the narrator will forget everything after that point", warn.includes("olvidará") && warn.includes("borrar una parte de tu historia"));
+  check("the warning lists what will be erased", (await pa.textContent('[data-testid="rollback-lists"]')).includes("mensajes de la escena"));
+  await pa.screenshot({ path: path.join(shots, "ooc-04-rollback-warning.png") });
+  await pa.click('[data-testid="ooc-rollback-cancel"]');
+  check("the warning can be cancelled without changing anything", (await pa.locator('[data-testid="rollback-warning"]').count()) === 0);
+  await row.locator('[data-testid="ooc-rollback"]').click();
+  await pa.waitForSelector('[data-testid="ooc-rollback-confirm"]');
   await pa.click('[data-testid="ooc-rollback-confirm"]');
   await pa.waitForSelector('[data-testid="ooc-notice"]:has-text("Volviste")');
   check("rollback to a restore point works and reports it", true);

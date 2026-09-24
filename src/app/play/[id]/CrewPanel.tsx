@@ -48,6 +48,8 @@ export interface PanelCrew {
   shipName: string;
   captainId: string;
   inviteCode: string;
+  hasEmblem: boolean;
+  emblemVersion: number;
   members: PanelMember[];
 }
 
@@ -96,6 +98,23 @@ const hakiText = (m: PanelMember) => {
   return parts.length ? parts.join(" · ") : "sin Haki";
 };
 
+/** Shrinks any picked image to a 256px square (cover) WebP/JPEG in the browser, so uploads stay tiny and valid. */
+async function shrinkToDataUrl(file: File): Promise<string> {
+  const bitmap = await createImageBitmap(file);
+  const size = 256;
+  const canvas = document.createElement("canvas");
+  canvas.width = size;
+  canvas.height = size;
+  const ctx = canvas.getContext("2d");
+  if (!ctx) throw new Error("no canvas");
+  const scale = Math.max(size / bitmap.width, size / bitmap.height);
+  const w = bitmap.width * scale;
+  const h = bitmap.height * scale;
+  ctx.drawImage(bitmap, (size - w) / 2, (size - h) / 2, w, h);
+  const webp = canvas.toDataURL("image/webp", 0.85);
+  return webp.startsWith("data:image/webp") ? webp : canvas.toDataURL("image/jpeg", 0.85);
+}
+
 /**
  * Own panel for everything crew: members with their live status (so you can see how your
  * nakamas are doing in multiplayer), NPC nakamas with stats and abilities, and the full
@@ -106,6 +125,7 @@ export default function CrewPanel({
   characterName,
   characterLevel,
   isCaptain,
+  faction,
   crew,
   companions,
   factionNoun,
@@ -116,6 +136,7 @@ export default function CrewPanel({
   characterName: string;
   characterLevel: number;
   isCaptain: boolean;
+  faction: string;
   crew: PanelCrew | null;
   companions: PanelCompanion[];
   factionNoun: string;
@@ -182,25 +203,53 @@ export default function CrewPanel({
   );
 
   const aliveNpcs = companions.filter((c) => c.status === "ALIVE").length;
+  const isSolo = faction === "BOUNTY_HUNTER";
+
+  async function pickEmblem(file: File | undefined) {
+    if (!file) return;
+    setBusy(true);
+    setError(null);
+    try {
+      const dataUrl = await shrinkToDataUrl(file);
+      await op({ op: "set_emblem", dataUrl });
+    } catch {
+      setError("No pude leer esa imagen. Prueba con un PNG, JPG o WebP.");
+    } finally {
+      setBusy(false);
+    }
+  }
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "rgba(0,0,0,0.65)" }} onClick={onClose} data-testid="crew-panel">
       <div className="panel p-4 w-full max-w-3xl max-h-[92vh] overflow-y-auto flex flex-col gap-3" onClick={(e) => e.stopPropagation()}>
         <div className="flex items-start justify-between gap-2">
-          <div>
+          <div className="flex items-center gap-3">
+            {crew?.hasEmblem && (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={`/api/crews/${crew.id}/emblem?v=${crew.emblemVersion}`} alt={`Bandera de ${crew.name}`} className="w-14 h-14 rounded border border-gold/40 object-cover" data-testid="crew-emblem" />
+            )}
+            <div>
             <h3 className="font-display text-xl text-gold-bright">{crew ? crew.name : factionNoun}</h3>
             {crew && (
               <p className="text-xs text-ink-dim">
                 {crew.flagDesc} · Barco: {crew.shipName}
               </p>
             )}
+            </div>
           </div>
           <button className="btn-ghost px-3 py-1.5 text-xs" onClick={onClose}>
             Cerrar
           </button>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
+        {isSolo && (
+          <div className="rounded border border-gold/40 p-4" data-testid="solo-notice">
+            <p className="text-sm text-gold-bright">Los cazarrecompensas trabajan siempre en solitario.</p>
+            <p className="text-xs text-ink-dim mt-1">No formas tripulación ni te unes a ninguna: tu gremio es tu reputación. Sí puedes reclutar nakamas NPC con tu texto ({aliveNpcs}/3 ahora mismo) y pelear junto a otros jugadores cuando la ocasión lo pida.</p>
+          </div>
+        )}
+
+        <div className={`flex gap-2 flex-wrap ${isSolo ? "hidden" : ""}`}>
           {tabBtn("crew", "Miembros")}
           {tabBtn("nakamas", `Nakamas NPC (${aliveNpcs}/3)`)}
           {tabBtn("invite", "Invitar y unirse", received.length)}
@@ -217,7 +266,7 @@ export default function CrewPanel({
           </p>
         )}
 
-        {tab === "crew" && (
+        {!isSolo && tab === "crew" && (
           <div className="flex flex-col gap-3">
             {!crew && <p className="text-sm text-ink-dim">Aún no tienes {factionNoun.toLowerCase()}. Funda una o únete a otra desde la pestaña «Invitar y unirse».</p>}
             {crew && (
@@ -271,6 +320,22 @@ export default function CrewPanel({
                     </button>
                   </div>
                 </div>
+                {isCaptain && (
+                  <div className="rounded border border-white/10 p-3 flex flex-col gap-2" data-testid="emblem-editor">
+                    <p className="text-xs text-ink-dim">Bandera de tu {factionNoun.toLowerCase()} (imagen cuadrada; se ajusta sola a 256 px):</p>
+                    <div className="flex gap-2 items-center flex-wrap">
+                      <label className="btn-ghost px-3 py-1.5 text-xs cursor-pointer">
+                        Subir imagen
+                        <input type="file" accept="image/png,image/jpeg,image/webp,image/gif" className="hidden" data-testid="emblem-file" onChange={(e) => pickEmblem(e.target.files?.[0])} />
+                      </label>
+                      {crew.hasEmblem && (
+                        <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => op({ op: "set_emblem", dataUrl: null })}>
+                          Quitar bandera
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                )}
                 {confirmLeave ? (
                   <div className="flex gap-2 items-center">
                     <span className="text-sm text-blood">¿Seguro que quieres abandonar {crew.name}?</span>
@@ -291,7 +356,7 @@ export default function CrewPanel({
           </div>
         )}
 
-        {tab === "nakamas" && (
+        {(isSolo || tab === "nakamas") && (
           <div className="flex flex-col gap-3" data-testid="nakamas">
             <p className="text-xs text-ink-dim">
               Tus nakamas NPC suben de nivel contigo (siempre a nivel {characterLevel}): nunca se quedan atrás. Para reclutar a alguien de la escena, invítalo con tu texto: «Jorge, únete a mi tripulación». Que acepte lo decide una tirada de persuasión.
@@ -324,7 +389,7 @@ export default function CrewPanel({
           </div>
         )}
 
-        {tab === "invite" && (
+        {!isSolo && tab === "invite" && (
           <div className="flex flex-col gap-4">
             <section data-testid="invites-received">
               <h4 className="font-display text-sm text-ink-dim mb-1">Invitaciones recibidas</h4>

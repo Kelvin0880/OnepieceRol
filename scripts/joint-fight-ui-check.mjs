@@ -5,6 +5,7 @@
 import { chromium } from "playwright";
 import path from "path";
 import fs from "fs";
+import { foundCrew, joinCrewByCode } from "./lib/crew-ui.mjs";
 
 const shotsDir = path.resolve(process.cwd(), "shots");
 fs.mkdirSync(shotsDir, { recursive: true });
@@ -48,14 +49,8 @@ try {
   const a = await registerAndCreate("jfA_" + stamp, "Capitan Uno");
   const b = await registerAndCreate("jfB_" + stamp, "Marinero Dos");
   const crewName = "Tormenta " + (stamp % 1000000);
-  await a.page.fill('input[placeholder="Nombre"]', crewName);
-  await a.page.fill('input[placeholder="Emblema / descripción"]', "Rayo sobre calavera.");
-  await a.page.click('button:has-text("Fundar")');
-  await a.page.waitForSelector(`text=${crewName}`);
-  const code = (await a.page.locator("p.font-mono.text-gold").innerText()).trim();
-  await b.page.fill('input[placeholder="Código de invitación"]', code);
-  await b.page.click('button:has-text("Unirse")');
-  await b.page.waitForSelector(`text=${crewName}`);
+  const code = await foundCrew(a.page, crewName, "Rayo sobre calavera.");
+  await joinCrewByCode(b.page, code);
   await a.page.reload();
   await b.page.reload();
   await a.page.waitForSelector("text=Escena compartida", { timeout: 15000 });

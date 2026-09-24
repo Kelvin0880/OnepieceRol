@@ -269,6 +269,21 @@ interface Character {
   isSeparatedFromParty: boolean;
 }
 
+interface WorldEventHere {
+  arcId: string;
+  title: string;
+  stage: number;
+  totalStages: number;
+  locationName: string | null;
+  minLevel: number;
+  canIntervene: boolean;
+  reason: string | null;
+  target: string;
+  aggressor: string | null;
+  defenders: number;
+  helpers: number;
+}
+
 interface DuelState {
   id: string;
   lethal: boolean;
@@ -296,6 +311,7 @@ interface JointFightState {
 }
 
 interface StateResponse {
+  worldEvent: WorldEventHere | null;
   character: Character;
   connectedIslands: Island[];
   othersHere: OtherHere[];
@@ -514,6 +530,21 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   // back that result instead of running the turn twice.
   const pendingRequest = useRef<{ key: string; id: string } | null>(null);
 
+  async function doWorldEvent(side: "defend" | "assist" | "chaos") {
+    if (!data?.worldEvent) return;
+    setBattleBusy(true);
+    setBattleError(null);
+    try {
+      const res = await fetch(`/api/characters/${id}/world-event`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ op: "intervene", arcId: data.worldEvent.arcId, side }) });
+      const result = await res.json().catch(() => ({}));
+      if (!res.ok) setBattleError(result.error ?? "No se pudo intervenir.");
+      else if (result.log) setFeed((f) => [...result.log, ...f].slice(0, 60));
+      await load();
+    } finally {
+      setBattleBusy(false);
+    }
+  }
+
   async function doAction(body: Record<string, unknown>): Promise<boolean> {
     setBusy(true);
     setError(null);
@@ -628,6 +659,9 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowGuideModal(true)}>
             Mapa y Guía
           </button>
+          <Link href="/codex" className="btn-ghost px-3 py-1.5 text-sm">
+            Códice
+          </Link>
           <Link href="/news" className="btn-ghost px-3 py-1.5 text-sm">
             Noticias
           </Link>
@@ -643,6 +677,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           characterName={character.name}
           characterLevel={character.level}
           isCaptain={character.isCaptain}
+          faction={character.faction}
           crew={character.crew}
           companions={character.companions}
           factionNoun={crewNounForFaction(character.faction as FactionKey)}
@@ -1042,6 +1077,42 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               )}
             </div>
           )}
+          {data.worldEvent && (
+            <div className="panel p-4" style={{ borderColor: "var(--gold)" }} data-testid="world-event-panel">
+              <div className="flex items-center justify-between mb-1">
+                <h3 className="font-display text-lg text-gold-bright">Evento mundial: {data.worldEvent.title}</h3>
+                <span className="text-xs text-orange-300">
+                  Capítulo {data.worldEvent.stage}/{data.worldEvent.totalStages}
+                </span>
+              </div>
+              <p className="text-sm text-ink-dim mb-2">
+                Algo grande está pasando aquí{data.worldEvent.locationName ? `, en ${data.worldEvent.locationName}` : ""}. {data.worldEvent.target}
+                {data.worldEvent.aggressor ? ` y ${data.worldEvent.aggressor}` : ""} están en el centro. Con nivel suficiente ({data.worldEvent.minLevel}+) puedes meterte: pelearás contra una vanguardia y tu victoria inclina la historia.
+              </p>
+              <p className="text-xs text-ink-dim mb-2">
+                Defensores: {data.worldEvent.defenders} · Aliados del agresor: {data.worldEvent.helpers}
+              </p>
+              {data.worldEvent.reason ? (
+                <p className="text-xs text-orange-300" data-testid="world-event-reason">
+                  {data.worldEvent.reason}
+                </p>
+              ) : (
+                <div className="flex gap-2 flex-wrap">
+                  <button className="btn-gold px-3 py-1.5 text-xs" disabled={battleBusy || !!jointActive} onClick={() => doWorldEvent("defend")} data-testid="intervene-defend">
+                    Defender a {data.worldEvent.target}
+                  </button>
+                  <button className="btn-ghost px-3 py-1.5 text-xs" disabled={battleBusy || !!jointActive} onClick={() => doWorldEvent("assist")} data-testid="intervene-assist">
+                    Apoyar a {data.worldEvent.aggressor ?? "los perseguidores"}
+                  </button>
+                  <button className="btn-ghost px-3 py-1.5 text-xs" disabled={battleBusy || !!jointActive} onClick={() => doWorldEvent("chaos")} data-testid="intervene-chaos">
+                    Pelear contra todos
+                  </button>
+                </div>
+              )}
+              {battleError && <p className="text-blood text-xs mt-2">{battleError}</p>}
+            </div>
+          )}
+
           {jointFight && (
             <div className="panel p-4" style={{ borderColor: "var(--blood)" }}>
               <div className="flex items-center justify-between mb-2">
@@ -1614,7 +1685,13 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
             </div>
             {character.crew ? (
               <div className="flex flex-col gap-1">
-                <p className="text-sm text-gold-bright">{character.crew.name}</p>
+                <div className="flex items-center gap-2">
+                  {character.crew.hasEmblem && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={`/api/crews/${character.crew.id}/emblem?v=${character.crew.emblemVersion}`} alt="" className="w-8 h-8 rounded border border-gold/40 object-cover" />
+                  )}
+                  <p className="text-sm text-gold-bright">{character.crew.name}</p>
+                </div>
                 <p className="text-xs text-ink-dim">
                   {character.crew.members.length} miembro{character.crew.members.length === 1 ? "" : "s"} · Barco: {character.crew.shipName}
                 </p>
@@ -1627,7 +1704,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                   )}
               </div>
             ) : (
-              <p className="text-xs text-ink-dim">Sin tripulación. Ábrela para fundar una, aceptar invitaciones o unirte con un código.</p>
+              <p className="text-xs text-ink-dim">{character.faction === "BOUNTY_HUNTER" ? "Los cazarrecompensas trabajan en solitario." : "Sin tripulación. Ábrela para fundar una, aceptar invitaciones o unirte con un código."}</p>
             )}
             {character.companions.length > 0 && (
               <div className="mt-2 pt-2 border-t border-[--line] flex flex-col gap-1" data-testid="companion-summary">

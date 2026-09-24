@@ -483,3 +483,96 @@ victoria, una semana.
 TIEMPO REAL
 Ya no hay que esperar al sondeo: los cambios de peleas, dominios,
 asaltos y grupo te llegan al instante.
+
+============================================================
+FASE 3: FUERA DE ROL, VIDA Y FATIGA, MUNDO VIVO (lo más nuevo)
+============================================================
+
+VIDA Y FATIGA (todo cuenta)
+Tu personaje empieza con 100 de vida. Cada cosa exigente que haces en
+una pelea te cansa: un golpe normal poco, un ataque potente o una carrera
+más, un esfuerzo máximo mucho más. Recibir golpes también te agota. Con
+poca fatiga TODO lo que hagas sale peor, aunque el plan sea bueno; y un
+enemigo con aliento puede contraatacar bien. Si fuerzas con el depósito
+vacío te haces daño (nunca te mata por sí solo).
+A MÁS NIVEL AGUANTAS MÁS: un nivel 30 pierde bastante menos vida y menos
+fatiga que un nivel 1 con el mismo golpe. Vale para ti, para tus aliados y
+para los enemigos: los enemigos también se cansan.
+Descansar y entrenar solo se puede sin peligro: nada de descansar en mitad
+de una pelea, un duelo, una caza o con una Buster Call sobre la isla.
+Debajo de tu vida ves la barra de EXPERIENCIA: cuánto falta para el
+siguiente nivel. El nivel se gana explorando y venciendo enemigos; entrenar
+sube el Haki, no el nivel.
+
+LA IA CONOCE LO QUE PUEDES HACER
+El narrador sabe tu Haki, tu fruta (y su fase), tu arma y tu estado físico.
+No te dará poderes que no tienes ni olvidará los que sí. Y los enemigos y
+tus aliados NPC pelean a ganar con TODO su repertorio: un almirante usa su
+fruta y su Haki; un veterano endurece su espada; cuanto más subes de nivel,
+más enemigos con frutas y Haki te encuentras.
+
+FUERA DE ROL (botón "Fuera de rol")
+Aquí hablas tú, no tu personaje. Nada de esto entra en la historia ni se
+guarda. Sirve para:
+ - Preguntar cómo funciona algo del juego.
+ - Contar un fallo del narrador (te repitió, te ignoró, se contradijo) y
+   dejarle una indicación permanente ("no repitas mi acción").
+ - Cambiar el nombre de tu personaje o de tu tripulación.
+ - Elegir el tono del narrador: equilibrado, letal o historia.
+ - PACTOS DE ESCENA: "somos 4 y haremos un 4 vs 4 amistoso en la plaza";
+   el narrador lo monta dentro del rol para todos.
+ - Deshacer la última respuesta (si no movió números), reparar valores raros,
+   reportar un fallo al desarrollador.
+La IA solo PROPONE; tú confirmas con un botón. No puede darte objetos,
+niveles ni revivir a nadie.
+
+PUNTOS DE RESTAURACIÓN Y ROLLBACK
+El juego guarda puntos automáticos y tú puedes guardar los tuyos. Volver a
+uno BORRA para siempre lo que hiciste después Y EL NARRADOR LO OLVIDA: solo
+recordará la historia hasta ese punto. Antes de confirmar ves una alerta con
+todo lo que se perderá y los valores a los que volverás. Límites: 3 al día,
+no si has muerto (la muerte es permanente), ni preso, ni en un duelo o una
+pelea en grupo. El equipo y lo que compraste no se deshacen.
+
+TRIPULACIÓN, ESCUADRÓN, CÉLULA... (botón de tu facción)
+Panel propio con tus compañeros: su vida, aguante, Haki, fruta y arma en
+vivo. Puedes invitar a jugadores de tu isla o por nombre, aceptar o rechazar
+invitaciones (caducan a las 24 h), unirte con un código y expulsar si eres
+capitán. El capitán puede subir una BANDERA (una imagen). Los cazarrecompensas
+trabajan siempre en solitario: no forman ni se unen a ninguna.
+NAKAMAS NPC: escribe en la escena "Jorge, únete a mi tripulación". Que acepte
+lo decide una tirada de persuasión (cuenta lo convincente que seas). Hasta
+3; SIEMPRE tienen tu nivel, así que nunca se quedan atrás, y ganan
+habilidades nuevas a los niveles 5 y 12. Los ves con su vida, ataque,
+defensa, velocidad y habilidades en el panel.
+Unirte a una tripulación no te aísla: el mundo, las noticias y los demás
+jugadores son los mismos para todos. Tu ficha, tu escena y la memoria que la
+IA tiene de ti son solo tuyas.
+
+EL MUNDO VIVO Y EL CÓDICE
+Cada personaje famoso siempre está en algún sitio: en una isla, navegando
+entre dos, o en paradero desconocido. Se mueve con el tiempo, y la IA lo sabe
+al narrarte: si en tu isla hay un almirante, puede cruzarse contigo.
+El botón "Códice" lista a todos: recompensa, fruta, arma, habilidades,
+estadísticas, personalidad y dónde están ahora. Los que ya no están en juego
+(fallecidos, derrotados) aparecen en "historia".
+TODAS LAS NOTICIAS DICEN DÓNDE OCURREN: una isla concreta, "En el mar,
+entre X y Y" o "Ubicación desconocida". Las noticias son públicas para todos
+los jugadores.
+
+EVENTOS MUNDIALES
+De vez en cuando se gesta una saga larga entre dos personajes famosos (por
+ejemplo, la caza de un capitán pirata). Se cuenta capítulo a capítulo en
+"Noticias > Eventos mundiales", con horas entre capítulos: rumores,
+movilización, primer choque, escalada, asedio y punto de no retorno. Hasta el
+final NADIE muere ni es capturado: el desenlace lo decide el dueño del juego.
+Puedes INTERVENIR: si estás en el lugar del suceso (desde el capítulo 3) y
+tienes nivel suficiente, en la pantalla de juego aparece el panel del evento:
+defender al objetivo, apoyar al agresor o pelear contra todos. Luchas contra
+una vanguardia (nunca contra el personaje famoso en persona) y tu victoria
+inclina la historia; con 3 defensores victoriosos el objetivo se salva sin
+más. Quienes intervienen salen en las noticias.
+
+NUEVAS ISLAS
+Orange Town y Villa Syrup (East Blue, nivel 1), Ohara (14), Marineford (26),
+Dressrosa (28), Zou (30) e Isla Egghead (36). Verlas en el mapa web.

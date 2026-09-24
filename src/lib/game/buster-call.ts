@@ -26,7 +26,8 @@ export async function startBusterCall(islandId: string, reason: string): Promise
     `${reason} El Gobierno Mundial ha ordenado el asedio: tres oleadas de buques de guerra se acercan a ${island.name} y, si nadie las detiene, la isla será bombardeada. Quien no quiera arder, que la abandone.`,
     "Gobierno Mundial",
     undefined,
-    "major"
+    "major",
+    { locationName: island.name, islandId: bc.islandId }
   );
   await notifyIsland(islandId, "buster-call");
   return bc;
@@ -53,7 +54,8 @@ async function bombard(bc: BusterCall): Promise<string[]> {
     `La flota de la Buster Call abrió fuego: ${present.length} personas estaban en la isla${dead.length ? ` y ${dead.join(", ")} no sobrevivió` : ", todas sobrevivieron por poco"}.`,
     "Gobierno Mundial",
     undefined,
-    "major"
+    "major",
+    { locationName: island.name, islandId: bc.islandId }
   );
   await notifyIsland(bc.islandId, "buster-call");
   return dead;

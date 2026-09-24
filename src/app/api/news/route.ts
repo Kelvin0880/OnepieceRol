@@ -1,13 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { tickWorldIfDue, tickBountyDigestIfDue } from "@/lib/game/world-tick";
+import { logError } from "@/lib/log-error";
 
 const DEFAULT_LIMIT = 20;
 const MAX_LIMIT = 50;
 
 export async function GET(request: NextRequest) {
-  await tickWorldIfDue();
-  await tickBountyDigestIfDue();
+  // In the background: the ticks may call the AI (many seconds) and the reader must never wait for them.
+  void tickWorldIfDue().catch((e) => logError("news/tick", e));
+  void tickBountyDigestIfDue().catch((e) => logError("news/digest", e));
 
   const { searchParams } = new URL(request.url);
   const limitParam = parseInt(searchParams.get("limit") ?? "", 10);

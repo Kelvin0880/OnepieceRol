@@ -1,6 +1,9 @@
 import { PrismaClient, WeaponGrade, Sea, EventKind, ActorRole, FactionType } from "@prisma/client";
 import { DEVIL_FRUIT_CATALOG } from "../src/lib/game/devil-fruit-catalog";
 
+import { ACTOR_PROFILES, FRUIT_ASSIGNMENTS, profileStatsJson } from "../src/lib/game/world-actor-profiles";
+import { EXTRA_ACTORS } from "../src/lib/game/world-actor-extra";
+
 const prisma = new PrismaClient();
 
 async function main() {
@@ -309,6 +312,90 @@ async function main() {
         "Los Cinco Ancianos gobiernan a la sombra de alguien a quien nunca se nombra. Cualquier intruso es una amenaza para el orden entero, y el orden entero responde.",
     },
     {
+      key: "orangeTown",
+      name: "Orange Town",
+      sea: Sea.EAST_BLUE,
+      danger: 2,
+      minLevel: 1,
+      factionControl: "Sin gobierno (bandas locales)",
+      description:
+        "Un pueblo de casas naranjas que vive con miedo: una banda de piratas con circo se ha adueñado del puerto y cobra por todo. La gente aún sonríe, pero cierra las puertas antes de que caiga el sol.",
+      arcHook:
+        "Los vecinos están hartos de pagar tributos a una banda de payasos armados. Quien los enfrente ganará agradecimiento... y la enemistad de quien los manda.",
+    },
+    {
+      key: "syrup",
+      name: "Villa Syrup",
+      sea: Sea.EAST_BLUE,
+      danger: 2,
+      minLevel: 1,
+      factionControl: "Sin gobierno",
+      description:
+        "Un pueblo costero tranquilo al pie de una colina con una mansión. Los niños juegan a ser piratas y un narrador de historias cuenta aventuras tan grandes que nadie las cree del todo.",
+      arcHook:
+        "Cuentan que un mayordomo demasiado amable llegó a la mansión de la colina hace tres años. Desde entonces, nadie ha visto a la señorita salir de casa.",
+    },
+    {
+      key: "ohara",
+      name: "Ohara",
+      sea: Sea.PARADISE,
+      danger: 6,
+      minLevel: 14,
+      factionControl: "Sin gobierno (ruinas)",
+      description:
+        "Lo que queda de la isla de los arqueólogos: un árbol enorme carbonizado, una biblioteca convertida en cenizas y un silencio que pesa. Se dice que el Gobierno arrasó la isla por estudiar lo que no debía.",
+      arcHook:
+        "Entre las cenizas aún hay quien busca páginas salvadas del fuego. Y el Gobierno sigue enviando agentes a comprobar que nadie las encuentre.",
+    },
+    {
+      key: "marineford",
+      name: "Marineford",
+      sea: Sea.PARADISE,
+      danger: 9,
+      minLevel: 26,
+      factionControl: "Marina (Cuartel General)",
+      description:
+        "El cuartel general de la Marina, una fortaleza blanca con una plaza enorme donde se han decidido guerras. Hay más almirantes por metro cuadrado que en cualquier otro lugar del mundo, y ninguno tiene prisa por sonreír.",
+      arcHook:
+        "Cada piedra de la plaza recuerda la guerra que cambió la era. La Marina se reconstruye, y cualquier pirata que pise el puerto será visto como una amenaza inmediata.",
+    },
+    {
+      key: "dressrosa",
+      name: "Dressrosa",
+      sea: Sea.NEW_WORLD,
+      danger: 9,
+      minLevel: 28,
+      factionControl: "Reino de Dressrosa (reconstruido)",
+      description:
+        "La isla de la pasión: flores, plazas, un coliseo donde los gladiadores luchan por un premio imposible y, bajo el ruido de la fiesta, las cicatrices de un reinado de marionetas que aún nadie termina de olvidar.",
+      arcHook:
+        "El coliseo ha vuelto a abrir sus puertas, pero ya no se pelea por un premio: se pelea por reputación. Y siempre hay alguien mirando desde las gradas más altas.",
+    },
+    {
+      key: "zou",
+      name: "Zou",
+      sea: Sea.NEW_WORLD,
+      danger: 9,
+      minLevel: 30,
+      factionControl: "Mink de Zou",
+      description:
+        "Un elefante gigante, mayor que una isla, que camina por el mar con una ciudad-bosque sobre el lomo. Los mink lo llaman hogar, guardan un Poneglifo y aún recuerdan un juramento a una familia lejana.",
+      arcHook:
+        "Los mink no aceptan intrusos a la ligera: quien llegue tendrá que ganarse su confianza a base de hechos, no de palabras.",
+    },
+    {
+      key: "egghead",
+      name: "Isla Egghead",
+      sea: Sea.NEW_WORLD,
+      danger: 10,
+      minLevel: 36,
+      factionControl: "Gobierno Mundial (Laboratorio de Vegapunk)",
+      description:
+        "La isla del futuro: torres de cristal, robots por las calles y un laboratorio flotante donde se decide lo que la humanidad será capaz de hacer. Tiene más vigilancia que cualquier prisión, y todo el mundo quiere entrar.",
+      arcHook:
+        "Lo que se cocina en el laboratorio podría cambiar el equilibrio del mundo. El Gobierno lo sabe, los piratas lo saben, y por eso la isla nunca duerme tranquila.",
+    },
+    {
       key: "laughTale",
       name: "Laugh Tale",
       sea: Sea.NEW_WORLD,
@@ -345,12 +432,19 @@ async function main() {
   }
 
   const adjacency: Record<string, string[]> = {
-    foosha: ["shimotsuki", "marineG5", "baltigo"],
+    foosha: ["shimotsuki", "marineG5", "baltigo", "orangeTown"],
+    orangeTown: ["foosha", "shimotsuki"],
+    syrup: ["shimotsuki", "baratie"],
+    ohara: ["waterSeven"],
+    marineford: ["sabaody", "eniesLobby"],
+    dressrosa: ["wholeCake", "zou", "egghead"],
+    zou: ["dressrosa", "wano"],
+    egghead: ["punkHazard", "dressrosa"],
     marineG5: ["foosha", "loguetown"],
     baltigo: ["foosha"],
     gecko: ["shimotsuki", "loguetown"],
-    shimotsuki: ["foosha", "gecko", "baratie"],
-    baratie: ["shimotsuki", "conomi"],
+    shimotsuki: ["foosha", "gecko", "baratie", "orangeTown", "syrup"],
+    baratie: ["shimotsuki", "conomi", "syrup"],
     conomi: ["baratie", "loguetown"],
     loguetown: ["conomi", "marineG5", "gecko", "reverseMountain"],
     reverseMountain: ["loguetown", "whiskyPeak"],
@@ -359,16 +453,16 @@ async function main() {
     drum: ["littleGarden", "alabasta"],
     alabasta: ["littleGarden", "drum", "graveyardIsland", "eniesLobby", "skypiea", "waterSeven"],
     skypiea: ["alabasta"],
-    waterSeven: ["alabasta", "eniesLobby", "sabaody"],
-    sabaody: ["waterSeven", "fishMan"],
+    waterSeven: ["alabasta", "eniesLobby", "sabaody", "ohara"],
+    sabaody: ["waterSeven", "fishMan", "marineford"],
     fishMan: ["sabaody", "punkHazard"],
-    punkHazard: ["fishMan", "wholeCake"],
-    wholeCake: ["punkHazard", "wano"],
-    wano: ["wholeCake", "laughTale"],
+    punkHazard: ["fishMan", "wholeCake", "egghead"],
+    wholeCake: ["punkHazard", "wano", "dressrosa"],
+    wano: ["wholeCake", "laughTale", "zou"],
     laughTale: ["wano"],
     graveyardIsland: ["alabasta", "abyss"],
     abyss: ["graveyardIsland"],
-    eniesLobby: ["alabasta", "waterSeven", "impelDown", "maryGeoise"],
+    eniesLobby: ["alabasta", "waterSeven", "impelDown", "maryGeoise", "marineford"],
     maryGeoise: ["eniesLobby"],
     impelDown: ["eniesLobby"],
   };
@@ -1109,6 +1203,52 @@ async function main() {
     worldActors[a.name] = actor;
   }
 
+  // ---------- Codex (2026-09-24): stats, abilities, location and the rest of the canon cast ----------
+  const islandIdOf = (key: string) => islands[key]?.id ?? null;
+  for (const a of actors) {
+    const prof = ACTOR_PROFILES[a.name];
+    if (!prof) continue;
+    const row = worldActors[a.name] as { id: string; currentIslandId?: string | null };
+    const assigned = FRUIT_ASSIGNMENTS[a.name];
+    const fruitId = assigned ? fruitsByName[assigned]?.id : undefined;
+    await prisma.worldActor.update({
+      where: { id: row.id },
+      data: {
+        statsJson: profileStatsJson(prof),
+        abilitiesJson: JSON.stringify(prof.ab),
+        homeIslandId: islandIdOf(prof.home),
+        ...(fruitId ? { devilFruitId: fruitId } : {}),
+        // Never move someone on a reseed: only place actors that have no location yet.
+        ...(row.currentIslandId ? {} : { currentIslandId: islandIdOf(prof.home), locationHidden: !!prof.hidden, locationUpdatedAt: new Date() }),
+      },
+    });
+  }
+  for (const e of EXTRA_ACTORS) {
+    const fruitId = e.devilFruitName ? fruitsByName[e.devilFruitName]?.id : undefined;
+    const common = {
+      personality: e.personality,
+      description: e.description,
+      powerLevel: e.powerLevel,
+      factionType: e.factionType,
+      factionName: e.factionName,
+      rankLabel: e.rankLabel,
+      canonBounty: e.canonBounty,
+      canonWeapon: e.canonWeapon,
+      statsJson: profileStatsJson(e.profile),
+      abilitiesJson: JSON.stringify(e.profile.ab),
+      homeIslandId: islandIdOf(e.profile.home),
+      status: e.status ?? "ACTIVE",
+      ...(fruitId ? { devilFruitId: fruitId } : {}),
+    };
+    const existing = await prisma.worldActor.findUnique({ where: { name: e.name } });
+    const row = await prisma.worldActor.upsert({
+      where: { name: e.name },
+      update: { ...common, ...(existing?.currentIslandId ? {} : { currentIslandId: islandIdOf(e.profile.home), locationHidden: !!e.profile.hidden, locationUpdatedAt: new Date() }) },
+      create: { name: e.name, role: e.role, ...common, currentIslandId: islandIdOf(e.profile.home), locationHidden: !!e.profile.hidden, locationUpdatedAt: new Date() },
+    });
+    worldActors[e.name] = row;
+  }
+
   // ---------- World event templates (background simulation) ----------
   // Rewritten 2026-09-23 to be faction-specific: each template's
   // allowedFactionTypes restricts which WorldActor can star in it (see
@@ -1843,6 +1983,14 @@ async function main() {
   // ---------- Phase 2: island stories (two beats per new island) ----------
   type Story = { island: string; kind: EventKind; title: string; weight: number; min: number; max: number; flavor: string; crit: string; ok: string; fail: string; critFail: string; loot?: [number, number]; xp?: [number, number]; hurt?: [number, number]; enemy?: { name: string; hp: number; atk: number; def: number; spd: number; personality: string } };
   const stories: Story[] = [
+    { island: "orangeTown", kind: EventKind.COMBAT, title: "El cobro del circo", weight: 9, min: 1, max: 2, flavor: "Unos matones con narices rojas y armas de verdad te cierran el paso para cobrarte 'la entrada' al pueblo.", crit: "Los dejas sentados en el suelo con sus propias narices pegadas al pecho, y el pueblo aplaude en secreto.", ok: "Los echas del puerto sin muchas complicaciones.", fail: "Te sacuden entre risotadas y te dejan un moratón de recuerdo.", critFail: "Te lanzan un cañonazo de confeti que resulta ser pólvora de verdad.", enemy: { name: "Matones del circo", hp: 70, atk: 12, def: 6, spd: 10, personality: "escandalosos y cobardes por dentro, se creen invencibles mientras nadie les planta cara" } },
+    { island: "syrup", kind: EventKind.COMBAT, title: "El mayordomo de la colina", weight: 9, min: 1, max: 2, flavor: "Un hombre de gafas y sonrisa perfecta te sale al paso en el camino de la mansión y te pide amablemente que te des la vuelta.", crit: "Descubres su verdadero rostro antes de que dé el primer paso y lo acorralas.", ok: "Lo obligas a retroceder, aunque su calma da más miedo que sus golpes.", fail: "Se mueve tan rápido que ni lo ves y te deja un arañazo de despedida.", critFail: "Tres cortes limpios, sin una sola palabra de más.", enemy: { name: "Mayordomo de la mansión", hp: 90, atk: 14, def: 8, spd: 16, personality: "educadísimo y calculador, planea cada golpe con cien pasos de antelación" } },
+    { island: "ohara", kind: EventKind.COMBAT, title: "Agentes entre las cenizas", weight: 9, min: 6, max: 6, flavor: "Unos hombres de traje gris peinan las ruinas de la biblioteca y no les hace ninguna gracia verte revolver entre el polvo.", crit: "Los desarmas y dejas caer entre las cenizas lo que buscaban: una hoja salvada del fuego.", ok: "Los ahuyentas antes de que avisen a sus superiores.", fail: "Te derriban con una técnica rápida y precisa y te dan por muerto.", critFail: "Una patada de aire te atraviesa el costado sin que veas moverse a nadie.", enemy: { name: "Agentes del Gobierno", hp: 220, atk: 34, def: 20, spd: 30, personality: "fríos y burocráticos, actúan como si borrar la memoria de una isla fuera un trámite" } },
+    { island: "marineford", kind: EventKind.COMBAT, title: "Patrulla de la plaza", weight: 9, min: 8, max: 9, flavor: "Una patrulla de élite de la Marina te cierra el paso en la plaza principal: aquí ningún pirata pasea sin permiso.", crit: "Los superas con una jugada que los deja sin palabras y un almirante lo ve desde lo alto.", ok: "Los detienes antes de que suene la alarma general.", fail: "Te encierran en una formación imposible de romper.", critFail: "Ni te da tiempo a levantar la guardia: una lluvia de disparos te clava contra el suelo.", enemy: { name: "Patrulla de élite de la Marina", hp: 300, atk: 46, def: 28, spd: 32, personality: "disciplinados y coordinados, no dejan un solo hueco" } },
+    { island: "dressrosa", kind: EventKind.COMBAT, title: "El coliseo", weight: 9, min: 9, max: 9, flavor: "Un gladiador legendario te reta en la arena ante miles de espectadores: perder aquí es un espectáculo, ganar es una leyenda.", crit: "Lo derrotas con tal estilo que el estadio entero se pone en pie.", ok: "Ganas el combate a duras penas, con el público a tu favor.", fail: "Te tumba delante de todos y te obliga a salir con la cabeza baja.", critFail: "Un golpe seco te deja fuera de combate mientras el público se ríe.", enemy: { name: "Gladiador del coliseo", hp: 280, atk: 48, def: 30, spd: 34, personality: "showman con el orgullo por las nubes, no soporta perder delante del público" } },
+    { island: "zou", kind: EventKind.COMBAT, title: "La prueba de los mink", weight: 9, min: 9, max: 9, flavor: "Un guerrero mink te espera en la entrada de la ciudad-bosque: solo quien demuestre valor cruzará.", crit: "Superas su prueba con honor y te ofrece un lugar junto al fuego.", ok: "Lo derrotas en duelo limpio y te deja pasar sin rencor.", fail: "Se mueve con una velocidad eléctrica y te lanza fuera del camino.", critFail: "Un relámpago te sacude y se te cortan hasta las palabras.", enemy: { name: "Guerrero mink", hp: 260, atk: 54, def: 30, spd: 44, personality: "orgulloso y sincero, respeta a quien pelea de frente" } },
+    { island: "egghead", kind: EventKind.COMBAT, title: "Los guardianes del laboratorio", weight: 9, min: 10, max: 10, flavor: "Unas máquinas enormes se alinean en el puente de cristal: cada intruso es un dato que quiere procesar.", crit: "Encuentras su fallo lógico y las apagas una a una.", ok: "Las destrozas antes de que sellen el paso.", fail: "Te clavan a la pared con rayos que ni siquiera se ven.", critFail: "Un pulso de energía te deja de rodillas sin saber de dónde vino.", enemy: { name: "Guardianes mecánicos", hp: 340, atk: 60, def: 40, spd: 42, personality: "fríos y precisos, calculan tu siguiente movimiento antes de que lo pienses" } },
+
     { island: "drum", kind: EventKind.SOCIAL, title: "La doctora de la montaña", weight: 10, min: 7, max: 7, flavor: "Subes por la nieve hasta el hospital de la cima, donde una anciana de risa inquietante te mira de arriba abajo como quien ya sabe qué te duele.", crit: "La doctora te ofrece un tratamiento que casi ningún forastero recibe: te sientes más fuerte que nunca.", ok: "Te cura las heridas viejas y te cobra con un recado que resulta útil.", fail: "Te despacha con una receta amarga y una carcajada.", critFail: "Su medicina 'de prueba' te deja ardiendo de fiebre un buen rato.", xp: [12, 30], hurt: [0, 6] },
     { island: "drum", kind: EventKind.COMBAT, title: "Los lobos de nieve", weight: 9, min: 7, max: 7, flavor: "Una manada de lobos de nieve gigantes te cierra el paso: no atacan por hambre, sino porque algo más grande los empuja hacia el pueblo.", crit: "Los dispersas y descubres qué los espantaba: un rastro de caza furtiva que puedes denunciar.", ok: "Rechazas la manada y la nieve se traga sus huellas.", fail: "Los lobos te rodean y solo el frío te salva de una mordida peor.", critFail: "Uno te derriba en la ventisca y te arrastra unos metros antes de soltarte.", enemy: { name: "Manada de lobos de nieve", hp: 190, atk: 30, def: 18, spd: 32, personality: "bestias hambrientas que solo entienden la fuerza" } },
     { island: "skypiea", kind: EventKind.EXPLORATION, title: "El mar de algodón", weight: 10, min: 8, max: 8, flavor: "Caminas sobre nubes que soportan tu peso a duras penas. Abajo se ve el mar; arriba, un sol que no parece el mismo.", crit: "Encuentras una antigua ofrenda de oro que los Sacerdotes no habían reclamado.", ok: "Cruzas la nube sin incidentes y con algo de botín en el bolsillo.", fail: "Te hundes hasta la cintura y pierdes un buen rato saliendo.", critFail: "La nube cede del todo y te salva un ángel de la casualidad... no del golpe.", loot: [400, 1600], xp: [12, 28], hurt: [0, 14] },

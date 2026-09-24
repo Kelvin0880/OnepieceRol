@@ -62,7 +62,7 @@ export async function rollConsequenceForExplore(
   if (outcome === "boon") {
     const r = boonRewards(ripe.stage, islandDanger);
     if (ripe.worldActorId) await addStanding(ripe.worldActorId, character.id, { mercy: true }, `${ripe.enemyName} te devolvió el favor`);
-    await postNews("Una deuda saldada", `Dicen que ${ripe.enemyName} devolvió el favor a quien le perdonó la vida en ${ripe.islandName}. La clemencia, a veces, también paga.`, "Rumores");
+    await postNews("Una deuda saldada", `Dicen que ${ripe.enemyName} devolvió el favor a quien le perdonó la vida en ${ripe.islandName}. La clemencia, a veces, también paga.`, "Rumores", undefined, "normal", { locationName: ripe.islandName });
     return { log: [`${ripe.enemyName}, a quien perdonaste en ${ripe.islandName}, te encuentra y no ha olvidado tu gesto: te entrega lo que puede y jura estar en deuda contigo (฿ ${r.berries.toLocaleString("es-ES")}).`], berries: r.berries, xp: r.xp };
   }
   if (outcome === "tribute") {

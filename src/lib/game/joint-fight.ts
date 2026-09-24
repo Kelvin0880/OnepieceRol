@@ -45,7 +45,7 @@ export interface JointRewards {
   poneglyphId?: string;
 }
 
-export type JointFightKind = "party" | "poneglyph" | "conquest" | "raid";
+export type JointFightKind = "party" | "poneglyph" | "conquest" | "raid" | "arc";
 
 /** After this long without everyone answering, the slow ones simply guard and the round resolves. */
 export const ROUND_TIMEOUT_MS = 120_000;
@@ -500,6 +500,11 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
     const { handleRaidPhaseSettled } = await import("./raid");
     const fresh = await prisma.jointFight.findUniqueOrThrow({ where: { id: fightId }, include: { participants: true } });
     closing.push(...(await handleRaidPhaseSettled({ contextJson: fresh.contextJson, outcome, humans: fresh.participants.filter((p) => !p.isNpc).map((p) => ({ characterId: p.characterId, status: p.status, name: p.name })) })));
+  }
+  if (fight.kind === "arc") {
+    const { handleArcFightSettled } = await import("./world-arcs");
+    const fresh = await prisma.jointFight.findUniqueOrThrow({ where: { id: fightId }, include: { participants: true } });
+    closing.push(...(await handleArcFightSettled({ contextJson: fresh.contextJson, outcome, humans: fresh.participants.filter((p) => !p.isNpc).map((p) => ({ characterId: p.characterId, status: p.status, name: p.name })) })));
   }
   if (closing.length) await prisma.jointFightMessage.create({ data: { fightId, authorCharacterId: null, authorName: "Narrador", text: closing.join(" ") } });
 }

@@ -1,4 +1,5 @@
 import { FruitType, Rarity } from "@prisma/client";
+import { EXTRA_FRUITS, SINGLETON_OVERRIDES } from "./devil-fruit-extra";
 
 /**
  * Single source of truth for every devil fruit "kind" in the game — moved
@@ -26,7 +27,7 @@ export interface DevilFruitCatalogEntry {
   isSingleton: boolean;
 }
 
-export const DEVIL_FRUIT_CATALOG: DevilFruitCatalogEntry[] = [
+const BASE_FRUITS: DevilFruitCatalogEntry[] = [
   // ---------- Paramecia — common/uncommon utility (duplicable) ----------
   {
     name: "Bara Bara no Mi",
@@ -484,3 +485,5 @@ export const DEVIL_FRUIT_CATALOG: DevilFruitCatalogEntry[] = [
     isSingleton: false,
   },
 ];
+
+export const DEVIL_FRUIT_CATALOG: DevilFruitCatalogEntry[] = [...BASE_FRUITS, ...EXTRA_FRUITS].map((f) => (SINGLETON_OVERRIDES.has(f.name) ? { ...f, isSingleton: true } : f));

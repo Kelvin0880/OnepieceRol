@@ -49,11 +49,11 @@ await page.waitForSelector("text=Encarcelado en", { timeout: 10000 });
 await page.screenshot({ path: path.join(shotsDir, "jail-view.png"), fullPage: true });
 
 await page.click('button:has-text("Pagar fianza")');
-await page.waitForSelector("text=Explorar", { timeout: 15000 });
+await page.waitForSelector("text=Descansar", { timeout: 15000 });
 await page.screenshot({ path: path.join(shotsDir, "after-bail.png"), fullPage: true });
 
 const bodyText = await page.locator("body").innerText();
-const freed = !bodyText.includes("Encarcelado en") && bodyText.includes("Explorar");
+const freed = !bodyText.includes("Encarcelado en") && bodyText.includes("Descansar");
 console.log("Freed after paying bail via real UI:", freed);
 console.log(freed ? "PASS" : "FAIL — check screenshots");
 

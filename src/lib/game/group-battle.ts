@@ -116,7 +116,9 @@ export async function proposeBattle(challengerCharacterId: string, userId: strin
   await postNews(
     `${challenger.crew.name} desafía a ${targetCrew.name}`,
     `En ${challenger.currentIsland.name}, "${challenger.crew.name}" ha propuesto un enfrentamiento de ${matchups.length} contra ${matchups.length} a "${targetCrew.name}".`,
-    "Tripulaciones"
+    "Tripulaciones",
+    challenger.id,
+    "normal"
   );
 
   return battle;
@@ -207,7 +209,7 @@ export async function respondToBattle(defendingCharacterId: string, userId: stri
   const headline = victorName
     ? `${victorName} se impone en el choque contra ${result.victor === "a" ? crewB?.name : crewA?.name}`
     : `Empate sangriento entre ${crewA?.name} y ${crewB?.name}`;
-  await postNews(headline, `Un enfrentamiento de ${matchups.length} contra ${matchups.length} terminó con ${result.duels.filter((d) => d.winner !== "draw").length} duelos decididos.`, "Guerra", undefined, "major");
+  await postNews(headline, `Un enfrentamiento de ${matchups.length} contra ${matchups.length} terminó con ${result.duels.filter((d) => d.winner !== "draw").length} duelos decididos.`, "Guerra", (result.victor === "b" ? crewB?.captainId : crewA?.captainId) ?? crewA?.captainId, "major");
   newsLog.push(headline);
 
   return { status: "RESOLVED" as const, result, newsPosted: newsLog };

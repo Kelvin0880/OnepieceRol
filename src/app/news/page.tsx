@@ -2,6 +2,7 @@
 
 import { useEffect, useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
+import Link from "next/link";
 
 interface NewsItem {
   id: string;
@@ -9,7 +10,18 @@ interface NewsItem {
   body: string;
   category: string;
   severity: string;
+  locationName?: string | null;
   createdAt: string;
+}
+
+interface WorldEvent {
+  id: string;
+  title: string;
+  status: string;
+  stage: number;
+  totalStages: number;
+  outcome: string | null;
+  beats: { id: string; stage: number; headline: string; body: string; locationName: string | null; createdAt: string }[];
 }
 
 const CATEGORY_COLOR: Record<string, string> = {
@@ -20,9 +32,10 @@ const CATEGORY_COLOR: Record<string, string> = {
   Guerra: "text-blood",
   Muertes: "text-blood",
   "Gobierno Mundial": "text-ink-dim",
+  "Eventos mundiales": "text-orange-300",
 };
 
-const CATEGORIES = ["Recompensas", "Frutas", "Poneglifos", "Tripulaciones", "Guerra", "Muertes", "Gobierno Mundial"];
+const CATEGORIES = ["Eventos mundiales", "Recompensas", "Frutas", "Poneglifos", "Tripulaciones", "Guerra", "Muertes", "Gobierno Mundial"];
 
 function dayLabel(dateStr: string): string {
   const date = new Date(dateStr);
@@ -46,6 +59,16 @@ function groupByDay(items: NewsItem[]): { label: string; items: NewsItem[] }[] {
   return groups;
 }
 
+function Where({ name }: { name?: string | null }) {
+  if (!name) return null;
+  const icon = name.startsWith("En el mar") || name === "En alta mar" ? "🌊" : name === "Ubicación desconocida" ? "❓" : "📍";
+  return (
+    <span className="text-xs text-gold" data-testid="news-location">
+      {icon} {name}
+    </span>
+  );
+}
+
 function NewsCard({ item }: { item: NewsItem }) {
   const color = CATEGORY_COLOR[item.category] ?? "text-ink-dim";
   if (item.severity === "major") {
@@ -57,6 +80,9 @@ function NewsCard({ item }: { item: NewsItem }) {
         </div>
         <div className="font-display text-xl text-gold-bright">{item.headline}</div>
         <p className="text-sm text-ink-dim mt-2">{item.body}</p>
+        <div className="mt-2">
+          <Where name={item.locationName} />
+        </div>
       </div>
     );
   }
@@ -69,6 +95,9 @@ function NewsCard({ item }: { item: NewsItem }) {
         </div>
         <div className="font-display text-base">{item.headline}</div>
         <p className="text-sm text-ink-dim mt-1">{item.body}</p>
+        <div className="mt-1">
+          <Where name={item.locationName} />
+        </div>
       </div>
     );
   }
@@ -80,6 +109,46 @@ function NewsCard({ item }: { item: NewsItem }) {
       </div>
       <div className="font-display text-base">{item.headline}</div>
       <p className="text-sm text-ink-dim mt-1">{item.body}</p>
+      <div className="mt-1">
+        <Where name={item.locationName} />
+      </div>
+    </div>
+  );
+}
+
+const STATUS_LABEL: Record<string, string> = {
+  ACTIVE: "En curso",
+  AWAITING_CONSENT: "El desenlace se decide",
+  RESOLVED: "Concluido",
+};
+
+function WorldEventCard({ event }: { event: WorldEvent }) {
+  return (
+    <div className="panel p-4 border-2 border-orange-300/50" data-testid="world-event">
+      <div className="flex items-center justify-between mb-2 gap-2">
+        <span className="font-display text-lg text-gold-bright">{event.title}</span>
+        <span className="text-xs text-orange-300 uppercase tracking-wide" data-testid="world-event-status">
+          {STATUS_LABEL[event.status] ?? event.status}
+        </span>
+      </div>
+      <div className="h-1.5 rounded bg-black/30 overflow-hidden mb-3">
+        <div className="h-full" style={{ width: `${(event.stage / event.totalStages) * 100}%`, background: "var(--gold)" }} />
+      </div>
+      <p className="text-[11px] text-ink-dim mb-2">
+        Capítulo {event.stage} de {event.totalStages}
+        {event.status === "AWAITING_CONSENT" ? " · el mundo contiene el aliento" : ""}
+      </p>
+      <ol className="flex flex-col gap-2 border-l border-orange-300/30 pl-3">
+        {event.beats.map((b) => (
+          <li key={b.id} data-testid="world-event-beat">
+            <div className="flex items-center justify-between gap-2">
+              <span className="text-sm font-display">{b.headline}</span>
+              <Where name={b.locationName} />
+            </div>
+            <p className="text-xs text-ink-dim">{b.body}</p>
+          </li>
+        ))}
+      </ol>
     </div>
   );
 }
@@ -91,6 +160,8 @@ export default function NewsPage() {
   const [loadingMore, setLoadingMore] = useState(false);
   const [nextCursor, setNextCursor] = useState<string | null>(null);
   const [category, setCategory] = useState<string | null>(null);
+  const [events, setEvents] = useState<WorldEvent[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   const load = useCallback((cat: string | null) => {
     setLoading(true);
@@ -108,6 +179,16 @@ export default function NewsPage() {
   useEffect(() => {
     load(category);
   }, [category, load]);
+
+  useEffect(() => {
+    fetch("/api/world-events")
+      .then((r) => r.json())
+      .then((d) => {
+        setEvents(d.events ?? []);
+        setIsAdmin(!!d.isAdmin);
+      })
+      .catch(() => {});
+  }, []);
 
   const loadMore = () => {
     if (!nextCursor) return;
@@ -129,13 +210,37 @@ export default function NewsPage() {
     <main className="flex-1 max-w-2xl w-full mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="font-display text-2xl text-gold-bright">El Heraldo del Mundo</h1>
-        <button onClick={() => router.back()} className="btn-ghost px-3 py-1.5 text-sm">
-          Volver
-        </button>
+        <div className="flex gap-2">
+          <Link href="/codex" className="btn-ghost px-3 py-1.5 text-sm" data-testid="codex-link">
+            Códice
+          </Link>
+          {isAdmin && (
+            <Link href="/admin" className="btn-gold px-3 py-1.5 text-sm" data-testid="admin-link">
+              Administración
+            </Link>
+          )}
+          <button onClick={() => router.back()} className="btn-ghost px-3 py-1.5 text-sm">
+            Volver
+          </button>
+        </div>
       </div>
       <p className="text-ink-dim text-sm mb-4">
         El mundo se mueve incluso cuando tú no lo haces. Estas son las noticias que corren de isla en isla.
       </p>
+
+      {events.length > 0 && !category && (
+        <section className="mb-6" data-testid="world-events">
+          <h2 className="font-display text-sm uppercase tracking-widest text-orange-300 mb-2">Eventos mundiales</h2>
+          <p className="text-xs text-ink-dim mb-3">
+            Sucesos lentos que se gestan durante días, capítulo a capítulo. Si estás en el lugar indicado y tienes el nivel, puedes intervenir.
+          </p>
+          <div className="flex flex-col gap-3">
+            {events.map((e) => (
+              <WorldEventCard key={e.id} event={e} />
+            ))}
+          </div>
+        </section>
+      )}
 
       <div className="flex flex-wrap gap-2 mb-6">
         <button

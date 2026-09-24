@@ -26,6 +26,8 @@ import {
   directivesBlock,
   buildRecruitNarrationPrompt,
   RecruitNarrationInput,
+  buildWorldEventPrompt,
+  WorldEventNarrationInput,
 } from "./narrate-prompt";
 import { callOpenRouter } from "./openrouter-client";
 import { OPENROUTER_MODELS } from "./models";
@@ -72,9 +74,13 @@ export async function loadDirectives(characterId: string): Promise<string> {
       fruitName: c.devilFruit?.name, fruitMastery: c.fruitMastery, fruitAwakened: c.fruitAwakened, weaponName: c.equippedWeapon?.name,
       stamina: currentStamina(c), maxStamina: c.maxStamina, hp: c.hp, maxHp: c.maxHp, companions: c.companions.map((n) => n.name),
     });
+    // Dynamic import: game/world-arcs imports this module for its own narration.
+    const presence = await import("../game/world-arcs").then((m) => m.worldPresenceFor(c.currentIslandId)).catch(() => "");
     return `
 
-${caps}${directivesBlock(c.narratorTone, c.oocNotes)}`;
+${caps}${presence ? `
+
+${presence}` : ""}${directivesBlock(c.narratorTone, c.oocNotes)}`;
   } catch {
     return directivesBlock();
   }
@@ -253,6 +259,19 @@ export async function narrateNews(
   }
 }
 
+/** One chapter (or the verdict) of a world event. Never throws: on failure the caller-provided static text is used. */
+export async function narrateWorldEvent(input: WorldEventNarrationInput, fallback: { headline: string; body: string }, meta: Record<string, string>): Promise<{ headline: string; body: string }> {
+  try {
+    const { system, user } = buildWorldEventPrompt(input);
+    const raw = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, jsonMode: true, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 500, validate: isValidNewsJson });
+    const parsed = JSON.parse(raw);
+    return { headline: String(parsed.headline).trim(), body: String(parsed.body).trim() };
+  } catch (err) {
+    await logError("ai/narrate-world-event", err, meta);
+    return fallback;
+  }
+}
+
 /** Same never-throws contract, for the periodic bounty roundup (see tickBountyDigestIfDue in world-tick.ts). */
 export async function narrateBountyDigest(
   input: BountyDigestInput,
@@ -310,6 +329,7 @@ export async function summarizeTranscript(currentSummary: string | null, lines: 
  */
 export async function updateCharacterMemory(characterId: string, currentSummary: string | null, latestEvent: string): Promise<void> {
   try {
+    const epoch = (await prisma.character.findUnique({ where: { id: characterId }, select: { timelineEpoch: true } }))?.timelineEpoch;
     const { system, user } = buildMemoryUpdatePrompt(currentSummary ?? undefined, latestEvent);
     const raw = await callOpenRouter(system, user, {
       models: OPENROUTER_MODELS,
@@ -320,8 +340,9 @@ export async function updateCharacterMemory(characterId: string, currentSummary:
     });
     const parsed = JSON.parse(raw);
     const summary = typeof parsed?.summary === "string" ? parsed.summary.trim() : "";
-    if (summary) {
-      await prisma.character.update({ where: { id: characterId }, data: { memorySummary: summary.slice(0, MEMORY_SUMMARY_MAX_CHARS) } });
+    if (summary && epoch !== undefined) {
+      // Dropped if a rollback happened while the model was thinking: that event belongs to a timeline that no longer exists.
+      await prisma.character.updateMany({ where: { id: characterId, timelineEpoch: epoch }, data: { memorySummary: summary.slice(0, MEMORY_SUMMARY_MAX_CHARS) } });
     }
   } catch (err) {
     await logError("ai/update-memory", err, { characterId });

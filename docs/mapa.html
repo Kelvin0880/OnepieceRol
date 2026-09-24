@@ -139,7 +139,7 @@
 
 <header>
   <h1><i class="fas fa-map-marked-alt"></i> GRAND LINE RPG — MAPA DE RUTA</h1>
-  <p>Las 26 islas jugables de hoy, sus conexiones, y qué te espera en cada una.</p>
+  <p>Las 33 islas jugables de hoy, sus conexiones, y qué te espera en cada una.</p>
   <a class="back" href="index.html"><i class="fas fa-arrow-left"></i> Volver</a>
 </header>
 
@@ -172,7 +172,7 @@
 
   <div class="map-wrap">
     <div class="map-card">
-      <svg id="routeMap" viewBox="0 0 1700 700" xmlns="http://www.w3.org/2000/svg"></svg>
+      <svg id="routeMap" viewBox="0 0 1700 790" xmlns="http://www.w3.org/2000/svg"></svg>
     </div>
     <div class="detail-card" id="detailCard">
       <p class="empty"><i class="fas fa-hand-pointer"></i><br>Haz clic en una isla del mapa para ver su ficha.</p>
@@ -267,17 +267,39 @@ const ISLANDS = [
   { key: "laughTale", name: "Laugh Tale", sea: "New World", danger: 10, minLevel: 50, faction: null, poneglyph: false, x: 560, y: 650,
     desc: "La última isla, la que nadie encuentra si no ha leído los cuatro Poneglifos de Ruta. Un lugar que ríe con quien llega y guarda el mayor secreto de la historia: lo que fue el One Piece, y por qué el mundo lleva ochocientos años sin poder mencionarlo.",
     hook: "Llegar aquí es haberlo dejado todo atrás. Lo que se descubra en Laugh Tale cambiará el mundo entero, para bien o para mal, y quien lo sepa ya no podrá fingir que no lo sabe." },
+  { key: "orangeTown", name: "Orange Town", sea: "East Blue", danger: 2, minLevel: 1, faction: "Sin gobierno (bandas locales)", poneglyph: false, x: 130, y: 540,
+    desc: "Un pueblo de casas naranjas que vive con miedo: una banda de piratas con circo se ha adueñado del puerto y cobra por todo. La gente aún sonríe, pero cierra las puertas antes de que caiga el sol.",
+    hook: "Los vecinos están hartos de pagar tributos a una banda de payasos armados. Quien los enfrente ganará agradecimiento... y la enemistad de quien los manda." },
+  { key: "syrup", name: "Villa Syrup", sea: "East Blue", danger: 2, minLevel: 1, faction: "Sin gobierno", poneglyph: false, x: 330, y: 610,
+    desc: "Un pueblo costero tranquilo al pie de una colina con una mansión. Los niños juegan a ser piratas y un narrador de historias cuenta aventuras tan grandes que nadie las cree del todo.",
+    hook: "Cuentan que un mayordomo demasiado amable llegó a la mansión de la colina hace tres años. Desde entonces, nadie ha visto a la señorita salir de casa." },
+  { key: "ohara", name: "Ohara", sea: "Paradise (Grand Line)", danger: 6, minLevel: 14, faction: "Sin gobierno (ruinas)", poneglyph: false, x: 1110, y: 470,
+    desc: "Lo que queda de la isla de los arqueólogos: un árbol enorme carbonizado, una biblioteca convertida en cenizas y un silencio que pesa. Se dice que el Gobierno arrasó la isla por estudiar lo que no debía.",
+    hook: "Entre las cenizas aún hay quien busca páginas salvadas del fuego. Y el Gobierno sigue enviando agentes a comprobar que nadie las encuentre." },
+  { key: "marineford", name: "Marineford", sea: "Paradise (Grand Line)", danger: 9, minLevel: 26, faction: "Marina (Cuartel General)", poneglyph: false, x: 1420, y: 700,
+    desc: "El cuartel general de la Marina, una fortaleza blanca con una plaza enorme donde se han decidido guerras. Hay más almirantes por metro cuadrado que en cualquier otro lugar del mundo, y ninguno tiene prisa por sonreír.",
+    hook: "Cada piedra de la plaza recuerda la guerra que cambió la era. La Marina se reconstruye, y cualquier pirata que pise el puerto será visto como una amenaza inmediata." },
+  { key: "dressrosa", name: "Dressrosa", sea: "New World", danger: 9, minLevel: 28, faction: "Reino de Dressrosa (reconstruido)", poneglyph: false, x: 760, y: 730,
+    desc: "La isla de la pasión: flores, plazas, un coliseo donde los gladiadores luchan por un premio imposible y, bajo el ruido de la fiesta, las cicatrices de un reinado de marionetas que aún nadie termina de olvidar.",
+    hook: "El coliseo ha vuelto a abrir sus puertas, pero ya no se pelea por un premio: se pelea por reputación. Y siempre hay alguien mirando desde las gradas más altas." },
+  { key: "zou", name: "Zou", sea: "New World", danger: 9, minLevel: 30, faction: "Mink de Zou", poneglyph: false, x: 570, y: 735,
+    desc: "Un elefante gigante, mayor que una isla, que camina por el mar con una ciudad-bosque sobre el lomo. Los mink lo llaman hogar, guardan un Poneglifo y aún recuerdan un juramento a una familia lejana.",
+    hook: "Los mink no aceptan intrusos a la ligera: quien llegue tendrá que ganarse su confianza a base de hechos, no de palabras." },
+  { key: "egghead", name: "Isla Egghead", sea: "New World", danger: 10, minLevel: 36, faction: "Gobierno Mundial (Laboratorio de Vegapunk)", poneglyph: false, x: 960, y: 735,
+    desc: "La isla del futuro: torres de cristal, robots por las calles y un laboratorio flotante donde se decide lo que la humanidad será capaz de hacer. Tiene más vigilancia que cualquier prisión, y todo el mundo quiere entrar.",
+    hook: "Lo que se cocina en el laboratorio podría cambiar el equilibrio del mundo. El Gobierno lo sabe, los piratas lo saben, y por eso la isla nunca duerme tranquila." },
 ];
 
 const EDGES = [
-  ["foosha","shimotsuki"], ["foosha","marineG5"], ["foosha","baltigo"],
+  ["foosha","shimotsuki"], ["foosha","marineG5"], ["foosha","baltigo"], ["foosha","orangeTown"], ["orangeTown","shimotsuki"],
   ["marineG5","loguetown"], ["gecko","shimotsuki"], ["gecko","loguetown"],
-  ["shimotsuki","baratie"], ["baratie","conomi"], ["conomi","loguetown"],
+  ["shimotsuki","baratie"], ["shimotsuki","syrup"], ["baratie","syrup"], ["baratie","conomi"], ["conomi","loguetown"],
   ["loguetown","reverseMountain"], ["reverseMountain","whiskyPeak"],
   ["whiskyPeak","littleGarden"], ["littleGarden","alabasta"], ["littleGarden","drum"], ["drum","alabasta"],
   ["alabasta","skypiea"], ["alabasta","waterSeven"], ["alabasta","graveyardIsland"], ["alabasta","eniesLobby"],
-  ["waterSeven","eniesLobby"], ["waterSeven","sabaody"], ["sabaody","fishMan"], ["fishMan","punkHazard"],
-  ["punkHazard","wholeCake"], ["wholeCake","wano"], ["wano","laughTale"],
+  ["waterSeven","eniesLobby"], ["waterSeven","sabaody"], ["waterSeven","ohara"], ["sabaody","fishMan"], ["sabaody","marineford"], ["eniesLobby","marineford"],
+  ["fishMan","punkHazard"], ["punkHazard","wholeCake"], ["punkHazard","egghead"], ["wholeCake","wano"], ["wholeCake","dressrosa"],
+  ["dressrosa","zou"], ["dressrosa","egghead"], ["wano","zou"], ["wano","laughTale"],
   ["graveyardIsland","abyss"], ["eniesLobby","impelDown"], ["eniesLobby","maryGeoise"],
 ];
 

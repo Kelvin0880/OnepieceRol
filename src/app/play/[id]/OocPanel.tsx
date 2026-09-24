@@ -14,6 +14,15 @@ interface Overview {
 
 type Proposal = { type: string; [k: string]: unknown };
 
+interface RollbackPreview {
+  label: string;
+  createdAt: string;
+  willDelete: { sceneMessages: number; logEntries: number; newsItems: number; recruitedNakamas: number; pendingFight: boolean };
+  changes: { label: string; from: string | number; to: string | number }[];
+  berriesKept: boolean;
+  aiForgets: string;
+}
+
 const PROPOSAL_LABELS: Record<string, string> = {
   rename: "Cambiar el nombre del personaje",
   rename_crew: "Cambiar el nombre de la tripulación",
@@ -73,7 +82,8 @@ export default function OocPanel({
   const [noteDraft, setNoteDraft] = useState("");
   const [reportDraft, setReportDraft] = useState("");
   const [pointDraft, setPointDraft] = useState("");
-  const [confirmRollback, setConfirmRollback] = useState<string | null>(null);
+  // A rollback is never one click: the player first sees exactly what will be erased.
+  const [rollbackPreview, setRollbackPreview] = useState<{ checkpointId?: string; data: RollbackPreview } | null>(null);
   const endRef = useRef<HTMLDivElement>(null);
 
   const reload = useCallback(async () => {
@@ -121,6 +131,7 @@ export default function OocPanel({
   }
 
   async function apply(action: Proposal) {
+    if (action.type === "rollback") return openRollbackPreview();
     setBusy(true);
     setNotice(null);
     try {
@@ -137,14 +148,31 @@ export default function OocPanel({
     }
   }
 
-  async function doRollback(checkpointId?: string) {
+  async function openRollbackPreview(checkpointId?: string) {
     setBusy(true);
     setNotice(null);
     try {
-      const r = await post({ op: "rollback", checkpointId });
+      const r = await post({ op: "rollback_preview", checkpointId });
+      if (r) {
+        setProposal(null);
+        setTab("points");
+        setRollbackPreview({ checkpointId, data: r });
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function doRollback() {
+    if (!rollbackPreview) return;
+    setBusy(true);
+    setNotice(null);
+    try {
+      const r = await post({ op: "rollback", checkpointId: rollbackPreview.checkpointId, acknowledged: true });
       if (r) {
         setNotice(r.message);
-        setConfirmRollback(null);
+        setRollbackPreview(null);
+        setChat([]);
         onChanged();
         await reload();
       }
@@ -347,6 +375,47 @@ export default function OocPanel({
                 Guardar punto
               </button>
             </div>
+            {rollbackPreview && (
+              <div className="rounded border-2 border-blood p-3 flex flex-col gap-2" style={{ background: "rgba(120,20,20,0.18)" }} data-testid="rollback-warning">
+                <h4 className="font-display text-base text-gold-bright">¿Volver a «{rollbackPreview.data.label}»?</h4>
+                <p className="text-sm">
+                  Vas a <strong>borrar una parte de tu historia</strong>. Se perderá para siempre lo que hiciste después de{" "}
+                  {new Date(rollbackPreview.data.createdAt).toLocaleString("es-ES")}, y <strong>el narrador lo olvidará por completo</strong>: solo recordará la historia hasta ese punto.
+                </p>
+                <ul className="text-xs list-disc pl-5 flex flex-col gap-0.5" data-testid="rollback-lists">
+                  <li>{rollbackPreview.data.willDelete.sceneMessages} mensajes de la escena</li>
+                  <li>{rollbackPreview.data.willDelete.logEntries} entradas de la bitácora</li>
+                  {rollbackPreview.data.willDelete.newsItems > 0 && <li>{rollbackPreview.data.willDelete.newsItems} noticias sobre tu personaje</li>}
+                  {rollbackPreview.data.willDelete.recruitedNakamas > 0 && <li>{rollbackPreview.data.willDelete.recruitedNakamas} nakama(s) reclutado(s) desde entonces</li>}
+                  {rollbackPreview.data.willDelete.pendingFight && <li>La pelea que tienes en curso</li>}
+                </ul>
+                {rollbackPreview.data.changes.length > 0 && (
+                  <div>
+                    <p className="text-xs text-ink-dim mb-1">Tu personaje volverá a estos valores:</p>
+                    <div className="grid grid-cols-2 gap-x-4 text-xs">
+                      {rollbackPreview.data.changes.map((c) => (
+                        <div key={c.label} className="flex justify-between">
+                          <span className="text-ink-dim">{c.label}</span>
+                          <span>
+                            {c.from} → <span className="text-gold-bright">{c.to}</span>
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+                {rollbackPreview.data.berriesKept && <p className="text-xs text-ink-dim">Tus berries actuales se quedan como están porque tu equipo cambió desde entonces (no hay reembolsos). El equipo, las frutas y lo comprado no se deshacen.</p>}
+                <p className="text-xs text-blood">{rollbackPreview.data.aiForgets}</p>
+                <div className="flex gap-2">
+                  <button className="btn-gold px-3 py-1.5 text-xs" disabled={busy} onClick={doRollback} data-testid="ooc-rollback-confirm">
+                    Sí, borrar esa parte de mi historia
+                  </button>
+                  <button className="btn-ghost px-3 py-1.5 text-xs" onClick={() => setRollbackPreview(null)} data-testid="ooc-rollback-cancel">
+                    No, seguir como estoy
+                  </button>
+                </div>
+              </div>
+            )}
             {ov.checkpoints.length === 0 && <p className="text-xs text-ink-dim">Aún no hay puntos.</p>}
             <div className="flex flex-col gap-1" data-testid="ooc-points">
               {ov.checkpoints.map((k) => (
@@ -355,27 +424,16 @@ export default function OocPanel({
                     <p className="text-sm">{k.label}</p>
                     <p className="text-[11px] text-ink-dim">{new Date(k.createdAt).toLocaleString("es-ES")} · {k.kind === "manual" ? "manual" : "automático"}</p>
                   </div>
-                  {confirmRollback === k.id ? (
-                    <div className="flex gap-1">
-                      <button className="btn-gold px-2 py-1 text-xs" disabled={busy} onClick={() => doRollback(k.id)} data-testid="ooc-rollback-confirm">
-                        Sí, volver
+                  <div className="flex gap-1">
+                    <button className="btn-ghost px-2 py-1 text-xs" disabled={busy || ov.rollbacksLeft === 0} onClick={() => openRollbackPreview(k.id)} data-testid="ooc-rollback">
+                      Volver aquí
+                    </button>
+                    {k.kind === "manual" && (
+                      <button className="btn-ghost px-2 py-1 text-xs" disabled={busy} onClick={() => post({ op: "delete_checkpoint", checkpointId: k.id }).then(reload)}>
+                        Borrar
                       </button>
-                      <button className="btn-ghost px-2 py-1 text-xs" onClick={() => setConfirmRollback(null)}>
-                        No
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="flex gap-1">
-                      <button className="btn-ghost px-2 py-1 text-xs" disabled={busy || ov.rollbacksLeft === 0} onClick={() => setConfirmRollback(k.id)} data-testid="ooc-rollback">
-                        Volver aquí
-                      </button>
-                      {k.kind === "manual" && (
-                        <button className="btn-ghost px-2 py-1 text-xs" disabled={busy} onClick={() => post({ op: "delete_checkpoint", checkpointId: k.id }).then(reload)}>
-                          Borrar
-                        </button>
-                      )}
-                    </div>
-                  )}
+                    )}
+                  </div>
                 </div>
               ))}
             </div>

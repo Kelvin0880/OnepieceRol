@@ -90,7 +90,8 @@ async function main() {
       const pe = await prisma.pendingEncounter.findUnique({ where: { characterId: character.id } });
       const storedEnemy = JSON.parse(pe!.enemyJson);
       assert(storedEnemy.worldActorId === teach.id, "grudge-ambush enemy carries the same worldActorId");
-      assert(storedEnemy.hp === 320, "grudge-ambush reuses the denormalized enemy snapshot stats");
+      const seededHp = JSON.parse((await prisma.eventTemplate.findFirstOrThrow({ where: { title: "La guardia personal de Barbanegra" } })).bodyJson).enemy.hp;
+      assert(storedEnemy.hp === seededHp, `grudge-ambush reuses the denormalized enemy snapshot stats (hp ${seededHp})`);
     } else if (result.pendingCombat) {
       // some other event triggered combat — clear it and keep trying
       await prisma.pendingEncounter.deleteMany({ where: { characterId: character.id } });

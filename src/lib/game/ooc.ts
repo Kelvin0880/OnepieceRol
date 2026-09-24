@@ -9,6 +9,7 @@ import {
   canRollback,
   checkpointLabel,
   gearSignature,
+  diffSnapshot,
   planRepair,
   planRollback,
   validateCharacterName,
@@ -27,7 +28,7 @@ const MAX_MANUAL_CHECKPOINTS = 10;
 async function loadOwned(characterId: string, userId: string) {
   const c = await prisma.character.findUnique({
     where: { id: characterId },
-    include: { currentIsland: true, pendingEncounter: true, crew: true, _count: { select: { inventory: true } } },
+    include: { currentIsland: true, pendingEncounter: true, crew: true, companions: true, _count: { select: { inventory: true } } },
   });
   if (!c || c.userId !== userId) throw new OocError("Personaje no encontrado.");
   return c;
@@ -35,14 +36,22 @@ async function loadOwned(characterId: string, userId: string) {
 
 type Owned = Awaited<ReturnType<typeof loadOwned>>;
 
-function snapshotOf(c: Owned): CharacterSnapshot {
+function snapshotOf(c: Owned, missions: { id: string; progress: number; status: string }[] = []): CharacterSnapshot {
   return {
     level: c.level, experience: c.experience, hp: c.hp, maxHp: c.maxHp, stamina: c.stamina, maxStamina: c.maxStamina,
     berries: c.berries, bounty: c.bounty, notoriety: c.notoriety,
     strength: c.strength, agility: c.agility, durability: c.durability, willpower: c.willpower, intellect: c.intellect,
     observationHaki: c.observationHaki, armamentHaki: c.armamentHaki, currentIslandId: c.currentIslandId,
+    memorySummary: c.memorySummary ?? null,
+    sceneCompactedUntil: c.sceneCompactedUntil ? c.sceneCompactedUntil.toISOString() : null,
+    missions,
+    companions: c.companions.map((n) => ({ id: n.id, hp: n.hp, status: n.status })),
     gearSignature: gearSignature({ weaponId: c.equippedWeaponId, fruitId: c.devilFruitId, inventoryCount: c._count.inventory }),
   };
+}
+
+async function missionState(characterId: string) {
+  return (await prisma.mission.findMany({ where: { characterId }, select: { id: true, progress: true, status: true } })).map((m) => ({ id: m.id, progress: m.progress, status: m.status }));
 }
 
 // ---------- restore points ----------
@@ -54,7 +63,7 @@ export async function createCheckpoint(characterId: string, userId: string, kind
     const manual = await prisma.checkpoint.count({ where: { characterId, kind: "manual" } });
     if (manual >= MAX_MANUAL_CHECKPOINTS) throw new OocError(`Ya tienes ${MAX_MANUAL_CHECKPOINTS} puntos manuales; borra alguno antes.`);
   }
-  const row = await prisma.checkpoint.create({ data: { characterId, kind, label: checkpointLabel(kind, reason), snapshotJson: JSON.stringify(snapshotOf(c)) } });
+  const row = await prisma.checkpoint.create({ data: { characterId, kind, label: checkpointLabel(kind, reason), snapshotJson: JSON.stringify(snapshotOf(c, await missionState(characterId))) } });
   if (kind === "auto") {
     const autos = await prisma.checkpoint.findMany({ where: { characterId, kind: "auto" }, orderBy: { createdAt: "desc" }, select: { id: true }, skip: MAX_AUTO_CHECKPOINTS });
     if (autos.length) await prisma.checkpoint.deleteMany({ where: { id: { in: autos.map((a) => a.id) } } });
@@ -85,38 +94,86 @@ async function rollbacksLast24h(characterId: string) {
   return prisma.oocReport.count({ where: { characterId, kind: "rollback", createdAt: { gt: new Date(Date.now() - 24 * 3600 * 1000) } } });
 }
 
-export async function rollbackToCheckpoint(characterId: string, userId: string, checkpointId?: string) {
+async function resolveRollbackTarget(characterId: string, userId: string, checkpointId?: string) {
   const c = await loadOwned(characterId, userId);
   const [duel, joint, used] = await Promise.all([getOpenDuelFor(characterId), getOpenJointFightFor(characterId), rollbacksLast24h(characterId)]);
   const verdict = canRollback({
-    alive: c.status === CharacterStatus.ALIVE,
+    dead: c.status === CharacterStatus.DEAD,
     imprisoned: c.status === CharacterStatus.IMPRISONED,
     inDuelOrJointFight: duel?.status === "ACTIVE" || !!joint,
     rollbacksLast24h: used,
   });
   if (!verdict.ok) throw new OocError(verdict.reason);
-
   const cp = checkpointId
     ? await prisma.checkpoint.findFirst({ where: { id: checkpointId, characterId } })
     : await prisma.checkpoint.findFirst({ where: { characterId }, orderBy: { createdAt: "desc" } });
   if (!cp) throw new OocError("No hay ningún punto de restauración al que volver.");
-
   const snap = JSON.parse(cp.snapshotJson) as CharacterSnapshot;
+  const signature = gearSignature({ weaponId: c.equippedWeaponId, fruitId: c.devilFruitId, inventoryCount: c._count.inventory });
+  return { c, cp, snap, used, plan: planRollback(snap, signature, c.berries) };
+}
+
+/** Everything a rollback would erase, counted, so the player sees the cost BEFORE confirming. Changes nothing. */
+export async function previewRollback(characterId: string, userId: string, checkpointId?: string) {
+  const { c, cp, snap, plan } = await resolveRollbackTarget(characterId, userId, checkpointId);
+  const after = { characterId, createdAt: { gt: cp.createdAt } };
+  const [scene, logs, news, laterCompanions, snapIsland] = await Promise.all([
+    prisma.sceneMessage.count({ where: after }),
+    prisma.gameLogEntry.count({ where: after }),
+    prisma.newsItem.count({ where: after }),
+    prisma.nPCCompanion.count({ where: { characterId, joinedAt: { gt: cp.createdAt } } }),
+    prisma.island.findUnique({ where: { id: snap.currentIslandId }, select: { name: true } }),
+  ]);
+  const changes = diffSnapshot(snap, { ...snapshotOf(c), berries: c.berries }, { snapshot: snapIsland?.name ?? c.currentIsland.name, current: c.currentIsland.name }, plan.berriesRestored);
+  return {
+    label: cp.label,
+    createdAt: cp.createdAt.toISOString(),
+    willDelete: { sceneMessages: scene, logEntries: logs, newsItems: news, recruitedNakamas: laterCompanions, pendingFight: !!c.pendingEncounter },
+    changes,
+    berriesKept: !plan.berriesRestored,
+    aiForgets: "El narrador olvidará todo lo ocurrido después de ese punto: solo recordará la historia hasta ahí. No se puede deshacer.",
+  };
+}
+
+export async function rollbackToCheckpoint(characterId: string, userId: string, checkpointId?: string) {
+  const { cp, snap, used, plan } = await resolveRollbackTarget(characterId, userId, checkpointId);
   const island = await prisma.island.findUnique({ where: { id: snap.currentIslandId }, select: { id: true } });
-  const plan = planRollback(snap, gearSignature({ weaponId: c.equippedWeaponId, fruitId: c.devilFruitId, inventoryCount: c._count.inventory }), c.berries);
-  if (!island) plan.data.currentIslandId = c.currentIslandId;
+  if (!island) plan.data.currentIslandId = (await prisma.character.findUniqueOrThrow({ where: { id: characterId }, select: { currentIslandId: true } })).currentIslandId;
+
+  // Old snapshots did not carry the narrator memory: forgetting is always safer than remembering a timeline that never happened.
+  const memory = snap.memorySummary === undefined ? null : snap.memorySummary;
+  const compactedUntil = snap.sceneCompactedUntil ? new Date(snap.sceneCompactedUntil) : null;
+  const after = { characterId, createdAt: { gt: cp.createdAt } };
 
   await prisma.$transaction([
-    prisma.character.update({ where: { id: characterId }, data: { ...plan.data, staminaUpdatedAt: new Date() } }),
+    prisma.character.update({
+      where: { id: characterId },
+      data: { ...plan.data, staminaUpdatedAt: new Date(), memorySummary: memory, sceneCompactedUntil: compactedUntil, timelineEpoch: { increment: 1 } },
+    }),
     prisma.pendingEncounter.deleteMany({ where: { characterId } }),
-    prisma.sceneMessage.deleteMany({ where: { characterId, createdAt: { gt: cp.createdAt } } }),
+    prisma.sceneMessage.deleteMany({ where: after }),
+    prisma.gameLogEntry.deleteMany({ where: after }),
+    prisma.bountyLogEntry.deleteMany({ where: after }),
+    prisma.newsItem.deleteMany({ where: { ...after, arcId: null } }),
     prisma.checkpoint.deleteMany({ where: { characterId, createdAt: { gt: cp.createdAt } } }),
     prisma.oocReport.create({ data: { characterId, kind: "rollback", text: `Volvió a «${cp.label}» (${cp.createdAt.toISOString()})`, contextJson: JSON.stringify({ berriesRestored: plan.berriesRestored }) } }),
-    prisma.gameLogEntry.create({ data: { characterId, kind: "ooc", text: `Vuelves al punto «${cp.label}». La escena posterior se borra de tu historia.` } }),
+    prisma.gameLogEntry.create({ data: { characterId, kind: "ooc", text: `Vuelves al punto «${cp.label}». Todo lo posterior se borró de tu historia y el narrador ya no lo recuerda.` } }),
   ]);
+
+  // Companions: those recruited after the point never existed on this timeline; the rest return to their state then.
+  await prisma.nPCCompanion.deleteMany({ where: { characterId, joinedAt: { gt: cp.createdAt } } });
+  for (const n of snap.companions ?? []) {
+    await prisma.nPCCompanion.updateMany({ where: { id: n.id, characterId }, data: { hp: n.hp, status: n.status as CharacterStatus, ...(n.status === "ALIVE" ? { deathCause: null, diedAt: null } : {}) } });
+  }
+  // Missions: same idea. Progress and completion go back to how they were.
+  for (const m of snap.missions ?? []) await prisma.mission.updateMany({ where: { id: m.id, characterId }, data: { progress: m.progress, status: m.status } });
+  await prisma.mission.deleteMany({ where: { characterId, createdAt: { gt: cp.createdAt } } });
+
   notifyCharacters([characterId], "ooc");
   return {
-    message: `Volviste a «${cp.label}».` + (plan.berriesRestored ? "" : " Tus berries actuales se conservaron porque tu equipo cambió desde entonces (no hay reembolsos)."),
+    message:
+      `Volviste a «${cp.label}». Todo lo posterior se borró y el narrador lo olvidó: la historia continúa desde ahí.` +
+      (plan.berriesRestored ? "" : " Tus berries actuales se conservaron porque tu equipo cambió desde entonces (no hay reembolsos)."),
     rollbacksLeft: MAX_ROLLBACKS_PER_DAY - used - 1,
   };
 }

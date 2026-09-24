@@ -100,6 +100,8 @@ model Character {
   // Out-of-role controls (game/ooc.ts): how the narrator plays enemies, and
   // standing feedback the player gave it ("no repitas mi acción"), injected
   // into every narrator prompt for this character.
+  // Bumped by every rollback: in-flight AI memory writes from the discarded timeline check it and drop themselves.
+  timelineEpoch Int    @default(0)
   narratorTone String  @default("balanced") // "balanced" | "lethal" | "story"
   oocNotes     String?
 
@@ -169,6 +171,10 @@ model Crew {
   shipName    String      @default("Barca sin nombre")
   captainId   String // the founding character's id — not FK-enforced, resolved in app code
   inviteCode  String      @unique @default(cuid())
+  // Flag / emblem image (engine/crew-emblem.ts): bytes live here, served by /api/crews/[id]/emblem, never in the JSON state.
+  flagImage         Bytes?
+  flagImageType     String?
+  flagImageUpdatedAt DateTime?
   members     Character[]
   createdAt   DateTime    @default(now())
 }
@@ -628,6 +634,11 @@ model NewsItem {
   // death/capture/poneglyph-reads/group-battle outcomes are "major", the
   // periodic bounty roundup is "digest", everything else stays "normal".
   severity     String   @default("normal")
+  // Where it happened (shown on every card) and, for world events, which arc/chapter it belongs to.
+  locationName String?
+  islandId     String?
+  arcId        String?
+  arcStage     Int?
   createdAt    DateTime @default(now())
 }
 
@@ -643,6 +654,8 @@ enum ActorRole {
   GOROSEI // the Five Elders: the Government's highest visible power
   HIDDEN_RULER // the one nobody names: the true power behind the Gorosei
   NOTABLE_PIRATE // a significant independent captain/crewmate, not yet Yonko/Warlord tier — rankLabel carries the specific title
+  MARINE_OFFICER // vice admirals, captains and other named marines below Admiral
+  NOTABLE_CIVILIAN // royals, scientists and other non-combatants who still matter to the story
 }
 
 // The behavioral bucket world-news templates gate actor selection on — see
@@ -689,7 +702,15 @@ model WorldActor {
   // DEFEATED / DECEASED ones are lore-only (still shown in the codex). statsJson
   // = {strength,agility,durability,willpower,intellect} on the same raw scale as
   // Character; abilitiesJson = string[] of signature techniques/haki.
-  status        String  @default("ACTIVE")
+  status        String  @default("ACTIVE") // ACTIVE | RETIRED | DEFEATED | DECEASED | CAPTURED
+  // Where they are in the world right now (always tracked, even when hidden from the UI). locationHidden = moving in secret.
+  currentIslandId   String? // null while at sea (see locationKind)
+  // island | sea (sailing between seaFromIslandId and seaToIslandId) — "unknown" is expressed by locationHidden
+  locationKind      String    @default("island")
+  seaFromIslandId   String?
+  seaToIslandId     String?
+  locationHidden    Boolean   @default(false)
+  locationUpdatedAt DateTime?
   statsJson     String?
   abilitiesJson String?
   factionType  FactionType @default(UNAFFILIATED)
@@ -958,4 +979,31 @@ model CrewInvite {
 
   @@index([toCharacterId, status])
   @@index([crewId, status])
+}
+
+
+// A slow, multi-chapter world event (game/world-arcs.ts) that may end in the death or capture of a canon character.
+// The AI never decides that: at the decisive chapter the arc waits for the game owner's explicit consent.
+model WorldArc {
+  id            String    @id @default(cuid())
+  kind          String // "death" | "capture"
+  title         String
+  targetActorId String
+  targetName    String
+  aggressorId   String?
+  aggressorName String?
+  stage         Int       @default(0) // chapters already published
+  totalStages   Int       @default(6) // chapters before the verdict
+  status        String    @default("ACTIVE") // ACTIVE | AWAITING_CONSENT | RESOLVED
+  nextBeatAt    DateTime
+  consent       String    @default("NONE") // NONE | PENDING | APPROVED | DENIED
+  outcome       String? // death | capture | survived
+  decidedBy     String?
+  decidedAt     DateTime?
+  contextJson   String    @default("[]") // one line per published chapter, fed back to the narrator as memory
+  contributionsJson String @default("[]") // player interventions: who stepped in, on which side, at which chapter
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
 }

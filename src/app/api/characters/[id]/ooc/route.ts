@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUserId, UnauthorizedError } from "@/lib/require-user";
-import { OocError, oocChat, applyOocAction, getOocOverview, createCheckpoint, deleteCheckpoint, rollbackToCheckpoint } from "@/lib/game/ooc";
+import { OocError, oocChat, applyOocAction, getOocOverview, createCheckpoint, deleteCheckpoint, rollbackToCheckpoint, previewRollback } from "@/lib/game/ooc";
 import { sanitizeProposal } from "@/lib/ai/ooc-prompt";
 import { runOncePerCharacter, ActionInFlightError } from "@/lib/idempotency";
 import { logError } from "@/lib/log-error";
@@ -15,7 +15,9 @@ const schema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("apply"), action: z.unknown() }),
   z.object({ op: z.literal("checkpoint"), label: z.string().min(1).max(60) }),
   z.object({ op: z.literal("delete_checkpoint"), checkpointId: z.string() }),
-  z.object({ op: z.literal("rollback"), checkpointId: z.string().optional() }),
+  z.object({ op: z.literal("rollback_preview"), checkpointId: z.string().optional() }),
+  // The warning was shown: the client must say so explicitly, so a stray call can never erase a timeline.
+  z.object({ op: z.literal("rollback"), checkpointId: z.string().optional(), acknowledged: z.literal(true) }),
 ]);
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -50,6 +52,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       case "delete_checkpoint":
         await deleteCheckpoint(id, userId, body.checkpointId);
         return NextResponse.json({ message: "Punto borrado." });
+      case "rollback_preview":
+        return NextResponse.json(await previewRollback(id, userId, body.checkpointId));
       case "rollback":
         return NextResponse.json(await runOncePerCharacter(id, undefined, () => rollbackToCheckpoint(id, userId, body.checkpointId)));
     }

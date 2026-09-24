@@ -86,7 +86,7 @@ misericordia, texto libre) · `combat-prep` (estamina + técnica + fatiga → co
 ### 4.1 Personaje
 - **Facciones jugables (5):** Pirata (progreso = recompensa), Marine (rango), Revolucionario, Cazarrecompensas y **CP-0 / Gobierno Mundial** (los tres últimos = notoriedad/mérito).
 - **Arquetipos (4):** Espadachín (FUE 8 AGI 9 RES 6 VOL 5 INT 4, espada de acero), Luchador (9/6/9/5/3, nudillos), Tirador (5/8/5/5/9, pistola de chispa), Fuerza Bruta (10/4/10/4/4, hacha).
-- **Estadísticas:** fuerza, agilidad, resistencia, voluntad (alimenta el Haki), intelecto (alimenta la fruta). Nivel/XP, vida, berries (3000 al inicio), recompensa/notoriedad.
+- **Estadísticas:** fuerza, agilidad, resistencia, voluntad (alimenta el Haki), intelecto (alimenta la fruta). Nivel/XP (con **barra de experiencia** en la ficha), **vida base 100**, berries (3000 al inicio), recompensa/notoriedad.
 - **Islas de inicio:** Pirata → Pueblo Foosha; Marine → Cuartel Marine G-5; Revolucionario → Isla Baltigo; Cazarrecompensas → Isla Gecko; CP-0 → Loguetown.
 - **Estados:** `ALIVE`, `DEAD`, `RETIRED`, `IMPRISONED`. Borrado voluntario de personaje con limpieza en cascada (`delete-character`).
 - **Condición física** (`condition`): Ileso ≥90% · Rasguñado ≥60% · Herido ≥35% · Malherido ≥15% · Al borde de la muerte.
@@ -136,6 +136,8 @@ Inyectadas como `ROLE_RULES` en **todos** los prompts del narrador (también par
 
 **Estamina** (`stamina`, `combat-prep`): máx. 100; regenera **2/min** en tiempo real (perezoso, desde `staminaUpdatedAt`); descansar da +60 % del máximo. Explorar cuesta 8 (necesitas ≥8), entrenar 20, zarpar 10, cada ronda 4 (más con técnica). **Fatiga:** ≤25 % → fatigado (atk ×0.85, def ×0.9, vel ×0.85); 0 → exhausto (×0.6/0.7/0.6).
 
+**Esfuerzo y desgaste por nivel (2026-09-24).** El clasificador mide en la misma llamada el *esfuerzo físico* de lo que describes (0 hablar/observar · 1 golpe normal · 2 ataque potente/carrera/combo · 3 esfuerzo máximo) y el **código** lo convierte en aguante (`effortStaminaCost`: 1/3/7/12). Además cada golpe recibido cansa (`staminaLossFromDamage`) y forzar un esfuerzo 2-3 con el depósito vacío te lastima (`overexertionHpLoss`, nunca letal por sí solo). **A más nivel aguantas más:** `levelResilience(nivel) = 1/(1+0.02·(nivel−1))` (suelo 0.5) reduce el daño recibido y todo coste de aguante, para jugadores, aliados y enemigos por igual. Los **enemigos y aliados NPC también se cansan** (`enemyStamina`) y rinden peor cansados; el narrador recibe la fatiga de ambos bandos (un rival fresco puede contraatacar bien contra uno exhausto). **Descansar y entrenar solo sin peligro** (`dangerBlockReason`: no con pelea pendiente, duelo, pelea en grupo, caza pendiente ni Buster Call en la isla).
+
 **Técnicas** (`techniques`): lo que *describes* se convierte en un bono real.
 
 | Técnica | Bono activo | Coste |
@@ -175,7 +177,7 @@ Plantillas por isla (o globales) filtradas por peligro; una tirada decide 4 nive
 - **Rescate** (`rescue`): tirada `poder del rescatador − nivel requerido − (15 si fruta)` vs 50; el aliado debe estar en la misma isla.
 
 ### 4.10 Multijugador
-- **Tripulaciones** (`crew`): fundar/unirse por código de invitación/abandonar; nombre por facción (Tripulación, Escuadrón, Célula, Gremio, Unidad); capitán, barco, emblema.
+- **Tripulaciones** (`crew`) con **panel propio**: miembros con vida/aguante/Haki/fruta/arma en vivo, nakamas NPC, **invitaciones** (candidatos de tu isla o por nombre exacto, aceptar/rechazar/cancelar, caducan a las 24 h), unirse por código, expulsar (capitán), abandonar. Nombre por facción (Tripulación, Escuadrón, Célula, Unidad); **los cazarrecompensas trabajan siempre en solitario** (sin tripulación). **Bandera con imagen** subida por el capitán (PNG/JPG/WebP/GIF ≤200 KB, validada por sus bytes, nunca SVG). Las noticias son **globales**: cualquier jugador las ve, invitado o no.
 - **Escena compartida** (`party`): compañeros de tripulación vivos, en la misma isla y no separados comparten una escena con **orden de turnos** (capitán primero) y **una sola llamada de IA por turno**. Se crea/disuelve perezosamente al consultar el personaje (sin cron). Separarse pide confirmación; se puede reunirse. Un combate personal ignora los turnos y se **retransmite ronda a ronda** al grupo.
 - **Batalla de grupo** (`group-battle`, N vs N determinista): el retador propone emparejamientos 1-vs-1; oleadas de máx. 14; quien gana con >50 % de vida refuerza a un compañero (+20 % atk por refuerzo, máx. 3).
 - **Duelos 1 vs 1** (`duel`): ambos escriben su movimiento; con los dos dentro el motor resuelve **a la vez** y la IA narra. Resolución con protección contra carreras. Máx. 12 rondas (después gana el de mayor % de vida).
@@ -216,8 +218,26 @@ Escaleras por umbrales de recompensa/notoriedad, con noticia al cruzar un escal�
 - **Mercado negro** (`engine/black-market`, `game/black-market`): 4 islas, género rotativo cada 3 h, riesgo de trampa creciente por trato.
 - **Misiones y panorama** (`Mission`, `IslandBriefing`, `engine/missions`, `game/missions`, `narrateIslandBriefing`): cada isla (y la de inicio de cualquier facción) da 3 misiones escaladas por nivel y un panorama narrado por la IA (con texto estático de respaldo); completarlas da berries/XP y confianza (`Alliance`).
 
-### 4.14 Islas (26)
-Ver 4.15 para las 11 islas de la fase 2 (Isla Drum, Skypiea, Water 7, Archipiélago Sabaody, Isla Gyojin, Punk Hazard, Whole Cake, País de Wano, Isla Abismo, Mary Geoise, Laugh Tale). East Blue: Pueblo Foosha, Cuartel Marine G-5, Isla Baltigo, Isla Gecko, Villa Shimotsuki, Restaurante Baratie, Isla Conomi (Arlong), Loguetown, Reverse Mountain. Grand Line/Nuevo Mundo: Whisky Peak (peligro 6, nivel 8) → Little Garden (7, 10) → Alabasta (8, 12) → **Isla Cementerio** (10, nivel 30, Barbanegra) y **Enies Lobby** (10, nivel 35, CP-0) → **Impel Down** (10, nivel 45). El nivel mínimo se comprueba al zarpar.
+### 4.16 Fase 3: herramientas fuera de rol, mundo vivo y eventos mundiales (2026-09-24)
+
+**Fuera de rol** (`game/ooc`, `ai/ooc*`, `OocPanel`): chat efímero con la IA (no se guarda nada; sirve también para preguntar cómo funciona el juego), que solo **propone** una acción de una lista cerrada y tú confirmas: renombrar personaje/tripulación, deshacer la última respuesta, rollback, reparar valores, tono del narrador (equilibrado/letal/historia), indicaciones permanentes, pactos de escena (p. ej. un 4 vs 4 que el narrador monta dentro del rol) y reportar fallos. Todo se revalida en servidor.
+
+**Rollback = una sola línea temporal.** Puntos de restauración automáticos (≥10 min entre ellos, más uno al crear el personaje) y manuales. Antes de volver hay una **alerta** que cuenta qué se borrará y qué valores cambian; la API exige confirmación explícita. Se restauran números **y la memoria del narrador**, se borra la escena/bitácora/noticias propias/nakamas/misiones posteriores y se incrementa `timelineEpoch`, de modo que ningún resumen de IA "en vuelo" pueda resucitar lo descartado. Reglas: el muerto no vuelve (muerte permanente), el preso tampoco, ni en duelo o pelea en grupo, máximo 3 al día; el equipo no se deshace y los berries solo se restauran si el equipo no cambió.
+
+**La IA conoce lo que cada uno puede hacer.** Ficha real del jugador (Haki, fruta y fase, arma, fatiga, aliados) y **repertorio de cada enemigo** (Haki, fruta y fase, arma, técnicas; los canon lo declaran, los aleatorios lo derivan de su nivel, con frutas a partir de la Grand Line). **Todo combatiente que la IA controla (enemigos y aliados NPC) juega a ganar** con todo su repertorio y nada fuera de él; el motor sigue decidiendo quién acierta.
+
+**Nakamas NPC reales:** se reclutan con el texto ("Jorge, únete a mi tripulación"), decide una tirada de persuasión, máximo 3, **siempre a tu nivel**, con rol y habilidades que se desbloquean a los niveles 1/5/12.
+
+**Mundo vivo.** Cada personaje canon tiene siempre una **ubicación** (`currentIslandId`; puede moverse en secreto → "Ubicación desconocida"), se mueve por islas vecinas con el tiempo, y el narrador lee en cada escena **quién está en tu isla y cerca** más los eventos mundiales en curso. Toda noticia muestra **dónde ocurrió**.
+
+**Eventos mundiales.** Sagas lentas de 6 capítulos (rumor → movilización → primer choque → escalada → asedio → punto de no retorno) separados por horas, cada uno una noticia con lugar y con el resumen de los anteriores como memoria. **Hasta el veredicto nadie muere ni es capturado.** En el último capítulo el evento se detiene y solo el dueño decide en `/admin` (doble confirmación): aprobar → el personaje pasa a DECEASED o CAPTURED (preso en Impel Down); rechazar → sobrevive en la sombra; en ambos casos se publica el desenlace. Administrador = usuario exacto en `ADMIN_USERNAMES` (nombres que solo difieren en mayúsculas se rechazan al registrarse). Los jugadores pueden **intervenir** en el lugar, desde el capítulo 3 y con nivel suficiente: defender, apoyar al agresor o pelear contra todos, contra una vanguardia (nunca el canon en persona); con 3 defensores victoriosos el objetivo se salva sin veredicto.
+
+**Códice** (`/codex`): ~126 personajes con recompensa, fruta y fase, arma, estadísticas, Haki, habilidades, personalidad y ubicación; los ya fuera de juego (fallecidos/derrotados/retirados) viven en "historia" y no actúan. 7 islas nuevas (Orange Town, Villa Syrup, Ohara, Marineford, Dressrosa, Zou, Isla Egghead).
+
+**Robustez** (a raíz del historial de una cuenta real): idempotencia por `requestId` (un reenvío nunca ejecuta el turno dos veces) y una acción a la vez por personaje; error visible + recarga si se corta la conexión; el turno del grupo se libera si la acción falla; los ticks del mundo van en segundo plano y protegidos contra simultaneidad.
+
+### 4.14 Islas (33)
+Fase 3: Orange Town y Villa Syrup (East Blue, nivel 1), Ohara (Paradise, 14), Marineford (26), Dressrosa (28), Zou (30) e Isla Egghead (36). Ver 4.15 para las 11 islas de la fase 2 (Isla Drum, Skypiea, Water 7, Archipiélago Sabaody, Isla Gyojin, Punk Hazard, Whole Cake, País de Wano, Isla Abismo, Mary Geoise, Laugh Tale). East Blue: Pueblo Foosha, Cuartel Marine G-5, Isla Baltigo, Isla Gecko, Villa Shimotsuki, Restaurante Baratie, Isla Conomi (Arlong), Loguetown, Reverse Mountain. Grand Line/Nuevo Mundo: Whisky Peak (peligro 6, nivel 8) → Little Garden (7, 10) → Alabasta (8, 12) → **Isla Cementerio** (10, nivel 30, Barbanegra) y **Enies Lobby** (10, nivel 35, CP-0) → **Impel Down** (10, nivel 45). El nivel mínimo se comprueba al zarpar.
 
 ## 5. Sistema de IA
 
@@ -229,7 +249,7 @@ Ver 4.15 para las 11 islas de la fase 2 (Isla Drum, Skypiea, Water 7, Archipiél
 
 ## 6. Modelo de datos (Prisma)
 
-`User` · `Character` (stats, haki, fruta, arma, isla, tripulación, estamina, dominio de fruta, `lastTravelAt`, `lastSeenAt`, `sceneCompactedUntil`, `memorySummary`, `poneglyphHeat`, `partyId`…) · `Crew` · `Party`/`PartySceneMessage` · `DevilFruit` (`isSingleton`) · `GroupBattle`/`GroupBattleParticipant` · `PendingEncounter` (fases threat/fighting/victory) · `Duel`/`DuelMessage` (`lethal`, `hostile`) · `Imprisonment` (`cellLevel`) · `NPCCompanion` · `Weapon` · `InventoryItem` · `Island` · `Poneglyph` · `EventTemplate` · `GameLogEntry` · `BountyLogEntry` · `SceneMessage` · `NewsItem` (`severity`) · `WorldActor` (facción, rango, recompensa canon, fruta canon) · `Grudge` · `WorldEventTemplate` · `WorldClock` · `ErrorLog`.
+`User` · `Character` (stats, haki, fruta, arma, isla, tripulación, estamina, dominio de fruta, `lastTravelAt`, `lastSeenAt`, `sceneCompactedUntil`, `memorySummary`, `poneglyphHeat`, `partyId`…) · `Crew` · `Party`/`PartySceneMessage` · `DevilFruit` (`isSingleton`) · `GroupBattle`/`GroupBattleParticipant` · `PendingEncounter` (fases threat/fighting/victory) · `Duel`/`DuelMessage` (`lethal`, `hostile`) · `Imprisonment` (`cellLevel`) · `NPCCompanion` · `Weapon` · `InventoryItem` · `Island` · `Poneglyph` · `EventTemplate` · `GameLogEntry` · `BountyLogEntry` · `SceneMessage` · `NewsItem` (`severity`) · `WorldActor` (facción, rango, recompensa canon, fruta canon) · `Grudge` · `WorldEventTemplate` · `WorldClock` · `ErrorLog` · Fase 3: `Checkpoint`, `OocReport`, `CrewInvite`, `WorldArc` (+ `WorldActor.status/statsJson/abilitiesJson/currentIslandId/locationHidden`, `NewsItem.locationName/arcId/arcStage`, `Character.narratorTone/oocNotes/timelineEpoch`, `Party.scenePact`, `Crew.flagImage`, `NPCCompanion.personality`).
 Convenciones: los ids de personaje en `Crew.captainId`, `GroupBattle`, `Duel`, `Grudge` son **strings sin FK** (validados en código); `Weapon.name` y `DevilFruit.name` no son únicos (instancia por concesión).
 
 ## 7. API
@@ -244,7 +264,13 @@ Convenciones: los ids de personaje en `Crew.captainId`, `GroupBattle`, `Duel`, `
 | `POST …/crew`, `…/battle` | Tripulación y batallas de grupo |
 | `POST …/prison` | Fianza / rescate |
 | `GET/POST …/shop`, `POST …/equip` | Tienda y equipamiento |
-| `GET /api/news` | Noticias (cursor, categoría) y disparo de ticks |
+| `GET /api/news` | Noticias (cursor, categoría; cada una con `locationName`); los ticks del mundo van en segundo plano |
+| `GET/POST …/ooc` | Fuera de rol: resumen, chat (`chat`), aplicar propuesta (`apply`), puntos (`checkpoint`, `delete_checkpoint`), `rollback_preview` y `rollback` (exige `acknowledged`) |
+| `GET/POST …/crew` | Invitaciones y candidatos (GET) · crear, unirse, invitar, responder, cancelar, expulsar, despedir nakama, `set_emblem`, abandonar |
+| `POST …/world-event` | Intervenir en un evento mundial (`defend`/`assist`/`chaos`) |
+| `GET /api/crews/[id]/emblem` | Bandera de una tripulación (imagen) |
+| `GET /api/world-events` · `GET /api/codex` | Eventos mundiales públicos · códice de personajes |
+| `GET/POST /api/admin/world-arcs` | Solo el dueño: eventos abiertos, `decide` (permitir/rechazar), `advance`, `cancel` |
 
 Errores tipados (`GameActionError`, `DuelError`, `CrewError`, `BattleError`, `PrisonError`, `UnauthorizedError`) → códigos 4xx; el resto → `logError` a la tabla `ErrorLog` + 500.
 
@@ -252,17 +278,18 @@ Errores tipados (`GameActionError`, `DuelError`, `CrewError`, `BattleError`, `Pr
 
 - `/` acceso y lista de personajes (borrar con confirmación) · `/create` facción + arquetipo · `/news` periódico.
 - `/play/[id]`: cabecera con título de facción; panel de **duelo/cacería**; cuadro de texto libre con ayuda; **Escena** (o **Escena compartida**) con burbujas que respetan saltos de línea; barra de vida del enemigo y decisión de perdonar/rematar; panel de estado (vida, **estamina**, berries, recompensa/mérito, calor), atributos y Haki, **equipo con dominio de fruta**, tripulación, aventureros de la isla (**Retar a duelo / Cazar a muerte**), prisioneros, retos de batalla, viajes, bitácora y modal “Mapa y Guía”.
+- **Fase 3:** botón **Fuera de rol** (cabecera y accesos en escena, duelo y pelea en grupo), **panel de Tripulación**, barra de experiencia, panel de **evento mundial** cuando estás en su lugar, `/codex` (Códice), `/news` con sección **Eventos mundiales** y pines de ubicación, y `/admin` (solo el dueño).
 - Tema oscuro pirata/pergamino: Cinzel (títulos) y Crimson Pro (texto). Todo el texto para jugadores en español.
 
 ## 9. Calidad y verificación
 
-- **275 pruebas unitarias** (Vitest): motor, prompts, clasificador, compactación, viajes, hostilidad, Impel Down.
+- **480+ pruebas unitarias** (Vitest): motor, prompts, clasificador, compactación, viajes, hostilidad, Impel Down.
 - `npx tsc --noEmit` limpio antes de dar nada por terminado.
-- **Verificación en navegador real** con Playwright y la IA de verdad: `e2e-smoke`, `ai-e2e-smoke`, `crew-smoke`, `battle-smoke`, `party-multiplayer-smoke`, `combat-rounds-check`, `roleplay-attack-check` (el bug del bar), `duel-smoke`, `party-attack-check`, `check-news-page`, `check-map-page`…
-- **Comprobaciones directas** (tsx contra la BD de desarrollo): `hunt-check` (cacería y protecciones), `impel-check`, `compaction-travel-check`, `world-news-check`, `grudge-check`, `prison-logic-check`, `delete-character-check`.
+- **Verificación en navegador real** con Playwright y la IA de verdad: `ai-e2e-smoke`, `crew-smoke`, `battle-smoke`, `party-multiplayer-smoke`, `combat-rounds-check`, `roleplay-attack-check` (el bug del bar), `duel-smoke`, `ooc-crew-ui-check`, `world-ui-check`, `check-news-page`, `check-map-page`…
+- **Comprobaciones directas** (tsx contra la BD de desarrollo): `hunt-check` (cacería y protecciones), `impel-check`, `compaction-travel-check`, `world-news-check`, `grudge-check`, `prison-logic-check`, `delete-character-check`, `ooc-rollback-check` (rollback = una línea temporal), `world-arcs-check` (76 comprobaciones del mundo vivo y los eventos). **Regresión completa:** `node scripts/run-all-checks.mjs` (resultado en `shots/regression.log`).
 - Tras verificar, se resetea la BD local (`npm run db:reset`).
 - Trampas encontradas construyéndolo (para no repetirlas): un `\b` de un script Python quedó como byte de retroceso dentro de una expresión regular (lo dejó muerto sin errores); `beforeEach(() => mock.mockReset())` **devuelve** el mock y Vitest lo ejecuta como limpieza; tras editar con scripts, buscar caracteres de control.
 
 ## 10. Lo que NO está hecho (hoja de ruta)
 
-La fase 2 está completa (ver 4.15). Pendiente: pulido general, regiones con NPC canon en ubicaciones reales más allá de los dominios, maestros de técnicas, subastas de frutas, coliseo sin permadeath, y balanceo del final con datos de juego reales.
+Las fases 2 y 3 están completas (ver 4.15 y 4.16). Pendiente: balanceo con datos de juego reales (final, territorios difíciles, ritmo de eventos mundiales), un modo de mundo instanciado por jugador (hoy el mundo es único y compartido; solo el personaje, su escena y su memoria son propios), maestros de técnicas, subastas de frutas y coliseo sin permadeath.

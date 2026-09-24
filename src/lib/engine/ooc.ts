@@ -44,6 +44,11 @@ export interface CharacterSnapshot {
   observationHaki: number;
   armamentHaki: number;
   currentIslandId: string;
+  /** What the narrator remembered at that moment (null = nothing). A rollback restores it so the discarded timeline is forgotten. Absent on very old snapshots: then memory is cleared. */
+  memorySummary?: string | null;
+  sceneCompactedUntil?: string | null;
+  missions?: { id: string; progress: number; status: string }[];
+  companions?: { id: string; hp: number; status: string }[];
   /** Gear signature: if it changed since the snapshot, berries are NOT rolled back (no buy-then-rollback refunds). */
   gearSignature: string;
 }
@@ -53,14 +58,14 @@ export function gearSignature(parts: { weaponId?: string | null; fruitId?: strin
 }
 
 export interface RollbackContext {
-  alive: boolean;
+  dead: boolean;
   imprisoned: boolean;
   inDuelOrJointFight: boolean;
   rollbacksLast24h: number;
 }
 
 export function canRollback(ctx: RollbackContext): { ok: true } | { ok: false; reason: string } {
-  if (!ctx.alive) return { ok: false, reason: "Un personaje muerto no puede volver atrás: la muerte permanente es la regla central del juego." };
+  if (ctx.dead) return { ok: false, reason: "Un personaje muerto no puede volver atrás: la muerte permanente es la regla central del juego." };
   if (ctx.imprisoned) return { ok: false, reason: "No puedes deshacer una captura con un rollback. Usa fianza, rescate o fuga." };
   if (ctx.inDuelOrJointFight) return { ok: false, reason: "No puedes hacer rollback en mitad de un duelo o pelea en grupo: afectaría a otros jugadores." };
   if (ctx.rollbacksLast24h >= MAX_ROLLBACKS_PER_DAY) return { ok: false, reason: `Ya usaste ${MAX_ROLLBACKS_PER_DAY} rollbacks en las últimas 24 horas.` };
@@ -130,4 +135,33 @@ export function planRepair(c: RepairInput): { changes: Record<string, number>; n
 
 export function checkpointLabel(kind: "auto" | "manual", reason: string): string {
   return kind === "manual" ? reason.slice(0, 60) : `Auto: ${reason}`.slice(0, 60);
+}
+
+export interface SnapshotDiffLine {
+  label: string;
+  from: string | number;
+  to: string | number;
+}
+
+/** What a rollback will visibly change, for the warning shown before the player confirms. Only fields that differ. */
+export function diffSnapshot(snap: CharacterSnapshot, current: CharacterSnapshot & { berries: number }, islandNames: { snapshot: string; current: string }, berriesRestored: boolean): SnapshotDiffLine[] {
+  const lines: SnapshotDiffLine[] = [];
+  const add = (label: string, from: string | number, to: string | number) => {
+    if (from !== to) lines.push({ label, from, to });
+  };
+  add("Nivel", current.level, snap.level);
+  add("Experiencia", current.experience, snap.experience);
+  add("Vida", current.hp, Math.min(snap.hp, snap.maxHp));
+  add("Aguante", current.stamina, Math.min(snap.stamina, snap.maxStamina));
+  if (berriesRestored) add("Berries", current.berries, snap.berries);
+  add("Recompensa", current.bounty, snap.bounty);
+  add("Fuerza", current.strength, snap.strength);
+  add("Agilidad", current.agility, snap.agility);
+  add("Resistencia", current.durability, snap.durability);
+  add("Voluntad", current.willpower, snap.willpower);
+  add("Intelecto", current.intellect, snap.intellect);
+  add("Haki de Armadura", current.armamentHaki, snap.armamentHaki);
+  add("Haki de Observación", current.observationHaki, snap.observationHaki);
+  add("Isla", islandNames.current, islandNames.snapshot);
+  return lines;
 }

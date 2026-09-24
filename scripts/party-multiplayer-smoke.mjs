@@ -5,6 +5,7 @@
 import { chromium } from "playwright";
 import path from "path";
 import fs from "fs";
+import { foundCrew, joinCrewByCode } from "./lib/crew-ui.mjs";
 
 const shotsDir = path.resolve(process.cwd(), "shots");
 fs.mkdirSync(shotsDir, { recursive: true });
@@ -54,15 +55,8 @@ try {
   const b = await registerAndCreate("partyB_" + Date.now(), "Marinero B");
 
   const crewName = "Vendaval " + (Date.now() % 1000000); // stays under the 32-char crew name limit
-  await a.page.fill('input[placeholder="Nombre"]', crewName);
-  await a.page.fill('input[placeholder="Emblema / descripción"]', "Una calavera envuelta en tormenta.");
-  await a.page.click('button:has-text("Fundar")');
-  await a.page.waitForSelector(`text=${crewName}`);
-
-  const inviteCode = (await a.page.locator("p.font-mono.text-gold").innerText()).trim();
-  await b.page.fill('input[placeholder="Código de invitación"]', inviteCode);
-  await b.page.click('button:has-text("Unirse")');
-  await b.page.waitForSelector(`text=${crewName}`);
+  const inviteCode = await foundCrew(a.page, crewName, "Una calavera envuelta en tormenta.");
+  await joinCrewByCode(b.page, inviteCode);
 
   // Both characters start on the same island by default (same faction) —
   // reload both so each side's own GET materializes the shared party.

@@ -439,6 +439,8 @@ export function buildPartySceneNarrationPrompt(input: PartySceneNarrationInput):
 }
 
 export interface NewsNarrationInput {
+  /** Where it happens (shown on every card): the story must be set there. */
+  locationName?: string;
   category: string;
   promptHint: string;
   actorName?: string;
@@ -476,6 +478,7 @@ export function buildNewsNarrationPrompt(input: NewsNarrationInput): { system: s
     `Categoría de la noticia: ${input.category}.\n` +
     `Qué ocurre (instrucción, no la redactes literal): ${input.promptHint}.\n` +
     `${actorLine}\n` +
+    (input.locationName ? `Lugar de los hechos: ${input.locationName}. Sitúa la noticia allí y menciona el lugar en el texto.\n` : "") +
     `Tensión actual del mundo (0-100): ${input.heat}.\n\n` +
     "Escribe el titular y el cuerpo de esta noticia.";
   return { system, user };
@@ -617,5 +620,59 @@ export function buildRecruitNarrationPrompt(input: RecruitNarrationInput): { sys
       : `Resultado decidido: ${input.npcName} RECHAZA (por ahora). Narra sus razones con respeto y deja la puerta abierta, sin hostilidad.`) +
     transcript +
     "\n\nNo repitas lo que el jugador escribió: empieza por la reacción de la otra persona.";
+  return { system, user };
+}
+
+
+export interface WorldEventNarrationInput {
+  kind: "death" | "capture";
+  /** 1..totalStages = a build-up chapter; totalStages + 1 = the verdict. */
+  stage: number;
+  totalStages: number;
+  chapterLabel: string;
+  /** Chapter instruction, already filled with the names. */
+  brief: string;
+  targetName: string;
+  aggressorName?: string | null;
+  locationName: string;
+  /** One line per chapter already published, oldest first: the story so far. */
+  storySoFar: string[];
+  /** Set only on the verdict, once the game owner has decided. */
+  verdict?: "death" | "capture" | "survived";
+}
+
+const WORLD_EVENT_BUILDUP_RULE =
+  "Escribes un capítulo de un EVENTO MUNDIAL en desarrollo, para el periódico de un rol de piratas de One Piece. Es una saga lenta: cada capítulo añade contexto y tensión, y el desenlace lo decidirá otra persona más adelante. " +
+  "REGLA ABSOLUTA: en este capítulo NADIE muere, es capturado ni cae definitivamente, y no insinúes ni anticipes el resultado final: los personajes canon siguen vivos, libres y en su puesto al terminar el texto. " +
+  "Puedes narrar rumores, movimientos, bajas menores sin nombre, daños, traiciones, alianzas y miedo. Continúa la historia sin contradecir los capítulos anteriores ni repetirlos. " +
+  "Sitúa SIEMPRE los hechos en el lugar indicado y menciónalo en el texto. No reveles que eres una IA.";
+
+const WORLD_EVENT_VERDICT_RULE =
+  "Escribes el DESENLACE de un evento mundial para el periódico de un rol de piratas de One Piece. El resultado YA está decidido y es definitivo (te lo dan abajo): narralo como un hecho consumado, con peso, dignidad y consecuencias para el mundo, enlazando con la historia de los capítulos anteriores sin contradecirla. " +
+  "No cambies el resultado ni lo dejes ambiguo. Sitúa los hechos en el lugar indicado y menciónalo. No reveles que eres una IA.";
+
+const WORLD_EVENT_STYLE_RULE =
+  "Escribe en español, con tono de periódico de piratas de One Piece, vívido y serio. " +
+  'Responde EXCLUSIVAMENTE con un objeto JSON como {"headline": "...", "body": "..."}: un titular de una frase y un cuerpo de 3 a 5 frases. ' +
+  "No añadas explicación ni markdown fuera del JSON.";
+
+export function buildWorldEventPrompt(input: WorldEventNarrationInput): { system: string; user: string } {
+  const isVerdict = input.verdict !== undefined;
+  const system = `${isVerdict ? WORLD_EVENT_VERDICT_RULE : WORLD_EVENT_BUILDUP_RULE} ${WORLD_EVENT_STYLE_RULE}`;
+  const story = input.storySoFar.length ? `\nLa historia hasta ahora:\n${input.storySoFar.map((l, i) => `${i + 1}. ${l}`).join("\n")}\n` : "\n(Este es el primer capítulo.)\n";
+  const verdictLine = !isVerdict
+    ? ""
+    : input.verdict === "death"
+    ? `RESULTADO DECIDIDO: ${input.targetName} MUERE en este enfrentamiento${input.aggressorName ? ` a manos de ${input.aggressorName} o de sus fuerzas` : ""}.\n`
+    : input.verdict === "capture"
+    ? `RESULTADO DECIDIDO: ${input.targetName} es CAPTURADO${input.aggressorName ? ` por ${input.aggressorName}` : ""} y queda preso.\n`
+    : `RESULTADO DECIDIDO: ${input.targetName} SOBREVIVE y escapa contra todo pronóstico; ${input.aggressorName ?? "sus perseguidores"} fracasa(n). Narra la huida y sus consecuencias.\n`;
+  const user =
+    `Evento: ${input.kind === "capture" ? "la caza de" : "el enfrentamiento mortal de"} ${input.targetName}${input.aggressorName ? ` contra ${input.aggressorName}` : ""}.\n` +
+    `Lugar de los hechos: ${input.locationName}.\n` +
+    (isVerdict ? `Capítulo final (desenlace).\n` : `Capítulo ${input.stage} de ${input.totalStages}: ${input.chapterLabel}.\nQué muestra este capítulo: ${input.brief}\n`) +
+    verdictLine +
+    story +
+    "\nEscribe el titular y el cuerpo.";
   return { system, user };
 }

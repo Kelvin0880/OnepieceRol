@@ -30,7 +30,7 @@ export async function maybeCompactCharacterScene(characterId: string): Promise<v
   if (inFlight.has(characterId)) return;
   inFlight.add(characterId);
   try {
-    const character = await prisma.character.findUnique({ where: { id: characterId }, select: { memorySummary: true, sceneCompactedUntil: true } });
+    const character = await prisma.character.findUnique({ where: { id: characterId }, select: { memorySummary: true, sceneCompactedUntil: true, timelineEpoch: true } });
     if (!character) return;
     const messages = await prisma.sceneMessage.findMany({
       where: { characterId, ...(character.sceneCompactedUntil ? { createdAt: { gt: character.sceneCompactedUntil } } : {}) },
@@ -41,7 +41,8 @@ export async function maybeCompactCharacterScene(characterId: string): Promise<v
     const lines = older.map((m) => (m.role === "player" ? `[Jugador]: ${clip(m.text)}` : `[Narrador]: ${clip(m.text)}`));
     const summary = await summarizeTranscript(character.memorySummary, lines, { characterId });
     if (!summary) return;
-    await prisma.character.update({ where: { id: characterId }, data: { memorySummary: summary, sceneCompactedUntil: older[older.length - 1].createdAt } });
+    // A rollback while this summary was being written bumps the epoch: the discarded timeline must not be written back.
+    await prisma.character.updateMany({ where: { id: characterId, timelineEpoch: character.timelineEpoch }, data: { memorySummary: summary, sceneCompactedUntil: older[older.length - 1].createdAt } });
   } catch (err) {
     await logError("scene-compaction/character", err, { characterId });
   } finally {

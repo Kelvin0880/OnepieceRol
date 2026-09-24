@@ -4,6 +4,7 @@
 import { chromium } from "playwright";
 import path from "path";
 import fs from "fs";
+import { foundCrew, joinCrewByCode } from "./lib/crew-ui.mjs";
 
 const shotsDir = path.resolve(process.cwd(), "shots");
 fs.mkdirSync(shotsDir, { recursive: true });
@@ -42,28 +43,23 @@ try {
   const b = await registerAndCreate("crewB_" + Date.now(), "Marinero B");
 
   // A founds the crew.
-  await a.page.fill('input[placeholder="Nombre"]', "Piratas del Alba");
-  await a.page.fill('input[placeholder="Emblema / descripción"]', "Una calavera con un sol naciente detrás.");
-  await a.page.click('button:has-text("Fundar")');
-  await a.page.waitForSelector("text=Piratas del Alba");
+  const inviteCode = await foundCrew(a.page, "Piratas del Alba", "Una calavera con un sol naciente detrás.");
+  console.log("Invite code:", inviteCode);
   await a.page.screenshot({ path: path.join(shotsDir, "crew-a-founded.png"), fullPage: true });
 
-  const inviteCode = await a.page.locator("p.font-mono.text-gold").innerText();
-  console.log("Invite code:", inviteCode);
-
   // B joins with the code.
-  await b.page.fill('input[placeholder="Código de invitación"]', inviteCode.trim());
-  await b.page.click('button:has-text("Unirse")');
-  await b.page.waitForSelector("text=Piratas del Alba");
+  await joinCrewByCode(b.page, inviteCode);
   await b.page.screenshot({ path: path.join(shotsDir, "crew-b-joined.png"), fullPage: true });
 
   // A refreshes and should see B in the crew roster AND in "Aventureros en esta isla".
   await a.page.reload();
   await a.page.waitForSelector("text=Piratas del Alba");
+  await a.page.click('[data-testid="crew-open"]');
   await a.page.waitForSelector("text=Marinero B");
   await a.page.screenshot({ path: path.join(shotsDir, "crew-a-sees-b.png"), fullPage: true });
 
-  const rosterHasBoth = (await a.page.locator("text=Capitana A").count()) > 0 && (await a.page.locator("text=Marinero B").count()) > 0;
+  const rosterHasBoth = (await a.page.locator('[data-testid="crew-member"]').count()) === 2;
+  await a.page.click('[data-testid="crew-panel"] button:has-text("Cerrar")');
   const presenceHasB = (await a.page.locator("text=Aventureros en esta isla").count()) > 0;
 
   console.log("Roster shows both members:", rosterHasBoth);

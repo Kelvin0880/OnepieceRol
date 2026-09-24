@@ -2,6 +2,8 @@ import { prisma } from "../db";
 import { liveRng } from "../engine/rng";
 import { runWorldTick } from "../engine/world";
 import { narrateNews, narrateBountyDigest } from "../ai/narrate";
+import { tickWorldArcs, moveActorsTick, actorLocation } from "./world-arcs";
+import { logError } from "../log-error";
 
 const TICK_INTERVAL_MS = 30 * 60 * 1000; // a new world beat roughly every 30 real minutes — the user found 5 too fast/noisy for a "living but calm" world
 const DIGEST_INTERVAL_MS = 6 * 60 * 60 * 1000; // a couple of bounty roundups a day, deliberately much rarer than the ambient tick
@@ -25,7 +27,9 @@ function formatBerries(n: bigint): string {
  * engine's own bodyVariants text becomes the fallback if that AI call fails,
  * never the primary content anymore.
  */
-export async function tickWorldIfDue(): Promise<void> {
+async function tickWorldIfDueInner(): Promise<void> {
+  // World events keep their own clock (chapters hours apart) and never block the request that happens to trigger them.
+  void tickWorldArcs().catch((err) => logError("world-arcs/tick", err));
   const clock = await prisma.worldClock.upsert({
     where: { id: 1 },
     update: {},
@@ -35,7 +39,7 @@ export async function tickWorldIfDue(): Promise<void> {
   const now = new Date();
   if (now.getTime() - clock.lastTickAt.getTime() < TICK_INTERVAL_MS) return;
 
-  const [templates, actors] = await Promise.all([prisma.worldEventTemplate.findMany(), prisma.worldActor.findMany()]);
+  const [templates, actors] = await Promise.all([prisma.worldEventTemplate.findMany(), prisma.worldActor.findMany({ where: { status: "ACTIVE" } })]);
 
   const result = runWorldTick(
     liveRng(),
@@ -70,9 +74,14 @@ export async function tickWorldIfDue(): Promise<void> {
   );
 
   await prisma.worldClock.update({ where: { id: 1 }, data: { lastTickAt: now } });
-  if (!result) return;
+  if (!result) {
+    await moveActorsTick();
+    return;
+  }
 
   const actor = result.involvedActorId ? actors.find((a) => a.id === result.involvedActorId) ?? null : null;
+  // Every headline says where it happened; someone moving in secret stays "Ubicación desconocida".
+  const where = actor ? await actorLocation(actor) : { islandId: null, name: "Mary Geoise" };
   const narrated = await narrateNews(
     {
       category: result.category,
@@ -82,6 +91,7 @@ export async function tickWorldIfDue(): Promise<void> {
       actorRankLabel: actor?.rankLabel ?? undefined,
       actorPersonality: actor?.personality ?? undefined,
       actorCanonBounty: actor?.canonBounty != null ? formatBerries(actor.canonBounty) : undefined,
+      locationName: where.name,
       heat: clock.heat,
     },
     { headline: result.headline, body: result.body },
@@ -95,6 +105,8 @@ export async function tickWorldIfDue(): Promise<void> {
         body: narrated.body,
         category: result.category,
         worldActorId: result.involvedActorId,
+        locationName: where.name,
+        islandId: where.islandId,
       },
     }),
     prisma.worldClock.update({ where: { id: 1 }, data: { heat: result.newHeat } }),
@@ -102,6 +114,7 @@ export async function tickWorldIfDue(): Promise<void> {
       ? [prisma.worldActor.update({ where: { id: result.involvedActorId }, data: { busyUntil: result.newBusyUntil } })]
       : []),
   ]);
+  await moveActorsTick();
 }
 
 /**
@@ -112,7 +125,7 @@ export async function tickWorldIfDue(): Promise<void> {
  * problem was content quality, not frequency. Purely flavor, never touches
  * player data.
  */
-export async function tickBountyDigestIfDue(): Promise<void> {
+async function tickBountyDigestIfDueInner(): Promise<void> {
   const clock = await prisma.worldClock.upsert({
     where: { id: 1 },
     update: {},
@@ -136,6 +149,30 @@ export async function tickBountyDigestIfDue(): Promise<void> {
   const narrated = await narrateBountyDigest({ entries }, { headline: "Cartelera de recompensas del Gobierno Mundial", body: fallbackBody });
 
   await prisma.newsItem.create({
-    data: { headline: narrated.headline, body: narrated.body, category: "Recompensas", severity: "digest" },
+    data: { headline: narrated.headline, body: narrated.body, category: "Recompensas", severity: "digest", locationName: "Loguetown" },
   });
+}
+
+// One tick at a time per process: two requests arriving together must not both publish a beat.
+let tickRunning = false;
+let digestRunning = false;
+
+export async function tickWorldIfDue(): Promise<void> {
+  if (tickRunning) return;
+  tickRunning = true;
+  try {
+    await tickWorldIfDueInner();
+  } finally {
+    tickRunning = false;
+  }
+}
+
+export async function tickBountyDigestIfDue(): Promise<void> {
+  if (digestRunning) return;
+  digestRunning = true;
+  try {
+    await tickBountyDigestIfDueInner();
+  } finally {
+    digestRunning = false;
+  }
 }

@@ -130,6 +130,8 @@ of truth, imported by both `prisma/seed.ts` and `tryDropFruit`
 
 ## Scope: what's real vs. lore-only
 
+> **Update 2026-09-24 — partly superseded by "Phase 3" at the end of this file** (canon actors now have locations, stats, abilities and a `status`; deceased/defeated figures are seeded; a real, owner-approved death/capture mechanic exists). Read Phase 3 before trusting this section.
+
 - **Real/mechanical today**: every `WorldActor`'s faction/rank/personality/
   canon bounty/canon fruit feeds the news system (faction-gated event
   selection, AI-narrated prose, the periodic bounty digest) and combat
@@ -151,6 +153,8 @@ of truth, imported by both `prisma/seed.ts` and `tryDropFruit`
   Wiring real locations to these characters is future work, listed below.
 
 ## Deliberately excluded / simplified (so nothing here is assumed done by accident)
+
+> **Update 2026-09-24 — partly superseded by "Phase 3" at the end of this file** (canon actors now have locations, stats, abilities and a `status`; deceased/defeated figures are seeded; a real, owner-approved death/capture mechanic exists). Read Phase 3 before trusting this section.
 
 - **Historically inactive/deceased canon figures** (Kaido, Big Mom,
   Whitebeard, Ace, etc.) are NOT seeded. The existing roster already
@@ -176,6 +180,8 @@ of truth, imported by both `prisma/seed.ts` and `tryDropFruit`
   "canon-flavored," not a precise simulation.
 
 ## Explicitly future work (NOT built this pass)
+
+> **Update 2026-09-24 — partly superseded by "Phase 3" at the end of this file** (canon actors now have locations, stats, abilities and a `status`; deceased/defeated figures are seeded; a real, owner-approved death/capture mechanic exists). Read Phase 3 before trusting this section.
 
 - **Real combat against the actual canon character**, not a subordinate
   stand-in — directly extends CLAUDE.md's existing "Poneglyph holders
@@ -211,3 +217,22 @@ of truth, imported by both `prisma/seed.ts` and `tryDropFruit`
 - **New actors**: Mr. 3, Mr. 1, Eneru, Caesar Clown, Hody Jones, Thalassa, Saint Jaygarcia Saturn (Gorosei) and **El Rey Sin Nombre** (`HIDDEN_RULER`, power 100). Eight islands are `Territory` rows held by canon powers.
 - **Original endgame lore** (`src/lib/game/endgame-lore.ts`): the One Piece is *La Crónica del Mar*, a living archive of the Void Century and the Sea's Voice. The hidden ruler governs through forgetting; whoever inherits the Crónica can break that. This is deliberately not canon's unrevealed answer.
 - Fruits: 24 singletons (new ones include Goro Goro and Gasu Gasu); common fruits stay duplicable.
+
+## Phase 3 additions (2026-09-24) — the codex, locations and world events
+
+**The cast is now ~126 `WorldActor` rows** (`prisma/seed.ts` upserts them from three data files; run `node scripts/world-arcs-check.ts`-style counts via the seed). Data lives in code, not here:
+- `src/lib/game/world-actor-profiles.ts` — backfill for the original 49 actors: `s` = [strength, agility, durability, willpower, intellect], `h` = [armament, observation, conqueror], `phase` (fruit phase), `ab` (signature abilities), `home` (island key, also the initial location), `hidden` (moves in secret by default); plus `FRUIT_ASSIGNMENTS` (Mr. 3 -> Doru Doru, Mr. 1 -> Supa Supa, Ivankov -> Horu Horu, Hawkins -> Wara Wara, X Drake -> Ryu Ryu Allosaurus, Kaku -> Ushi Ushi Jirafa, Kalifa -> Awa Awa) and `profileStatsJson`.
+- `src/lib/game/world-actor-extra.ts` — the ~77 characters that were missing, each with bounty, weapon, fruit, personality, stats, Haki, abilities and home: the past era (Roger, Whitebeard, Ace, Rocks, Oden, Rosinante, Vergo, Orochi, Kaido, Big Mom), Marines (Aokiji, Tsuru, Coby, Helmeppo, Tashigi, Hina, Momonga, Sentomaru, Strawberry, Doberman), Cipher Pol (Jabra, Blueno, Fukuro, Kumadori), Red Hair (Rayleigh, Beckman, Lucky Roo, Yasopp), Whitebeard's sons (Marco, Vista, Jozu), Blackbeard's crew (Burgess, Shiryu, Van Augur, Laffitte, Pizarro), Beasts Pirates (King, Queen, Jack, Ulti), Big Mom's ministers (Perospero, Cracker, Smoothie), Moria, Kuma, East Blue (Arlong, Kuro, Don Krieg, Alvida, Wapol, Bon Clay), Worst Generation & captains (Urouge, Apoo, Capone Bege, Cavendish, Bartolomeo, Bellamy), Donquixote (Diamante, Trebol, Monet), Wano (Yamato, Kin'emon, Raizo, Nekomamushi, Inuarashi, Carrot, Momonosuke), civilians (Vivi, Shirahoshi), Revolutionaries (Belo Betty, Lindbergh, Morley, Karasu, Hack), Germa (Judge, Reiju), Vegapunk, Bepo.
+- `src/lib/game/devil-fruit-extra.ts` — 24 new canon 1-of-1 fruits (Gura Gura, Nikyu Nikyu, Ori Ori, Soru Soru, Pero Pero, Bisu Bisu, Shibo Shibo, three more Ryu Ryu/Zou Zou models, Dia Dia, Baku Baku, Bane Bane, Shiro Shiro, Oto Oto, Doru Doru, Horu Horu, Wara Wara, Awa Awa, Inu Inu Lobo, Yuki Yuki, Ushi Ushi Jirafa, Ryu Ryu Allosaurus) and `SINGLETON_OVERRIDES` (older catalog fruits that turned out to be a canon signature: Hie Hie, Tori Tori Fénix, Bari Bari, Supa Supa, Woshu Woshu, Mane Mane, Sube Sube, Kage Kage, Uo Uo, Ryu Ryu Pteranodon, Inu Inu Okuchi no Makami, Nagi Nagi, Doa Doa). 72 fruits total, 56 singletons.
+- **Rule: `WorldActor.devilFruitId` is `@unique`.** Two actors can never point at the same fruit row; the seed fails loudly on a clash (it did once: Jabra vs Yamato, fixed with a Wolf model).
+
+**`WorldActor.status`** = ACTIVE | RETIRED | DEFEATED | DECEASED | CAPTURED. Only ACTIVE actors act in the world tick, wander, or appear in news; the others stay in the codex under "historia" (10 seeded: Roger, Whitebeard, Ace, Rocks, Oden, Rosinante, Vergo, Orochi as DECEASED; Kaido, Big Mom as DEFEATED). This replaces the old "Deliberately excluded" list. Marshall D. Teach's second fruit is still not modeled (single fruit relation); Gura Gura is Whitebeard's row.
+
+**Every canon actor always has a place.** `currentIslandId` (island), `locationKind` ("island" | "sea" with `seaFromIslandId`/`seaToIslandId`), `locationHidden` (moving in secret), `locationUpdatedAt`. `engine/actor-movement.ts` moves up to 3 actors per world tick to a neighbouring island (Yonko are anchored; Cipher Pol/Revolutionaries often move hidden; pirates often go via the sea, arriving on the next tick). The narrator reads the "living map" (who is on the island, who is next door, running world events) for every scene. Reseeding never moves an actor that already has a location. `homeIslandId` is now set for everyone (the 8 `Territory` owners keep their dominion island).
+News wording is exact and single-sourced (`whereLabel`): an island name, **"En el mar, entre X y Y"**, or **"Ubicación desconocida"** (never a guessed island for someone hidden). Every `NewsItem` has `locationName`; `postNews` defaults to the character's island, world-tick uses the involved actor's real location, government announcements use Mary Geoise, the bounty roundup Loguetown.
+
+**Death and capture of canon characters are now possible — only through a world event and only with the owner's verdict.** The AI is still forbidden to narrate either as an accomplished fact in ambient news (`NEWS_HARD_RULE`) and in chapters (`WORLD_EVENT_BUILDUP_RULE`). A `WorldArc` (`engine/world-arcs.ts`) runs six chapters hours apart (rumor, mobilization, first clash, escalation — a fight at sea between two islands —, siege, ultimatum), each a news item with its place and the story-so-far as narrator memory; then it stops and asks the owner at `/admin`. Approve -> `DECEASED` (stays where it fell) or `CAPTURED` (held in Impel Down); deny -> survives, in hiding for a while; either way the ending is published as a major "Eventos mundiales" news item. Never raffled into an arc: Gorosei, the hidden ruler, Thalassa, Saturn, El Rey Sin Nombre (endgame pieces). Players can intervene at the place from chapter 3 (`engine/arc-intervention.ts`): defend / back the aggressor / fight everyone, against a vanguard (a fraction of the canon character's power, never the character in person); 3 winning defenders (more than the aggressor's helpers) save the target with no verdict.
+
+**Islands: 33.** New: Orange Town, Villa Syrup (East Blue, level 1), Ohara (Paradise, 14), Marineford (Paradise, 26), Dressrosa (New World, 28), Zou (New World, 30), Isla Egghead (New World, 36). See `docs/mapa.html` (keep it in sync with `prisma/seed.ts`).
+
+**Still future**: real combat against a canon character in person (only vanguards so far), obtaining a singleton fruit from a defeated/deceased holder (the fruits of the dead stay reserved), rescue missions for a captured actor, a per-player instanced world (today there is ONE shared world; only a character, their scene and the AI memory are personal).

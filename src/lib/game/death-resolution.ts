@@ -3,8 +3,25 @@ import { liveRng } from "../engine/rng";
 import { rollDeath } from "../engine/death";
 import { CharacterStatus } from "@prisma/client";
 
-export async function postNews(headline: string, body: string, category: string, characterId?: string, severity: "normal" | "digest" | "major" = "normal") {
-  await prisma.newsItem.create({ data: { headline, body, category, characterId, severity } });
+export async function postNews(
+  headline: string,
+  body: string,
+  category: string,
+  characterId?: string,
+  severity: "normal" | "digest" | "major" = "normal",
+  where?: { locationName?: string; islandId?: string }
+) {
+  // Every headline says where it happened: default to the island the character is on right now.
+  let locationName = where?.locationName;
+  let islandId = where?.islandId;
+  if (!locationName && characterId) {
+    const c = await prisma.character.findUnique({ where: { id: characterId }, select: { currentIslandId: true, currentIsland: { select: { name: true } } } });
+    if (c) {
+      locationName = c.currentIsland.name;
+      islandId = c.currentIslandId;
+    }
+  }
+  await prisma.newsItem.create({ data: { headline, body, category, characterId, severity, locationName: locationName ?? "Ubicación desconocida", islandId } });
 }
 
 export interface DeathCheckCharacter {

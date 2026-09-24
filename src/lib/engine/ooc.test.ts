@@ -30,9 +30,9 @@ describe("validateCharacterName", () => {
 });
 
 describe("canRollback", () => {
-  const base = { alive: true, imprisoned: false, inDuelOrJointFight: false, rollbacksLast24h: 0 };
+  const base = { dead: false, imprisoned: false, inDuelOrJointFight: false, rollbacksLast24h: 0 };
   it("allows a healthy, free character", () => expect(canRollback(base).ok).toBe(true));
-  it("keeps permadeath: the dead cannot roll back", () => expect(canRollback({ ...base, alive: false }).ok).toBe(false));
+  it("keeps permadeath: the dead cannot roll back", () => expect(canRollback({ ...base, dead: true }).ok).toBe(false));
   it("does not undo an imprisonment", () => expect(canRollback({ ...base, imprisoned: true }).ok).toBe(false));
   it("blocks mid duel / joint fight", () => expect(canRollback({ ...base, inDuelOrJointFight: true }).ok).toBe(false));
   it("caps rollbacks per day", () => {
@@ -80,5 +80,30 @@ describe("isNarratorTone", () => {
     expect(isNarratorTone("story")).toBe(true);
     expect(isNarratorTone("hard")).toBe(false);
     expect(isNarratorTone(undefined)).toBe(false);
+  });
+});
+
+import { diffSnapshot } from "./ooc";
+
+describe("rollback messages and preview diff", () => {
+  it("a prisoner and a dead character get different, accurate reasons", () => {
+    const base = { dead: false, imprisoned: false, inDuelOrJointFight: false, rollbacksLast24h: 0 };
+    const dead = canRollback({ ...base, dead: true });
+    const jailed = canRollback({ ...base, imprisoned: true });
+    expect(dead.ok || dead.reason).toContain("muerto");
+    expect(jailed.ok || jailed.reason).toContain("captura");
+    expect(jailed.ok || jailed.reason).not.toContain("muerto");
+  });
+  it("diffSnapshot lists only what actually changes and hides berries when they are kept", () => {
+    const now = { ...snap, level: 6, hp: 10, berries: 100, gearSignature: snap.gearSignature };
+    const lines = diffSnapshot(snap, now, { snapshot: "Foosha", current: "Loguetown" }, false);
+    expect(lines.find((l) => l.label === "Nivel")).toEqual({ label: "Nivel", from: 6, to: 4 });
+    expect(lines.find((l) => l.label === "Isla")).toEqual({ label: "Isla", from: "Loguetown", to: "Foosha" });
+    expect(lines.some((l) => l.label === "Berries")).toBe(false);
+    expect(lines.some((l) => l.label === "Fuerza")).toBe(false);
+    expect(diffSnapshot(snap, now, { snapshot: "Foosha", current: "Loguetown" }, true).some((l) => l.label === "Berries")).toBe(true);
+  });
+  it("an identical state has nothing to warn about", () => {
+    expect(diffSnapshot(snap, { ...snap }, { snapshot: "A", current: "A" }, true)).toEqual([]);
   });
 });

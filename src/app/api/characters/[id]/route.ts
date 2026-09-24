@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireUserId, UnauthorizedError } from "@/lib/require-user";
 import { logError } from "@/lib/log-error";
 import { getCompanionViews } from "@/lib/game/companions";
+import { getWorldEventForCharacter } from "@/lib/game/world-arcs";
 import { syncPartyForCharacter, getPartyStateForCharacter } from "@/lib/game/party";
 import { currentStamina } from "@/lib/game/combat-prep";
 import { fatigueLevel, FATIGUE_LABELS } from "@/lib/engine/stamina";
@@ -39,6 +40,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         companions: true,
         inventory: true,
         crew: {
+          omit: { flagImage: true },
           include: {
             members: {
               select: {
@@ -140,10 +142,13 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       : null;
 
     const companions = await getCompanionViews(id, character.level);
+    const worldEvent = await getWorldEventForCharacter(id);
     const pendingCrewInvites = await prisma.crewInvite.count({ where: { toCharacterId: id, status: "PENDING", createdAt: { gt: new Date(Date.now() - 24 * 3600 * 1000) } } });
     const crewShaped = character.crew
       ? {
           ...character.crew,
+          hasEmblem: !!character.crew.flagImageType,
+          emblemVersion: character.crew.flagImageUpdatedAt ? character.crew.flagImageUpdatedAt.getTime() : 0,
           members: character.crew.members.map(({ staminaUpdatedAt, ...m }) => ({
             ...m,
             stamina: currentStamina({ stamina: m.stamina, maxStamina: m.maxStamina, staminaUpdatedAt }),
@@ -179,6 +184,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       raid,
       blackMarket,
       missions,
+      worldEvent,
     });
   } catch (err) {
     if (err instanceof UnauthorizedError) return NextResponse.json({ error: err.message }, { status: 401 });
