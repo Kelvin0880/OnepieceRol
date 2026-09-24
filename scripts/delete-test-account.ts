@@ -1,7 +1,8 @@
-// Test helper: deletes a user account and all owned characters/weapons/etc
-// via cascading relations, for cleaning up production smoke-test accounts.
+// Test helper: deletes a user account and everything its characters own, using the same cascade
+// players get from "Borrar" (game/delete-character.ts), for cleaning up production smoke-test accounts.
 // Usage: npx tsx scripts/delete-test-account.ts <username>
 import { prisma } from "../src/lib/db";
+import { deleteCharacter } from "../src/lib/game/delete-character";
 
 async function main() {
   const username = process.argv[2];
@@ -12,12 +13,9 @@ async function main() {
     return;
   }
   for (const character of user.characters) {
-    await prisma.character.update({ where: { id: character.id }, data: { equippedWeaponId: null } });
-    await prisma.weapon.deleteMany({ where: { ownerId: character.id } });
-    await prisma.gameLogEntry.deleteMany({ where: { characterId: character.id } });
-    await prisma.pendingEncounter.deleteMany({ where: { characterId: character.id } });
-    await prisma.imprisonment.deleteMany({ where: { characterId: character.id } });
-    await prisma.character.delete({ where: { id: character.id } });
+    await prisma.checkpoint.deleteMany({ where: { characterId: character.id } });
+    await prisma.oocReport.deleteMany({ where: { characterId: character.id } });
+    await deleteCharacter(character.id, user.id);
   }
   await prisma.user.delete({ where: { id: user.id } });
   console.log("Deleted user + characters:", username);
