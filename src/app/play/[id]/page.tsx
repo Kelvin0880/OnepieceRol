@@ -7,6 +7,7 @@ import InventoryPanel from "./InventoryPanel";
 import StylesPanel from "./StylesPanel";
 import ColiseumPanel from "./ColiseumPanel";
 import VoyagePanel from "./VoyagePanel";
+import EmpirePanel from "./EmpirePanel";
 import OocPanel from "./OocPanel";
 import CrewPanel, { type PanelCompanion, type PanelCrew } from "./CrewPanel";
 import { characterCondition, conditionLabel } from "@/lib/engine/condition";
@@ -407,6 +408,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [showStyles, setShowStyles] = useState(false);
   const [showColiseum, setShowColiseum] = useState(false);
   const [showVoyage, setShowVoyage] = useState(false);
+  const [showEmpire, setShowEmpire] = useState(false);
   const sceneEndRef = useRef<HTMLDivElement>(null);
   const duelBoxRef = useRef<HTMLDivElement>(null);
   const jointBoxRef = useRef<HTMLDivElement>(null);
@@ -675,6 +677,11 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               Coliseo
             </button>
           )}
+          {(character.companions.length > 0 || territory?.isOwner) && (
+            <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowEmpire(true)} data-testid="empire-open">
+              Imperio
+            </button>
+          )}
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowVoyage(true)} data-testid="voyage-open">
             Rumbo
           </button>
@@ -709,6 +716,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
         </div>
       </div>
 
+      {showEmpire && <EmpirePanel characterId={character.id} onClose={() => setShowEmpire(false)} onChanged={() => load()} />}
       {showVoyage && <VoyagePanel characterId={character.id} onClose={() => setShowVoyage(false)} onChanged={() => load()} />}
       {showColiseum && <ColiseumPanel characterId={character.id} onClose={() => setShowColiseum(false)} onChanged={() => load()} />}
 

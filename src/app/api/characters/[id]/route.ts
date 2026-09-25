@@ -3,6 +3,7 @@ import { prisma } from "@/lib/db";
 import { requireUserId, UnauthorizedError } from "@/lib/require-user";
 import { logError } from "@/lib/log-error";
 import { getCompanionViews } from "@/lib/game/companions";
+import { settleErrands } from "@/lib/game/empire";
 import { syncAttributePoints } from "@/lib/game/attributes";
 import { getColiseumState } from "@/lib/game/coliseum";
 import { getVoyageView, settleVoyage } from "@/lib/game/voyage";
@@ -81,6 +82,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const voyage = await getVoyageView(id);
     const coliseumFull = await getColiseumState(id);
     const coliseum = coliseumFull?.tournament ? { status: coliseumFull.tournament.status, kindLabel: coliseumFull.tournament.kindLabel, prize: coliseumFull.tournament.prize.label, startsAt: coliseumFull.tournament.startsAt, onDressrosa: coliseumFull.onDressrosa, registered: !!coliseumFull.me, round: coliseumFull.tournament.roundLabel } : null;
+    await settleErrands(id).catch(() => []);
     await ensureIslandMissions(id);
     const missions = await getMissionState(id);
     const connections = JSON.parse(character.currentIsland.connections) as string[];

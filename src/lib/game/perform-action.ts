@@ -4,6 +4,7 @@ import { pickEventTemplate, resolveEvent, parseEventBody, EventBody } from "../e
 import { maybeAutoCheckpoint } from "./ooc";
 import { dangerBlockReason } from "../engine/safety";
 import { recruitCompanion, CompanionError } from "./companions";
+import { isOnErrand } from "../engine/empire";
 import { resolveEnemyKit } from "./enemy-kit";
 import { estimateLevel, applyFatigueToCombatant, npcStaminaAfterExchange, npcBaseEffort } from "../engine/resilience";
 import type { EffortLevel } from "../engine/stamina";
@@ -598,7 +599,7 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
 
 /** Companions who are alive and reasonably fresh may lend a hand in a boss fight. */
 function rollCompanionAssist(character: LoadedCharacter, rng: () => number): string | null {
-  const ready = character.companions.filter((c) => c.status === "ALIVE" && c.hp / c.maxHp > 0.5);
+  const ready = character.companions.filter((c) => c.status === "ALIVE" && c.hp / c.maxHp > 0.5 && !isOnErrand(c.profileJson, Date.now()));
   if (ready.length === 0) return null;
   const candidate = ready[Math.floor(rng() * ready.length)];
   const chance = 0.25 + candidate.loyalty * 0.005;

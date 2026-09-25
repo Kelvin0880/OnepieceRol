@@ -483,6 +483,9 @@ marea o por los Poneglifos de Ruta aparecen bloqueadas con el motivo. Los
 Yonko salen en las Noticias cada vez que zarpan o desembarcan.
 
 OTRAS NOVEDADES
+- Botón "Imperio": ves tus islas (guarnición, soldados, tributos) y mandas a tus
+  nakamas y comandantes de misión: patrullar un dominio, cobrar tributos o
+  explorar el mar. Vuelven solos; si fallan vuelven heridos, nunca muertos.
 - Cada puerto vende algo propio (agua de oasis en Alabasta, banquete en el
   Baratie, sake en Wano...): sale marcado "especialidad local" en el Mercader.
 - El Coliseo también convoca torneos de estilos: el campeón aprende un estilo
