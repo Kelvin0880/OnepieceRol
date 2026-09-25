@@ -83,4 +83,9 @@ describe("buildRefereePrompt", () => {
     expect(system).toContain("NUNCA escribas cifras de vida");
     expect(system).toContain("MEMORIA");
   });
+  it("asks the rival to fight like a strategist with continuity", () => {
+    const { system } = buildRefereePrompt(base);
+    expect(system).toContain("NIVEL DE ESTRATEGA");
+    expect(system).toContain("continuidad");
+  });
 });

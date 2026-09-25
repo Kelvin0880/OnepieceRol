@@ -44,7 +44,7 @@ import { rankProgress, type FactionKey } from "../engine/progression";
 import { currentStamina } from "../game/combat-prep";
 
 // Long, inspiring scenes need real time to write: a 6+ paragraph reply is normal now.
-const NARRATION_TIMEOUT_MS = 30_000;
+const NARRATION_TIMEOUT_MS = 75_000;
 const MEMORY_TIMEOUT_MS = 8_000;
 const MEMORY_SUMMARY_MAX_CHARS = 1_500;
 

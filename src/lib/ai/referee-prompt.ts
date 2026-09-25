@@ -94,9 +94,13 @@ const CORE_RULES =
 
 // Reported: the rival threw the same fireball line every round and never learned from a repeated trick.
 const RIVAL_CRAFT =
-  "OFICIO DEL RIVAL (obligatorio): su \"intencion_rival\" es una SECUENCIA de 3 a 5 frases, no un golpe suelto: una finta o preparación, el golpe principal con su técnica (nómbrala) y un seguimiento o contraataque listo por si el jugador esquiva o bloquea (\"y si se aparta, gira y ...\"). " +
+  "OFICIO DEL RIVAL (obligatorio): su \"intencion_rival\" es una SECUENCIA larga y estructurada (de 5 a 10 frases, o más si la jugada lo pide; sin tope), no un golpe suelto; el rival NUNCA se contiene ni se limita al atacar y escribe con el mismo nivel de detalle, planificación y ambición que un jugador experto que desarrolla sus ataques por fases (cada fase con su técnica, su intención y su alcance): una finta o preparación, el golpe principal con su técnica (nómbrala) y un seguimiento o contraataque listo por si el jugador esquiva o bloquea (\"y si se aparta, gira y ...\"). MODELO DE ATAQUE LARGO (el estilo de los mejores jugadores de este juego, aprende de él): una frase de diálogo o burla en voz alta, luego la preparación (activa su Haki o su fruta en una fase concreta), luego el movimiento principal con el nombre de la técnica y cómo afecta al terreno y al ambiente, luego lo que INTENTA lograr con su alcance (\"con la intención de que, si llega a conectar, ...\"), y por último el plan B según cómo responda el otro. Escribe así de largo y completo siempre que la situación lo permita; jamás resumas un ataque a una línea. Ejemplo de forma: \"Rocco intenta amagar un derechazo alto para hacerte subir la guardia y, en cuanto lo haga, con la intención de clavar su rodilla cubierta de Haki en tu costado (Rompecostillas); si llega a conectar, te dejaría sin aire. Si te apartas del rodillazo, gira sobre su pie de apoyo para intentar un codazo descendente; si bloqueas, intenta agarrarte la muñeca para arrastrarte contra su cabezazo.\" " +
   "NUNCA repitas la técnica, el ángulo ni la estructura del ataque anterior del rival (el pendiente): cambia de técnica, de distancia, de zona del cuerpo o usa el terreno, la multitud, un arma o un objeto. " +
   "APRENDE: si el jugador ya usó el mismo truco (cambiar de sitio, contraatacar con lo mismo, un Haki), el rival lo nota, lo dice o lo piensa y cambia de plan (ataca desde otro flanco, rompe el contacto visual, engaña primero, ataca al espacio donde el jugador aparecería). " +
+  "NIVEL DE ESTRATEGA: el rival combate como un maestro que estudia a su enemigo: lee su estilo, su fatiga, sus heridas y lo que ya le vio hacer en el REGISTRO DEL COMBATE, y prepara jugadas ingeniosas: fintas (amaga un golpe para ejecutar otro), cebos, trampas, ataques en pinza, cambios de ritmo, uso del terreno, del público y de los objetos, presión sobre la debilidad conocida del jugador, y su carta oculta cuando la pelea se pone seria. " +
+  "Cada turno usa una pieza distinta y concreta de su repertorio (Haki, fruta y fase, arma, estilo, habilidades nombradas), combinándolas en cadena, y ESCALA con el avance del combate (más ingenio y riesgo cuanto más se alarga o más peligro corre). Sabe con exactitud sus límites y los de todos a su alrededor: nunca usa lo que no tiene, pero exprime al máximo lo que sí. " +
+  "Da continuidad (continuidad total): su nuevo plan responde a lo ocurrido en las rondas anteriores (retoma una amenaza, un truco visto, una promesa) sin mezclar personajes, escenas ni hechos ajenos a este combate. "
+  +
   "Y mientras esté herido o cansado, su estilo lo muestra (más desesperado, más peligroso o más cauto), sin dejar de intentar ganar. ";
 
 const SOLO_FORMAT =
@@ -141,7 +145,7 @@ export function buildRefereePrompt(input: RefereeInput): PromptOut {
   const lastAction = input.actions.map((a) => a.text).join(" ");
   const plan = planLength(input.mode === "solo" ? "combat_round" : "group", lastAction);
   // Three texts must fit, so the referee never gets the tight default budget.
-  const maxWords = input.mode === "duel" ? 90 : Math.max(plan.maxWords, input.mode === "joint" ? 260 : 230);
+  const maxWords = input.mode === "duel" ? 90 : Math.max(plan.maxWords, input.mode === "joint" ? 700 : 650);
 
   const modeRules =
     input.mode === "duel"
@@ -165,7 +169,7 @@ export function buildRefereePrompt(input: RefereeInput): PromptOut {
     : "";
 
   const system = `${CORE_RULES} ${modeRules} ${openingRule} ${fleeRule}${JSON_TAIL} ` +
-    `Extensión total de los textos: unas ${maxWords} palabras como máximo, frases claras; es un combate ${input.isBoss ? "importante contra un enemigo formidable" : "menor"}.` +
+    `Extensión total de los textos: sin límite práctico (hasta unas ${maxWords} palabras); NO te contengas ni recortes: el ataque del rival y el resultado deben ser tan largos, estructurados y detallados como pida la jugada, igualando la riqueza de lo que escribió el jugador; es un combate ${input.isBoss ? "importante contra un enemigo formidable" : "menor"}.` +
     (input.directives ?? "");
 
   const user =
@@ -186,5 +190,5 @@ export function buildRefereePrompt(input: RefereeInput): PromptOut {
       : input.recentScene && input.recentScene.length > 0 ? `Escena reciente:\n${input.recentScene.join("\n")}\n` : "") +
     (input.actions[0] && input.mode !== "duel" ? currentActionBlock(input.actions[0].text) : "") +
     "\n\nResponde solo con el JSON.";
-  return { system, user, maxTokens: Math.round(maxWords * 2.6) + 300 };
+  return { system, user, maxTokens: Math.round(maxWords * 2.6) + 600 };
 }

@@ -12,27 +12,26 @@ export function countWords(text: string): number {
 }
 
 /**
- * How long the narrator's reply should be. The player's own effort sets the
- * baseline (a one-line question gets a short answer, a long developed post can
- * get a longer one) and the kind of beat only nudges it — a fight round stays
- * tight, a finishing blow or a group scene earns more room. Never above ~300
- * words: long is the exception, not the default.
+ * How long the narrator's reply should be. The owner ordered that the AI is never held back (2026-09-25): the reply
+ * matches the player's own effort (a one-line question naturally gets a short answer, a long structured post gets a long,
+ * detailed one) and a fight is never trimmed: rival attacks and results may be as long and structured as the scene needs.
  */
 export function planLength(kind: BeatKind, playerText: string): LengthPlan {
   const w = countWords(playerText);
   let maxWords: number;
-  if (w <= 15) maxWords = 70;
-  else if (w <= 45) maxWords = 120;
-  else if (w <= 110) maxWords = 190;
-  else maxWords = 260;
+  if (w <= 15) maxWords = 100;
+  else if (w <= 45) maxWords = 220;
+  else if (w <= 110) maxWords = 400;
+  else if (w <= 250) maxWords = 650;
+  else maxWords = 900;
 
   switch (kind) {
     case "combat_round":
-      maxWords = Math.min(maxWords, 130);
+      maxWords = Math.max(maxWords, 550);
       break;
     case "combat_end":
     case "group":
-      maxWords = Math.max(maxWords, 150);
+      maxWords = Math.max(maxWords, 450);
       break;
     case "intro":
     case "recruit":
@@ -47,15 +46,14 @@ export function planLength(kind: BeatKind, playerText: string): LengthPlan {
     case "chat":
       break;
   }
-  maxWords = Math.min(maxWords, 300);
+  maxWords = Math.min(maxWords, 1000);
 
-  const label = maxWords <= 90 ? "breve" : maxWords <= 160 ? "media" : "larga";
-  const paragraphs = label === "breve" ? "1 o 2 párrafos cortos" : label === "media" ? "2 o 3 párrafos cortos" : "hasta 4 párrafos cortos";
+  const label = maxWords <= 120 ? "breve" : maxWords <= 300 ? "media" : "larga";
+  const paragraphs = label === "breve" ? "1 o 2 párrafos" : label === "media" ? "2 a 4 párrafos" : "los párrafos que la escena necesite (6 o más si hace falta)";
   const instruction =
-    `EXTENSIÓN DE ESTA RESPUESTA: ${label}, ${paragraphs}, alrededor de ${maxWords} palabras como máximo. ` +
-    "Responde con lo justo: una acción simple o una pregunta merece una respuesta corta y directa. " +
-    "Solo te alargas cuando el momento lo pide de verdad (un giro importante, el final de una pelea, algo que el jugador desarrolló con detalle). " +
-    "Lenguaje sencillo y claro, frases cortas, sin metáforas recargadas ni descripciones de cielo, olores o ambiente que no aporten nada.";
+    `EXTENSIÓN DE ESTA RESPUESTA: ${label}, ${paragraphs}; hasta unas ${maxWords} palabras si la escena lo pide. ` +
+    "NUNCA te limites ni recortes: iguala el nivel de detalle y de estructura de lo que escribió el jugador (si desarrolla algo largo y planificado, responde con la misma riqueza), y una pregunta simple merece naturalmente una respuesta directa. " +
+    "Lenguaje claro, sin relleno ni descripciones de ambiente que no aporten nada.";
   return { label, maxWords, maxTokens: Math.round(maxWords * 2.6) + 80, instruction };
 }
 

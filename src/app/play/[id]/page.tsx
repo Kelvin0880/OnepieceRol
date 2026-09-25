@@ -405,6 +405,8 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [freeText, setFreeText] = useState("");
   const [escapePlan, setEscapePlan] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
+  const [closeFightOpen, setCloseFightOpen] = useState(false);
+  const [closeFightNote, setCloseFightNote] = useState("");
   const [showGuideModal, setShowGuideModal] = useState(false);
   const [ooc, setOoc] = useState<{ starter?: string } | null>(null);
   const [showCrew, setShowCrew] = useState(false);
@@ -1416,6 +1418,39 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                 <p className={`text-xs mb-2 ${ASSESSMENT_LABEL[character.pendingEncounter.assessment].color}`}>
                   {ASSESSMENT_LABEL[character.pendingEncounter.assessment].text}
                 </p>
+                {character.pendingEncounter.phase === "fighting" && (
+                  <div className="mt-2">
+                    {!closeFightOpen ? (
+                      <button data-testid="close-fight-open" className="text-xs underline text-ink-dim" onClick={() => setCloseFightOpen(true)}>
+                        ¿La pelea se atascó o ya terminó? Finalizarla
+                      </button>
+                    ) : (
+                      <div className="panel p-2" data-testid="close-fight-panel">
+                        <p className="text-xs mb-1">La IA leerá toda la pelea y decidirá cómo terminó de verdad (quién ganó, quién perdió o si nadie). Si quieres, cuéntale qué pasó:</p>
+                        <textarea className="w-full text-sm mb-2" rows={2} maxLength={500} placeholder="Opcional: por ejemplo, «ya lo derroté en el mensaje anterior»" value={closeFightNote} onChange={(e) => setCloseFightNote(e.target.value)} />
+                        <div className="flex gap-2">
+                          <button
+                            data-testid="close-fight-confirm"
+                            className="btn text-xs"
+                            disabled={busy}
+                            onClick={async () => {
+                              const ok = await doAction({ action: "close_fight", note: closeFightNote.trim() || undefined });
+                              if (ok) {
+                                setCloseFightOpen(false);
+                                setCloseFightNote("");
+                              }
+                            }}
+                          >
+                            {busy ? "Juzgando..." : "Sí, finalizar la pelea"}
+                          </button>
+                          <button className="text-xs underline text-ink-dim" onClick={() => setCloseFightOpen(false)}>
+                            Cancelar
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 

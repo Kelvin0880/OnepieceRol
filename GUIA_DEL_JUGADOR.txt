@@ -512,6 +512,12 @@ COMBATE SIN DADOS
 - Huir se escribe (cómo escapas) y lo juzga el árbitro; al llegar a 0 de vida, la
   IA como juez decide si mueres, te capturan o sobrevives. Nada se tira.
 - Si estás en una pelea propia, la ronda del Coliseo espera a que termines.
+- FINALIZAR PELEA: mientras luchas contra un NPC aparece un enlace "¿La pelea se atascó o ya
+  terminó? Finalizarla". La IA lee TODA la pelea y decide cómo terminó: si ganaste (el rival
+  queda a tu merced y eliges perdonar o rematar), si perdiste (se juzga tu destino como siempre)
+  o si no hay ganador claro (la pelea se cierra sin premios ni castigos). Solo se da por ganada o
+  perdida si el perdedor ya está a la mitad de vida o menos: no vale escribir "ya lo derroté".
+- La vida de los NPC nunca se muestra; solo la tuya y la de otros jugadores.
 - El rival ataca con secuencias variadas (finta, golpe, seguimiento) y se adapta si
   repites el mismo truco.
 

@@ -120,3 +120,43 @@ export function stubMatch(a: { level: number; atk: number; def: number }, b: { l
   const pb = b.atk + b.def + b.level * 2;
   return pa >= pb ? "a" : "b";
 }
+
+// ---------------------------------------------------------------------------------------------
+// Closing a stuck fight against an NPC: the judge reads the whole fight and says how it ended.
+// ---------------------------------------------------------------------------------------------
+
+export type FightEnd = "player_won" | "player_lost" | "ended";
+const FIGHT_END_WORDS: Record<string, FightEnd> = {
+  gana_jugador: "player_won", gana: "player_won", victoria: "player_won", player_won: "player_won",
+  pierde_jugador: "player_lost", pierde: "player_lost", derrota: "player_lost", player_lost: "player_lost",
+  terminada: "ended", sin_ganador: "ended", empate: "ended", ended: "ended",
+};
+
+export interface FightEndVerdict {
+  outcome: FightEnd;
+  reason: string;
+}
+
+export function parseFightEndVerdict(raw: string): FightEndVerdict | null {
+  const o = firstJson(raw);
+  const outcome = o ? FIGHT_END_WORDS[norm(o.resultado ?? o.outcome)] : undefined;
+  if (!o || !outcome) return null;
+  return { outcome, reason: String(o.motivo ?? o.reason ?? "").slice(0, 500) };
+}
+
+/** Scripted checks only: whoever has more of their life left won. */
+export function stubFightEnd(playerHp: number, playerMaxHp: number, enemyHp: number, enemyMaxHp: number): FightEnd {
+  const p = playerHp / Math.max(1, playerMaxHp);
+  const e = enemyHp / Math.max(1, enemyMaxHp);
+  return p > e ? "player_won" : p < e ? "player_lost" : "ended";
+}
+
+/**
+ * A win or a loss is only accepted when the loser is at half life or less (the same rule the referee follows for a
+ * defeat); otherwise the closing judge cannot hand a fight to whoever asks, and it is closed with no winner.
+ */
+export function clampFightEnd(outcome: FightEnd, playerHp: number, playerMaxHp: number, enemyHp: number, enemyMaxHp: number): FightEnd {
+  if (outcome === "player_won" && enemyHp > enemyMaxHp / 2) return "ended";
+  if (outcome === "player_lost" && playerHp > playerMaxHp / 2) return "ended";
+  return outcome;
+}

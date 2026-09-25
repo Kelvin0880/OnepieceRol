@@ -204,3 +204,22 @@ describe("defeated + coherence", () => {
     expect(v.fled).toEqual(["Ana"]);
   });
 });
+
+describe("rival sequences", () => {
+  const long = "Rocco intenta amagar un derechazo alto para que subas la guardia y, con la intención de clavar su rodilla cubierta de Haki en tu costado; si llega a conectar, te dejaría sin aire. Si te apartas, gira para intentar un codazo descendente; si bloqueas, intenta agarrarte la muñeca para arrastrarte contra su cabezazo. Y si te quedas quieto, cierra la distancia con un gancho cubierto de Haki buscando tu mentón, mientras su otra mano prepara el siguiente golpe.";
+  it("keeps the rival's conditional follow-ups about how the player might answer", () => {
+    const v = { narration: `Rocco retrocede.\n\n${long}`, rivalIntent: long, changes: [] };
+    const { verdict, report } = sanitizeVerdict(v, "me quedo quieto", "Rocco");
+    expect(report.removed).toEqual([]);
+    expect(verdict.rivalIntent).toContain("Si te apartas");
+  });
+  it("still drops a plain unwritten dodge that is not hypothetical", () => {
+    const v = { narration: "Esquivas el golpe con facilidad.", changes: [] };
+    expect(sanitizeVerdict(v, "me quedo quieto", "Rocco").report.removed.length).toBe(1);
+  });
+  it("asks again when the rival's announced attack is a one-liner", () => {
+    const issues = checkConsistency({ narration: "x", rivalIntent: "Rocco intenta golpearte.", changes: [] }, []);
+    expect(issues.some((i) => i.includes("demasiado corta"))).toBe(true);
+    expect(checkConsistency({ narration: "x", rivalIntent: long, changes: [] }, [])).toEqual([]);
+  });
+});

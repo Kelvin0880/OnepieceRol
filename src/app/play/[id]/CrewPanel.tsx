@@ -372,7 +372,6 @@ export default function CrewPanel({
                       {c.role} · Nv. {c.level}
                     </span>
                   </div>
-                  <Bar label="Vida" value={c.hp} max={c.maxHp} color="var(--blood)" />
                   <Bar label={`Lealtad (${c.rank})`} value={c.loyalty} max={100} color="var(--gold)" />
                   <p className="text-[11px] text-ink-dim">
                     Ataque {c.atk} · Defensa {c.def} · Velocidad {c.spd}

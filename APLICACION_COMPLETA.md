@@ -334,3 +334,6 @@ Las fases 2 y 3 están completas (ver 4.15 y 4.16). Pendiente: balanceo con dato
 
 ## Sin dados en ningún ámbito (2026-09-25)
 No queda ninguna tirada: juez/árbitro IA para todo resultado (explorar, huida, muerte a 0 de vida, sigilo, fugas, reclutar, simulaciones, Coliseo, 2v2/4v4); el código solo limita y aplica. Sustituye cualquier mención anterior a azar/dados en este documento. El Coliseo aplaza una ronda mientras un competidor esté en una pelea propia; el rival ataca con secuencias variadas y se adapta.
+
+## Finalizar pelea (2026-09-25)
+Botón/enlace en el panel de pelea contra un NPC ("¿La pelea se atascó o ya terminó? Finalizarla"). La IA lee toda la pelea y decide ganó / perdió / sin ganador; el código solo acepta victoria o derrota si el perdedor está a la mitad de vida o menos. Sigue los finales normales (perdonar o rematar, destino, o cierre sin premios). La vida de los NPC no se muestra en ninguna pantalla.

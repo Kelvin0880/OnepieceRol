@@ -4,10 +4,12 @@
 
 ## Decisiones del dueño (reglas fijas)
 - [x] Nada de dados en ninguna parte: juez/árbitro IA decide; el código solo limita y aplica.
-- [x] Solo IA de pago en OpenRouter (DeepSeek primero, gpt-4o-mini de respaldo). Nunca modelos gratis.
+- [x] Solo IA de pago en OpenRouter (DeepSeek V3.2 primero, Claude Haiku 4.5 de respaldo). Nunca modelos gratis.
 - [x] La vida de los NPC/rivales NO se muestra ni se escribe en cifras: la decide y cuenta el árbitro. Solo se ve la vida y la fatiga de los usuarios.
 - [x] Tiempos de respuesta generosos: 24 h (rondas del Coliseo esperan a quien pelea, duelos/peleas conjuntas abandonadas, respuesta a una caza).
 - [x] Barbanegra tiene DOS frutas (Yami Yami + Gura Gura) en su ficha.
+- [x] Botón "Finalizar pelea" contra NPC (la IA lee la pelea y decide; tope: solo si el perdedor está a media vida o menos).
+- [x] El rival pelea como estratega: secuencias variadas, continuidad, se adapta.
 - [x] El árbitro recuerda todo el combate (registro completo de rondas) para no olvidar heridas ni trucos.
 
 ## Verificación pendiente

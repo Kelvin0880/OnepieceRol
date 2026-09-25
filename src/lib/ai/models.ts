@@ -1,9 +1,9 @@
 /**
  * PAID models only (owner's decision, 2026-09-25): the free router and free models gave wildly uneven quality and are
- * never used. DeepSeek answers first (better roleplay and instruction-following per cent); gpt-4o-mini joins as a
+ * never used. DeepSeek V3.2 answers first (long, structured, creative attacks per cent); Claude Haiku 4.5 joins as a
  * hedged backup when it is slow or fails (see hedgeDelayMs). This list is the only place that knows model names.
  */
-const DEFAULT_MODELS = ["deepseek/deepseek-chat", "openai/gpt-4o-mini"];
+const DEFAULT_MODELS = ["deepseek/deepseek-v3.2", "anthropic/claude-haiku-4.5"];
 
 export const OPENROUTER_MODELS: string[] = (() => {
   const fromEnv = process.env.OPENROUTER_MODELS?.split(",")

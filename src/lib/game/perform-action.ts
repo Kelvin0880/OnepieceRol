@@ -1,7 +1,8 @@
 import { prisma } from "../db";
 import { varietyRng } from "../engine/rng";
 import { pickEventTemplate, resolveEvent, eventDifficulty, parseEventBody, EventBody } from "../engine/events";
-import { judgeOutcome, judgeChoice } from "../ai/judge";
+import { judgeOutcome, judgeChoice, judgeFightEnd } from "../ai/judge";
+import { clampFightEnd } from "../engine/judge";
 import { maybeAutoCheckpoint } from "./ooc";
 import { dangerBlockReason } from "../engine/safety";
 import { recruitCompanion, CompanionError } from "./companions";
@@ -2067,4 +2068,57 @@ export async function travelCharacter(characterId: string, userId: string, targe
     where: { id: targetIslandId },
   });
   return withMissions(characterId, result, target ? [{ kind: "travel", destination: target.name }] : []);
+}
+
+/**
+ * "Finalizar pelea": a safety valve for a fight against an NPC that got stuck or already ended in the story. The judge
+ * reads the whole fight (getFightLog) and decides who won; the result then follows the normal endings: a win leaves the
+ * rival at your mercy (spare/finish), a loss goes through the fate judge, no winner just closes the encounter.
+ */
+export async function closeFight(characterId: string, userId: string, note?: string): Promise<ActionResult> {
+  const character = await loadCharacterOrThrow(characterId, userId);
+  const pending = character.pendingEncounter;
+  if (!pending || pending.phase !== "fighting") throw new GameActionError("No hay ninguna pelea en curso que finalizar.");
+  const enemy = JSON.parse(pending.enemyJson) as StoredEnemy;
+  const enemyHp = pending.enemyHp ?? enemy.hp;
+  const fightLog = await getFightLog(character.id, pending.createdAt, 40);
+  const verdict = await judgeFightEnd({
+    playerName: character.name,
+    enemyName: enemy.name,
+    fightLog,
+    player: { hp: character.hp, maxHp: character.maxHp },
+    enemy: { hp: enemyHp, maxHp: enemy.hp },
+    note: note?.trim() || undefined,
+    characterId: character.id,
+  });
+  verdict.outcome = clampFightEnd(verdict.outcome, character.hp, character.maxHp, enemyHp, enemy.hp);
+  const log: string[] = [];
+  const newsLog: string[] = [];
+  const closing = (text: string) => prisma.sceneMessage.create({ data: { characterId: character.id, role: "narrator", text } });
+
+  if (verdict.outcome === "player_won") {
+    log.push(`Pelea finalizada: ${verdict.reason} ${enemy.name} queda derrotado y a tu merced.`.replace(/\s+/g, " "));
+    await prisma.pendingEncounter.update({ where: { characterId: character.id }, data: { phase: "victory", enemyHp: 0 } });
+    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
+    await closing(log.join(" "));
+    void updateCharacterMemory(character.id, character.memorySummary, `${character.name} venció a ${enemy.name} en combate${enemy.isBoss ? " (un enemigo formidable)" : ""}.`);
+    return { ...emptyResult(log, character.level), awaitingMercyChoice: { enemyName: enemy.name } };
+  }
+
+  if (verdict.outcome === "player_lost") {
+    log.push(`Pelea finalizada: ${verdict.reason} ${enemy.name} te derrota.`.replace(/\s+/g, " "));
+    const cause = `Cayó en combate contra ${enemy.name}.`;
+    const deathCheck = await handleDeathCheck(character, 0, cause, newsLog, { name: enemy.name, personality: enemy.personality, isBoss: enemy.isBoss, power: enemy.atk + enemy.def });
+    await prisma.pendingEncounter.delete({ where: { characterId: character.id } });
+    if (!deathCheck.died) await prisma.character.update({ where: { id: character.id }, data: { hp: deathCheck.finalHp } });
+    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
+    await closing(log.join(" "));
+    return { ...emptyResult(log, character.level), hpDelta: deathCheck.finalHp - character.hp, died: deathCheck.died, deathCause: deathCheck.died ? cause : undefined, newsPosted: newsLog };
+  }
+
+  log.push(`Pelea finalizada sin un ganador claro: ${verdict.reason}`.replace(/\s+/g, " "));
+  await prisma.pendingEncounter.delete({ where: { characterId: character.id } });
+  await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "combat", text: log.join(" ") } });
+  await closing(log.join(" "));
+  return emptyResult(log, character.level);
 }

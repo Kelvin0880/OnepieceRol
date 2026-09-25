@@ -133,7 +133,7 @@ export default function EmpirePanel({ characterId, onClose, onChanged }: { chara
                     <div className="min-w-0">
                       <strong className="text-ink">{c.name}</strong> <span className="text-xs text-ink-dim">{c.role}{c.epithet ? ` · «${c.epithet}»` : ""}</span>
                     </div>
-                    <span className="text-xs text-ink-dim">Poder {c.power} · {c.hp}/{c.maxHp} PV</span>
+                    <span className="text-xs text-ink-dim">Poder {c.power}</span>
                   </div>
                   {c.errand ? (
                     <p className="text-sm text-gold mt-2" data-testid="empire-away">

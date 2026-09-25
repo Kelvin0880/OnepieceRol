@@ -235,7 +235,9 @@ export function sanitizeVerdict(verdict: RefereeVerdict, playerText: string, riv
       removed.push(sentence);
       return false;
     }
-    if ((!wroteDefence && UNWRITTEN_DEFENCE.test(sentence)) || (!wroteOffence && UNWRITTEN_OFFENCE.test(sentence))) {
+    // "Si esquivas, girará..." is the rival planning for both answers, not the player acting.
+    const hypothetical = isIntent && /\b(si|en\s+caso\s+de\s+que|por\s+si|en\s+cuanto)\b/i.test(sentence);
+    if (!hypothetical && ((!wroteDefence && UNWRITTEN_DEFENCE.test(sentence)) || (!wroteOffence && UNWRITTEN_OFFENCE.test(sentence)))) {
       removed.push(sentence);
       return false;
     }
@@ -262,6 +264,8 @@ export function sanitizeVerdict(verdict: RefereeVerdict, playerText: string, riv
 /** Sentences that say someone can no longer fight. */
 export const DEFEAT_PHRASES = /\b(cae\s+(inerte|muert[oa]|inconsciente|desplomad[oa]|de\s+espaldas|sin\s+vida)|queda(n)?\s+(inconsciente|fuera\s+de\s+combate|inerte|sin\s+vida)|(ha\s+)?muert[oa]\b|\bmuere\b|sin\s+vida|no\s+puede\s+(continuar|seguir)|sin\s+poder\s+(continuar|seguir)|ha\s+llegado\s+a\s+su\s+fin|cuerpo\s+cae|pierde\s+el\s+conocimiento|queda\s+derrotad[oa]|victoria\s+es\s+tuya)/i;
 
+const MIN_INTENT_CHARS = 350;
+
 export function checkConsistency(verdict: RefereeVerdict, bounds: RefereeBound[]): string[] {
   const issues: string[] = [];
   const declared = (verdict.defeated ?? []).map(norm);
@@ -273,6 +277,9 @@ export function checkConsistency(verdict: RefereeVerdict, bounds: RefereeBound[]
   }
   if (declared.length === 0 && DEFEAT_PHRASES.test(verdict.narration)) {
     issues.push('Narras que alguien cae, muere, queda inconsciente o no puede seguir, pero no lo pusiste en "derrotados". O lo listas en "derrotados" (solo si su vida está por debajo de la mitad) o reescribes sin darlo por caído.');
+  }
+  if (verdict.rivalIntent && declared.length === 0 && verdict.rivalIntent.trim().length < MIN_INTENT_CHARS) {
+    issues.push("La \"intencion_rival\" es demasiado corta: debe ser una SECUENCIA larga y estructurada (5 a 10 frases) con una finta o preparación, el golpe principal con su técnica nombrada y un seguimiento por si el jugador esquiva o bloquea (todo en grado de tentativa).");
   }
   return issues;
 }

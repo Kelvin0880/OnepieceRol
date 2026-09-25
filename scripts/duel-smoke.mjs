@@ -55,6 +55,8 @@ try {
   a.on("response", async (r) => { if (r.url().includes("/duel")) console.log("DUEL RESP", r.status(), await r.text()); });
   await a.locator("div.text-sm", { hasText: NAME_B }).locator('button:has-text("Retar a duelo")').first().click();
   await a.waitForSelector(`text=Duelo contra ${NAME_B}`);
+  await b.waitForSelector("text=Narrador", { timeout: 20000 }).catch(() => {});
+  await a.waitForSelector("text=Narrador", { timeout: 20000 }).catch(() => {});
   check("challenger sees a pending duel panel", (await a.locator("text=Reto pendiente").count()) > 0);
 
   await b.reload();
