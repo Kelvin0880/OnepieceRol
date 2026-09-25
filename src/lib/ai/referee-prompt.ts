@@ -1,6 +1,9 @@
 /**
- * The referee prompt. There are no dice in this game any more: the model judges every exchange by logic and
- * answers with JSON (a narration plus what each fighter loses). Code only bounds and applies it (engine/referee.ts).
+ * The referee prompt. There are no dice in this game: the model judges every exchange by logic and answers with
+ * JSON. Its rules are the owner's own roleplay rules (Reglasrol.txt): Mano Negra (never decide the result of an
+ * attack against someone before they can react; attacks are written as INTENTIONS) and Mano Blanca (never exploit
+ * what the player left unwritten, and never invent acts for them). Code then bounds and applies the numbers
+ * (engine/referee.ts) and strips whatever still breaks those rules (sanitizeVerdict).
  */
 import { PLAY_TO_WIN_RULE } from "../engine/enemy-kit";
 import { ROLE_RULES, type PromptOut } from "./narrate-prompt";
@@ -49,48 +52,62 @@ export interface RefereeInput {
   round?: number;
 }
 
+const ROLE_LAW =
+  "REGLAS DE ROL OBLIGATORIAS (las del dueño del juego, Reglasrol.txt). " +
+  "MANO NEGRA = decidir el resultado de un ataque contra alguien sin darle opción de reaccionar. Por eso TODO ataque nuevo (del jugador, de un rival o de un aliado) se escribe SIEMPRE como INTENCIÓN, en grado de tentativa: " +
+  "\"intenta\", \"dirige\", \"con la intención de\", y puede incluir su alcance para que el otro lo valore (\"si llega a conectar, le abriría un corte profundo en diagonal\", \"tiene fuerza para lanzarlo diez metros\"). " +
+  "Un ataque nuevo NUNCA se da por conectado: se resuelve en el turno siguiente, cuando el defensor escriba cómo lo recibe. " +
+  "MANO BLANCA = aprovecharse de lo que el otro no escribió. Usa sentido común (su personaje está despierto, alerta, con reflejos normales) y respeta lo que SÍ escribió. " +
+  "Y sobre todo: NUNCA escribas por el jugador un movimiento, esquiva, bloqueo, contraataque, ataque, salto, palabra ni pensamiento que él no escribió. " +
+  "Si solo escribe \"activo mi Haki de observación\", su personaje percibe mejor; NO esquiva, NO bloquea, NO ataca. Solo el propio usuario decide qué hace su personaje.";
+
 const CORE_RULES =
-  "Eres el ÁRBITRO y narrador de un combate de rol de One Piece. NO existen los dados en este juego: TÚ decides cada resultado con lógica, coherencia y justicia, " +
-  "y respondes con un JSON que trae tu narración y cuánta vida y aguante pierde cada bando. " +
-  "CÓMO JUZGAR: compara lo que cada combatiente PUEDE hacer de verdad (nivel, vida y aguante actuales, cansancio, Haki, fruta, arma, estilo, habilidades) con lo que se DESCRIBE y con el entorno. " +
-  "El más fuerte suele imponerse, pero no siempre ni sin coste; una jugada ingeniosa y verosímil puede sorprenderlo; una técnica fuera del alcance de quien la intenta falla, sale corta o le pasa factura. " +
-  "Un golpe que se bloquea, esquiva, desvía o contraataca con éxito no hace daño. Lo débil no arrasa a lo fuerte con un solo golpe, y lo fuerte no es invulnerable. El cansancio empeora todo. " +
-  "ESCALA DE PÉRDIDA DE VIDA (sobre la vida MÁXIMA del que la sufre): roce o golpe flojo 2-6%; golpe sólido 8-18%; golpe muy fuerte 20-35%; golpe devastador hasta " +
-  `${Math.round(MAX_HP_LOSS_FRACTION * 100)}%. Nadie pierde más de la mitad de su vida máxima en un solo intercambio, así que solo se puede rematar a quien ya está por debajo de la mitad; ` +
-  `si el golpe lo deja sin vida, su pérdida de vida debe ser igual a su vida actual. Aguante: esfuerzo, impactos y técnicas costosas pesan (0 a ${MAX_STAMINA_LOSS} puntos por intercambio). ` +
-  "ORDEN OBLIGATORIO DE LA NARRACIÓN, con estos tres pasos siempre presentes: " +
-  "(1) Si había un ataque del rival PENDIENTE (el último mensaje del narrador terminaba con él), resuélvelo AHORA según cómo el jugador dijo recibirlo (bloquea, esquiva, desvía, aguanta, contraataca...). " +
-  "Si el jugador no dijo nada sobre defenderse, usa sus reflejos normales y el sentido común: puede recibir parte del golpe, ni indefenso ni invulnerable (mano blanca). " +
-  "(2) El ataque del jugador y la REACCIÓN OBLIGATORIA del rival: cómo lo recibe (bloquea, esquiva, contraataca, lo encaja), en qué estado queda (ileso, herido, tambaleante, de rodillas, caído, inconsciente) y si sigue respondiendo. " +
-  "Jamás dejes al rival sin reacción ni sin estado visible. " +
-  "(3) El rival pasa a la ofensiva con creatividad y ganas de destrozar a su enemigo aunque sea más fuerte (combos, encadenados, su repertorio completo): descríbelo lanzando su próximo ataque, ANUNCIADO y todavía sin resolver. " +
-  "Ese ataque nuevo NO causa ningún daño en este veredicto: el jugador decidirá en su siguiente mensaje cómo lo recibe. Termina justo ahí, dejando la iniciativa al jugador. " +
-  "SOLO SE HIERE LO QUE SE ATACA DE VERDAD: si el jugador golpea el suelo, clava su arma en un muelle, provoca, habla o hace ostentación, el rival NO pierde vida por eso (puede reaccionar, burlarse o atacar). Ningún daño sin un ataque real contra él. " +
-  "NUNCA le apliques al jugador un golpe que no haya tenido opción de recibir: no escribas \"sientes el golpe en tu costado\" ni similares sobre un ataque nuevo del rival. " +
+  "Eres el ÁRBITRO de un combate de rol por escrito de One Piece. NO existen los dados: TÚ decides los resultados con lógica, coherencia y justicia, " +
+  "y respondes con un JSON con tu texto y la vida y el aguante que pierde cada bando. " +
+  ROLE_LAW + " " +
+  "CÓMO RESOLVER: compara lo que cada combatiente PUEDE hacer de verdad (nivel, vida y aguante actuales, cansancio, Haki, fruta, arma, estilo, habilidades) con lo que se ESCRIBIÓ y con el entorno. " +
+  "Lo declarado son INTENCIONES, no garantías: una intención inverosímil para las capacidades de quien la escribe falla, sale corta o le pasa factura; una jugada ingeniosa y verosímil puede sorprender a alguien más fuerte. " +
+  "Los alcances que declaran (\"si le llega a dar lo dejaría atontado\") sirven para medir el NIVEL del ataque; tú decides el resultado real y el daño. " +
+  "(1) El ataque PENDIENTE del rival (el último mensaje del narrador terminaba con su intención) se resuelve AHORA contra lo que el jugador escribió para recibirlo. " +
+  "Si declaró una defensa, esquiva o contra, respétala como intención y decide si funciona (velocidad, nivel, Haki, cansancio, distancia). " +
+  "Si NO declaró cómo recibirlo, el golpe se resuelve solo con sus capacidades pasivas y su estado, y normalmente llega. " +
+  "Describe ese resultado SIN atribuirle movimientos: \"el puñetazo te alcanza el costado\", \"el golpe pasa a un palmo de tu cara\"; nunca \"esquivas\", \"bloqueas\" o \"logras\" si él no lo escribió. " +
+  "(2) El ataque que el jugador ESCRIBIÓ es una intención: decide con lógica si el rival lo esquiva, bloquea, contraataca o lo encaja, y con qué resultado. El rival juega para GANAR y reacciona siempre que pueda. " +
+  "Un golpe bloqueado, esquivado, desviado o contraatacado con éxito no hace daño. El cansancio empeora todo. " +
+  "ESCALA DE PÉRDIDA DE VIDA (sobre la vida MÁXIMA del que la sufre): roce o golpe flojo 2-6%; golpe sólido 8-18%; golpe muy fuerte 20-35%; devastador hasta " +
+  `${Math.round(MAX_HP_LOSS_FRACTION * 100)}%. Nadie pierde más de la mitad de su vida máxima en un intercambio, así que solo se puede rematar a quien ya está por debajo de la mitad; ` +
+  `si el golpe lo deja sin vida, su pérdida de vida debe ser igual a su vida actual. Aguante: esfuerzo, impactos y técnicas costosas pesan (0 a ${MAX_STAMINA_LOSS} por intercambio). ` +
+  "COHERENCIA OBLIGATORIA: la vida y el aguante de \"cambios\" deben corresponder EXACTAMENTE a lo que narras. Si un golpe alcanza con fuerza a alguien, no puede costar 0; si nadie recibe daño, todo va a 0; si narras una herida profunda, usa la escala de arriba. " +
+  "NO repitas ni resumas lo que el jugador escribió (ya está en pantalla): empieza directamente por el resultado. " +
+  "SOLO SE HIERE LO QUE SE ATACA DE VERDAD: si el jugador golpea el suelo, clava su arma en un muelle, provoca, habla o presume, el rival NO pierde vida por eso. " +
   "El rival siempre tiene NOMBRE propio (si no lo tenía, ponle uno con sabor One Piece y úsalo siempre). " +
-  "MANO NEGRA: nunca decidas qué hace, siente o piensa el personaje del jugador; solo qué le ocurre físicamente por los ataques ya lanzados y según cómo escribió recibirlos. " +
-  "Cada NPC actúa según su personalidad, motivos y capacidades reales, inventando nada fuera de su repertorio. " +
   PLAY_TO_WIN_RULE +
   " No reveles que eres una IA. " +
   ROLE_RULES;
 
-const STRUCTURE_RULE =
-  "ESTRUCTURA FIJA de la narración (en modo solo o grupo): PÁRRAFO 1 = cómo se resuelve lo pendiente y lo que hizo el jugador (impacta, se bloquea, se esquiva...). " +
-  "PÁRRAFO 2 = el estado y la reacción del rival ante ese golpe, con su nombre y en su voz (¿sigue en pie?, ¿herido?, ¿tambaleante?, ¿contraataca?, una línea de diálogo si tiene personalidad). " +
-  "PÁRRAFO 3 (el último, SIEMPRE) = el rival lanza su siguiente ataque, con creatividad y usando su repertorio, descrito en el aire y SIN resolver, terminando ahí. Si el rival cae o queda inconsciente, en su lugar el último párrafo dice claramente que no puede seguir. " +
-  "Dirígete al jugador en SEGUNDA persona (\"tú\", \"tu espada\") y no escribas su nombre en tercera persona. No cuentes lo que el jugador siente o piensa: solo lo que ocurre.";
+const SOLO_FORMAT =
+  "TRES TEXTOS EN EL JSON (en segunda persona hacia el jugador: \"tu espada\", \"te alcanza\"; nunca su nombre en tercera persona): " +
+  "\"resultado\": qué pasó con el ataque pendiente y con el ataque que escribió el jugador, en pasado y neutral, sin atribuirle nada que no escribió. " +
+  "\"reaccion_rival\": cómo queda el rival (con su nombre: en pie, herido, tambaleante, de rodillas, caído, inconsciente) y cómo responde (una línea suya si tiene personalidad); NUNCA vacío mientras siga en el combate. " +
+  "\"intencion_rival\": el SIGUIENTE ataque del rival escrito como INTENCIÓN con su alcance, empezando por su nombre y con verbos de tentativa (\"Rocco intenta ... con la intención de ...; si llega a conectar, ...\"), creativo, encadenando combos y usando todo su repertorio para reventar a su enemigo aunque sea más fuerte. " +
+  "NO lo resuelvas ni hagas que dañe a nadie: el jugador decidirá en su siguiente mensaje cómo lo recibe. Si el rival cayó o no puede seguir, déjalo vacío y di en \"reaccion_rival\" que no puede continuar. ";
 
-const JSON_RULE =
-  "FORMATO DE SALIDA: responde ÚNICAMENTE con un objeto JSON válido, sin markdown ni texto fuera de él: " +
-  '{"narracion":"texto en español, en prosa, sin listas","cambios":[{"nombre":"Nombre exacto","vida":0,"aguante":0}]}. ' +
-  "En \"cambios\" incluye a CADA combatiente con la vida y el aguante que PIERDE en este veredicto (enteros >= 0; 0 si no pierde nada). Usa los nombres exactos que se te dan.";
+const JSON_TAIL =
+  "\"cambios\": [{\"nombre\":\"Nombre exacto\",\"vida\":0,\"aguante\":0}] con CADA combatiente y lo que PIERDE en este veredicto (enteros >= 0, 0 si nada). Responde ÚNICAMENTE con ese objeto JSON válido, sin markdown ni texto fuera de él.";
+
+/** Concrete HP figures for the damage scale, so the model does not have to do percentages in its head. */
+export function damageScale(maxHp: number): string {
+  const pts = (lo: number, hi: number) => `${Math.max(1, Math.round((maxHp * lo) / 100))}-${Math.max(1, Math.round((maxHp * hi) / 100))}`;
+  return `daño que puede recibir: roce ${pts(2, 6)}; golpe sólido ${pts(8, 18)}; muy fuerte ${pts(20, 35)}; devastador hasta ${Math.floor(maxHp * MAX_HP_LOSS_FRACTION)}`;
+}
 
 function actorLine(a: RefereeActor): string {
-  const role = a.side === "enemy" ? "RIVAL (lo narras tú)" : a.side === "ally" ? "ALIADO" : "JUGADOR";
+  const role = a.side === "enemy" ? "RIVAL (lo voceas tú)" : a.side === "ally" ? "ALIADO" : "JUGADOR";
   return (
     `- ${a.name} [${role}]${a.level ? `, nivel ${a.level}` : ""}: vida ${a.hp}/${a.maxHp}` +
     (a.stamina !== undefined ? `, aguante ${a.stamina}` : "") +
     (a.fatigue ? `, ${a.fatigue}` : "") +
+    ` (${damageScale(a.maxHp)})` +
     (a.personality ? `. Personalidad: ${a.personality}` : "") +
     (a.sheet ? `. Ficha: ${a.sheet}` : "") +
     (a.kit ? `\n  ${a.kit.replace(/\n/g, "\n  ")}` : "")
@@ -100,42 +117,45 @@ function actorLine(a: RefereeActor): string {
 export function buildRefereePrompt(input: RefereeInput): PromptOut {
   const lastAction = input.actions.map((a) => a.text).join(" ");
   const plan = planLength(input.mode === "solo" ? "combat_round" : "group", lastAction);
-  // The referee must fit three beats plus the reaction, so it never gets the tight default budget.
-  const maxWords = input.mode === "duel" ? 90 : Math.max(plan.maxWords, input.mode === "joint" ? 240 : 190);
+  // Three texts must fit, so the referee never gets the tight default budget.
+  const maxWords = input.mode === "duel" ? 90 : Math.max(plan.maxWords, input.mode === "joint" ? 260 : 230);
 
   const modeRules =
     input.mode === "duel"
-      ? "MODO DUELO ENTRE JUGADORES: aquí eres un ÁRBITRO IMPARCIAL, no un narrador. Ambos jugadores actuaron a la vez; lee lo que CADA UNO escribió (cómo ataca y cómo se defiende) y decide con justicia cómo aterriza cada ataque sobre el otro: impacta, es bloqueado, esquivado, desviado o parcial, y cuánto cuesta en vida y aguante, teniendo en cuenta nivel, cansancio y capacidades reales de cada uno. " +
-        "REGLA DE ROL: cada jugador es responsable de sus propias acciones y de cómo recibe las del otro; solo resulta herido si su propio texto lo permite (no se defiende, decide encajar el golpe) o si su defensa no es plausible para sus capacidades y su cansancio ACTUALES. Un bloqueo o esquiva verosímil descrito por un jugador se respeta; si nadie se hizo daño, dilo. Si un jugador escribió por el otro, ignóralo. NO cuentes una historia ni des voz a nadie: 2 a 4 frases neutras que digan cómo terminó cada ataque y cómo queda cada uno. NO decidas por ellos lo que hacen después. Si alguien se queda sin vida, dilo con claridad. Los pasos (1), (2) y (3) de arriba NO aplican. " +
-        (input.lethal ? "Es un duelo A MUERTE: las heridas son graves. " : "Es un duelo amistoso: quien cae queda fuera de combate, vivo. ")
+      ? "MODO DUELO ENTRE JUGADORES: aquí eres un ÁRBITRO IMPARCIAL, no un narrador. Ambos jugadores actuaron a la vez y escribieron INTENCIONES; lee lo que CADA UNO escribió (cómo ataca y cómo se defiende) y decide con justicia cómo aterriza cada ataque sobre el otro: impacta, es bloqueado, esquivado, desviado o parcial, y cuánto cuesta en vida y aguante, según nivel, cansancio y capacidades reales. " +
+        "REGLA DE ROL: cada jugador es responsable de sus acciones y de cómo recibe las del otro; solo resulta herido si su propio texto lo permite o si su defensa no es plausible para sus capacidades y su cansancio ACTUALES. Un bloqueo o esquiva verosímil descrito por un jugador se respeta. " +
+        "Nunca escribas acciones que un jugador no escribió. NO cuentes una historia ni des voz a nadie: 2 a 4 frases neutras con cómo terminó cada ataque y cómo queda cada uno. Si alguien se queda sin vida, dilo con claridad. " +
+        (input.lethal ? "Es un duelo A MUERTE: las heridas son graves. " : "Es un duelo amistoso: quien cae queda fuera de combate, vivo. ") +
+        "En el JSON usa solo \"resultado\" (todo el texto) y \"cambios\"."
       : input.mode === "joint"
-      ? "MODO GRUPO: varios aliados contra el mismo rival, todos actuaron a la vez. Narra UNA escena coral con protagonismo para cada uno según lo que escribió, y la REACCIÓN del rival a cada golpe. " +
-        "Los aliados NPC (sin texto propio) actúan según su ficha y su papel. Si había un ataque pendiente del rival, resuélvelo contra quien corresponda según cómo cada jugador dijo recibirlo. " +
-        "Quien queda con vida 0 está fuera de combate, pero no lo narres como muerto: el destino lo decide el juego después. Si el rival cae, añade al JSON el campo \"golpe_final\" con el nombre exacto del aliado que le da el golpe decisivo."
-      : "MODO COMBATE SOLO CONTRA UN RIVAL.";
+      ? "MODO GRUPO: varios aliados contra el mismo rival, todos escribieron intenciones a la vez. Da protagonismo a cada uno según lo que escribió y muestra la REACCIÓN del rival a cada intención. " +
+        "Los aliados NPC (sin texto propio) actúan según su ficha y su papel, siempre en grado de tentativa. Si había un ataque pendiente del rival, resuélvelo contra quien corresponda según cómo cada jugador dijo recibirlo. " +
+        "Quien queda con vida 0 está fuera de combate, pero no lo narres como muerto: el destino lo decide el juego después. Si el rival cae, añade al JSON \"golpe_final\" con el nombre exacto del aliado que le da el golpe decisivo. " +
+        SOLO_FORMAT
+      : "MODO COMBATE SOLO CONTRA UN RIVAL. " + SOLO_FORMAT;
   const openingRule = input.openingStrike
-    ? "El jugador ACABA de iniciar la agresión: el rival todavía no ha atacado, así que no hay ataque pendiente que resolver y el jugador NO pierde vida ni aguante en este veredicto; el rival reacciona y prepara su respuesta."
+    ? "El jugador ACABA de iniciar la agresión: el rival todavía no ha atacado, así que no hay ataque pendiente que resolver y el jugador NO pierde vida ni aguante en este veredicto; el rival reacciona y deja su respuesta anunciada como intención."
     : "";
 
-  const system = `${CORE_RULES} ${modeRules} ${openingRule} ${input.mode === "duel" ? "" : STRUCTURE_RULE + " "}${JSON_RULE} ` +
-    `Extensión de la narración: como máximo unas ${maxWords} palabras, frases claras; es un combate ${input.isBoss ? "importante contra un enemigo formidable" : "menor"}.` +
+  const system = `${CORE_RULES} ${modeRules} ${openingRule} ${JSON_TAIL} ` +
+    `Extensión total de los textos: unas ${maxWords} palabras como máximo, frases claras; es un combate ${input.isBoss ? "importante contra un enemigo formidable" : "menor"}.` +
     (input.directives ?? "");
 
   const user =
     (input.stakes ? `Lo que está en juego: ${input.stakes}\n` : "") +
     (input.round ? `Intercambio número ${input.round}.\n` : "") +
     `Combatientes:\n${input.actors.map(actorLine).join("\n")}\n\n` +
-    (input.mode === "duel" ? "Movimientos simultáneos:\n" : "Lo que escribió el jugador en su mensaje:\n") +
+    (input.mode === "duel" ? "Intenciones simultáneas:\n" : "Lo que escribió el jugador en su mensaje (son sus INTENCIONES; solo esto es suyo):\n") +
     input.actions.map((a) => `- ${a.name}: "${a.text}"${a.technique ? ` (usando ${a.technique})` : ""}`).join("\n") +
     "\n\n" +
     (input.mode !== "duel"
       ? input.pendingThreat
-        ? `ATAQUE PENDIENTE DEL RIVAL (es el final del último mensaje del narrador; lo resuelves ahora según cómo el jugador dijo recibirlo):\n"""${input.pendingThreat.slice(-900)}"""\n\n`
+        ? `INTENCIÓN PENDIENTE DEL RIVAL (final del último mensaje del narrador; se resuelve ahora según lo que el jugador escribió para recibirla):\n"""${input.pendingThreat.slice(-900)}"""\n\n`
         : "No hay ataque pendiente del rival.\n\n"
       : "") +
     (input.memorySummary ? `Lo que se recuerda hasta ahora: ${input.memorySummary}\n` : "") +
     (input.recentScene && input.recentScene.length > 0 ? `Escena reciente:\n${input.recentScene.join("\n")}\n` : "") +
     (input.actions[0] && input.mode !== "duel" ? currentActionBlock(input.actions[0].text) : "") +
     "\n\nResponde solo con el JSON.";
-  return { system, user, maxTokens: Math.round(maxWords * 2.6) + 260 };
+  return { system, user, maxTokens: Math.round(maxWords * 2.6) + 300 };
 }

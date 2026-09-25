@@ -11,7 +11,7 @@ import { prepareFighter, combatProgressData, characterCapabilityText } from "./c
 import { toCombatant } from "./derive";
 import { postNews } from "./death-resolution";
 import { notifyPair } from "./notify";
-import { resolveDuelLoss, grantVictorSpoils } from "./group-battle";
+import { settleGroupBattleIfDone } from "./battle-settle";
 import { CharacterStatus } from "@prisma/client";
 import { DuelError, postDuelReport } from "./duel-resolution";
 import { verdictOptions } from "../engine/duel-outcome";
@@ -30,9 +30,8 @@ import { verdictOptions } from "../engine/duel-outcome";
  *    after a pirate, a pirate after a Marine — though the target may try to
  *    slip away instead of standing to fight, and only online, non-novice
  *    players can be hunted. Between non-hostile players it needs both sides to
- *    agree. The loser goes through the same death roll / Marine-capture path
- *    as every other lost fight (resolveDuelLoss), so nothing about permadeath
- *    is special-cased here.
+ *    agree. When someone falls or gives up, the WINNER decides their fate
+ *    (kill / capture / spare, game/duel-resolution.ts); nothing is rolled.
  */
 export { DuelError };
 
@@ -56,6 +55,7 @@ export async function getOpenDuelFor(characterId: string) {
   const expired = duel.status === "PROPOSED" && duel.hostile ? idle > HUNT_RESPONSE_WINDOW_MS : idle > STALE_DUEL_MS;
   if (expired) {
     await prisma.duel.update({ where: { id: duel.id }, data: { status: "CANCELLED" } });
+    await settleGroupBattleIfDone(duel.groupBattleId);
     return null;
   }
   return duel;
@@ -355,6 +355,7 @@ async function resolveDuelRoundFor(duelId: string) {
     if (finished && winnerChar && loserChar) log.push(`${loserChar.name} ha caído. ${winnerChar.name} decide su destino.`);
   } else if (finished && winnerChar && loserChar) {
     await postDuelReport(duel.id, winnerChar.name, loserChar.name, "knockout", { name: a.currentIsland.name, islandId: a.currentIslandId }, false, winnerChar.id);
+    await settleGroupBattleIfDone(duel.groupBattleId);
   }
 
   return { log, waiting: false, finished, winnerName: winnerChar?.name };

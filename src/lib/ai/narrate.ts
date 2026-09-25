@@ -33,7 +33,7 @@ import {
 } from "./narrate-prompt";
 import { callOpenRouter } from "./openrouter-client";
 import { buildRefereePrompt, type RefereeInput } from "./referee-prompt";
-import { parseRefereeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
+import { parseRefereeVerdict, sanitizeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
 import { OPENROUTER_MODELS } from "./models";
 import { parseCompanionProfile } from "../engine/companions";
 import { describeCapabilities } from "../engine/capabilities";
@@ -421,7 +421,12 @@ export async function refereeExchange(input: RefereeInput, meta: { characterId?:
       temperature: 0.8,
       validate: (t) => parseRefereeVerdict(t) !== null,
     });
-    return parseRefereeVerdict(raw);
+    const parsed = parseRefereeVerdict(raw);
+    if (!parsed) return null;
+    const rival = input.actors.find((a) => a.side === "enemy")?.name ?? "El rival";
+    const { verdict, report } = sanitizeVerdict(parsed, input.actions.map((a) => a.text).join("\n"), rival, input.mode === "solo" ? input.actors.find((a) => a.side === "player")?.name : undefined);
+    if (report.removed.length > 0) await logError(`ai/referee-${meta.context}-guard`, new Error(`removed ${report.removed.length} sentence(s): ${report.removed.join(" | ").slice(0, 600)}`), meta.characterId ? { characterId: meta.characterId } : undefined);
+    return verdict;
   } catch (err) {
     await logError(`ai/referee-${meta.context}`, err, meta.characterId ? { characterId: meta.characterId } : undefined);
     return null;

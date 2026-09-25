@@ -282,6 +282,7 @@ model DevilFruit {
 
 enum BattleStatus {
   PROPOSED // challenger set the matchups; waiting on the defending captain
+  ACTIVE // accepted: one real duel per matchup is being fought
   RESOLVED
   DECLINED
 }
@@ -295,6 +296,7 @@ model GroupBattle {
   status       BattleStatus             @default(PROPOSED)
   matchupsJson String // [{ aId, bId }] — each a named 1-vs-1 the challenger proposed
   resultJson   String? // GroupBattleResult, set once RESOLVED
+  lethal       Boolean                  @default(false) // every matchup is a fight to the death (winner decides kill / capture / spare)
   createdAt    DateTime                 @default(now())
   resolvedAt   DateTime?
   participants GroupBattleParticipant[]
@@ -370,6 +372,7 @@ model Duel {
   hostile             Boolean       @default(false)
   // Something is waiting on a person, not on the next round: "VERDICT" (the loser is down or gave up, the winner
   // decides kill / capture / spare) or "FLEE_PLEA" (the other side accepts or refuses the escape described in pleaText).
+  groupBattleId       String? // set when this duel is one matchup of a crew battle
   resolution          String?
   pleaById            String?
   pleaText            String?

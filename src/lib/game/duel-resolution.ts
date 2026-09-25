@@ -7,6 +7,7 @@ import { toCombatant } from "./derive";
 import { captureCharacter } from "./prison";
 import { postNews } from "./death-resolution";
 import { notifyPair } from "./notify";
+import { settleGroupBattleIfDone } from "./battle-settle";
 
 export class DuelError extends Error {}
 
@@ -46,8 +47,9 @@ export async function postDuelReport(duelId: string, winnerName: string | null, 
 }
 
 async function closeDuel(duelId: string, winnerId: string | null, message: string) {
-  await prisma.duel.update({ where: { id: duelId }, data: { status: "FINISHED", winnerId, resolution: null, pleaById: null, pleaText: null } });
+  const closed = await prisma.duel.update({ where: { id: duelId }, data: { status: "FINISHED", winnerId, resolution: null, pleaById: null, pleaText: null } });
   await prisma.duelMessage.create({ data: { duelId, authorCharacterId: null, authorName: "Árbitro", text: message } });
+  await settleGroupBattleIfDone(closed.groupBattleId);
 }
 
 /** "Perdí": in a friendly duel that is the end; in a fight to the death the winner decides what happens next. */

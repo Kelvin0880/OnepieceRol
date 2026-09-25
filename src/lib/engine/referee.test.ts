@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, stubVerdict } from "./referee";
+import { MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
 
 const NARR = "El rival bloquea con el antebrazo y responde con una patada baja que se acerca a tu rodilla.";
 const good = (extra = "") => JSON.stringify({ narracion: NARR, cambios: [{ nombre: "Kirito", vida: 10, aguante: 5 }, { nombre: "Bandido", vida: 20, aguante: 8 }], ...(extra ? { x: extra } : {}) });
@@ -81,5 +81,66 @@ describe("stubVerdict (scripted checks only)", () => {
   it("pairs the first two actors when nobody is an enemy (a duel)", () => {
     const v = stubVerdict([{ ...strong, side: "player" }, { ...weak, side: "player" }]);
     expect(v.changes.find((c) => c.name === "Debil")!.hp).toBeGreaterThan(v.changes.find((c) => c.name === "Fuerte")!.hp);
+  });
+});
+
+describe("three-part verdict", () => {
+  it("assembles result, reaction and the rival's intention in that order", () => {
+    const v = parseRefereeVerdict(JSON.stringify({ resultado: "El puñetazo pasó rozando tu costado sin tocarte.", reaccion_rival: "Rocco resopla, herido pero en pie.", intencion_rival: "Rocco intenta un gancho a tu mandíbula que, si conecta, te dejaría aturdido.", cambios: [] }))!;
+    expect(v.narration.split("\n\n")).toHaveLength(3);
+    expect(v.narration.endsWith("aturdido.")).toBe(true);
+    expect(v.rivalIntent).toContain("intenta un gancho");
+  });
+  it("still accepts the single-field form", () => {
+    expect(parseRefereeVerdict(JSON.stringify({ narracion: NARR, cambios: [] }))?.rivalIntent).toBeUndefined();
+  });
+});
+
+describe("mano negra guard (sanitizeVerdict)", () => {
+  const mk = (resultado: string, intent: string) => parseRefereeVerdict(JSON.stringify({ resultado, reaccion_rival: "Rocco se tambalea, herido pero sigue en pie ante ti.", intencion_rival: intent, cambios: [] }))!;
+
+  it("the reported case: 'activo mi Haki de observación' does not become a dodge", () => {
+    const v = mk("Rocco lanza un puñetazo cargado de Haki. El puñetazo conecta, pero logras esquivarlo por un estrecho margen. Tu Haki de Observación te muestra el golpe venir.", "Rocco intenta un cabezazo contra tu frente que, si conecta, te aturdiría.");
+    const { verdict, report } = sanitizeVerdict(v, "Ok muchacho intenta atacarme\n-Activaria mi HAKI de observación-", "Rocco");
+    expect(verdict.narration).not.toContain("logras esquivarlo");
+    expect(verdict.narration).toContain("Tu Haki de Observación te muestra");
+    expect(report.removed.some((s) => s.includes("logras esquivarlo"))).toBe(true);
+  });
+  it("keeps a dodge the player did write", () => {
+    const v = mk("Rocco lanza un puñetazo. Logras esquivar por un palmo.", "Rocco intenta otro golpe que, si conecta, te haría retroceder.");
+    const { verdict } = sanitizeVerdict(v, "Me agacho y esquivo hacia la izquierda", "Rocco");
+    expect(verdict.narration).toContain("Logras esquivar por un palmo");
+  });
+  it("a rival attack written as landed is dropped from the intention", () => {
+    const v = mk("El corte de Kirito se pierde en el aire, sin tocarlo.", "Rocco te golpea en el estómago. Rocco intenta después una patada baja que, si conecta, te derribaría.");
+    const { verdict } = sanitizeVerdict(v, "Ataco con mi espada", "Rocco");
+    expect(verdict.rivalIntent).not.toContain("te golpea");
+    expect(verdict.rivalIntent).toContain("intenta después una patada");
+  });
+  it("if the whole intention was a landed hit it is replaced by a safe hand-over", () => {
+    const v = mk("El corte de Kirito se pierde en el aire sin tocarlo.", "Sientes el golpe en tu costado. El puñetazo conecta y te derriba.");
+    const { verdict } = sanitizeVerdict(v, "Ataco con mi espada", "Rocco");
+    expect(verdict.rivalIntent).toContain("Rocco se prepara para atacar de nuevo");
+    expect(verdict.narration.endsWith(verdict.rivalIntent!)).toBe(true);
+  });
+  it("does not let the narration attack for the player", () => {
+    const v = mk("Te lanzas contra él y cortas su hombro. El aire se rompe.", "Rocco intenta una patada que, si conecta, te haría retroceder.");
+    const { verdict } = sanitizeVerdict(v, "-Lo miraría con desdén-", "Rocco");
+    expect(verdict.narration).not.toContain("Te lanzas");
+  });
+  it("leaves clean verdicts untouched", () => {
+    const v = mk("El puñetazo llega y te alcanza el costado con fuerza.", "Rocco intenta un gancho que, si conecta, te sacudiría.");
+    const { verdict, report } = sanitizeVerdict(v, "Ok, intenta atacarme", "Rocco");
+    expect(report.removed).toHaveLength(0);
+    expect(verdict.narration).toBe(v.narration);
+  });
+  it("a sentence that opens with the player's name is the narrator acting for them", () => {
+    const v = mk("Kirito saca su espada y la clava en el muelle. El puñetazo de Rocco pasa a un palmo de tu cara.", "Rocco intenta un gancho que, si conecta, te sacudiría.");
+    const { verdict } = sanitizeVerdict(v, "Ataco con mi espada", "Rocco", "Kirito");
+    expect(verdict.narration).not.toContain("Kirito saca");
+    expect(verdict.narration).toContain("pasa a un palmo");
+  });
+  it("splits sentences without losing text", () => {
+    expect(splitSentences("Uno. Dos! ¿Tres?").join(" ")).toBe("Uno. Dos! ¿Tres?");
   });
 });

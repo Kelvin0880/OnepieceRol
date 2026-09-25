@@ -16,11 +16,12 @@ describe("buildRefereePrompt", () => {
     const { system } = buildRefereePrompt(base);
     expect(system).toContain("NO existen los dados");
     expect(system).toContain('"cambios"');
-    expect(system).toContain("REACCIÓN OBLIGATORIA del rival");
+    expect(system).toContain("\"reaccion_rival\"");
+    expect(system).toContain("\"intencion_rival\"");
   });
   it("hands over what is pending and what the player wrote", () => {
     const { user } = buildRefereePrompt(base);
-    expect(user).toContain("ATAQUE PENDIENTE DEL RIVAL");
+    expect(user).toContain("INTENCIÓN PENDIENTE DEL RIVAL");
     expect(user).toContain("Rocco lanza un puñetazo directo");
     expect(user).toContain("Bloqueo con la palma");
     expect(user).toContain("vida 300/500");
@@ -33,7 +34,9 @@ describe("buildRefereePrompt", () => {
   it("only hurts what is really attacked and never hits without a chance to respond", () => {
     const { system } = buildRefereePrompt(base);
     expect(system).toContain("SOLO SE HIERE LO QUE SE ATACA DE VERDAD");
-    expect(system).toContain("NUNCA le apliques al jugador un golpe que no haya tenido opción de recibir");
+    expect(system).toContain("MANO NEGRA");
+    expect(system).toContain("NUNCA escribas por el jugador");
+    expect(system).toContain("grado de tentativa");
   });
   it("duel mode resolves both simultaneous moves and has no pending threat", () => {
     const out = buildRefereePrompt({
@@ -49,13 +52,20 @@ describe("buildRefereePrompt", () => {
       ],
     });
     expect(out.system).toContain("MODO DUELO");
+    expect(out.system).toContain("Nunca escribas acciones que un jugador no escribió");
     expect(out.system).toContain("A MUERTE");
-    expect(out.user).toContain("Movimientos simultáneos");
-    expect(out.user).not.toContain("ATAQUE PENDIENTE");
+    expect(out.user).toContain("Intenciones simultáneas");
+    expect(out.user).not.toContain("PENDIENTE DEL RIVAL");
   });
   it("joint mode asks for the final blow", () => {
     const out = buildRefereePrompt({ ...base, mode: "joint" });
     expect(out.system).toContain("golpe_final");
+  });
+  it("tells the model to resolve a dodge only if the player wrote one", () => {
+    const { system } = buildRefereePrompt(base);
+    expect(system).toContain("activo mi Haki de observación");
+    expect(system).toContain("NO esquiva");
+    expect(system).toContain("SIN atribuirle movimientos");
   });
   it("leaves room for three beats", () => {
     expect(buildRefereePrompt(base).maxTokens).toBeGreaterThan(600);

@@ -216,7 +216,7 @@ interface DuelResult {
 
 interface BattleSummary {
   id: string;
-  status: "PROPOSED" | "RESOLVED" | "DECLINED";
+  status: "PROPOSED" | "ACTIVE" | "RESOLVED" | "DECLINED";
   isChallenger: boolean;
   opponentCrewName: string;
   matchupCount: number;
@@ -403,6 +403,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [matchups, setMatchups] = useState<Record<string, string>>({});
   const [battleError, setBattleError] = useState<string | null>(null);
   const [battleBusy, setBattleBusy] = useState(false);
+  const [battleLethal, setBattleLethal] = useState(false);
   const [freeText, setFreeText] = useState("");
   const [escapePlan, setEscapePlan] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
@@ -1634,6 +1635,10 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                             </select>
                           </div>
                         ))}
+                        <label className="flex items-center gap-2 text-xs text-ink-dim mt-1">
+                          <input type="checkbox" checked={battleLethal} onChange={(e) => setBattleLethal(e.target.checked)} data-testid="battle-lethal" />
+                          A muerte (el vencedor de cada duelo decide matar, capturar o perdonar; lo pactáis fuera del juego)
+                        </label>
                         {battleError && <p className="text-blood text-xs">{battleError}</p>}
                         <div className="flex gap-2 mt-1">
                           <button
@@ -1644,6 +1649,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                                 op: "propose",
                                 targetCrewId: rival.id,
                                 matchups: rows.map((r) => ({ myCharacterId: r.id, opponentCharacterId: matchups[r.id] })),
+                                lethal: battleLethal,
                               })
                             }
                           >
@@ -1676,10 +1682,10 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                         </span>
                         <span
                           className={
-                            b.status === "PROPOSED" ? "text-gold" : b.status === "DECLINED" ? "text-ink-dim" : won ? "text-emerald-300" : "text-blood"
+                            b.status === "PROPOSED" || b.status === "ACTIVE" ? "text-gold" : b.status === "DECLINED" ? "text-ink-dim" : won ? "text-emerald-300" : "text-blood"
                           }
                         >
-                          {b.status === "PROPOSED" ? "Pendiente" : b.status === "DECLINED" ? "Rechazada" : won ? "Victoria" : "Derrota"}
+                          {b.status === "PROPOSED" ? "Pendiente" : b.status === "ACTIVE" ? "En curso: un duelo por pareja" : b.status === "DECLINED" ? "Rechazada" : won ? "Victoria" : "Derrota"}
                         </span>
                       </div>
                       {b.status === "PROPOSED" && !b.isChallenger && (

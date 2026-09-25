@@ -82,15 +82,33 @@ try {
   await b1.page.waitForTimeout(1000);
   await b1.page.screenshot({ path: path.join(shotsDir, "b6-resolved-defender.png"), fullPage: true });
 
-  // A1 reloads to see the resolved outcome.
-  await a1.page.reload();
-  await a1.page.waitForTimeout(500);
-  await a1.page.screenshot({ path: path.join(shotsDir, "b7-resolved-challenger.png"), fullPage: true });
+  // Accepting starts one real duel per matchup: the battle is "en curso" until every duel ends.
+  await b1.page.reload();
+  await b1.page.waitForSelector('[data-testid="duel-yield"]', { timeout: 15000 });
+  const inProgress = (await b1.page.locator("body").innerText()).includes("En curso");
+  console.log("Battle shows as in progress after accepting:", inProgress);
 
-  const bodyText = await a1.page.locator("body").innerText();
-  const hasOutcome = bodyText.includes("Victoria") || bodyText.includes("Derrota");
-  console.log("Battle shows a resolved outcome for challenger:", hasOutcome);
-  console.log(hasOutcome ? "PASS" : "FAIL — check screenshots");
+  // Both members of crew A give up their duel ("Perdí"): the other side wins both, and the battle settles.
+  for (const p of [a1.page, a2.page]) {
+    await p.reload();
+    await p.waitForSelector('[data-testid="duel-yield"]', { timeout: 15000 });
+    await p.click('[data-testid="duel-yield"]');
+    await p.click('[data-testid="duel-yield-confirm"]');
+    await p.waitForTimeout(1200);
+  }
+  await a1.page.reload();
+  await a1.page.waitForTimeout(800);
+  await a1.page.screenshot({ path: path.join(shotsDir, "b7-resolved-challenger.png"), fullPage: true });
+  await b1.page.reload();
+  await b1.page.waitForTimeout(800);
+  await b1.page.screenshot({ path: path.join(shotsDir, "b6-resolved-defender.png"), fullPage: true });
+
+  const bodyA = await a1.page.locator("body").innerText();
+  const bodyB = await b1.page.locator("body").innerText();
+  const okA = bodyA.includes("Derrota");
+  const okB = bodyB.includes("Victoria");
+  console.log("Challenger sees a defeat:", okA, "| defender sees a victory:", okB);
+  console.log(inProgress && okA && okB ? "PASS" : "FAIL — check screenshots");
 } catch (e) {
   console.error("SCRIPT ERROR:", e);
 } finally {
