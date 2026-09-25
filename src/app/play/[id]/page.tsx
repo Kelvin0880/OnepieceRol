@@ -1042,7 +1042,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               <p className="text-sm mt-2">
                 Oleada {busterCall.wave}/{busterCall.waves}: <span className="text-gold">{busterCall.waveName}</span> · Hundidas: {busterCall.wavesBroken}/{busterCall.waves} · Tiempo: {Math.ceil(busterCall.msLeft / 60000)} min
               </p>
-              <p className="text-xs text-ink-dim mt-1">Si el tiempo se agota, la flota bombardea la isla: todos los que sigan aquí reciben un golpe brutal con tirada de muerte. Defiende o zarpa.</p>
+              <p className="text-xs text-ink-dim mt-1">Si el tiempo se agota, la flota bombardea la isla: todos los que sigan aquí reciben un golpe brutal y el juez decide el destino de quien caiga. Defiende o zarpa.</p>
               {battleError && <p className="text-blood text-xs mt-2">{battleError}</p>}
               <div className="flex flex-wrap gap-2 mt-3">
                 <button className="btn-gold px-4 py-2 text-sm" disabled={battleBusy || !!jointActive} onClick={() => doPrisonAction({ op: "defend" }, "buster-call")}>
@@ -1317,10 +1317,10 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                 <p className="text-xs text-ink-dim">
                   {jointFight.me.submitted
                     ? "Movimiento enviado. Esperando a tus aliados: cada quien responde a su ritmo, la ronda se resuelve cuando todos han movido."
-                    : "Describe tu movimiento abajo (lo que intentas, no lo que consigues). Cuando todos hayáis movido, el motor lo resuelve a la vez. Puedes escribir que huyes: se decide por velocidad."}
+                    : "Describe tu movimiento abajo (lo que intentas, no lo que consigues). Cuando todos hayáis movido, el árbitro lo lee a la vez. Puedes escribir que huyes: el árbitro decide quién escapa."}
                 </p>
               )}
-              {jointFight.status === "ACTIVE" && jointFight.me?.status === "DOWN" && <p className="text-sm text-blood">Estás caído. Tus aliados deciden el desenlace: si vencen, te sacan con vida; si caen, tirada de muerte.</p>}
+              {jointFight.status === "ACTIVE" && jointFight.me?.status === "DOWN" && <p className="text-sm text-blood">Estás caído. Tus aliados deciden el desenlace: si vencen, te sacan con vida; si caen, el juez decide tu destino.</p>}
             </div>
           )}
           <div className="panel p-4">

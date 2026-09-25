@@ -1,5 +1,5 @@
-import { Rng, rollInt, weightedPick } from "./rng";
-import { skillCheck, encounterDifficulty } from "./checks";
+import { Rng, hashString, weightedPick } from "./rng";
+import { encounterDifficulty } from "./checks";
 
 export interface OutcomeSpec {
   text: string[]; // one is picked at random for narrative variety
@@ -55,60 +55,53 @@ export interface EventResolutionResult {
   fruitDropRolled: boolean;
 }
 
-function pick<T>(rng: Rng, list: T[]): T {
-  return list[Math.floor(rng() * list.length)];
+function pickBy<T>(seed: string, list: T[]): T {
+  return list[hashString(seed) % list.length];
 }
 
-function rollRange(rng: Rng, range?: [number, number]): number {
+/** Rewards are the middle of their range: the result of the action is judged, not the amount. */
+function middle(range?: [number, number]): number {
   if (!range) return 0;
-  return rollInt(rng, range[0], range[1]);
+  return Math.round((range[0] + range[1]) / 2);
 }
 
 export function parseEventBody(bodyJson: string): EventBody {
   return JSON.parse(bodyJson) as EventBody;
 }
 
-/**
- * Resolves a single narrative beat: a d100 check against island/character
- * derived difficulty, picking one of four outcome tiers and rolling its
- * reward/penalty ranges. Combat events additionally hand back the enemy
- * spec so the caller can run `runCombat` for the tactical exchange.
- */
-export function resolveEvent(
-  rng: Rng,
-  body: EventBody,
-  modifier: number,
-  islandDanger: number,
-  characterLevel: number,
-  hasDevilFruit: boolean = false
-): EventResolutionResult {
-  const difficulty = body.difficultyOverride ?? encounterDifficulty(islandDanger, characterLevel);
-  const effectiveModifier = body.waterHazard && hasDevilFruit ? modifier - DEVIL_FRUIT_WATER_PENALTY : modifier;
-  const check = skillCheck(rng, effectiveModifier, difficulty);
+/** How hard the beat is for this character, as a number 0-99 for the AI judge. */
+export function eventDifficulty(body: EventBody, islandDanger: number, characterLevel: number, hasDevilFruit = false): number {
+  const base = body.difficultyOverride ?? encounterDifficulty(islandDanger, characterLevel);
+  // Devil fruit users cannot swim (canon): a water hazard is far harder for them.
+  return Math.min(99, base + (body.waterHazard && hasDevilFruit ? DEVIL_FRUIT_WATER_PENALTY : 0));
+}
 
+/**
+ * Turns an outcome already judged by the AI (ai/judge.ts judgeOutcome) into the beat's text and rewards.
+ * `seed` only picks which of the equivalent flavour texts is shown.
+ */
+export function resolveEvent(seed: string, outcome: EventResolutionResult["outcome"], body: EventBody): EventResolutionResult {
   const spec =
-    check.outcome === "critical_success"
+    outcome === "critical_success"
       ? body.onCriticalSuccess ?? body.onSuccess
-      : check.outcome === "success"
+      : outcome === "success"
       ? body.onSuccess
-      : check.outcome === "critical_fail"
+      : outcome === "critical_fail"
       ? body.onCriticalFail ?? body.onFail
       : body.onFail;
 
-  const succeeded = check.outcome === "success" || check.outcome === "critical_success";
-  const fruitDropRolled = succeeded && !!body.fruitDropChance && rng() < body.fruitDropChance;
-
   return {
-    flavorText: pick(rng, body.flavorTexts),
-    outcome: check.outcome,
-    narrative: pick(rng, spec.text),
-    berries: rollRange(rng, spec.berries),
-    xp: rollRange(rng, spec.xp),
-    bounty: rollRange(rng, spec.bounty),
-    hpLoss: rollRange(rng, spec.hpLoss),
+    flavorText: pickBy(`${seed}:flavor`, body.flavorTexts),
+    outcome,
+    narrative: pickBy(`${seed}:${outcome}`, spec.text),
+    berries: middle(spec.berries),
+    xp: middle(spec.xp),
+    bounty: middle(spec.bounty),
+    hpLoss: middle(spec.hpLoss),
     triggersCombat: !!body.enemy,
     enemy: body.enemy,
-    fruitDropRolled,
+    // A treasure that would change a character's life only turns up on a brilliant result.
+    fruitDropRolled: outcome === "critical_success" && !!body.fruitDropChance,
   };
 }
 

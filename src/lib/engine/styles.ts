@@ -1,4 +1,3 @@
-import type { Rng } from "./rng";
 
 /**
  * Combat styles: learnable martial arts and swordsmanship with their own mastery ladder (like Haki),
@@ -314,16 +313,16 @@ export function wieldedAttackBonus(bonuses: number[], slotsSkilled: number, mast
   return total;
 }
 
-export function trainStyleMastery(rng: Rng, mastery: number, willpower: number, level: number): number {
+export function trainStyleMastery(mastery: number, willpower: number, level: number): number {
   if (mastery >= 100) return 0;
   const base = 3 + willpower * 0.08 + level * 0.1;
-  const gain = Math.max(1, Math.round(base * (1 - mastery / 125)) + (rng() < 0.3 ? 1 : 0));
+  const gain = Math.max(1, Math.round(base * (1 - mastery / 125)));
   return Math.min(gain, 100 - mastery);
 }
 
-export function styleGrowthFromUse(rng: Rng, mastery: number): number {
-  if (mastery >= 100) return 0;
-  return rng() < 0.3 * (1 - mastery / 130) ? 1 : 0;
+/** Using a style in a fight teaches it a little: one point per use, fading as it nears mastery. */
+export function styleGrowthFromUse(mastery: number): number {
+  return mastery >= 100 ? 0 : 1;
 }
 
 /** One block of text for the narrator: what styles the character really knows, at what level, with which techniques. */

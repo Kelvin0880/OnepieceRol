@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Den Den Mushi against the dev DB: a message only reaches its own faction, and abuse is refused.
 // Usage: npx tsx scripts/denden-check.ts
 import "dotenv/config";

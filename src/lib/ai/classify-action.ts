@@ -129,7 +129,7 @@ function buildClassifyPrompt(freeText: string, validActions: ActionId[], sceneCo
   const canLeaveParty = validActions.includes("leave_party");
   const guidance = narrateIsDefault
     ? "Esto es un rol libre de verdad: el jugador puede escribir cualquier cosa — caminar, hablar con alguien, coquetear, comprar, beber, merodear, pensar, lo que sea. " +
-      "Usa 'narrate' (pura interacción de rol, sin dados) para CUALQUIER texto que no sea claramente entrenar físicamente/técnicas, descansar/dormir, " +
+      "Usa 'narrate' (pura interacción de rol, sin resultado mecánico) para CUALQUIER texto que no sea claramente entrenar físicamente/técnicas, descansar/dormir, " +
       "ni una decisión arriesgada y decisiva de avanzar la trama (como 'exploro la isla a fondo', 'me interno en la jungla a buscar algo', 'busco pelea con quien sea', 'me arriesgo a robar esto'). " +
       "Esas decisiones arriesgadas y decisivas van en 'explore' (salir a buscar peligro u oportunidad SIN un objetivo concreto). " +
       (validActions.includes("recruit")

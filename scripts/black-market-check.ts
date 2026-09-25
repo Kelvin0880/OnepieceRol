@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Black market against the dev DB: state only on lawless islands, purchases apply their effect,
 // stings happen. Usage: npx tsx scripts/black-market-check.ts
 import "dotenv/config";

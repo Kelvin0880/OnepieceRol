@@ -1,4 +1,3 @@
-import { Rng } from "./rng";
 
 /**
  * Poneglyphs are carved stone — nobody steals them back. What a reader
@@ -27,11 +26,10 @@ export function decayPursuitHeat(currentHeat: number): number {
  * Scales with heat but is capped well below certainty — even freshly
  * marked, you get to actually play, not just get executed on sight.
  */
-export function hunterAmbushChance(heat: number): number {
-  return Math.min(0.35, heat / 300);
-}
-
-export function rollHunterAmbush(rng: Rng, heat: number): boolean {
-  if (heat <= 0) return false;
-  return rng() < hunterAmbushChance(heat);
+/**
+ * Heat drops by a fixed step on every explore, so the pursuer catches up on every third step of the countdown while
+ * the heat is still hot: pressure that eases as it cools, with nothing rolled.
+ */
+export function hunterAmbushDue(heat: number): boolean {
+  return heat >= 30 && Math.floor(heat / 3) % 3 === 0;
 }

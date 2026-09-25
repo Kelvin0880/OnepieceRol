@@ -1,4 +1,5 @@
 process.env.REFEREE_STUB = "1"; // the AI referee is replaced by the deterministic stand-in
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Crew battles (2v2) are now real duels: propose -> accept -> one duel per matchup -> the battle settles when all end.
 // Usage: npx tsx scripts/battle-check.ts
 import "dotenv/config";

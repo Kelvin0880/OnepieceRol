@@ -43,14 +43,13 @@ export async function findPoneglyphGuardian(islandId: string): Promise<{ body: E
  */
 export async function applyGuardianPresence(
   subordinate: GuardianEnemy,
-  rng: Rng,
   now = new Date()
 ): Promise<{ enemy: GuardianEnemy; meeting: "actor" | "subordinate"; note: string | null }> {
   if (!subordinate.worldActorId) return { enemy: subordinate, meeting: "subordinate", note: null };
   const actor = await prisma.worldActor.findUnique({ where: { id: subordinate.worldActorId } });
   if (!actor) return { enemy: subordinate, meeting: "subordinate", note: null };
   const home = isActorHome(actor.busyUntil, now);
-  const meeting = guardianMeeting(rng, home);
+  const meeting = guardianMeeting(home);
   if (meeting === "subordinate") {
     return { enemy: subordinate, meeting, note: home ? null : `${actor.name} no está aquí ahora mismo: sus hombres guardan el lugar en su ausencia.` };
   }

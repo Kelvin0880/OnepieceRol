@@ -1,10 +1,9 @@
 import { prisma } from "../db";
-import { Rng } from "../engine/rng";
+import { judgeChoice } from "../ai/judge";
 import {
   consequenceDelayMs,
   consequenceRipe,
-  rollConsequenceTrigger,
-  rollOutcome,
+  OUTCOME_OPTIONS,
   boonRewards,
   tributeRewards,
   returningEnemy,
@@ -51,12 +50,23 @@ export async function recordConsequence(characterId: string, enemy: { name: stri
 export async function rollConsequenceForExplore(
   character: { id: string; maxHp: number },
   playerStats: { atk: number; def: number; spd: number },
-  islandDanger: number,
-  rng: Rng
+  islandDanger: number
 ): Promise<ConsequenceResult | null> {
   const ripe = await prisma.consequence.findFirst({ where: { characterId: character.id, resolvedAt: null, dueAt: { lte: new Date() } }, orderBy: { dueAt: "asc" } });
-  if (!ripe || !consequenceRipe(ripe.dueAt.getTime(), Date.now()) || !rollConsequenceTrigger(rng)) return null;
-  const outcome = rollOutcome(rng, ripe.kind as ConsequenceKind);
+  if (!ripe || !consequenceRipe(ripe.dueAt.getTime(), Date.now())) return null;
+  const kind = ripe.kind as ConsequenceKind;
+  const [first, second] = OUTCOME_OPTIONS[kind];
+  const labels: Record<ConsequenceOutcome, string> = {
+    boon: "devuelve el favor al que le perdonó",
+    betrayal: "se vuelve contra quien le perdonó",
+    avenger: "alguien cercano viene a vengarse",
+    tribute: "el miedo hace que la gente pague tributo",
+  };
+  const outcome = await judgeChoice(
+    `${ripe.enemyName}${kind === "spared" ? " fue perdonado" : " fue derrotado sin piedad"} en ${ripe.islandName}. Ha pasado un tiempo: ¿cómo vuelve a cruzarse con quien lo hizo? Decide según su carácter y sus motivos.`,
+    [{ id: first, label: labels[first] }, { id: second, label: labels[second] }],
+    character.id
+  );
   await prisma.consequence.update({ where: { id: ripe.id }, data: { resolvedAt: new Date(), outcome } });
 
   if (outcome === "boon") {

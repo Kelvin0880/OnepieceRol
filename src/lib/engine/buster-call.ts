@@ -1,4 +1,3 @@
-import { Rng } from "./rng";
 import { actorCombatStats } from "./guardian";
 
 /**
@@ -12,17 +11,11 @@ export const BUSTER_DURATION_MS = 40 * 60 * 1000;
 export const BOMBARDMENT_HP_FRACTION = 0.7;
 const FLEET_POWER = 80; // power level the wave forces are modelled on; scaled up per wave
 
-/** Chance an Impel Down breakout from this cell (or rescue out of it) brings the fleet: none for shallow cells, certain in the deepest. */
-export function busterCallChance(cellLevel: number): number {
-  if (cellLevel <= 2) return 0;
-  if (cellLevel === 3) return 0.3;
-  if (cellLevel === 4) return 0.6;
-  return 1;
-}
-
-export function rollBusterCall(rng: Rng, cellLevel: number): boolean {
-  const p = busterCallChance(cellLevel);
-  return p > 0 && rng() < p;
+/** The fleet answers a successful breakout from deep cells: never from shallow ones, only a spectacular one from level 3, any from level 4, always from the deepest. */
+export function busterCallTriggered(cellLevel: number, spectacular: boolean): boolean {
+  if (cellLevel <= 2) return false;
+  if (cellLevel === 3) return spectacular;
+  return true;
 }
 
 export const WAVE_NAMES = ["Vanguardia de acorazados", "Flota de bombardeo", "Almirantazgo de la Buster Call"];

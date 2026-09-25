@@ -60,7 +60,7 @@ describe("isYonkoClass", () => {
   });
 });
 
-import { pickSeaAmbush, rollSeaAmbush, seaAmbushChance, seaAmbushPower } from "./voyage";
+import { pickSeaAmbush, seaAmbushChance, seaAmbushPower } from "./voyage";
 
 describe("sea ambushes", () => {
   it("never happens on a single hop and grows with distance, capped", () => {
@@ -68,11 +68,6 @@ describe("sea ambushes", () => {
     expect(seaAmbushChance(2)).toBeCloseTo(0.19);
     expect(seaAmbushChance(5)).toBeGreaterThan(seaAmbushChance(3));
     expect(seaAmbushChance(30)).toBe(0.55);
-  });
-  it("rolls against the chance", () => {
-    expect(rollSeaAmbush(() => 0.99, 6)).toBe(false);
-    expect(rollSeaAmbush(() => 0.01, 6)).toBe(true);
-    expect(rollSeaAmbush(() => 0.0, 1)).toBe(false);
   });
   it("picks a faction-appropriate ambusher and falls back for unknown factions", () => {
     expect(pickSeaAmbush(() => 0, "PIRATE").name).toBe("Patrulla de la Marina");

@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Direct integration check of the prison game-logic functions (capture,
 // bail, rescue), bypassing combat RNG so the outcome is deterministic.
 // Exercises the real functions against the real dev database.

@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Impel Down check (2026-09-23): a hugely wanted pirate is shipped to the
 // island itself, cell level by bounty, no bail, brutal rescue wall.
 // Usage: npx tsx scripts/impel-check.ts

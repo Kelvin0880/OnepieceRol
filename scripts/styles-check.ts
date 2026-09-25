@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Combat styles against the dev DB: learning rules, training, weapons in hand, the effect on the real combatant,
 // technique use, and the canon cast's styles. Usage: npx tsx scripts/styles-check.ts
 import "dotenv/config";

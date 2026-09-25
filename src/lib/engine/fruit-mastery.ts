@@ -1,4 +1,3 @@
-import { Rng } from "./rng";
 
 /**
  * A devil fruit never gives its full power at once. Three phases:
@@ -33,22 +32,20 @@ export function fruitStaminaMultiplier(phase: FruitPhase): number {
 }
 
 /** Mastery gained from using the fruit in a fight, with diminishing returns like haki training. */
-export function masteryGainFromUse(rng: Rng, mastery: number, intellect: number): number {
+export function masteryGainFromUse(mastery: number, intellect: number): number {
   if (mastery >= MASTERY_MAX) return 0;
   const base = 2 + Math.round(intellect * 0.06);
-  const diminishing = 1 - mastery / 140;
-  const gained = Math.max(1, Math.round(base * diminishing * (rng() < 0.1 ? 2 : 1)));
+  const gained = Math.max(1, Math.round(base * (1 - mastery / 140)));
   return Math.min(gained, MASTERY_MAX - mastery);
 }
 
-/** Dedicated training focused on the fruit — a bigger, steadier gain than incidental use. */
-export function trainFruitMastery(rng: Rng, mastery: number, intellect: number): { gained: number; breakthrough: boolean } {
+/** Dedicated training focused on the fruit: a bigger, steadier gain than incidental use; a new phase is a breakthrough. */
+export function trainFruitMastery(mastery: number, intellect: number): { gained: number; breakthrough: boolean } {
   if (mastery >= MASTERY_MAX) return { gained: 0, breakthrough: false };
-  const roll = rng();
-  if (roll < 0.1) return { gained: 0, breakthrough: false };
-  const breakthrough = roll > 0.95;
   const base = 3 + Math.round(intellect * 0.1);
-  const gained = Math.max(1, Math.round(base * (1 - mastery / 140) * (breakthrough ? 3 : 1)));
+  let gained = Math.max(1, Math.round(base * (1 - mastery / 140)));
+  const breakthrough = Math.floor((mastery + gained) / 25) > Math.floor(mastery / 25);
+  if (breakthrough) gained *= 2;
   return { gained: Math.min(gained, MASTERY_MAX - mastery), breakthrough };
 }
 

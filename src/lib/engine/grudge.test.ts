@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mulberry32 } from "./rng";
-import { heatAfterGrudgeIncident, heatAfterMercy, decayGrudgeHeat, grudgeAmbushChance, rollGrudgeAmbush, MAX_GRUDGE_HEAT } from "./grudge";
+import { heatAfterGrudgeIncident, heatAfterMercy, decayGrudgeHeat, grudgeAmbushDue, MAX_GRUDGE_HEAT } from "./grudge";
 
 describe("heatAfterGrudgeIncident", () => {
   it("increases heat on escape", () => {
@@ -54,34 +54,15 @@ describe("decayGrudgeHeat", () => {
   });
 });
 
-describe("grudgeAmbushChance", () => {
-  it("is zero at zero heat", () => {
-    expect(grudgeAmbushChance(0)).toBe(0);
+describe("grudgeAmbushDue", () => {
+  it("never at zero or low heat", () => {
+    expect(grudgeAmbushDue(0)).toBe(false);
+    expect(grudgeAmbushDue(10)).toBe(false);
   });
-
-  it("increases with heat", () => {
-    expect(grudgeAmbushChance(100)).toBeGreaterThan(grudgeAmbushChance(20));
-  });
-
-  it("never exceeds the cap even at max heat", () => {
-    expect(grudgeAmbushChance(MAX_GRUDGE_HEAT)).toBeLessThanOrEqual(0.3);
-  });
-});
-
-describe("rollGrudgeAmbush", () => {
-  it("never fires at zero heat", () => {
-    for (let seed = 0; seed < 100; seed++) {
-      expect(rollGrudgeAmbush(mulberry32(seed), 0)).toBe(false);
-    }
-  });
-
-  it("fires sometimes at high heat across many seeds", () => {
-    let hits = 0;
-    const trials = 500;
-    for (let seed = 0; seed < trials; seed++) {
-      if (rollGrudgeAmbush(mulberry32(seed), MAX_GRUDGE_HEAT)) hits++;
-    }
-    expect(hits).toBeGreaterThan(0);
-    expect(hits / trials).toBeLessThan(0.5);
+  it("comes on a fixed cadence while the grudge is hot, and is the same every time for the same heat", () => {
+    const due = Array.from({ length: 150 }, (_, h) => grudgeAmbushDue(h));
+    expect(due.some(Boolean)).toBe(true);
+    expect(due.filter(Boolean).length).toBeLessThan(75);
+    expect(grudgeAmbushDue(100)).toBe(grudgeAmbushDue(100));
   });
 });

@@ -7,7 +7,6 @@ import {
   drawBracket,
   gladiatorCombatant,
   gladiatorNames,
-  runBout,
   choosePrize,
   pickKind,
   nextAction,
@@ -57,44 +56,6 @@ describe("gladiators", () => {
     expect(names).toHaveLength(20);
     expect(names).not.toContain("Brutus");
     expect(new Set(names).size).toBe(20);
-  });
-});
-
-describe("runBout", () => {
-  it("always ends with a winner, never mutates the fighters, and is deterministic per seed", () => {
-    const a = gladiatorCombatant("A", 10, false);
-    const b = gladiatorCombatant("B", 10, false);
-    const snapshot = JSON.stringify([a, b]);
-    const r1 = runBout(mulberry32(5), a, b);
-    const r2 = runBout(mulberry32(5), a, b);
-    expect(r1).toEqual(r2);
-    expect(["a", "b"]).toContain(r1.winner);
-    expect(JSON.stringify([a, b])).toBe(snapshot);
-  });
-  it("the stronger fighter wins most of the time, but not always", () => {
-    const strong = gladiatorCombatant("S", 16, false);
-    const weak = gladiatorCombatant("W", 14, false);
-    let strongWins = 0;
-    for (let s = 1; s <= 300; s++) if (runBout(mulberry32(s), strong, weak).winner === "a") strongWins++;
-    expect(strongWins).toBeGreaterThan(160);
-    expect(strongWins).toBeLessThan(300);
-  });
-  it("a good tactic tilts an even bout", () => {
-    const a = gladiatorCombatant("A", 12, false);
-    const b = gladiatorCombatant("B", 12, false);
-    let plain = 0;
-    let tactic = 0;
-    for (let s = 1; s <= 300; s++) {
-      if (runBout(mulberry32(s), a, b).winner === "a") plain++;
-      if (runBout(mulberry32(s), a, b, 15, 0).winner === "a") tactic++;
-    }
-    expect(tactic).toBeGreaterThan(plain);
-  });
-  it("reports a health percentage in range", () => {
-    const r = runBout(mulberry32(9), gladiatorCombatant("A", 8, false), gladiatorCombatant("B", 8, false));
-    expect(r.aHpPct).toBeGreaterThanOrEqual(0);
-    expect(r.bHpPct).toBeLessThanOrEqual(100);
-    expect(r.rounds).toBeGreaterThan(0);
   });
 });
 

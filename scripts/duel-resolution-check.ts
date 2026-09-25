@@ -1,4 +1,5 @@
 process.env.REFEREE_STUB = "1"; // the AI referee is replaced by the deterministic stand-in
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Player duels: friendly surrender, fights to the death, kill / capture / spare, fleeing and the news reports (dev DB, seeded).
 // Usage: npx tsx scripts/duel-resolution-check.ts
 import "dotenv/config";

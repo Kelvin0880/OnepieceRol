@@ -169,7 +169,7 @@ const sceneBase: SceneNarrationInput = {
 describe("buildSceneNarrationPrompt", () => {
   it("forbids granting or altering any mechanical outcome", () => {
     const { system } = buildSceneNarrationPrompt(sceneBase);
-    expect(system).toMatch(/SIN tiradas de dados ni resultados mecánicos/);
+    expect(system).toMatch(/SIN resultados mecánicos/);
     expect(system).toMatch(/Nunca otorgues ni quites berries/);
   });
 
@@ -203,7 +203,7 @@ const partySceneBase: PartySceneNarrationInput = {
 describe("buildPartySceneNarrationPrompt", () => {
   it("forbids granting or altering any mechanical outcome, same as the solo scene prompt", () => {
     const { system } = buildPartySceneNarrationPrompt(partySceneBase);
-    expect(system).toMatch(/SIN tiradas de dados ni resultados mecánicos/);
+    expect(system).toMatch(/SIN resultados mecánicos/);
     expect(system).toMatch(/Nunca otorgues ni quites berries/);
   });
 

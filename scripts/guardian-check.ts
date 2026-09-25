@@ -1,10 +1,10 @@
 process.env.REFEREE_STUB = "1"; // combat is judged by the AI; scripted checks use the deterministic stand-in
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Poneglyph guardians + stealth (2026-09-24). Direct function calls against the
 // dev DB (real AI narration is used where the game calls it).
 // Usage: npx tsx scripts/guardian-check.ts
 import "dotenv/config";
 import { prisma } from "../src/lib/db";
-import { liveRng } from "../src/lib/engine/rng";
 import { applyGuardianPresence, findPoneglyphGuardian } from "../src/lib/game/guardian";
 import { sneakPoneglyph, resolveMercyChoice, GameActionError } from "../src/lib/game/perform-action";
 
@@ -30,14 +30,14 @@ async function main() {
   await prisma.worldActor.update({ where: { id: teach.id }, data: { busyUntil: null } });
   const sub = { ...guardian!.enemy, isBoss: true };
   let actors = 0;
-  for (let i = 0; i < 200; i++) if ((await applyGuardianPresence(sub, liveRng())).enemy.isActor) actors++;
-  assert(actors > 110 && actors < 190, `home holder shows up in person most of the time (${actors}/200)`);
-  const real = (await applyGuardianPresence(sub, () => 0)).enemy;
+  for (let i = 0; i < 200; i++) if ((await applyGuardianPresence(sub)).enemy.isActor) actors++;
+  assert(actors === 200, `a home holder always receives in person (${actors}/200)`);
+  const real = (await applyGuardianPresence(sub)).enemy;
   assert(real.isActor === true && real.name === teach.name && real.hp > guardian!.enemy.hp * 1.5, `the real Teach is far tougher than the lieutenant (${real.hp} hp vs ${guardian!.enemy.hp})`);
 
   await prisma.worldActor.update({ where: { id: teach.id }, data: { busyUntil: new Date(Date.now() + 3600_000) } });
   let awayActors = 0;
-  for (let i = 0; i < 100; i++) if ((await applyGuardianPresence(sub, () => 0)).enemy.isActor) awayActors++;
+  for (let i = 0; i < 100; i++) if ((await applyGuardianPresence(sub)).enemy.isActor) awayActors++;
   assert(awayActors === 0, "with the holder away on world business only the subordinate guards");
 
   // --- Stealth: a master reads it, a clumsy one brings the guardian ---

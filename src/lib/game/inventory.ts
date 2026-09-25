@@ -1,6 +1,5 @@
 import { prisma } from "../db";
 import { DEVIL_FRUIT_CATALOG } from "./devil-fruit-catalog";
-import { liveRng } from "../engine/rng";
 import { fruitBlackMarketPrice } from "../engine/economy";
 import { INVENTORY_SLOTS } from "../engine/inventory";
 import {
@@ -9,7 +8,7 @@ import {
   describeInventory,
   getItemDef,
   removeOne,
-  rollLoot,
+  lootFor,
   specialtyIdsFor,
   sellValue,
   useItem,
@@ -128,7 +127,7 @@ export async function grantItem(characterId: string, itemId: string, quantity = 
 
 export async function grantLoot(characterId: string, danger: number, outcome: "success" | "critical_success"): Promise<string | null> {
   try {
-    const drop = rollLoot(liveRng(), danger, outcome);
+    const drop = lootFor(`${characterId}:${Date.now()}`, danger, outcome);
     return drop ? await grantItem(characterId, drop.id, drop.quantity) : null;
   } catch {
     return null;

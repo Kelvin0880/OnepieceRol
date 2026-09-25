@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Long voyages and the Yonko tool against the dev DB (needs a seeded DB: npm run db:reset).
 // Usage: npx tsx scripts/voyage-check.ts
 import "dotenv/config";

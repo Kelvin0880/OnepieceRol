@@ -1,5 +1,5 @@
 import { prisma } from "../db";
-import { liveRng } from "../engine/rng";
+import { varietyRng } from "../engine/rng";
 import { runWorldTick } from "../engine/world";
 import { narrateNews, narrateBountyDigest } from "../ai/narrate";
 import { tickWorldArcs, moveActorsTick, actorLocation } from "./world-arcs";
@@ -45,7 +45,7 @@ async function tickWorldIfDueInner(): Promise<void> {
   const [templates, actors] = await Promise.all([prisma.worldEventTemplate.findMany(), prisma.worldActor.findMany({ where: { status: "ACTIVE" } })]);
 
   const result = runWorldTick(
-    liveRng(),
+    varietyRng(`tick:${Math.floor(now.getTime() / 60_000)}`),
     now,
     clock.heat,
     templates.map((t) => {
@@ -145,7 +145,8 @@ async function tickBountyDigestIfDueInner(): Promise<void> {
   });
   if (candidates.length === 0) return;
 
-  const sample = [...candidates].sort(() => Math.random() - 0.5).slice(0, DIGEST_SAMPLE_SIZE);
+  const shuffle = varietyRng(`digest:${Math.floor(Date.now() / 3_600_000)}`);
+  const sample = candidates.map((a) => ({ a, k: shuffle() })).sort((x, y) => x.k - y.k).map((x) => x.a).slice(0, DIGEST_SAMPLE_SIZE);
   const entries = sample.map((a) => ({ name: a.name, factionName: a.factionName, canonBounty: formatBerries(a.canonBounty!) }));
 
   const fallbackBody = entries.map((e) => `${e.name} (${e.factionName}): ${e.canonBounty}`).join(" · ");

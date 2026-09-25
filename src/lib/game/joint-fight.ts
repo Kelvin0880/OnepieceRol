@@ -1,9 +1,7 @@
 import { prisma } from "../db";
-import { liveRng } from "../engine/rng";
 import { Combatant } from "../engine/combat";
-import { attemptFlee } from "../engine/encounter";
 import { berryReward, bountyReward } from "../engine/economy";
-import { resolveJointRound, scaleEnemyForGroup, JointFighter } from "../engine/joint-fight";
+import { scaleEnemyForGroup, JointFighter } from "../engine/joint-fight";
 import { TECHNIQUE_LABELS, TechniqueId } from "../engine/techniques";
 import { classifyPlayerAction } from "../ai/classify-action";
 import { refereeExchange, getRecentScene } from "../ai/narrate";
@@ -16,6 +14,7 @@ import { prepareFighter, combatProgressData, PreparedFighter, characterCapabilit
 import { resolveEnemyKit } from "./enemy-kit";
 import { toCombatant } from "./derive";
 import { postNews, handleDeathCheck } from "./death-resolution";
+import { judgeFate } from "../ai/judge";
 import { applyBountyOrNotoriety } from "./reputation";
 import { grantPoneglyphRead } from "./poneglyph";
 import { recordGrudgeIncident } from "./grudges";
@@ -233,7 +232,6 @@ async function resolveJointRoundFor(fightId: string) {
   const round = start.round;
   const enemy = JSON.parse(fight.enemyJson) as JointEnemy;
   const rewards = JSON.parse(fight.rewardsJson) as JointRewards;
-  const rng = liveRng();
   const enemyLevel = enemy.level ?? estimateLevel(enemy.atk, enemy.def);
   // The enemy tires as the fight drags on, exactly like the players do.
   const enemyBase: Combatant = applyFatigueToCombatant(
@@ -252,6 +250,7 @@ async function resolveJointRoundFor(fightId: string) {
 
   const fled: string[] = [];
   const failedFlight: string[] = [];
+  const fleeAttempts = new Map<string, string>();
   const guarding: string[] = [];
   const prepared = new Map<string, PreparedFighter>();
   const fighters: JointFighter[] = [];
@@ -278,15 +277,9 @@ async function resolveJointRoundFor(fightId: string) {
     let tactic = p.tactic;
     let text = p.action ?? "";
     if (p.action === FLEE_TOKEN) {
-      const flee = attemptFlee(rng, toCombatant(c), enemyBase);
-      if (flee.success) {
-        fled.push(p.characterId);
-        actionsForNarration.push({ name: p.name, text: "huye de la pelea con éxito" });
-        continue;
-      }
-      failedFlight.push(p.name);
-      tactic = FLEE_FAILED_TACTIC;
-      text = "intenta huir pero no lo consigue";
+      // A flight is an intention like any other: the referee decides who gets away ("huyen") and who is caught.
+      fleeAttempts.set(p.characterId, p.name);
+      text = "intenta huir del combate";
     } else if (!p.action) {
       guarding.push(p.name);
       tactic = GUARD_TACTIC;
@@ -364,15 +357,24 @@ async function resolveJointRoundFor(fightId: string) {
       ])
     : [];
   const foe = applied[applied.length - 1];
+  const fledNames = new Set((verdict?.fled ?? []).map((n) => n.toLowerCase()));
+  for (const [id, name] of fleeAttempts) {
+    if (fledNames.has(name.toLowerCase())) fled.push(id);
+    else failedFlight.push(name);
+  }
   const result = {
-    fighters: fighters.map((f, i) => ({ id: f.id, hpAfter: applied[i]?.hpAfter ?? f.hp, down: (applied[i]?.hpAfter ?? f.hp) <= 0, staminaLoss: applied[i]?.staminaLoss ?? 0, staminaAfter: applied[i]?.staminaAfter ?? null })),
+    fighters: fighters.map((f, i) => {
+      const gone = fled.includes(f.id);
+      const hpAfter = gone ? f.hp : applied[i]?.hpAfter ?? f.hp;
+      return { id: f.id, hpAfter, down: hpAfter <= 0, staminaLoss: gone ? 0 : applied[i]?.staminaLoss ?? 0, staminaAfter: gone ? null : applied[i]?.staminaAfter ?? null };
+    }),
     enemyHpAfter: foe ? foe.hpAfter : fight.enemyHp,
     log: [] as { attacker: string; defender: string; damage: number }[],
     finished: !!foe && (foe.hpAfter <= 0 || applied.slice(0, -1).every((x) => x.hpAfter <= 0)),
     outcome: (!foe ? "defeat" : foe.hpAfter <= 0 ? "victory" : applied.slice(0, -1).every((x) => x.hpAfter <= 0) ? "defeat" : null) as "victory" | "defeat" | null,
   };
   // Everyone escaped: nobody won, nobody died.
-  const allFled = fighters.length === 0 && fled.length > 0;
+  const allFled = fled.length > 0 && fled.length === fighters.length;
   const finished = result.finished || allFled;
   const outcome = allFled ? null : result.outcome;
 
@@ -388,7 +390,7 @@ async function resolveJointRoundFor(fightId: string) {
     const c = chars.get(id)!;
     const after = result.fighters.find((f) => f.id === id);
     const startHp = fighting.find((p) => p.characterId === id)?.hp ?? c.hp;
-    await prisma.character.update({ where: { id }, data: { hp: Math.max(0, after?.hpAfter ?? c.hp), ...combatProgressData(c, prep, rng, Math.max(0, startHp - (after?.hpAfter ?? startHp)), after?.staminaLoss) } });
+    await prisma.character.update({ where: { id }, data: { hp: Math.max(0, after?.hpAfter ?? c.hp), ...combatProgressData(c, prep, Math.max(0, startHp - (after?.hpAfter ?? startHp)), after?.staminaLoss) } });
   }
 
   const narration = verdict ? verdict.narration : "Todos han escapado del combate.";
@@ -434,7 +436,12 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
     if (npc.characterId.startsWith(`${NPC_PREFIX}ally:`)) continue; // a pledged actor is not a row we own
     const id = npc.characterId.slice(NPC_PREFIX.length);
     const down = npc.status === "DOWN";
-    if (down && outcome === "defeat" && Math.random() < 0.5) {
+    const owner = humans.find((h) => npc.characterId.length > 0 && h.status !== "FLED");
+    const fate =
+      down && outcome === "defeat"
+        ? await judgeFate({ victim: { name: npc.name, level: 1, durability: 20, willpower: 20, faction: "PIRATE" }, cause: `Cayó luchando contra ${enemy.name}.`, killer: { name: enemy.name, personality: enemy.personality, isBoss: enemy.isBoss }, islandName: "el lugar del combate", islandDanger: rewards.islandDanger, characterId: owner?.characterId })
+        : null;
+    if (fate?.fate === "death") {
       await prisma.nPCCompanion.update({ where: { id }, data: { status: CharacterStatus.DEAD, hp: 0, deathCause: `Cayó luchando contra ${enemy.name}.`, diedAt: new Date() } });
       closing.push(`${npc.name} no sobrevive a la derrota.`);
     } else {
@@ -486,7 +493,7 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
       if (!c || c.status !== CharacterStatus.ALIVE) continue;
       if (p.status === "DOWN") {
         // Real stakes: a fallen ally who wasn't rescued by a win faces the ordinary death roll.
-        const death = await handleDeathCheck(c, 0, `Cayó en grupo contra ${enemy.name}.`, newsLog);
+        const death = await handleDeathCheck({ ...c, faction: c.faction, currentIslandId: c.currentIslandId }, 0, `Cayó en grupo contra ${enemy.name}.`, newsLog, { name: enemy.name, personality: enemy.personality, isBoss: enemy.isBoss });
         if (death.died) closing.push(`${c.name} ha muerto.`);
         else {
           await prisma.character.update({ where: { id: c.id }, data: { hp: death.finalHp } });

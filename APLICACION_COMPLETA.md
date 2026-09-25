@@ -331,3 +331,6 @@ Errores tipados (`GameActionError`, `DuelError`, `CrewError`, `BattleError`, `Pr
 ## 10. Lo que NO está hecho (hoja de ruta)
 
 Las fases 2 y 3 están completas (ver 4.15 y 4.16). Pendiente: balanceo con datos de juego reales (final, territorios difíciles, ritmo de eventos mundiales), un modo de mundo instanciado por jugador (hoy el mundo es único y compartido; solo el personaje, su escena y su memoria son propios), maestros de técnicas, subastas de frutas y coliseo sin permadeath.
+
+## Sin dados en ningún ámbito (2026-09-25)
+No queda ninguna tirada: juez/árbitro IA para todo resultado (explorar, huida, muerte a 0 de vida, sigilo, fugas, reclutar, simulaciones, Coliseo, 2v2/4v4); el código solo limita y aplica. Sustituye cualquier mención anterior a azar/dados en este documento. El Coliseo aplaza una ronda mientras un competidor esté en una pelea propia; el rival ataca con secuencias variadas y se adapta.

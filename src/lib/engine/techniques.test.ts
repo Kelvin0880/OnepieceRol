@@ -48,11 +48,8 @@ describe("resolveTechnique", () => {
 
 describe("hakiGrowthFromUse", () => {
   it("only haki techniques grow, and never past 100", () => {
-    const rng = mulberry32(9);
-    expect(hakiGrowthFromUse(rng, "fruit", 10)).toBe(0);
-    expect(hakiGrowthFromUse(rng, "armament", 100)).toBe(0);
-    let grew = 0;
-    for (let i = 0; i < 300; i++) grew += hakiGrowthFromUse(rng, "observation", 10);
-    expect(grew).toBeGreaterThan(0);
+    expect(hakiGrowthFromUse("fruit", 10)).toBe(0);
+    expect(hakiGrowthFromUse("armament", 100)).toBe(0);
+    expect(hakiGrowthFromUse("observation", 10)).toBe(1);
   });
 });

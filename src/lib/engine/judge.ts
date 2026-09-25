@@ -1,0 +1,122 @@
+/**
+ * The judge: what used to be a dice roll is decided by the AI with logic. This file is the pure half: the shapes,
+ * the strict parsing of the model's JSON, and the deterministic stand-in used only by scripted checks (JUDGE_STUB=1).
+ * No randomness anywhere in here.
+ */
+
+export type JudgeOutcome = "critical_success" | "success" | "fail" | "critical_fail";
+export const JUDGE_OUTCOMES: JudgeOutcome[] = ["critical_success", "success", "fail", "critical_fail"];
+
+const OUTCOME_WORDS: Record<string, JudgeOutcome> = {
+  exito_total: "critical_success",
+  exito_brillante: "critical_success",
+  exito: "success",
+  fallo: "fail",
+  fallo_grave: "critical_fail",
+  desastre: "critical_fail",
+  critical_success: "critical_success",
+  success: "success",
+  fail: "fail",
+  critical_fail: "critical_fail",
+};
+
+const norm = (s: unknown) => String(s ?? "").normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim().replace(/\s+/g, "_");
+
+function firstJson(raw: string): Record<string, unknown> | null {
+  const start = raw.indexOf("{");
+  const end = raw.lastIndexOf("}");
+  if (start < 0 || end <= start) return null;
+  try {
+    const obj = JSON.parse(raw.slice(start, end + 1));
+    return obj && typeof obj === "object" ? (obj as Record<string, unknown>) : null;
+  } catch {
+    return null;
+  }
+}
+
+export interface OutcomeVerdict {
+  outcome: JudgeOutcome;
+  reason: string;
+}
+
+export function parseOutcomeVerdict(raw: string): OutcomeVerdict | null {
+  const o = firstJson(raw);
+  const outcome = o ? OUTCOME_WORDS[norm(o.resultado ?? o.outcome)] : undefined;
+  if (!o || !outcome) return null;
+  return { outcome, reason: String(o.motivo ?? o.reason ?? "").slice(0, 400) };
+}
+
+export type Fate = "death" | "captured" | "survives";
+const FATE_WORDS: Record<string, Fate> = { muerte: "death", muere: "death", death: "death", captura: "captured", capturado: "captured", captured: "captured", sobrevive: "survives", vive: "survives", survives: "survives" };
+
+export interface FateVerdict {
+  fate: Fate;
+  reason: string;
+  companionsLost: string[];
+}
+
+export function parseFateVerdict(raw: string): FateVerdict | null {
+  const o = firstJson(raw);
+  const fate = o ? FATE_WORDS[norm(o.destino ?? o.fate)] : undefined;
+  if (!o || !fate) return null;
+  const lost = Array.isArray(o.companeros_caidos) ? o.companeros_caidos.filter((x): x is string => typeof x === "string").slice(0, 6) : [];
+  return { fate, reason: String(o.motivo ?? o.reason ?? "").slice(0, 400), companionsLost: lost };
+}
+
+export interface ChoiceVerdict<T extends string> {
+  choice: T;
+  reason: string;
+}
+
+/** Only an id from the offered list is accepted. */
+export function parseChoiceVerdict<T extends string>(raw: string, ids: readonly T[]): ChoiceVerdict<T> | null {
+  const o = firstJson(raw);
+  const c = o ? norm(o.eleccion ?? o.choice) : "";
+  const found = ids.find((id) => norm(id) === c);
+  return o && found ? { choice: found, reason: String(o.motivo ?? o.reason ?? "").slice(0, 400) } : null;
+}
+
+export interface MatchVerdict {
+  winner: "a" | "b";
+  reason: string;
+}
+
+export function parseMatchVerdict(raw: string): MatchVerdict | null {
+  const o = firstJson(raw);
+  const w = o ? norm(o.ganador ?? o.winner) : "";
+  if (!o || (w !== "a" && w !== "b")) return null;
+  return { winner: w, reason: String(o.motivo ?? o.reason ?? "").slice(0, 400) };
+}
+
+/** Difficulty class (0-99) in words, so the model does not have to interpret a bare number. */
+export function difficultyLabel(dc: number): string {
+  if (dc < 25) return "fácil";
+  if (dc < 50) return "media";
+  if (dc < 72) return "difícil";
+  if (dc < 88) return "muy difícil";
+  return "extrema";
+}
+
+// ---------------------------------------------------------------------------------------------
+// Deterministic stand-ins (scripted checks only, JUDGE_STUB=1). Never used by the running game.
+// ---------------------------------------------------------------------------------------------
+
+/** Power beats difficulty: a wide margin is total, a narrow one is plain. */
+export function stubOutcome(power: number, difficulty: number): JudgeOutcome {
+  const margin = power - difficulty;
+  return margin >= 40 ? "critical_success" : margin >= 0 ? "success" : margin <= -40 ? "critical_fail" : "fail";
+}
+
+/** The fallen die when the place is deadly for their level; a Government killer captures instead. */
+export function stubFate(input: { islandDanger: number; level: number; durability: number; killerFaction?: string }): Fate {
+  const risk = input.islandDanger * 10 - input.level - input.durability;
+  if (risk >= 40) return "death";
+  if (input.killerFaction === "MARINE" || input.killerFaction === "CP0") return "captured";
+  return "survives";
+}
+
+export function stubMatch(a: { level: number; atk: number; def: number }, b: { level: number; atk: number; def: number }): "a" | "b" {
+  const pa = a.atk + a.def + a.level * 2;
+  const pb = b.atk + b.def + b.level * 2;
+  return pa >= pb ? "a" : "b";
+}

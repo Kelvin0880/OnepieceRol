@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Verifies (1) silent scene compaction folds old messages into memorySummary
 // with the real AI, and (2) travel cooldown / crew-busy / stamina rules.
 // Usage: npx tsx scripts/compaction-travel-check.ts

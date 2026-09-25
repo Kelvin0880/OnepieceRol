@@ -1,7 +1,6 @@
 # Grand Line RPG — project notes for Claude
 
-A text-based, multiplayer One Piece RPG. Full random resolution (dice/skill
-checks, never scripted outcomes), real permadeath, a world that keeps
+A text-based, multiplayer One Piece RPG. AI-judged resolution (NO dice anywhere: an AI referee/judge decides, code only bounds and applies; never scripted outcomes), real permadeath, a world that keeps
 moving on its own, and a final endgame built around the 4 Road Poneglyphs
 leading to Laugh Tale / becoming Pirate King. This file exists so a future
 session with zero conversation history can pick up exactly where the last
@@ -1451,3 +1450,5 @@ Then: the "Imperio" panel + nakama errands (`engine/empire.ts`, `game/empire.ts`
   `font-body` (Crimson Pro) for text — see `globals.css` for the token
   palette (`--gold`, `--sea-deep`, `--blood`, etc.) before inventing new
   colors.
+
+**No dice anywhere (2026-09-25, supersedes every "random/dice/roll" statement above)**: `engine/rng.ts` keeps only seeded *variety* helpers (which flavour text, which stock, bracket order); `src/lib/no-dice.test.ts` fails if any dice primitive returns or if `varietyRng` spreads beyond its allowlist. Results are decided by `ai/judge.ts` (`judgeOutcome`, `judgeFate`, `judgeMatch`, `judgeChoice`; pure parsing + stubs in `engine/judge.ts`, deterministic stand-ins active with `JUDGE_STUB=1`, which every scripted `*-check.ts` sets) and by `refereeExchange` (fights). Flight, the death check at 0 HP, stealth, prison escape, recruiting, explore events, Buster Call triggers and the sims are all judged or fixed-rule now; training, Conqueror's Haki and ambush cadences are deterministic. Coliseum rounds wait (max 45 min) while a competitor is in a live fight of their own (`postponeWhileFighting`). The referee's `RIVAL_CRAFT` rule makes the rival's announced attack a varied 3-5 sentence sequence that adapts to repeated tricks.

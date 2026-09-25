@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Attributes + inventory against the dev DB: lazy point grants, spending (incl. a double-spend race),
 // bag stacking, use/sell/buy rules, several weapons per character, loot. Usage: npx tsx scripts/attributes-inventory-check.ts
 import "dotenv/config";
@@ -93,9 +94,10 @@ async function main() {
   await prisma.pendingEncounter.deleteMany({ where: { characterId: c.id } });
 
   // loot
+  assert((await grantLoot(c.id, 6, "success")) === null, "an ordinary success leaves nothing behind");
   let found = 0;
-  for (let i = 0; i < 80; i++) if (await grantLoot(c.id, 6, "critical_success")) found++;
-  assert(found > 5 && found < 80, `criticals drop loot fairly often (${found}/80) but not always`);
+  for (let i = 0; i < 10; i++) if (await grantLoot(c.id, 6, "critical_success")) found++;
+  assert(found >= 1, `a brilliant result always leaves something (${found}/10, less only when the backpack is full)`);
 
   // fruits: found -> bag -> the player decides
   await prisma.inventoryItem.deleteMany({ where: { characterId: c.id } });

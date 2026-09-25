@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Test helper for scripts/features-ui-check.mjs.
 //   npx tsx scripts/features-setup.ts prep "<character>"   -> level 12, on Dressrosa, money, a fruit and a weapon in the bag, a fruit tournament announced
 //   npx tsx scripts/features-setup.ts start                  -> closes registration now

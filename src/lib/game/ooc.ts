@@ -212,7 +212,7 @@ export async function repairCharacter(characterId: string, userId: string) {
 export async function undoLastExchange(characterId: string, userId: string) {
   const c = await loadOwned(characterId, userId);
   if (c.status !== CharacterStatus.ALIVE) throw new OocError("Este personaje ya no puede actuar.");
-  if (c.pendingEncounter) throw new OocError("Hay una pelea en curso: no se puede borrar un intercambio que ya movió los dados. Usa un punto de restauración si hace falta.");
+  if (c.pendingEncounter) throw new OocError("Hay una pelea en curso: no se puede borrar un intercambio que ya se juzgó. Usa un punto de restauración si hace falta.");
   if (c.partyId && !c.isSeparatedFromParty) throw new OocError("En escena compartida no se puede deshacer: otros jugadores ya la están leyendo.");
   const last = await prisma.sceneMessage.findMany({ where: { characterId }, orderBy: { createdAt: "desc" }, take: 8 });
   const narrator = last.find((m) => m.role === "narrator");
@@ -274,7 +274,7 @@ export async function setNarratorTone(characterId: string, userId: string, tone:
   await prisma.character.update({ where: { id: characterId }, data: { narratorTone: tone } });
   await prisma.oocReport.create({ data: { characterId, kind: "tone", text: tone } });
   const label = tone === "lethal" ? "letal" : tone === "story" ? "historia" : "equilibrado";
-  return { message: `Tono del narrador: ${label}. Solo cambia cómo actúan y hablan los enemigos; los dados siguen mandando.` };
+  return { message: `Tono del narrador: ${label}. Solo cambia cómo actúan y hablan los enemigos; el resultado lo sigue juzgando el árbitro.` };
 }
 
 export async function addNarratorNote(characterId: string, userId: string, note: string) {

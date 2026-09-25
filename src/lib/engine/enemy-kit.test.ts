@@ -77,6 +77,6 @@ describe("describeEnemyKit", () => {
   });
   it("the shared rule tells the narrator to play to win without changing outcomes", () => {
     expect(PLAY_TO_WIN_RULE).toContain("GANAR");
-    expect(PLAY_TO_WIN_RULE).toContain("el motor decide");
+    expect(PLAY_TO_WIN_RULE).toContain("el resultado lo decide el árbitro");
   });
 });

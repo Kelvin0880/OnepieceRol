@@ -1,9 +1,9 @@
 import { CharacterStatus } from "@prisma/client";
 import { prisma } from "../db";
-import { liveRng } from "../engine/rng";
+import { judgeOutcome } from "../ai/judge";
 import { companionSheet, parseCompanionProfile } from "../engine/companions";
 import { incomeAccrued, GARRISON_MAX } from "../engine/territory";
-import { ERRAND_INFO, ERRAND_KINDS, ErrandKind, errandDone, garrisonLabel, msUntilFall, readErrand, resolveErrand, troopCount, writeErrand } from "../engine/empire";
+import { ERRAND_INFO, ERRAND_KINDS, ErrandKind, errandDone, garrisonLabel, msUntilFall, readErrand, errandRewards, errandDifficulty, troopCount, writeErrand } from "../engine/empire";
 import { refreshTerritory } from "./territory";
 import { grantXp } from "./xp";
 import { notifyCharacters } from "../realtime";
@@ -44,7 +44,15 @@ export async function settleErrands(characterId: string): Promise<string[]> {
     const target = e.islandId ? await prisma.island.findUnique({ where: { id: e.islandId } }) : null;
     const danger = target?.dangerLevel ?? c.currentIsland.dangerLevel;
     const sheet = companionSheet(n.role, c.level, n.loyalty, parseCompanionProfile(n.profileJson));
-    const out = resolveErrand(liveRng(), e.kind, sheet.atk + sheet.def + sheet.spd, danger);
+    const power = sheet.atk + sheet.def + sheet.spd;
+    const verdict = await judgeOutcome({
+      situation: `Misión de un nakama: ${ERRAND_INFO[e.kind].label} (${ERRAND_INFO[e.kind].brief}) en ${target?.name ?? c.currentIsland.name}, un lugar de peligro ${danger}/10`,
+      actor: { name: n.name, level: sheet.level, power, kit: `${n.role}${sheet.epithet ? `, «${sheet.epithet}»` : ""}. Técnicas: ${sheet.abilities.join("; ")}` },
+      difficulty: errandDifficulty(power, danger),
+      stakes: "éxito = cumple la misión; fallo = vuelve herido, nunca muerto",
+      characterId,
+    });
+    const out = errandRewards(e.kind, verdict.outcome === "success" || verdict.outcome === "critical_success", danger);
     let line: string;
     if (!out.success) {
       const hp = Math.max(1, n.hp - Math.round(n.maxHp * out.hpLossFraction));

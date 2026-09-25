@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Deterministic verification for the faction-aware news rewrite + devil
 // fruit duplication mechanic (2026-09-23). Direct function calls against
 // the real seeded dev DB, same style as grudge-check.ts.

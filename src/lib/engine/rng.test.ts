@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { mulberry32, rollInt, rollD100, weightedPick } from "./rng";
+import { mulberry32, rollInt, weightedPick, hashString, varietyRng } from "./rng";
 
 describe("mulberry32", () => {
   it("is deterministic for a given seed", () => {
@@ -52,17 +52,6 @@ describe("rollInt", () => {
   });
 });
 
-describe("rollD100", () => {
-  it("stays within [1, 100]", () => {
-    const rng = mulberry32(99);
-    for (let i = 0; i < 2000; i++) {
-      const v = rollD100(rng);
-      expect(v).toBeGreaterThanOrEqual(1);
-      expect(v).toBeLessThanOrEqual(100);
-    }
-  });
-});
-
 describe("weightedPick", () => {
   it("only ever returns zero-weight-excluded items roughly proportionally", () => {
     const rng = mulberry32(555);
@@ -90,5 +79,18 @@ describe("weightedPick", () => {
   it("throws when total weight is zero", () => {
     const rng = mulberry32(1);
     expect(() => weightedPick(rng, [{ item: "x", weight: 0 }])).toThrow();
+  });
+});
+
+describe("variety generators", () => {
+  it("hashString is stable and spreads different inputs", () => {
+    expect(hashString("Foosha")).toBe(hashString("Foosha"));
+    expect(hashString("a")).not.toBe(hashString("b"));
+  });
+  it("varietyRng gives the same sequence for the same seed and differs by seed", () => {
+    const a = varietyRng("seed");
+    const b = varietyRng("seed");
+    expect([a(), a(), a()]).toEqual([b(), b(), b()]);
+    expect(varietyRng("x")()).not.toBe(varietyRng("y")());
   });
 });

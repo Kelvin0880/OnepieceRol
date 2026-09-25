@@ -1,5 +1,3 @@
-import { Rng } from "./rng";
-import { skillCheck } from "./checks";
 
 /**
  * Poneglyph guardians: who actually stands between a player and the stone.
@@ -9,10 +7,7 @@ import { skillCheck } from "./checks";
  * player can also skip the fight entirely by slipping in unseen.
  */
 
-export const REAL_ACTOR_MEET_CHANCE = 0.75;
 export const STEALTH_STAMINA_COST = 15;
-/** A success that beats the difficulty by this much leaves no witness at all. */
-export const CLEAN_MARGIN = 20;
 
 export function isActorHome(busyUntil: Date | null, now: Date): boolean {
   return !busyUntil || busyUntil.getTime() <= now.getTime();
@@ -24,9 +19,9 @@ export function actorCombatStats(powerLevel: number): { hp: number; atk: number;
   return { hp: Math.round(p * 16), atk: Math.round(p * 1.6), def: Math.round(p * 1.05), spd: Math.round(p * 0.75) };
 }
 
-export function guardianMeeting(rng: Rng, actorHome: boolean): "actor" | "subordinate" {
-  if (!actorHome) return "subordinate";
-  return rng() < REAL_ACTOR_MEET_CHANCE ? "actor" : "subordinate";
+/** A holder who is home receives visitors in person; one who is away leaves a subordinate on watch. */
+export function guardianMeeting(actorHome: boolean): "actor" | "subordinate" {
+  return actorHome ? "actor" : "subordinate";
 }
 
 export interface StealthDifficultyInput {
@@ -62,10 +57,8 @@ export type StealthResult = "clean" | "noticed" | "spotted" | "caught";
  * guard saw a shape leave. spotted: seen before reading — the guardian
  * comes. caught: seen at the worst moment — the guardian strikes first.
  */
-export function attemptStealthRead(rng: Rng, modifier: number, difficulty: number): StealthResult {
-  const check = skillCheck(rng, modifier, difficulty);
-  const outcome = check.outcome;
-  if (outcome === "critical_success" || (outcome === "success" && check.margin >= CLEAN_MARGIN)) return "clean";
+export function stealthResultFrom(outcome: "critical_success" | "success" | "fail" | "critical_fail"): StealthResult {
+  if (outcome === "critical_success") return "clean";
   if (outcome === "success") return "noticed";
   if (outcome === "fail") return "spotted";
   return "caught";

@@ -23,12 +23,20 @@ describe("mastery gain", () => {
     const rng = mulberry32(3);
     for (let i = 0; i < 200; i++) {
       const m = Math.floor(rng() * 100);
-      const g = masteryGainFromUse(rng, m, 10);
+      const g = masteryGainFromUse(m, 10);
       expect(g).toBeGreaterThanOrEqual(1);
       expect(m + g).toBeLessThanOrEqual(MASTERY_MAX);
     }
-    expect(masteryGainFromUse(mulberry32(1), MASTERY_MAX, 10)).toBe(0);
-    expect(trainFruitMastery(mulberry32(1), MASTERY_MAX, 10).gained).toBe(0);
+    expect(masteryGainFromUse(MASTERY_MAX, 10)).toBe(0);
+    expect(trainFruitMastery(MASTERY_MAX, 10).gained).toBe(0);
+  });
+  it("training is steady, never random, and crossing a phase boundary doubles the session", () => {
+    expect(trainFruitMastery(10, 20)).toEqual(trainFruitMastery(10, 20));
+    const plain = trainFruitMastery(0, 10);
+    expect(plain.breakthrough).toBe(false);
+    const cross = trainFruitMastery(24, 10);
+    expect(cross.breakthrough).toBe(true);
+    expect(cross.gained).toBeGreaterThan(plain.gained);
   });
 });
 

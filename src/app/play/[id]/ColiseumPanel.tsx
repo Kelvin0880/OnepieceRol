@@ -149,7 +149,7 @@ export default function ColiseumPanel({ characterId, onClose, onChanged }: { cha
                     <p className="text-sm">
                       Tu próximo combate: <strong className="text-gold-bright">{state.me.opponent ?? "por sortear"}</strong>
                     </p>
-                    <p className="text-xs text-ink-dim">Cuéntale al público cómo piensas ganar (máx. 300 letras): una buena táctica inclina el combate, pero los dados mandan. Debes seguir en Dressrosa.</p>
+                    <p className="text-xs text-ink-dim">Cuéntale al público cómo piensas ganar (máx. 300 letras): el árbitro tendrá en cuenta tu táctica al juzgar el combate. Debes seguir en Dressrosa.</p>
                     <textarea className="input min-h-[70px]" maxLength={300} value={strategy} onChange={(e) => setStrategy(e.target.value)} placeholder={state.me.strategy ?? "Ej: aguanto la primera embestida y contraataco al costado."} data-testid="coliseum-strategy" />
                     <button className="btn-gold px-3 py-1.5 text-sm self-start" disabled={busy || !strategy.trim()} onClick={() => act({ op: "strategy", text: strategy }).then(() => setStrategy(""))} data-testid="coliseum-strategy-send">
                       Guardar estrategia

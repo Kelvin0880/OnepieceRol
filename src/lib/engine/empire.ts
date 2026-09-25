@@ -1,4 +1,3 @@
-import type { Rng } from "./rng";
 import { GARRISON_DECAY_PER_PERIOD, GARRISON_MAX, GARRISON_PERIOD_MS } from "./territory";
 
 /**
@@ -47,9 +46,10 @@ export function msUntilFall(garrison: number, lastPressureMs: number, nowMs: num
   return periods * GARRISON_PERIOD_MS - intoPeriod;
 }
 
-export function errandSuccessChance(power: number, islandDanger: number): number {
+/** How hard the errand is (0-99) for the AI judge, from the danger of the place against the nakama's power. */
+export function errandDifficulty(power: number, islandDanger: number): number {
   const needed = 20 + 12 * islandDanger;
-  return Math.max(20, Math.min(92, Math.round(50 + (power - needed) * 0.5)));
+  return Math.max(10, Math.min(95, Math.round(50 + (needed - power) * 0.5)));
 }
 
 export interface ErrandOutcome {
@@ -60,8 +60,8 @@ export interface ErrandOutcome {
   hpLossFraction: number;
 }
 
-export function resolveErrand(rng: Rng, kind: ErrandKind, power: number, islandDanger: number): ErrandOutcome {
-  const success = rng() * 100 < errandSuccessChance(power, islandDanger);
+/** The rewards of an errand whose result the judge already decided. */
+export function errandRewards(kind: ErrandKind, success: boolean, islandDanger: number): ErrandOutcome {
   if (!success) return { success: false, garrisonGain: 0, berries: 0, xp: 0, hpLossFraction: FAILED_ERRAND_HP_LOSS };
   return {
     success: true,

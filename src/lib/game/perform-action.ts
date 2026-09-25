@@ -1,6 +1,7 @@
 import { prisma } from "../db";
-import { liveRng } from "../engine/rng";
-import { pickEventTemplate, resolveEvent, parseEventBody, EventBody } from "../engine/events";
+import { varietyRng } from "../engine/rng";
+import { pickEventTemplate, resolveEvent, eventDifficulty, parseEventBody, EventBody } from "../engine/events";
+import { judgeOutcome, judgeChoice } from "../ai/judge";
 import { maybeAutoCheckpoint } from "./ooc";
 import { dangerBlockReason } from "../engine/safety";
 import { recruitCompanion, CompanionError } from "./companions";
@@ -10,20 +11,20 @@ import { estimateLevel, applyFatigueToCombatant, npcStaminaAfterExchange, npcBas
 import type { EffortLevel } from "../engine/stamina";
 import { Combatant } from "../engine/combat";
 import { applyVerdict, NO_VERDICT_TEXT } from "../engine/referee";
-import { trainHaki, rollConquerorsHakiAwakening } from "../engine/haki";
+import { trainHaki, conquerorsHakiAwakens } from "../engine/haki";
 import { trainFruitMastery, canAwaken, FRUIT_PHASE_LABELS, fruitPhase } from "../engine/fruit-mastery";
 import { TechniqueId, TECHNIQUE_LABELS } from "../engine/techniques";
 import { buildSceneEnemy, tierXp, EnemyTier } from "../engine/scene-enemy";
 import { FATIGUE_LABELS, fatigueLevel, restStamina, spendStamina } from "../engine/stamina";
 import { prepareFighter, combatProgressData, currentStamina, characterCapabilityText } from "./combat-prep";
 import { bountyReward, berryReward, xpToNextLevel } from "../engine/economy";
-import { assessThreat, attemptFlee, ThreatAssessment } from "../engine/encounter";
+import { assessThreat, ThreatAssessment } from "../engine/encounter";
 import { detectStyleLesson, getStyle } from "../engine/styles";
 import { ACTOR_STYLES } from "../engine/actor-styles";
 import { settleVoyage, assertNotAtSea, startVoyage } from "./voyage";
-import { canSailAnywhere, hopsBetween, voyageDurationMs, rollSeaAmbush, pickSeaAmbush, seaAmbushPower } from "../engine/voyage";
+import { canSailAnywhere, hopsBetween, voyageDurationMs, pickSeaAmbush, seaAmbushPower, seaAmbushChance } from "../engine/voyage";
 import { canEnterIsland, travelWaitMs, TRAVEL_STAMINA_COST, tideStatus, knowsTheRoad } from "../engine/travel";
-import { rollHunterAmbush, decayPursuitHeat, heatAfterReadingPoneglyph } from "../engine/pursuit";
+import { hunterAmbushDue, decayPursuitHeat, heatAfterReadingPoneglyph } from "../engine/pursuit";
 import { recordGrudgeIncident, recordMercyIncident, decayGrudgesForCharacter, rollGrudgeAmbushForCharacter, getGrudgeContextForNarration } from "./grudges";
 import { toCombatant, generalSkillModifier } from "./derive";
 import { tickWorldIfDue } from "./world-tick";
@@ -35,7 +36,7 @@ import { grantXp } from "./xp";
 import { grantLoot, storeFruitInBag } from "./inventory";
 import { intellectTacticEdge } from "../engine/attributes";
 import { applyGuardianPresence, guardianBaseRewards, markActorDefeated, findPoneglyphGuardian, ACTOR_REWARD_MULTIPLIER } from "./guardian";
-import { isActorHome, stealthDifficulty, stealthModifier, attemptStealthRead, STEALTH_HEAT, STEALTH_STAMINA_COST, CAUGHT_HP_FRACTION } from "../engine/guardian";
+import { isActorHome, stealthDifficulty, stealthModifier, stealthResultFrom, STEALTH_HEAT, STEALTH_STAMINA_COST, CAUGHT_HP_FRACTION } from "../engine/guardian";
 import { getOpenJointFightFor, submitJointAction, startJointFight, freePartyMemberIds } from "./joint-fight";
 import { DEVIL_FRUIT_CATALOG } from "./devil-fruit-catalog";
 import { applyBountyOrNotoriety } from "./reputation";
@@ -110,7 +111,7 @@ export async function tryDropFruit(characterId: string, newsLog: string[]): Prom
   // of the old "pick from the one unclaimed row" model.
   const commonKinds = DEVIL_FRUIT_CATALOG.filter((f) => !f.isSingleton);
   if (commonKinds.length === 0) return undefined;
-  const kind = commonKinds[Math.floor(Math.random() * commonKinds.length)];
+  const kind = commonKinds[Math.floor(varietyRng(`${characterId}:fruit:${Date.now()}`)() * commonKinds.length)];
   const fruit = await prisma.devilFruit.create({
     data: {
       name: kind.name,
@@ -176,7 +177,7 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
   if (character.pendingEncounter) {
     throw new GameActionError("Tienes un enfrentamiento sin resolver. Decide si luchar o huir primero.");
   }
-  const rng = liveRng();
+  const beat = `${character.id}:${Math.floor(Date.now() / 60_000)}`;
 
   // Peaceful phases restore you; adventuring while spent does not — that is
   // the "días inhábiles" rule: exhausted characters must rest first.
@@ -194,7 +195,7 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
 
   // Holding a Poneglyph's secret makes you a target — before anything
   // else, roll whether whoever lost that secret has finally caught up.
-  if (rollHunterAmbush(rng, character.poneglyphHeat)) {
+  if (hunterAmbushDue(character.poneglyphHeat)) {
     const playerCombatant = toCombatant(character);
     const enemy: StoredEnemy = {
       name: "Cazador de Poneglifos",
@@ -254,7 +255,7 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
   // "at most one ambush per explore" rule, since we've already returned by
   // now if the poneglyph one fired), just keyed to a specific WorldActor
   // instead of one global "how hunted are you."
-  const grudgeAmbush = await rollGrudgeAmbushForCharacter(character.id, rng);
+  const grudgeAmbush = await rollGrudgeAmbushForCharacter(character.id);
   await decayGrudgesForCharacter(character.id);
   if (grudgeAmbush) {
     const playerCombatant = toCombatant(character);
@@ -303,7 +304,7 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
     };
   }
 
-  const thread = await rollConsequenceForExplore(character, toCombatant(character), character.currentIsland.dangerLevel, rng);
+  const thread = await rollConsequenceForExplore(character, toCombatant(character), character.currentIsland.dangerLevel);
   if (thread?.encounter) {
     const e = thread.encounter;
     const enemy: StoredEnemy = {
@@ -386,14 +387,23 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
   if (templates.length === 0) throw new GameActionError("No hay nada que explorar aquí por ahora.");
 
   const template = pickEventTemplate(
-    rng,
+    varietyRng(`${beat}:event`),
     templates.map((t) => ({ id: t.id, weight: t.weight }))
   );
   const full = templates.find((t) => t.id === template.id)!;
   const body: EventBody = parseEventBody(full.bodyJson);
 
   const modifier = generalSkillModifier(character);
-  const resolution = resolveEvent(rng, body, modifier, character.currentIsland.dangerLevel, character.level, !!character.devilFruitId);
+  // What used to be a roll is judged: the AI weighs what the character can do against the beat's difficulty and what they wrote.
+  const verdict = await judgeOutcome({
+    situation: `Suceso al explorar ${character.currentIsland.name}: ${body.flavorTexts[0] ?? full.kind}${body.enemy ? `. Hay un enemigo (${body.enemy.name}) en juego` : ""}${body.waterHazard ? ". Es un peligro de agua (quien tiene una Fruta del Diablo no sabe nadar)" : ""}`,
+    actor: { name: character.name, level: character.level, kit: characterCapabilityText(character), power: modifier + 50 },
+    intent: intentText,
+    difficulty: eventDifficulty(body, character.currentIsland.dangerLevel, character.level, !!character.devilFruitId),
+    stakes: "éxito total = resultado excepcional; éxito = sale bien; fallo = sale mal con coste; fallo grave = sale muy mal",
+    characterId: character.id,
+  });
+  const resolution = resolveEvent(`${beat}:${full.id}`, verdict.outcome, body);
 
   const introLog: string[] = [resolution.flavorText, resolution.narrative];
   const newsLog: string[] = [];
@@ -423,7 +433,7 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
       bounty: number;
     } | null = null;
     if (body.poneglyphId && enemy.worldActorId) {
-      const g = await applyGuardianPresence(enemy, rng);
+      const g = await applyGuardianPresence(enemy);
       enemy = g.enemy;
       if (g.note) introLog.push(g.note);
       if (g.enemy.isActor) {
@@ -599,12 +609,12 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
 }
 
 /**
- * Combat plays out one exchange (engine/combat.ts's resolveExchange) per
+ * Combat plays out one exchange (the AI referee) per
  * call, driven by the player's free text each time — "poco a poco ir
  * peleando, la IA respondiendo a mi ataque", the user's own words. Phase
  * "threat" is the very first fight-or-flee commitment; once the player
  * commits, phase flips to "fighting" and each further call resolves one
- * more exchange until someone's HP hits 0, exactly like runCombat used to
+ * more exchange until someone's HP hits 0, the way whole fights used to
  * do internally in one shot — the only thing that changed is *when* each
  * round happens (one per message) and that the player's described tactic
  * for that exchange feeds a real modifier (`tacticModifier`, judged by the
@@ -631,7 +641,6 @@ export async function engageCharacter(
   if (pending.phase !== "threat" && pending.phase !== "fighting") {
     throw new GameActionError("Ya resolviste el combate; solo falta decidir su destino.");
   }
-  const rng = liveRng();
 
   const enemy = JSON.parse(pending.enemyJson) as StoredEnemy;
   const rewards = JSON.parse(pending.rewardsJson) as StoredRewards;
@@ -712,7 +721,7 @@ export async function engageCharacter(
 
   if (concluded && victor === "player") {
     log.push(`¡${enemy.name} queda derrotado y a tu merced!`);
-    const progress = combatProgressData(character, prepared, rng, damageTaken, me.staminaLoss);
+    const progress = combatProgressData(character, prepared, damageTaken, me.staminaLoss);
     const growth: Record<string, unknown> = {};
     const mastery = progress.fruitMastery ?? character.fruitMastery;
     if (progress.fruitMastery !== undefined && fruitPhase(character.fruitMastery, false) !== fruitPhase(mastery, false)) {
@@ -734,7 +743,7 @@ export async function engageCharacter(
       await postNews(headline, `Quienes presenciaron el combate aseguran que el poder de ${character.name} cambió por completo en mitad de la pelea.`, "Frutas", character.id, "major");
       newsLog.push(headline);
     }
-    if (!character.conquerorsHaki && (enemy.isBoss || hpRatio <= 0.25) && rollConquerorsHakiAwakening(rng, character.willpower)) {
+    if (!character.conquerorsHaki && (enemy.isBoss || hpRatio <= 0.25) && conquerorsHakiAwakens(character.willpower, character.armamentHaki, character.observationHaki)) {
       growth.conquerorsHaki = true;
       log.push("Un estremecimiento recorre el lugar: has despertado el Haki del Rey.");
       const headline = `${character.name} despierta el Haki del Rey`;
@@ -771,7 +780,7 @@ export async function engageCharacter(
 
   if (concluded && victor === "enemy") {
     log.push(`${enemy.name} te derrota.`);
-    const deathCheck = await handleDeathCheck(character, playerHpAfter, `Cayó en combate contra ${enemy.name}.`, newsLog);
+    const deathCheck = await handleDeathCheck(character, playerHpAfter, `Cayó en combate contra ${enemy.name}.`, newsLog, { name: enemy.name, personality: enemy.personality, isBoss: enemy.isBoss, power: enemy.atk + enemy.def });
     await prisma.pendingEncounter.delete({
       where: { characterId: character.id },
     });
@@ -780,7 +789,7 @@ export async function engageCharacter(
         where: { id: character.id },
         data: {
           hp: deathCheck.finalHp,
-          ...combatProgressData(character, prepared, rng, damageTaken, me.staminaLoss),
+          ...combatProgressData(character, prepared, damageTaken, me.staminaLoss),
         },
       });
     }
@@ -810,7 +819,7 @@ export async function engageCharacter(
     where: { id: character.id },
     data: {
       hp: Math.max(0, playerHpAfter),
-      ...combatProgressData(character, prepared, rng, damageTaken, me.staminaLoss),
+      ...combatProgressData(character, prepared, damageTaken, me.staminaLoss),
     },
   });
   await prisma.pendingEncounter.update({
@@ -1088,7 +1097,7 @@ async function resolveMercyChoiceInner(characterId: string, userId: string, spar
       await recordMercyIncident(enemy.worldActorId, character.id, `perdonó a ${enemy.name} en ${character.currentIsland.name}`);
       await addStanding(enemy.worldActorId, character.id, { mercy: true }, `perdonaste a ${enemy.name}`);
     }
-    if (Math.random() < 0.1) {
+    if (varietyRng(`${character.id}:mercy:${enemy.name}`)() < 0.1) {
       const headline = `${enemy.name} jura no olvidar la piedad de ${character.name}`;
       await postNews(headline, `Testigos aseguran que ${enemy.name}, perdonado en pleno combate, se ha marchado jurando devolver el favor algún día.`, "Tripulaciones", character.id);
       newsLog.push(headline);
@@ -1106,7 +1115,7 @@ async function resolveMercyChoiceInner(characterId: string, userId: string, spar
         spd: enemy.spd,
       });
     }
-    if (enemy.isBoss && Math.random() < 0.15) {
+    if (enemy.isBoss && varietyRng(`${character.id}:revenge:${enemy.name}`)() < 0.15) {
       const headline = `Rumores de venganza tras la caída de ${enemy.name}`;
       await postNews(headline, `Antiguos aliados de ${enemy.name} habrían jurado hacer pagar a ${character.name} por lo ocurrido.`, "Guerra", character.id);
       newsLog.push(headline);
@@ -1212,7 +1221,6 @@ async function trainCharacterInner(characterId: string, userId: string, focus: "
     throw new GameActionError("Estás demasiado agotado para entrenar en serio. Descansa primero.");
   }
 
-  const rng = liveRng();
   const hasFruit = !!character.devilFruitId;
   // "auto" trains whatever is furthest behind, so a fruit user's mastery
   // isn't neglected in favour of haki (and vice versa).
@@ -1242,7 +1250,7 @@ async function trainCharacterInner(characterId: string, userId: string, focus: "
   };
 
   if (chosen === "fruit") {
-    const result = trainFruitMastery(rng, character.fruitMastery, character.intellect);
+    const result = trainFruitMastery(character.fruitMastery, character.intellect);
     if (result.gained === 0) {
       log.push(character.fruitMastery >= 100 ? "Tu dominio de la fruta ya no puede crecer con simple práctica: solo un momento límite lo llevará más allá." : "Practicas con tu fruta hasta el agotamiento, pero hoy no notas ningún avance real.");
     } else {
@@ -1255,7 +1263,7 @@ async function trainCharacterInner(characterId: string, userId: string, focus: "
   } else {
     const level = chosen === "armament" ? character.armamentHaki : character.observationHaki;
     const label = chosen === "armament" ? "Haki de Armadura" : "Haki de Observación";
-    const result = trainHaki(rng, level, character.willpower);
+    const result = trainHaki(level, character.willpower);
     if (result.gained === 0) {
       log.push("Entrenas duro, pero hoy no notas ningún avance real.");
     } else {
@@ -1347,8 +1355,15 @@ async function travelCharacterInner(characterId: string, userId: string, targetI
   if (staminaNow < TRAVEL_STAMINA_COST) throw new GameActionError("Estás demasiado exhausto para gobernar el barco. Descansa antes de zarpar.");
 
   if (hops > 1) {
-    const ambushRng = liveRng();
-    const ambush = rollSeaAmbush(ambushRng, hops) ? { ...pickSeaAmbush(ambushRng, character.faction), power: seaAmbushPower(hops) } : null;
+    // The sea is a place with weather, patrols and rivals: the judge decides whether this crossing turns dangerous, knowing how risky the route is and how famous the traveller.
+    const risk = Math.round(seaAmbushChance(hops) * 100);
+    const turn = await judgeChoice(
+      `${character.name} (${character.faction}, nivel ${character.level}${character.bounty ? `, recompensa ${character.bounty}` : ""}) cruza ${hops} islas de mar abierto hacia ${target.name}. El riesgo de la ruta es ${risk}/100 y sube con la distancia y la fama del viajero. ¿Ocurre algo en la travesía?`,
+      [{ id: "calm" as const, label: "travesía sin incidentes" }, { id: "ambush" as const, label: "una emboscada o ataque en el mar les sale al paso" }],
+      character.id
+    );
+    const seaSeed = varietyRng(`${character.id}:sea:${Date.now()}`);
+    const ambush = turn === "ambush" ? { ...pickSeaAmbush(seaSeed, character.faction), power: seaAmbushPower(hops) } : null;
     const log = await startVoyage(character, character.currentIsland.name, target, voyageDurationMs(hops), { stamina: spendStamina(staminaNow, TRAVEL_STAMINA_COST), staminaUpdatedAt: new Date() }, ambush);
     return { log };
   }
@@ -1489,8 +1504,15 @@ export async function sneakPoneglyph(characterId: string, userId: string, freeTe
     level: character.level,
     tacticModifier,
   });
-  const rng = liveRng();
-  const result = attemptStealthRead(rng, modifier, difficulty);
+  const stealthVerdict = await judgeOutcome({
+    situation: `Colarse hasta el Poneglifo de ${island.name}${actor ? `, en los dominios de ${actor.name}` : ""} sin ser visto`,
+    actor: { name: character.name, level: character.level, kit: characterCapabilityText(character), power: modifier + 50 },
+    intent: freeText,
+    difficulty,
+    stakes: "éxito total = lo lee sin que nadie lo note; éxito = lo lee pero alguien ve una silueta; fallo = lo descubren antes de leerlo; fallo grave = lo esperaban",
+    characterId: character.id,
+  });
+  const result = stealthResultFrom(stealthVerdict.outcome);
   await prisma.character.update({
     where: { id: character.id },
     data: {
@@ -1573,7 +1595,7 @@ export async function sneakPoneglyph(characterId: string, userId: string, freeTe
     personality: guardian.enemy.personality,
     worldActorId: guardian.enemy.worldActorId,
   };
-  const g = await applyGuardianPresence(subordinate, rng, now);
+  const g = await applyGuardianPresence(subordinate, now);
   const base = guardianBaseRewards(guardian.body);
   const mult = g.enemy.isActor ? ACTOR_REWARD_MULTIPLIER : 1;
   const enemy: StoredEnemy = g.enemy;

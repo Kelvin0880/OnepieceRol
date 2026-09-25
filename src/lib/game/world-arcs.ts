@@ -1,5 +1,5 @@
 import { prisma } from "../db";
-import { liveRng } from "../engine/rng";
+import { varietyRng } from "../engine/rng";
 import {
   ARC_TOTAL_STAGES,
   ArcKind,
@@ -66,7 +66,7 @@ export async function moveActorsTick(): Promise<void> {
     id: a.id, name: a.name, factionType: a.factionType, role: a.role, status: a.status, locationKind: a.locationKind,
     currentIslandId: a.currentIslandId, homeIslandId: a.homeIslandId, pinned: pinnedIds.has(a.id) || (a.busyUntil !== null && a.busyUntil > now),
   }));
-  const moves = pickMoves(liveRng(), movable, (id) => islands.get(id)?.neighbors ?? []);
+  const moves = pickMoves(varietyRng(`moves:${Math.floor(Date.now() / 60_000)}`), movable, (id) => islands.get(id)?.neighbors ?? []);
   for (const m of moves) {
     const from = fresh.find((a) => a.id === m.actorId)?.currentIslandId ?? null;
     await prisma.worldActor.update({
@@ -172,7 +172,7 @@ async function runArcBeat(arcId: string): Promise<void> {
       where: { id: arc.id },
       data: {
         contextJson: JSON.stringify(appendContext(context, `Capítulo ${stage} (${chapter.label}, ${place}): ${narrated.headline}`)),
-        nextBeatAt: nextBeatTime(now, liveRng()),
+        nextBeatAt: nextBeatTime(now, varietyRng(`beat:${arcId}:${stage}`)),
         ...(isLast ? { status: "AWAITING_CONSENT", consent: "PENDING" } : {}),
       },
     }),
@@ -212,7 +212,7 @@ export async function tickWorldArcs(now = new Date()): Promise<void> {
       prisma.worldArc.findFirst({ where: { status: "RESOLVED" }, orderBy: { updatedAt: "desc" } }),
       prisma.worldActor.findMany({ where: { status: "ACTIVE" }, select: { id: true, name: true, role: true, status: true, factionType: true, powerLevel: true } }),
     ]);
-    const rng = liveRng();
+    const rng = varietyRng(`arc:${Math.floor(Date.now() / 60_000)}`);
     if (!shouldStartArc(rng, { hasOpenArc: false, lastResolvedAt: lastResolved?.updatedAt ?? null, heat: clock?.heat ?? 0, now })) return;
     const cast = pickArcCast(rng, actors, FEATURED_ACTOR_NAMES);
     if (!cast) return;

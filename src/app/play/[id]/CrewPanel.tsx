@@ -360,7 +360,7 @@ export default function CrewPanel({
         {(isSolo || tab === "nakamas") && (
           <div className="flex flex-col gap-3" data-testid="nakamas">
             <p className="text-xs text-ink-dim">
-              Tus nakamas NPC suben de nivel contigo (siempre a nivel {characterLevel}): nunca se quedan atrás. Para reclutar a alguien de la escena, invítalo con tu texto: «Jorge, únete a mi tripulación». Que acepte lo decide una tirada de persuasión.
+              Tus nakamas NPC suben de nivel contigo (siempre a nivel {characterLevel}): nunca se quedan atrás. Para reclutar a alguien de la escena, invítalo con tu texto: «Jorge, únete a mi tripulación». Que acepte lo decide el juez según lo convincente que seas.
             </p>
             {companions.length === 0 && <p className="text-sm text-ink-dim">Todavía no tienes nakamas NPC.</p>}
             <div className="grid gap-2 md:grid-cols-2">

@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mulberry32 } from "./rng";
-import { assessThreat, attemptFlee } from "./encounter";
+import { assessThreat } from "./encounter";
 import { Combatant } from "./combat";
 
 function fighter(overrides: Partial<Combatant> = {}): Combatant {
@@ -27,48 +27,3 @@ describe("assessThreat", () => {
   });
 });
 
-describe("attemptFlee", () => {
-  it("a much faster player reliably escapes across many seeds", () => {
-    let successes = 0;
-    const trials = 200;
-    for (let seed = 0; seed < trials; seed++) {
-      const rng = mulberry32(seed);
-      const player = fighter({ spd: 80 });
-      const enemy = fighter({ spd: 5 });
-      const result = attemptFlee(rng, player, enemy);
-      if (result.success) successes++;
-    }
-    expect(successes / trials).toBeGreaterThan(0.85);
-  });
-
-  it("a much slower player rarely escapes cleanly", () => {
-    let successes = 0;
-    const trials = 200;
-    for (let seed = 0; seed < trials; seed++) {
-      const rng = mulberry32(seed);
-      const player = fighter({ spd: 5 });
-      const enemy = fighter({ spd: 80 });
-      const result = attemptFlee(rng, player, enemy);
-      if (result.success) successes++;
-    }
-    expect(successes / trials).toBeLessThan(0.3);
-  });
-
-  it("never reports damage on a successful flee", () => {
-    for (let seed = 0; seed < 300; seed++) {
-      const rng = mulberry32(seed);
-      const result = attemptFlee(rng, fighter({ spd: 60 }), fighter({ spd: 10 }));
-      if (result.success) expect(result.hpLoss).toBe(0);
-    }
-  });
-
-  it("can always be attempted, even against a vastly superior foe", () => {
-    let sawAnySuccess = false;
-    for (let seed = 0; seed < 500; seed++) {
-      const rng = mulberry32(seed);
-      const result = attemptFlee(rng, fighter({ spd: 1 }), fighter({ spd: 99, atk: 99 }));
-      if (result.success) sawAnySuccess = true;
-    }
-    expect(sawAnySuccess).toBe(true);
-  });
-});

@@ -1,5 +1,4 @@
 import { prisma } from "../db";
-import { liveRng } from "../engine/rng";
 import {
   STYLES,
   STARTING_MASTERY,
@@ -103,7 +102,7 @@ export async function trainStyle(characterId: string, userId: string, styleId: s
   if (wait > 0) throw new StyleError(`Sigues agotado del último entrenamiento: espera ${Math.ceil(wait / 60000)} min.`);
   if (c.stamina < 15) throw new StyleError("No te queda aliento para entrenar: descansa primero.");
   const before = styleTier(row.mastery);
-  const gain = trainStyleMastery(liveRng(), row.mastery, c.willpower, c.level);
+  const gain = trainStyleMastery(row.mastery, c.willpower, c.level);
   // Claiming the row by its old mastery: two simultaneous requests cannot both train.
   const res = await prisma.characterStyle.updateMany({ where: { id: row.id, mastery: row.mastery }, data: { mastery: row.mastery + gain, lastTrainedAt: new Date() } });
   if (res.count === 0) throw new StyleError("Ya estabas entrenando: inténtalo de nuevo.");

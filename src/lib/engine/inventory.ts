@@ -1,4 +1,4 @@
-import type { Rng } from "./rng";
+import { varietyRng } from "./rng";
 
 export type ItemKind = "Consumible" | "Herramienta" | "Tesoro";
 
@@ -140,13 +140,12 @@ export function removeOne(stacks: Stack[], itemId: string): Stack[] | null {
   return next.filter((s) => s.quantity > 0);
 }
 
-/** What a successful action might leave behind: a small chance, more often on dangerous islands, never a jackpot from small fry. */
-export function rollLoot(rng: Rng, danger: number, outcome: "success" | "critical_success"): Stack | null {
-  const chance = outcome === "critical_success" ? 0.4 : 0.15;
-  if (rng() >= chance) return null;
+/** What a brilliant result leaves behind: never from small fry, and cheap things are far more common than pricey ones. `seed` only picks among equivalents. */
+export function lootFor(seed: string, danger: number, outcome: "success" | "critical_success"): Stack | null {
+  if (outcome !== "critical_success") return null;
   const pool = ITEM_CATALOG.filter((i) => i.minDanger <= danger);
   if (pool.length === 0) return null;
-  // Cheap items are far more common than pricey ones.
+  const rng = varietyRng(seed);
   const weights = pool.map((i) => 1 / Math.sqrt(i.price));
   const total = weights.reduce((a, b) => a + b, 0);
   let roll = rng() * total;

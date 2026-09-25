@@ -1,4 +1,5 @@
 process.env.REFEREE_STUB = "1"; // combat is judged by the AI; scripted checks use the deterministic stand-in
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Deterministic verification for the grudge/memory system, same style as
 // delete-character-check.ts / prison-logic-check.ts (direct function calls
 // against the real dev DB, not mocked).

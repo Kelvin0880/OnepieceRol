@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mulberry32 } from "./rng";
-import { heatAfterReadingPoneglyph, decayPursuitHeat, hunterAmbushChance, rollHunterAmbush } from "./pursuit";
+import { heatAfterReadingPoneglyph, decayPursuitHeat, hunterAmbushDue } from "./pursuit";
 
 describe("heatAfterReadingPoneglyph", () => {
   it("increases heat", () => {
@@ -31,34 +31,15 @@ describe("decayPursuitHeat", () => {
   });
 });
 
-describe("hunterAmbushChance", () => {
-  it("is zero at zero heat", () => {
-    expect(hunterAmbushChance(0)).toBe(0);
+describe("hunterAmbushDue", () => {
+  it("never when cold", () => {
+    expect(hunterAmbushDue(0)).toBe(false);
+    expect(hunterAmbushDue(29)).toBe(false);
   });
-
-  it("increases with heat", () => {
-    expect(hunterAmbushChance(100)).toBeGreaterThan(hunterAmbushChance(20));
-  });
-
-  it("never exceeds the cap even at max heat", () => {
-    expect(hunterAmbushChance(150)).toBeLessThanOrEqual(0.35);
-  });
-});
-
-describe("rollHunterAmbush", () => {
-  it("never fires at zero heat", () => {
-    for (let seed = 0; seed < 100; seed++) {
-      expect(rollHunterAmbush(mulberry32(seed), 0)).toBe(false);
-    }
-  });
-
-  it("fires sometimes at high heat across many seeds", () => {
-    let hits = 0;
-    const trials = 500;
-    for (let seed = 0; seed < trials; seed++) {
-      if (rollHunterAmbush(mulberry32(seed), 150)) hits++;
-    }
-    expect(hits).toBeGreaterThan(0);
-    expect(hits / trials).toBeLessThan(0.5);
+  it("comes on every third step of the cooldown while the heat is high, and never every time", () => {
+    const due = Array.from({ length: 151 }, (_, h) => hunterAmbushDue(h));
+    expect(due.some(Boolean)).toBe(true);
+    expect(due.filter(Boolean).length).toBeLessThan(60);
+    expect(hunterAmbushDue(90)).toBe(hunterAmbushDue(90));
   });
 });

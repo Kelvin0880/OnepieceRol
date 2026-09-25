@@ -3,7 +3,6 @@
  * gets left behind. Their numbers derive from (role, owner level, loyalty) —
  * nothing to grind and nothing to drift out of sync. Pure: no DB.
  */
-import type { Rng } from "./rng";
 
 export const MAX_COMPANIONS = 3;
 
@@ -128,14 +127,10 @@ export interface RecruitInput {
   tier: RecruitTier;
 }
 
-/** Persuasion is a real roll: a good pitch helps, a proud or powerful target resists. */
-export function recruitChance(i: RecruitInput): number {
-  const raw = 35 + i.willpower * 0.4 + i.intellect * 0.3 + i.tacticModifier * 0.8 - TIER_PENALTY[i.tier];
-  return Math.max(15, Math.min(90, Math.round(raw)));
-}
-
-export function rollRecruit(rng: Rng, chance: number): boolean {
-  return rng() * 100 < chance;
+/** How hard the pitch is (0-99) for the AI judge: a proud or powerful target resists; a good pitch and a strong will help (see ai/judge.ts). */
+export function recruitDifficulty(i: RecruitInput): number {
+  const raw = 65 - i.willpower * 0.4 - i.intellect * 0.3 - i.tacticModifier * 0.8 + TIER_PENALTY[i.tier];
+  return Math.max(10, Math.min(85, Math.round(raw)));
 }
 
 /** Starting loyalty: a convincing pitch buys a warmer start. */

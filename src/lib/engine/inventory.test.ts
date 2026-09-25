@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mulberry32 } from "./rng";
-import { addToInventory, useItem, getItemDef, removeOne, rollLoot, sellValue, belongingsFor, describeInventory, INVENTORY_SLOTS, ITEM_CATALOG, type BodyState } from "./inventory";
+import { addToInventory, useItem, getItemDef, removeOne, lootFor, sellValue, belongingsFor, describeInventory, INVENTORY_SLOTS, ITEM_CATALOG, type BodyState } from "./inventory";
 
 const body: BodyState = { hp: 50, maxHp: 100, stamina: 40, maxStamina: 100, heat: 60, berries: 1000 };
 
@@ -53,32 +53,6 @@ describe("removeOne", () => {
   });
 });
 
-describe("rollLoot", () => {
-  it("is deterministic per seed, only returns catalog items available at that danger, and criticals drop more often", () => {
-    let low = 0;
-    let high = 0;
-    for (let s = 1; s <= 600; s++) {
-      const a = rollLoot(mulberry32(s), 2, "success");
-      const b = rollLoot(mulberry32(s), 2, "critical_success");
-      if (a) {
-        low++;
-        expect(getItemDef(a.id)!.minDanger).toBeLessThanOrEqual(2);
-      }
-      if (b) high++;
-    }
-    expect(high).toBeGreaterThan(low);
-    expect(rollLoot(mulberry32(5), 2, "success")).toEqual(rollLoot(mulberry32(5), 2, "success"));
-  });
-  it("cheap things drop far more than a pearl on a rich island", () => {
-    const counts: Record<string, number> = {};
-    for (let s = 1; s <= 4000; s++) {
-      const r = rollLoot(mulberry32(s), 9, "critical_success");
-      if (r) counts[r.id] = (counts[r.id] ?? 0) + 1;
-    }
-    expect(counts.vendaje).toBeGreaterThan(counts.perla);
-  });
-});
-
 describe("catalog sanity", () => {
   it("has unique ids, positive prices and sensible sale values", () => {
     const ids = new Set(ITEM_CATALOG.map((i) => i.id));
@@ -116,5 +90,30 @@ describe("island specialties", () => {
       expect(i.price).toBeGreaterThan(0);
       expect(i.soldAt!.length).toBeGreaterThan(0);
     }
+  });
+});
+
+describe("lootFor", () => {
+  it("only a brilliant result leaves something, only catalog items available at that danger", () => {
+    expect(lootFor("s", 5, "success")).toBeNull();
+    for (let i = 0; i < 60; i++) {
+      const d = lootFor(`seed${i}`, 3, "critical_success");
+      expect(d).not.toBeNull();
+      const def = ITEM_CATALOG.find((x) => x.id === d!.id)!;
+      expect(def.minDanger).toBeLessThanOrEqual(3);
+    }
+  });
+  it("is the same for the same seed and varies across seeds", () => {
+    expect(lootFor("a", 6, "critical_success")).toEqual(lootFor("a", 6, "critical_success"));
+    const ids = new Set(Array.from({ length: 80 }, (_, i) => lootFor(`v${i}`, 8, "critical_success")!.id));
+    expect(ids.size).toBeGreaterThan(2);
+  });
+  it("cheap things turn up far more than a pearl", () => {
+    const counts = new Map<string, number>();
+    for (let i = 0; i < 600; i++) {
+      const id = lootFor(`c${i}`, 10, "critical_success")!.id;
+      counts.set(id, (counts.get(id) ?? 0) + 1);
+    }
+    expect((counts.get("perla") ?? 0)).toBeLessThan(Math.max(...counts.values()));
   });
 });

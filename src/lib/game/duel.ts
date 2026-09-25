@@ -1,5 +1,4 @@
 import { prisma } from "../db";
-import { liveRng } from "../engine/rng";
 import { applyVerdict, NO_VERDICT_TEXT } from "../engine/referee";
 import { FATIGUE_LABELS } from "../engine/stamina";
 import { areHostile, huntBlockReason, HUNT_RESPONSE_WINDOW_MS, HUNT_REPEAT_COOLDOWN_MS, PlayerFaction } from "../engine/hostility";
@@ -194,7 +193,6 @@ async function resolveDuelRoundFor(duelId: string) {
   if (claimed.count === 0) return { log: ["Movimiento registrado. Esperando a tu rival..."], waiting: true };
   const [a, b] = await Promise.all([loadFighter(duel.challengerId), loadFighter(duel.opponentId)]);
   if (!a || !b) throw new DuelError("Uno de los duelistas ya no existe.");
-  const rng = liveRng();
 
   let aYield = duel.challengerAction === "__yield__";
   let bYield = duel.opponentAction === "__yield__";
@@ -307,8 +305,8 @@ async function resolveDuelRoundFor(duelId: string) {
   });
 
   // Stamina and mastery are real costs/gains even in a friendly duel.
-  if (!aYield) await prisma.character.update({ where: { id: a.id }, data: combatProgressData(a, aPrep, rng, 0, aStaminaLoss) });
-  if (!bYield) await prisma.character.update({ where: { id: b.id }, data: combatProgressData(b, bPrep, rng, 0, bStaminaLoss) });
+  if (!aYield) await prisma.character.update({ where: { id: a.id }, data: combatProgressData(a, aPrep, 0, aStaminaLoss) });
+  if (!bYield) await prisma.character.update({ where: { id: b.id }, data: combatProgressData(b, bPrep, 0, bStaminaLoss) });
 
   const log = [narration];
 

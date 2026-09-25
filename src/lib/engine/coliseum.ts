@@ -1,6 +1,6 @@
-import { resolveExchange, type Combatant } from "./combat";
 import type { Rng } from "./rng";
 import { STYLES } from "./styles";
+import type { Combatant } from "./combat";
 
 export type CompetitionKind = "weapons" | "fruit" | "gold" | "styles";
 
@@ -11,7 +11,6 @@ export const TOURNAMENT_INTERVAL_MS = 48 * 60 * 60 * 1000;
 export const REGISTRATION_LEAD_MS = 3 * 60 * 60 * 1000;
 /** Time between rounds: long enough to describe a strategy, short enough to finish in an evening. */
 export const ROUND_INTERVAL_MS = 15 * 60 * 1000;
-export const MAX_BOUT_ROUNDS = 40;
 
 export interface PrizeSpec {
   kind: "weapon" | "fruit" | "berries" | "style";
@@ -113,35 +112,6 @@ export function gladiatorCombatant(name: string, level: number, named: boolean):
   const L = Math.max(1, level + (named ? 3 : 0));
   const hp = 100 + L * 4;
   return { name, hp, maxHp: hp, atk: Math.round(12 + L * 1.6), def: Math.round(8 + L * 1.1), spd: Math.round(10 + L), level: L };
-}
-
-export interface BoutResult {
-  winner: "a" | "b";
-  rounds: number;
-  aHpPct: number;
-  bHpPct: number;
-}
-
-/**
- * A non-lethal bout on copies of each fighter's full health: nobody carries wounds out of the arena, so this
- * never touches a real character's HP. The tactic bonus is the same bounded nudge combat uses (attack in full, defence in half).
- */
-export function runBout(rng: Rng, a: Combatant, b: Combatant, tacticA = 0, tacticB = 0): BoutResult {
-  const fa: Combatant = { ...a, atk: a.atk + tacticA, def: a.def + Math.round(tacticA / 2) };
-  const fb: Combatant = { ...b, atk: b.atk + tacticB, def: b.def + Math.round(tacticB / 2) };
-  let aHp = a.maxHp;
-  let bHp = b.maxHp;
-  let round = 0;
-  while (round < MAX_BOUT_ROUNDS && aHp > 0 && bHp > 0) {
-    round++;
-    const r = resolveExchange(rng, round, fa, aHp, fb, bHp);
-    aHp = r.aHpAfter;
-    bHp = r.bHpAfter;
-  }
-  const aPct = Math.max(0, aHp) / a.maxHp;
-  const bPct = Math.max(0, bHp) / b.maxHp;
-  const winner: "a" | "b" = bHp <= 0 && aHp > 0 ? "a" : aHp <= 0 && bHp > 0 ? "b" : aPct > bPct ? "a" : bPct > aPct ? "b" : a.spd >= b.spd ? "a" : "b";
-  return { winner, rounds: round, aHpPct: Math.round(aPct * 100), bHpPct: Math.round(bPct * 100) };
 }
 
 export interface ScheduleState {

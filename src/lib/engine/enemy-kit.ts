@@ -108,4 +108,4 @@ export function describeEnemyKit(name: string, kit: EnemyKit): string {
 /** Shared rule for every fighter the AI voices — enemies and allied NPCs alike. */
 export const PLAY_TO_WIN_RULE =
   "COMPETITIVIDAD: cada combatiente que controlas (enemigos y aliados NPC) lucha por GANAR y lo da todo, dentro de su repertorio y su estado físico: usa el Haki que tenga, su fruta en la fase que domine, sus técnicas propias y el terreno, y adapta su estilo a lo que ve del rival (si el otro está fatigado, presiona; si es rápido, lo acorrala). " +
-  "Ganar puede significar matar, capturar o someter según su carácter y su bando — nunca rendirse a mitad de la pelea por cortesía. Aun así, el motor decide quién acierta: describe un ataque con todo su potencial cuyo resultado es exactamente el indicado.";
+  "Ganar puede significar matar, capturar o someter según su carácter y su bando — nunca rendirse a mitad de la pelea por cortesía. Aun así, el resultado lo decide el árbitro: describe tu ataque como una INTENCIÓN con todo su potencial («intenta ... con la intención de ...») y deja que se juzgue.";

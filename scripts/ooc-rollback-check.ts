@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Deterministic check of the out-of-role toolbox against the real dev DB (2026-09-24): checkpoints, the
 // rollback that must leave ONE timeline (memory, scene, log, companions, missions), the epoch guard
 // against late AI writes, permadeath, limits, rename/repair/undo. No AI calls needed.

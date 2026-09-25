@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mulberry32 } from "./rng";
-import { resolveEvent, parseEventBody, pickEventTemplate, EventBody, DEVIL_FRUIT_WATER_PENALTY } from "./events";
+import { resolveEvent, eventDifficulty, parseEventBody, pickEventTemplate, EventBody, DEVIL_FRUIT_WATER_PENALTY } from "./events";
 
 const sampleBody: EventBody = {
   flavorTexts: ["El viento sopla sobre la costa."],
@@ -12,142 +12,68 @@ const sampleBody: EventBody = {
 
 describe("parseEventBody", () => {
   it("round-trips through JSON", () => {
-    const json = JSON.stringify(sampleBody);
-    expect(parseEventBody(json)).toEqual(sampleBody);
+    expect(parseEventBody(JSON.stringify(sampleBody))).toEqual(sampleBody);
   });
 });
 
-describe("resolveEvent", () => {
-  it("critical fail rolls always pick the critical fail outcome and its penalties", () => {
-    let found = false;
-    for (let seed = 0; seed < 2000 && !found; seed++) {
-      const rng = mulberry32(seed);
-      const result = resolveEvent(rng, sampleBody, 999, 1, 99);
-      if (result.outcome === "critical_fail") {
-        expect(result.hpLoss).toBe(20);
-        found = true;
-      }
-    }
-    expect(found).toBe(true);
+describe("resolveEvent (the outcome comes from the AI judge)", () => {
+  it("each judged outcome picks its own tier and its rewards", () => {
+    const cs = resolveEvent("s", "critical_success", sampleBody);
+    expect(cs).toMatchObject({ outcome: "critical_success", berries: 500, xp: 50, hpLoss: 0 });
+    expect(cs.narrative).toBe("¡Éxito rotundo!");
+    expect(resolveEvent("s", "success", sampleBody)).toMatchObject({ berries: 100, xp: 10 });
+    expect(resolveEvent("s", "fail", sampleBody)).toMatchObject({ hpLoss: 5, berries: 0 });
+    expect(resolveEvent("s", "critical_fail", sampleBody)).toMatchObject({ hpLoss: 20 });
   });
-
-  it("critical success rolls always pick the critical success outcome and its rewards", () => {
-    let found = false;
-    for (let seed = 0; seed < 2000 && !found; seed++) {
-      const rng = mulberry32(seed);
-      const result = resolveEvent(rng, sampleBody, -999, 10, 1);
-      if (result.outcome === "critical_success") {
-        expect(result.berries).toBe(500);
-        found = true;
-      }
-    }
-    expect(found).toBe(true);
+  it("ranges pay the middle of the range: the amount is never random", () => {
+    const body: EventBody = { ...sampleBody, onSuccess: { text: ["ok"], berries: [100, 200], xp: [10, 20] } };
+    expect(resolveEvent("a", "success", body)).toMatchObject({ berries: 150, xp: 15 });
+    expect(resolveEvent("b", "success", body)).toMatchObject({ berries: 150, xp: 15 });
   });
-
-  it("falls back to onFail when onCriticalFail is absent", () => {
-    const bodyNoCritFail: EventBody = { ...sampleBody, onCriticalFail: undefined };
-    let found = false;
-    for (let seed = 0; seed < 2000 && !found; seed++) {
-      const rng = mulberry32(seed);
-      const result = resolveEvent(rng, bodyNoCritFail, -999, 10, 1);
-      if (result.outcome === "critical_fail") {
-        expect(result.hpLoss).toBe(5); // onFail's value, not onCriticalFail's
-        found = true;
-      }
-    }
-    expect(found).toBe(true);
+  it("falls back to the plain tiers when the critical ones are absent", () => {
+    const body: EventBody = { flavorTexts: ["x"], onSuccess: { text: ["ok"], berries: [10, 10] }, onFail: { text: ["fail"], hpLoss: [3, 3] } };
+    expect(resolveEvent("s", "critical_success", body).narrative).toBe("ok");
+    expect(resolveEvent("s", "critical_fail", body).narrative).toBe("fail");
   });
-
-  it("reward/penalty fields default to zero when the outcome tier omits them", () => {
-    const rng = mulberry32(1);
-    const result = resolveEvent(rng, sampleBody, -999, 10, 1);
-    expect(Number.isFinite(result.berries)).toBe(true);
-    expect(Number.isFinite(result.bounty)).toBe(true);
-    expect(result.bounty).toBe(0); // sampleBody never specifies bounty
+  it("reward fields default to zero when the tier omits them", () => {
+    const body: EventBody = { flavorTexts: ["x"], onSuccess: { text: ["ok"] }, onFail: { text: ["f"] } };
+    expect(resolveEvent("s", "success", body)).toMatchObject({ berries: 0, xp: 0, bounty: 0, hpLoss: 0 });
   });
-
-  it("only flags a fruit drop on success tiers, gated by fruitDropChance", () => {
-    const bodyWithDrop: EventBody = { ...sampleBody, fruitDropChance: 1 };
-    let sawSuccessDrop = false;
-    let sawFailNoDrop = false;
-    for (let seed = 0; seed < 500; seed++) {
-      const rng = mulberry32(seed);
-      const result = resolveEvent(rng, bodyWithDrop, 999, 1, 99); // biased toward success
-      if ((result.outcome === "success" || result.outcome === "critical_success") && result.fruitDropRolled) {
-        sawSuccessDrop = true;
-      }
-      const rng2 = mulberry32(seed);
-      const failResult = resolveEvent(rng2, bodyWithDrop, -999, 10, 1); // biased toward fail
-      if ((failResult.outcome === "fail" || failResult.outcome === "critical_fail") && !failResult.fruitDropRolled) {
-        sawFailNoDrop = true;
-      }
-    }
-    expect(sawSuccessDrop).toBe(true);
-    expect(sawFailNoDrop).toBe(true);
+  it("the same seed shows the same flavour text and different seeds can differ", () => {
+    const body: EventBody = { ...sampleBody, flavorTexts: ["a", "b", "c", "d", "e"], onSuccess: { text: ["1", "2", "3", "4"] } };
+    expect(resolveEvent("x", "success", body).flavorText).toBe(resolveEvent("x", "success", body).flavorText);
+    const seen = new Set(Array.from({ length: 30 }, (_, i) => resolveEvent(`s${i}`, "success", body).flavorText));
+    expect(seen.size).toBeGreaterThan(1);
   });
-
-  it("triggersCombat mirrors the presence of an enemy spec", () => {
-    const rng = mulberry32(1);
-    const withEnemy = resolveEvent(rng, { ...sampleBody, enemy: { name: "X", hp: 1, atk: 1, def: 1, spd: 1 } }, 0, 1, 1);
-    const withoutEnemy = resolveEvent(mulberry32(1), sampleBody, 0, 1, 1);
-    expect(withEnemy.triggersCombat).toBe(true);
-    expect(withoutEnemy.triggersCombat).toBe(false);
+  it("only a brilliant result can flag a fruit find, and only when the event offers one", () => {
+    const body: EventBody = { ...sampleBody, fruitDropChance: 0.5 };
+    expect(resolveEvent("s", "critical_success", body).fruitDropRolled).toBe(true);
+    expect(resolveEvent("s", "success", body).fruitDropRolled).toBe(false);
+    expect(resolveEvent("s", "critical_success", sampleBody).fruitDropRolled).toBe(false);
   });
-
-  it("passes an enemy's optional personality straight through to the resolution", () => {
-    const rng = mulberry32(1);
-    const result = resolveEvent(
-      rng,
-      { ...sampleBody, enemy: { name: "X", hp: 1, atk: 1, def: 1, spd: 1, personality: "arrogante y cruel" } },
-      0,
-      1,
-      1
-    );
-    expect(result.enemy?.personality).toBe("arrogante y cruel");
-  });
-
-  it("leaves personality undefined when the enemy spec doesn't set one", () => {
-    const rng = mulberry32(1);
-    const result = resolveEvent(rng, { ...sampleBody, enemy: { name: "X", hp: 1, atk: 1, def: 1, spd: 1 } }, 0, 1, 1);
-    expect(result.enemy?.personality).toBeUndefined();
+  it("triggersCombat mirrors the presence of an enemy spec and passes the personality through", () => {
+    const enemy = { name: "Bandido", hp: 20, atk: 5, def: 2, spd: 3, personality: "torpe" };
+    expect(resolveEvent("s", "fail", { ...sampleBody, enemy })).toMatchObject({ triggersCombat: true, enemy });
+    expect(resolveEvent("s", "fail", sampleBody).triggersCombat).toBe(false);
+    expect(resolveEvent("s", "fail", { ...sampleBody, enemy: { ...enemy, personality: undefined } }).enemy?.personality).toBeUndefined();
   });
 });
 
-describe("resolveEvent — devil fruit water hazard", () => {
-  const waterBody: EventBody = { ...sampleBody, waterHazard: true };
-
-  it("does not penalize a character without a devil fruit", () => {
-    let successCount = 0;
-    for (let seed = 0; seed < 300; seed++) {
-      const withFruit = resolveEvent(mulberry32(seed), waterBody, 20, 5, 20, true);
-      const withoutFruit = resolveEvent(mulberry32(seed), waterBody, 20, 5, 20, false);
-      if (withoutFruit.outcome === "success" || withoutFruit.outcome === "critical_success") successCount++;
-      // Same roll, same difficulty: the devil fruit user's effective modifier is
-      // always <= the non-user's, so they can never succeed where the non-user fails.
-      const rank = (o: string) => ["critical_fail", "fail", "success", "critical_success"].indexOf(o);
-      expect(rank(withFruit.outcome)).toBeLessThanOrEqual(rank(withoutFruit.outcome));
-    }
-    expect(successCount).toBeGreaterThan(0);
+describe("eventDifficulty", () => {
+  it("uses the override when set and rises with island danger otherwise", () => {
+    expect(eventDifficulty({ ...sampleBody, difficultyOverride: 42 }, 9, 1)).toBe(42);
+    expect(eventDifficulty(sampleBody, 8, 1)).toBeGreaterThan(eventDifficulty(sampleBody, 2, 1));
   });
-
-  it("ignores waterHazard entirely when the event body doesn't opt in", () => {
-    const rng1 = mulberry32(7);
-    const rng2 = mulberry32(7);
-    const withFruit = resolveEvent(rng1, sampleBody, 20, 5, 20, true);
-    const withoutFruit = resolveEvent(rng2, sampleBody, 20, 5, 20, false);
-    expect(withFruit.outcome).toBe(withoutFruit.outcome);
+  it("a water hazard is far harder for a devil fruit user, and only if the event opts in", () => {
+    const water: EventBody = { ...sampleBody, waterHazard: true, difficultyOverride: 30 };
+    expect(eventDifficulty(water, 5, 5, true)).toBe(30 + DEVIL_FRUIT_WATER_PENALTY);
+    expect(eventDifficulty(water, 5, 5, false)).toBe(30);
+    expect(eventDifficulty({ ...sampleBody, difficultyOverride: 30 }, 5, 5, true)).toBe(30);
   });
-
-  it("a large enough penalty still allows the guaranteed 5% critical success through", () => {
-    let found = false;
-    for (let seed = 0; seed < 3000 && !found; seed++) {
-      const result = resolveEvent(mulberry32(seed), waterBody, 0, 10, 1, true);
-      if (result.outcome === "critical_success") found = true;
-    }
-    expect(found).toBe(true);
+  it("never passes 99", () => {
+    expect(eventDifficulty({ ...sampleBody, waterHazard: true, difficultyOverride: 90 }, 9, 1, true)).toBe(99);
   });
-
-  it("DEVIL_FRUIT_WATER_PENALTY is large enough to matter at any realistic modifier", () => {
+  it("the penalty is large enough to matter", () => {
     expect(DEVIL_FRUIT_WATER_PENALTY).toBeGreaterThanOrEqual(40);
   });
 });
@@ -156,15 +82,8 @@ describe("pickEventTemplate", () => {
   it("throws on an empty list", () => {
     expect(() => pickEventTemplate(mulberry32(1), [])).toThrow();
   });
-
   it("only ever returns templates from the input list", () => {
-    const templates = [
-      { id: "a", weight: 5 },
-      { id: "b", weight: 5 },
-    ];
-    for (let seed = 0; seed < 50; seed++) {
-      const picked = pickEventTemplate(mulberry32(seed), templates);
-      expect(["a", "b"]).toContain(picked.id);
-    }
+    const list = [{ id: "a", weight: 1 }, { id: "b", weight: 3 }];
+    for (let s = 0; s < 50; s++) expect(["a", "b"]).toContain(pickEventTemplate(mulberry32(s), list).id);
   });
 });

@@ -70,4 +70,10 @@ describe("buildRefereePrompt", () => {
   it("leaves room for three beats", () => {
     expect(buildRefereePrompt(base).maxTokens).toBeGreaterThan(600);
   });
+  it("asks for a varied, adaptive multi-step rival attack", () => {
+    const { system } = buildRefereePrompt(base);
+    expect(system).toContain("OFICIO DEL RIVAL");
+    expect(system).toContain("NUNCA repitas la técnica");
+    expect(system).toContain("APRENDE");
+  });
 });

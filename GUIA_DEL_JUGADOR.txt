@@ -4,7 +4,7 @@ GRAND LINE RPG — GUÍA DEL JUGADOR
 
 Bienvenido al Grand Line. Esto no es un rol narrado a mano: es un juego de
 rol de texto libre con una IA como narradora, reglas reales por debajo,
-dados de verdad, y un mundo que sigue girando aunque tú no estés
+una IA que hace de árbitro justo, y un mundo que sigue girando aunque tú no estés
 conectado. Todo lo que lees aquí puede pasarte a ti. No hay finales
 escritos de antemano.
 
@@ -18,11 +18,13 @@ explorar islas, luchar, hacer fortuna (o no), formar tripulación con
 otros jugadores reales, y perseguir el objetivo más difícil del juego:
 los Poneglifos de Ruta, la llave hacia Laugh Tale.
 
-Todo se resuelve con tiradas aleatorias reales (nunca resultados
-prefabricados) y la muerte es permanente. Si tu personaje cae, cae de
+No hay dados en ninguna parte: todo lo decide la IA como árbitro y juez, con
+lógica, tus estadísticas y lo que escribes (nunca resultados prefabricados),
+y la muerte es permanente. Si tu personaje cae, cae de
 verdad — no hay revivir, no hay "vuelve a intentarlo". Eso es intencional:
 las decisiones importan porque cuestan algo. Una IA narra todo lo que
-pasa, pero nunca decide los números — eso siempre lo hacen los dados.
+pasa y decide los resultados con coherencia; el código solo pone límites
+(por ejemplo, nadie pierde más de la mitad de su vida de golpe) y los aplica.
 
 -----------------------------------------------------------
 2. CREAR PERSONAJE
@@ -74,18 +76,18 @@ Una IA lee lo que escribiste y hace dos cosas: decide qué tipo de acción
 es (¿estás solo conversando/explorando la escena, o comprometiéndote a
 algo arriesgado y decisivo?) y narra lo que pasa. Los NÚMEROS — quién
 gana un golpe, cuánto daño, si algo sale bien o mal, si encuentras algo
-— los decide siempre el motor de dados del juego, nunca la IA a su
-antojo. La IA solo le pone palabras a lo que los dados ya decidieron.
+— los decide la IA como árbitro, con lógica y dentro de límites que fija
+el juego: mira tus estadísticas, las del rival, el cansancio y lo que escribes.
 
 DOS TIPOS DE RESPUESTA A TU TEXTO:
   - CONVERSACIÓN / ESCENA — si lo que describes es hablar con alguien,
     mirar alrededor, curiosear, tontear, pensar en voz alta... la IA
     simplemente narra la escena y sigue la conversación contigo. No
-    cuesta ningún recurso ni tira ningún dado: es rol puro.
+    cuesta ningún recurso ni se juzga nada: es rol puro.
   - ACCIÓN DECISIVA — si tu texto es claramente arriesgado o decisivo
     ("me interno en la isla a explorar a fondo", "busco pelea", "me
-    arriesgo a robar esto"), ahí sí se activa el motor del juego: se
-    tira contra el peligro de la isla y tus estadísticas, y puede pasar
+    arriesgo a robar esto"), ahí sí se activa el juez del juego: valora
+    el peligro de la isla y tus estadísticas, y puede pasar
     cualquier cosa — desde un hallazgo hasta un combate.
 
 Debajo de cada respuesta de la IA verás "(interpretado como: X)" cuando
@@ -108,9 +110,9 @@ VIAJAR entre islas también es un botón (eliges destino de una lista).
 -----------------------------------------------------------
 
   EXPLORAR (vía texto libre) — el corazón del juego. Cada acción decisiva
-  desencadena un evento aleatorio: puede ser un hallazgo, una pelea, un
+  desencadena un evento: puede ser un hallazgo, una pelea, un
   encuentro social, un entrenamiento improvisado, o directamente un
-  desastre. El resultado depende de una tirada contra el peligro de la
+  desastre. El resultado lo juzga la IA según el peligro de la
   isla y tus propias estadísticas — y la IA lo narra incorporando lo que
   tú describiste que hacías.
 
@@ -139,17 +141,18 @@ CUANDO APARECE UNA AMENAZA, decides con texto libre si luchar o huir:
     "Intento escabullirme antes de que me vea."               -> huir
 
   LUCHAR — te comprometes al combate. Se resuelve una RONDA por vez: tú
-  describes tu movimiento, el motor de dados decide qué tan bien te sale
-  (basado en ataque, defensa y velocidad de ambos lados, y en cuánto
-  daño te hacen a ti), y la IA narra ese intercambio — incluyendo cómo
+  describes tu movimiento, el árbitro decide qué tan bien te sale
+  (según nivel, ataque, defensa, velocidad, cansancio y habilidades de ambos
+  lados, y cuánto daño te hacen a ti), y la IA narra ese intercambio — incluyendo cómo
   reacciona el enemigo, con algo de diálogo suyo si tiene personalidad
   propia. Después escribes tu siguiente movimiento, y así hasta que
   alguien cae.
 
-  TU ASTUCIA IMPORTA DE VERDAD — pero los dados siguen decidiendo. La IA
-  lee qué tan inteligente es la táctica que describes (aprovechar una
-  debilidad, una finta, el entorno...) y eso mejora de verdad tus
-  probabilidades en esa ronda. Una idea torpe o imprudente las empeora.
+  TU ASTUCIA IMPORTA DE VERDAD. El árbitro lee qué tan inteligente es la
+  táctica que describes (aprovechar una debilidad, una finta, el entorno...)
+  y eso mejora de verdad tu resultado en esa ronda. Una idea torpe o
+  imprudente lo empeora. El rival también aprende: si repites el mismo truco,
+  cambiará de plan.
   Pero nunca es la IA quien decide directamente si ganas o pierdes esa
   ronda — eso lo sigue tirando el motor del juego. Ningún combate se
   gana o se pierde solo porque "sonó bien" lo que escribiste.
@@ -289,7 +292,7 @@ a veces significa la cárcel. Una vez capturado:
     una fruta del diablo, la fianza cuesta más — te vigilan con
     Kairoseki).
   - Un ALIADO en tu misma isla puede intentar RESCATARTE. Esto no es
-    gratis: se tira una comprobación real contra el poder de quien te
+    gratis: el juez valora el intento contra el poder de quien te
     capturó (más difícil todavía si tienes una fruta del diablo). Si
     sale mal del todo, el propio rescatador puede acabar capturado
     también. Rescatar a alguien es un riesgo, no un favor automático.
@@ -342,7 +345,7 @@ la misma amplitud cuando la escena lo merece.
 
 INTENCIÓN, NO RESULTADO (Mano Negra). Lo que escribes es lo que INTENTAS:
 "intento cortarle el pecho con un tajo horizontal", nunca "le corto el
-pecho". El motor tira los dados y decide si conecta, se bloquea o falla. El
+pecho". El árbitro decide si conecta, se bloquea o falla. El
 narrador nunca da por hecho un golpe tuyo ni te hace sentir, decir o pensar
 lo que no escribiste. Los enemigos tampoco imponen: su ataque también es un
 intento con resultado decidido por el motor.
@@ -381,9 +384,9 @@ PVP A MUERTE Y CACERÍAS. Junto a "Retar a duelo" hay un botón rojo. Entre
 facciones enemigas es una CACERÍA sin consentimiento: la Marina y CP-0 cazan a
 piratas y revolucionarios; los piratas atacan a cualquier otra bandera;
 Revolucionarios y Gobierno son enemigos jurados. El cazado puede plantar cara o
-intentar huir (velocidad; si falla, toca pelear). Es letal: la vida empieza donde
-estés, y quien cae pasa la tirada de muerte real — o es capturado si el
-vencedor es de la Marina/CP-0. Misma bandera: solo si ambos aceptan.
+intentar huir (escribe cómo; el otro lo permite o no). Es letal: la vida empieza donde
+estés, y quien cae lo decide el vencedor (matar, capturar o perdonar) — y si el
+vencedor es de la Marina/CP-0, captura. Misma bandera: solo si ambos aceptan.
 Protecciones: nivel menor de 3 intocable, solo a los conectados, y no repetir
 contra la misma persona en 30 min.
 
@@ -406,9 +409,9 @@ nadie puede. Solo un rescate o una fuga.
 -----------------------------------------------------------
 
 No hay resultados guionizados. No hay "tranquilo, seguro que sobrevives".
-Cada tirada es real, cada muerte es real, y cada título que ganas te lo
+Cada juicio es serio, cada muerte es real, y cada título que ganas te lo
 ganaste de verdad. La IA le pone voz al mundo, pero nunca te hace
-trampa ni a tu favor ni en tu contra — los dados mandan. Bienvenido a
+trampa ni a tu favor ni en tu contra — la coherencia manda. Bienvenido a
 bordo.
 
 ============================================================
@@ -430,7 +433,7 @@ Cada nivel te da 2 puntos de atributo para repartir en la tarjeta "Atributos"
 (botones + y −, luego "Confirmar reparto"). Fuerza = más daño; Agilidad =
 golpeas antes y huyes mejor; Resistencia = menos daño y +3 de vida máxima por
 punto; Voluntad = Haki más rápido, resistes la muerte y +2 de aguante por punto;
-Intelecto = mejores tácticas (mejora tus tiradas en combate), domina antes la
+Intelecto = mejores tácticas (mejora tus tácticas en combate), domina antes la
 fruta y convence mejor. Hay un tope por nivel para que nadie lo ponga todo en
 una sola cosa. El narrador conoce tus atributos y los de todos los personajes.
 
@@ -463,8 +466,8 @@ maestría. Cada personaje canon tiene su propio estilo.
 COLISEO DE DRESSROSA
 De vez en cuando el coliseo convoca un torneo (armas, fruta o oro). Se anuncia
 en Noticias unas 3 horas antes, con el premio. Solo se inscribe quien esté en
-Dressrosa, y tiene que seguir allí al cerrar la inscripción. El sorteo es
-totalmente al azar (gladiadores de la isla cubren los huecos), los combates no
+Dressrosa, y tiene que seguir allí al cerrar la inscripción. El sorteo del cuadro es
+imparcial (gladiadores de la isla cubren los huecos), los combates no
 son letales y cada ronda se resuelve cada 15 minutos: antes puedes escribir una
 estrategia que inclina el combate. Cada victoria da experiencia y queda en tu
 bitácora; el campeón recibe el premio en su Inventario (un arma se equipa, una
@@ -506,7 +509,11 @@ COMBATE SIN DADOS
   no le quita vida a nadie.
 - Nadie pierde más de la mitad de su vida máxima en un solo intercambio.
 - Si la IA no responde a tiempo, ese intercambio no cuenta y no pierdes nada.
-- Siguen con azar: intentar huir y la tirada de supervivencia cuando llegas a 0.
+- Huir se escribe (cómo escapas) y lo juzga el árbitro; al llegar a 0 de vida, la
+  IA como juez decide si mueres, te capturan o sobrevives. Nada se tira.
+- Si estás en una pelea propia, la ronda del Coliseo espera a que termines.
+- El rival ataca con secuencias variadas (finta, golpe, seguimiento) y se adapta si
+  repites el mismo truco.
 
 OTRAS NOVEDADES
 - Botón "Imperio": ves tus islas (guarnición, soldados, tributos) y mandas a tus
@@ -538,7 +545,7 @@ GUARDIANES Y SIGILO
 Los Poneglifos los guardan personajes reales. Si el guardián está en
 casa, hay un 75 % de encontrártelo EN PERSONA (letal si no estás
 listo); si anda fuera, te topas con un subordinado. También puedes
-escribir que te infiltras: es una tirada de sigilo (te ven, te
+escribir que te infiltras: lo juzga la IA (te ven, te
 descubren, te atrapan o pasas limpio). Un guardián derrotado se retira
 unas horas y guarda rencor.
 
@@ -554,11 +561,11 @@ Buster Call.
 
 IMPEL DOWN Y BUSTER CALL
 Desde dentro puedes intentar fugarte por niveles con un plan escrito
-(tirada real, enfriamiento de 30 min; si te atrapan, bajas de celda).
+(lo juzga la IA, enfriamiento de 30 min; si te atrapan, bajas de celda).
 Los fugados de celdas profundas pueden desencadenar una BUSTER CALL:
 tres oleadas de la Marina contra la isla en 40 minutos. Si la
 defendéis, se salva; si no, bombardean y todos los presentes reciben un
-golpe brutal con tirada de muerte.
+golpe brutal y el juez decide el destino de quien caiga.
 
 MERCADO NEGRO
 Loguetown, Whisky Peak, Water 7 y Sabaody tienen vendedores sin
@@ -651,7 +658,7 @@ invitaciones (caducan a las 24 h), unirte con un código y expulsar si eres
 capitán. El capitán puede subir una BANDERA (una imagen). Los cazarrecompensas
 trabajan siempre en solitario: no forman ni se unen a ninguna.
 NAKAMAS NPC: escribe en la escena "Jorge, únete a mi tripulación". Que acepte
-lo decide una tirada de persuasión (cuenta lo convincente que seas). Hasta
+lo decide el juez según lo convincente que seas. Hasta
 3; SIEMPRE tienen tu nivel, así que nunca se quedan atrás, y ganan
 habilidades nuevas a los niveles 5 y 12. Los ves con su vida, ataque,
 defensa, velocidad y habilidades en el panel.

@@ -161,7 +161,7 @@ export function describeRound(r: CombatRoundInput): string {
 
 /**
  * Combat plays out round-by-round (one exchange per player message, via
- * engine/combat.ts's resolveExchange) — the user wants "the AI acts, I
+ * the AI referee) — the user wants "the AI acts, I
  * respond, the AI acts": each reply must answer the player's move with its
  * exact engine result, then show the enemy acting on its own initiative, then
  * hand the turn back. `concluded` decides whether to invite the next move or
@@ -375,7 +375,7 @@ export interface SceneNarrationInput {
 }
 
 const SCENE_HARD_RULE =
-  "Eres el narrador (rol master) de una escena de rol libre — pura interacción y ambiente, SIN tiradas de dados ni resultados mecánicos. " +
+  "Eres el narrador (rol master) de una escena de rol libre — pura interacción y ambiente, SIN resultados mecánicos. " +
   "Nunca otorgues ni quites berries, experiencia, objetos, frutas del diablo, ni causes daño o muerte: eso solo lo decide el motor del juego cuando el jugador tome una acción arriesgada y decisiva, en otro paso. " +
   "Puedes describir el entorno, hacer hablar y reaccionar a los NPCs presentes, y dejar que la escena avance — pero deja que el jugador decida qué hace después, no actúes en su nombre. " +
   "Los NPC son personas con nombre, motivos y voz propia: reaccionan con lógica a lo que se les hace y toman la iniciativa cuando la escena lo pide. " +
@@ -421,7 +421,7 @@ export interface PartySceneNarrationInput {
 }
 
 const PARTY_SCENE_HARD_RULE =
-  "Eres el narrador (rol master) de una escena de rol libre compartida por VARIOS jugadores a la vez — pura interacción y ambiente, SIN tiradas de dados ni resultados mecánicos. " +
+  "Eres el narrador (rol master) de una escena de rol libre compartida por VARIOS jugadores a la vez — pura interacción y ambiente, SIN resultados mecánicos. " +
   "Nunca otorgues ni quites berries, experiencia, objetos, frutas del diablo, ni causes daño o muerte: eso solo lo decide el motor del juego cuando un jugador tome una acción arriesgada y decisiva, en otro paso, de forma individual. " +
   "Puedes describir el entorno, hacer hablar y reaccionar a los NPCs presentes, y dejar que la escena avance — pero deja que cada jugador decida qué hace después, no actúes en su nombre. " +
   "Puedes dirigirte y reaccionar a CUALQUIERA de los personajes presentes en el grupo, no solo a quien acaba de hablar — trata al grupo como un grupo, dejando que los NPCs los traten como tal también. " +

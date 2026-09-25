@@ -1,5 +1,6 @@
 import { prisma } from "../db";
-import { liveRng } from "../engine/rng";
+import { varietyRng } from "../engine/rng";
+import { judgeMatch } from "../ai/judge";
 import {
   COLISEUM_ISLAND_NAME,
   KIND_LABELS,
@@ -14,7 +15,6 @@ import {
   nextAction,
   pickKind,
   roundName,
-  runBout,
   totalRounds,
   type CompetitionKind,
   type PrizeSpec,
@@ -70,6 +70,31 @@ export async function tickColiseum(): Promise<void> {
   }
 }
 
+const MAX_POSTPONE_MS = 45 * 60 * 1000;
+const POSTPONE_STEP_MS = 3 * 60 * 1000;
+const postponedSince = new Map<string, number>();
+
+// A round is never announced as decided while a competitor is still in a live fight of their own (reported: the news
+// crowned a player champion while they were mid-duel). The round waits a few minutes, up to a cap.
+async function postponeWhileFighting(t: { id: string; round: number; bracketJson: string }, now: number): Promise<boolean> {
+  const key = `${t.id}:${t.round}`;
+  const first = postponedSince.get(key) ?? now;
+  if (now - first > MAX_POSTPONE_MS) return false;
+  const current = parseBracket(t.bracketJson)[t.round - 1] ?? [];
+  const ids = new Set(current.flatMap((m) => [m.a, m.b]));
+  const entries = await prisma.tournamentEntry.findMany({ where: { id: { in: [...ids] }, characterId: { not: null } }, select: { characterId: true } });
+  for (const e of entries) {
+    const cid = e.characterId!;
+    const fighting = (await prisma.pendingEncounter.findFirst({ where: { characterId: cid } })) || (await getOpenDuelFor(cid)) || (await getOpenJointFightFor(cid));
+    if (fighting) {
+      postponedSince.set(key, first);
+      await prisma.tournament.update({ where: { id: t.id }, data: { roundEndsAt: new Date(now + POSTPONE_STEP_MS) } });
+      return true;
+    }
+  }
+  return false;
+}
+
 /** Runs at most one due transition. Returns false when nothing was due. */
 export async function coliseumStep(now = Date.now()): Promise<boolean> {
   const [open, clock] = await Promise.all([
@@ -82,8 +107,10 @@ export async function coliseumStep(now = Date.now()): Promise<boolean> {
   );
   if (action === "announce") await announceTournament(now);
   else if (action === "start" && open) await startTournament(open.id);
-  else if (action === "resolve_round" && open) await resolveRound(open.id);
-  else return false;
+  else if (action === "resolve_round" && open) {
+    if (await postponeWhileFighting(open, now)) return false;
+    await resolveRound(open.id);
+  } else return false;
   return true;
 }
 
@@ -94,7 +121,7 @@ async function dressrosa() {
 export async function announceTournament(now = Date.now(), forced?: { kind?: CompetitionKind }) {
   const isle = await dressrosa();
   if (!isle) return null;
-  const rng = liveRng();
+  const rng = varietyRng(`tournament:${Math.floor(now / 3_600_000)}`);
   const here = await prisma.character.findMany({ where: { currentIslandId: isle.id, status: "ALIVE" }, select: { level: true } });
   const avgLevel = here.length ? Math.round(here.reduce((s, c) => s + c.level, 0) / here.length) : isle.minLevelToEnter;
   const kind = forced?.kind ?? pickKind(rng);
@@ -105,7 +132,7 @@ export async function announceTournament(now = Date.now(), forced?: { kind?: Com
   const hours = Math.round(REGISTRATION_LEAD_MS / 3_600_000);
   await postNews(
     `El Coliseo de Dressrosa convoca el ${KIND_LABELS[kind].toLowerCase()}`,
-    `Premio para el campeón: ${prize.label}. La inscripción está abierta durante ${hours} horas y solo pueden apuntarse quienes estén en Dressrosa cuando se cierre. Los emparejamientos serán totalmente al azar, gladiadores del reino incluidos, y el torneo no es letal.`,
+    `Premio para el campeón: ${prize.label}. La inscripción está abierta durante ${hours} horas y solo pueden apuntarse quienes estén en Dressrosa cuando se cierre. Los emparejamientos los fija el reglamento del Coliseo, gladiadores del reino incluidos, cada combate lo juzga un árbitro y el torneo no es letal.`,
     CATEGORY,
     undefined,
     "major",
@@ -124,7 +151,7 @@ export async function startTournament(tournamentId: string) {
   if (!t || t.status !== "ANNOUNCED") return;
   const isle = await dressrosa();
   if (!isle) return;
-  const rng = liveRng();
+  const rng = varietyRng(`bracket:${tournamentId}`);
   const humans: { entryId: string; level: number }[] = [];
   for (const e of t.entries.filter((x) => x.status === "REGISTERED" && x.characterId)) {
     const c = await prisma.character.findUnique({ where: { id: e.characterId! } });
@@ -191,7 +218,6 @@ export async function resolveRound(tournamentId: string) {
   if (!t || t.status !== "RUNNING") return;
   const isle = await dressrosa();
   if (!isle) return;
-  const rng = liveRng();
   const rounds = parseBracket(t.bracketJson);
   const current = rounds[t.round - 1];
   const byId = new Map(t.entries.map((e) => [e.id, e]));
@@ -212,15 +238,23 @@ export async function resolveRound(tournamentId: string) {
     const [sa, sb] = await Promise.all([side(ea), side(eb)]);
     let winnerEntry: typeof ea;
     if (!sa.present || !sb.present) {
-      winnerEntry = sa.present ? ea : sb.present ? eb : rng() < 0.5 ? ea : eb;
+      winnerEntry = sa.present ? ea : sb.present ? eb : ea;
       m.walkover = true;
       m.aHp = 100;
       m.bHp = 100;
     } else {
-      const bout = runBout(rng, sa.combatant!, sb.combatant!, sa.tactic, sb.tactic);
-      winnerEntry = bout.winner === "a" ? ea : eb;
-      m.aHp = bout.aHpPct;
-      m.bHp = bout.bHpPct;
+      // An exhibition bout on copies of full health: the judge weighs both fighters' sheets and the tactic each player chose.
+      const fa = { ...sa.combatant!, atk: sa.combatant!.atk + sa.tactic, def: sa.combatant!.def + Math.round(sa.tactic / 2) };
+      const fb = { ...sb.combatant!, atk: sb.combatant!.atk + sb.tactic, def: sb.combatant!.def + Math.round(sb.tactic / 2) };
+      const verdict = await judgeMatch({ name: ea.name, level: fa.level ?? 10, atk: fa.atk, def: fa.def }, { name: eb.name, level: fb.level ?? 10, atk: fb.atk, def: fb.def }, `${label} del Coliseo de Dressrosa (combate de exhibición, nadie muere).`);
+      winnerEntry = verdict.winner === "a" ? ea : eb;
+      // How close it was, from the two sides' strength: the winner keeps more health the wider the gap.
+      const pa = fa.atk + fa.def + (fa.level ?? 10) * 2;
+      const pb = fb.atk + fb.def + (fb.level ?? 10) * 2;
+      const winShare = (verdict.winner === "a" ? pa : pb) / Math.max(1, pa + pb);
+      const winnerPct = Math.max(15, Math.min(100, Math.round(20 + 80 * (winShare - 0.5) * 2)));
+      m.aHp = verdict.winner === "a" ? winnerPct : 0;
+      m.bHp = verdict.winner === "b" ? winnerPct : 0;
     }
     m.winner = winnerEntry.id;
     narrationMatches.push({ a: ea.name, b: eb.name, winner: winnerEntry.name, aHpPct: m.aHp ?? 0, bHpPct: m.bHp ?? 0, walkover: m.walkover });
@@ -275,8 +309,8 @@ export async function resolveRound(tournamentId: string) {
     return;
   }
 
-  // Next round: a fresh random draw among the survivors.
-  const pairs = drawBracket(rng, winners);
+  // Next round: the survivors are paired in the order the Coliseum sets.
+  const pairs = drawBracket(varietyRng(`round:${t.id}:${t.round}`), winners);
   rounds.push(pairs.map(([a, b]) => ({ a, b })));
   await prisma.tournament.update({ where: { id: t.id }, data: { round: t.round + 1, roundEndsAt: new Date(Date.now() + ROUND_INTERVAL_MS), bracketJson: JSON.stringify(rounds) } });
   notifyCharacters(await participantIds(t.id), "coliseum");

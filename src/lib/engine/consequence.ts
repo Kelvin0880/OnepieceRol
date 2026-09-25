@@ -1,5 +1,3 @@
-import { Rng } from "./rng";
-
 /**
  * Kill-vs-spare aftermath: sparing or finishing a named enemy leaves a thread
  * that comes back later, up to MAX_STAGE times, each return being a fresh
@@ -12,25 +10,17 @@ export type ConsequenceOutcome = "boon" | "betrayal" | "avenger" | "tribute";
 export const MAX_STAGE = 3;
 export const SPARED_DELAY_MS = 20 * 60_000;
 export const KILLED_DELAY_MS = 10 * 60_000;
-/** Chance per explore that a ripe consequence resurfaces. */
-export const TRIGGER_CHANCE = 0.3;
-
 export const consequenceDelayMs = (kind: ConsequenceKind) => (kind === "spared" ? SPARED_DELAY_MS : KILLED_DELAY_MS);
 
 export function consequenceRipe(dueAtMs: number, nowMs: number): boolean {
   return nowMs >= dueAtMs;
 }
 
-export function rollConsequenceTrigger(rng: Rng): boolean {
-  return rng() < TRIGGER_CHANCE;
-}
-
-/** Mercy is usually repaid, but not always; violence mostly breeds revenge, sometimes only fear. */
-export function rollOutcome(rng: Rng, kind: ConsequenceKind): ConsequenceOutcome {
-  const r = rng();
-  if (kind === "spared") return r < 0.7 ? "boon" : "betrayal";
-  return r < 0.7 ? "avenger" : "tribute";
-}
+/** The two ways each thread can come back; the AI judge picks one from who the enemy is (ai/judge.ts judgeChoice). */
+export const OUTCOME_OPTIONS: Record<ConsequenceKind, [ConsequenceOutcome, ConsequenceOutcome]> = {
+  spared: ["boon", "betrayal"],
+  killed: ["avenger", "tribute"],
+};
 
 export function boonRewards(stage: number, islandDanger: number) {
   const s = Math.max(1, Math.min(MAX_STAGE, stage));

@@ -1,5 +1,5 @@
 import { prisma } from "../db";
-import { liveRng } from "../engine/rng";
+import { varietyRng } from "../engine/rng";
 import { generateMissionSpecs, progressGain, isComplete, shouldGenerateBatch, MissionEvent, MissionKind } from "../engine/missions";
 import { canEnterIsland } from "../engine/travel";
 import { narrateIslandBriefing } from "../ai/narrate";
@@ -31,7 +31,7 @@ async function generateBatch(characterId: string): Promise<void> {
   if (!shouldGenerateBatch(active, last?.createdAt.getTime() ?? null, Date.now())) return;
 
   const neighbours = await openNeighbours(island.connections, c.level);
-  const specs = generateMissionSpecs(liveRng(), { level: c.level, danger: island.dangerLevel, minLevel: island.minLevelToEnter, islandName: island.name, arcHook: island.arcHook, openNeighbours: neighbours });
+  const specs = generateMissionSpecs(varietyRng(`${characterId}:${island.id}:${Math.floor(Date.now() / 3_600_000)}`), { level: c.level, danger: island.dangerLevel, minLevel: island.minLevelToEnter, islandName: island.name, arcHook: island.arcHook, openNeighbours: neighbours });
   const { patronActorId } = await islandPowers(island.id);
   await prisma.mission.createMany({
     data: specs.map((s) => ({

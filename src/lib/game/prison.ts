@@ -1,13 +1,13 @@
 import { prisma } from "../db";
-import { liveRng } from "../engine/rng";
-import { attemptPrisonRescue, rescueSucceeded } from "../engine/rescue";
+import { judgeOutcome } from "../ai/judge";
+import { rescueEdge, rescueSucceeded } from "../engine/rescue";
 import { combatPower } from "../engine/encounter";
 import { computeBailBerries, isBailAllowed } from "../engine/economy";
 import { impelDownCell, impelDownRescueLevel, CELL_LABELS, IMPEL_FAILED_RESCUE_HP_FRACTION } from "../engine/impel-down";
 import { toCombatant } from "./derive";
 import { postNews } from "./death-resolution";
-import { attemptEscape, applyEscapeResult, escapeDifficulty, escapeModifier, escapeCooldownLeftMs, levelsToEscape, ESCAPE_COOLDOWN_MS, BRIG_LOCKDOWN_MS, CAUGHT_HP_FRACTION } from "../engine/escape";
-import { rollBusterCall } from "../engine/buster-call";
+import { escapeResultFrom, applyEscapeResult, escapeDifficulty, escapeModifier, escapeCooldownLeftMs, levelsToEscape, ESCAPE_COOLDOWN_MS, BRIG_LOCKDOWN_MS, CAUGHT_HP_FRACTION } from "../engine/escape";
+import { busterCallTriggered } from "../engine/buster-call";
 import { classifyPlayerAction } from "../ai/classify-action";
 import { narrateExplore } from "../ai/narrate";
 import { applyBountyOrNotoriety } from "./reputation";
@@ -129,10 +129,19 @@ export async function attemptRescue(rescuerCharacterId: string, userId: string, 
   }
 
   const rescuerPower = combatPower(toCombatant(rescuer));
-  const check = attemptPrisonRescue(liveRng(), rescuerPower, prisoner.imprisonment.minRescueLevel, !!prisoner.devilFruitId);
+  const edge = rescueEdge(rescuerPower, prisoner.imprisonment.minRescueLevel, !!prisoner.devilFruitId);
+  const cellLabel = prisoner.imprisonment.cellLevel > 0 ? CELL_LABELS[prisoner.imprisonment.cellLevel] : "la celda";
+  const judged = await judgeOutcome({
+    situation: `Rescatar a ${prisoner.name} de ${cellLabel} en ${prisoner.currentIsland.name}. La guardia es tan fuerte como el captor (${prisoner.imprisonment.minRescueLevel} de poder)${prisoner.devilFruitId ? "; el preso lleva grilletes de Kairoseki" : ""}`,
+    actor: { name: rescuer.name, level: rescuer.level, power: 50 + edge, kit: `Poder de combate ${rescuerPower}` },
+    difficulty: 50,
+    stakes: "éxito = lo libera; fallo = se retira; fallo grave = también lo capturan",
+    characterId: rescuer.id,
+  });
+  const check = { outcome: judged.outcome };
   const newsLog: string[] = [];
 
-  if (rescueSucceeded(check)) {
+  if (rescueSucceeded(check.outcome)) {
     let escapeIsland: { id: string } | null = null;
     if (prisoner.imprisonment.cellLevel > 0) {
       // Freed prisoners are smuggled off the island — they can't be left stranded somewhere their level can't even enter.
@@ -152,7 +161,7 @@ export async function attemptRescue(rescuerCharacterId: string, userId: string, 
     await postNews(headline, `En una fuga audaz en ${rescuer.currentIsland.name}, ${rescuer.name} logró sacar a ${prisoner.name} de su celda.`, "Gobierno Mundial", rescuer.id, "major");
     newsLog.push(headline);
     // Breaking someone out of the deep levels is exactly what the fleet exists for.
-    if (prisoner.imprisonment.cellLevel > 0 && rollBusterCall(liveRng(), prisoner.imprisonment.cellLevel)) {
+    if (prisoner.imprisonment.cellLevel > 0 && busterCallTriggered(prisoner.imprisonment.cellLevel, check.outcome === "critical_success")) {
       const bc = await startBusterCall(prisoner.imprisonment.islandId, `El rescate de ${prisoner.name} desde ${CELL_LABELS[prisoner.imprisonment.cellLevel]} ha desatado la furia del Gobierno.`);
       if (bc) log.push("Las sirenas se disparan a vuestra espalda: el Gobierno ha ordenado una Buster Call sobre la isla.");
     }
@@ -212,7 +221,15 @@ export async function attemptPrisonEscape(characterId: string, userId: string, p
     tacticModifier: tactic,
     hasDevilFruit: !!full.devilFruitId,
   });
-  const result = attemptEscape(liveRng(), modifier, difficulty);
+  const escapeVerdict = await judgeOutcome({
+    situation: `Fugarse desde dentro de ${jail.cellLevel > 0 ? CELL_LABELS[jail.cellLevel] : "la celda"} en ${full.currentIsland.name}, con los guardias en alerta ${jail.alert}`,
+    actor: { name: full.name, level: full.level, power: 50 + modifier, kit: full.devilFruitId ? "Lleva grilletes de Kairoseki: su fruta no le sirve" : undefined },
+    intent: plan,
+    difficulty,
+    stakes: "éxito total = avanza dos niveles; éxito = avanza uno; fallo = sin avance y guardias más alerta; fallo grave = lo descubren y lo castigan",
+    characterId: full.id,
+  });
+  const result = escapeResultFrom(escapeVerdict.outcome);
   const step = applyEscapeResult(state, result);
   const newsLog: string[] = [];
   const need = levelsToEscape(jail.cellLevel);
@@ -263,7 +280,7 @@ export async function attemptPrisonEscape(characterId: string, userId: string, p
       full.id,
       "major"
     );
-    if (jail.cellLevel > 0 && rollBusterCall(liveRng(), jail.cellLevel)) {
+    if (jail.cellLevel > 0 && busterCallTriggered(jail.cellLevel, result === "breakthrough")) {
       const bc = await startBusterCall(jail.islandId, `La fuga de ${full.name} desde ${where} ha sido considerada una amenaza intolerable.`);
       if (bc) log.push("Detrás de ti, las sirenas de Impel Down se disparan: el Gobierno ha ordenado una Buster Call.");
     }

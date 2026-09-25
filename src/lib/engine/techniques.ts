@@ -1,4 +1,3 @@
-import { Rng } from "./rng";
 import type { StyleUse } from "./styles";
 import { FruitPhase, fruitPowerMultiplier, fruitStaminaMultiplier } from "./fruit-mastery";
 
@@ -94,10 +93,8 @@ export function resolveTechnique(requested: TechniqueId, ctx: TechniqueContext):
   return { requested, used: requested, downgraded: false, ...(requested === "style" && ctx.style ? { styleUse: ctx.style } : {}), atk: wanted.atk, def: wanted.def, spd: wanted.spd, staminaCost: wanted.cost };
 }
 
-/** Haki also grows from being used under pressure, not only from the training button. */
-export function hakiGrowthFromUse(rng: Rng, technique: TechniqueId, currentLevel: number): number {
+/** Haki also grows from being used under pressure, not only from the training button: a point every time it carries a fight. */
+export function hakiGrowthFromUse(technique: TechniqueId, currentLevel: number): number {
   if (technique !== "armament" && technique !== "observation") return 0;
-  if (currentLevel >= 100) return 0;
-  const chance = 0.35 * (1 - currentLevel / 130);
-  return rng() < chance ? 1 : 0;
+  return currentLevel >= 100 ? 0 : 1;
 }

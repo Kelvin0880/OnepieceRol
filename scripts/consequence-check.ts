@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Kill-vs-spare aftermath against the dev DB: threads resurface, branch by choice, chain up to 3 stages.
 // Usage: npx tsx scripts/consequence-check.ts
 import "dotenv/config";
@@ -20,9 +21,8 @@ async function main() {
   await recordConsequence(c.id, { name: "Lugarteniente de Barbanegra", worldActorId: actor.id }, "spared", island);
   const row = await prisma.consequence.findFirstOrThrow({ where: { characterId: c.id } });
   assert(row.stage === 1 && !row.resolvedAt, "sparing leaves an unresolved stage-1 thread");
-  const rng = mulberry32(5);
   let early = null;
-  for (let i = 0; i < 30; i++) early = early ?? (await rollConsequenceForExplore(c, stats, 6, rng));
+  for (let i = 0; i < 30; i++) early = early ?? (await rollConsequenceForExplore(c, stats, 6));
   assert(early === null, "nothing resurfaces before its delay");
 
   const seen = new Set<string>();
@@ -31,14 +31,14 @@ async function main() {
     await recordConsequence(c.id, { name: "Rival", worldActorId: actor.id }, n % 2 ? "spared" : "killed", island);
     await prisma.consequence.updateMany({ where: { characterId: c.id }, data: { dueAt: new Date(Date.now() - 1000) } });
     let res = null;
-    for (let i = 0; i < 40 && !res; i++) res = await rollConsequenceForExplore(c, stats, 6, rng);
+    for (let i = 0; i < 40 && !res; i++) res = await rollConsequenceForExplore(c, stats, 6);
     assert(!!res, `thread ${n} eventually resurfaces`);
     const done = await prisma.consequence.findFirstOrThrow({ where: { characterId: c.id } });
     assert(!!done.resolvedAt && !!done.outcome, "it is marked resolved with an outcome");
     seen.add(done.outcome!);
     if (res!.encounter) assert(res!.encounter.consequenceStage === 1 && res!.encounter.stats.hp > 0, "a returning enemy carries its stage");
   }
-  assert(["boon", "betrayal", "avenger", "tribute"].every((o) => seen.has(o)), "all four branches occurred");
+  assert(["boon", "avenger"].every((o) => seen.has(o)) && [...seen].every((o) => ["boon", "betrayal", "avenger", "tribute"].includes(o)), "the judge picks one of the offered branches for each thread (the stub always takes the first)");
 
   await prisma.consequence.deleteMany({ where: { characterId: c.id } });
   await recordConsequence(c.id, { name: "Vengador", consequenceStage: 2 }, "killed", island);

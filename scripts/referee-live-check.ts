@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Real-AI check of the dice-free referee, reproducing two reported scenes (needs OPENROUTER_API_KEY in .env).
 // Usage: npx tsx scripts/referee-live-check.ts
 import "dotenv/config";
@@ -66,6 +67,21 @@ async function main() {
     actions: [{ name: "Kirito", text: "-Lo vería venir con mi Haki de observación y bloquearía el puñetazo con la palma cubierta de Haki-" }],
   });
   if (r3) check("a clean block takes little or no damage", (r3.applied.find((a) => a.name === "Kirito")?.hpLoss ?? 999) <= 25);
+
+  // Report: the rival repeated the same fire attack every round and did not adapt to a repeated trick.
+  const r4 = await scene("Rival creativo que aprende", {
+    mode: "solo",
+    round: 5,
+    actors: [kirito, { name: "Fuego de Rayo", side: "enemy" as const, level: 30, hp: 300, maxHp: 480, stamina: 120, personality: "gladiador orgulloso, explosivo", kit: "Fruta de fuego (Rayo-Fuego), Haki de Armadura; puños ardientes.", sheet: "ataque 180, defensa 150, velocidad 140" }],
+    pendingThreat: "Fuego de Rayo intenta lanzar una potente ráfaga de fuego hacia ti, buscando envolverte en llamas; si llega a conectar, te causaría quemaduras severas.",
+    actions: [{ name: "Kirito", text: "No aprendes......\n\n-Otra vez usaría Shambles en el momento justo para cambiar de lugar con Fuego de Rayo, con la intención de que su propia ráfaga le dé a él-" }],
+  });
+  if (r4) {
+    const said = r4.v.rivalIntent ?? "";
+    console.log("INTENCION:", said);
+    check("the rival's next attack is a real sequence, not a one-liner", said.length > 200);
+    check("it does not repeat the previous fire blast wording", !/ráfaga de fuego hacia ti/i.test(said));
+  }
 
   console.log(failures === 0 ? "\nALL PASS" : `\n${failures} FAILED`);
   process.exit(failures === 0 ? 0 : 1);

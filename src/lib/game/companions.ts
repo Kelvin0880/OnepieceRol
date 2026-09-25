@@ -1,8 +1,8 @@
 import { belongingsFor } from "../engine/inventory";
 import { prisma } from "../db";
 import { CharacterStatus } from "@prisma/client";
-import { liveRng } from "../engine/rng";
-import { MAX_COMPANIONS, RecruitTier, companionMaxHp, companionSheet, parseCompanionProfile, normalizeRole, recruitChance, rollRecruit, startingLoyalty } from "../engine/companions";
+import { judgeOutcome } from "../ai/judge";
+import { MAX_COMPANIONS, RecruitTier, companionMaxHp, companionSheet, parseCompanionProfile, normalizeRole, recruitDifficulty, startingLoyalty } from "../engine/companions";
 import { narrateRecruit, getRecentScene } from "../ai/narrate";
 
 export class CompanionError extends Error {}
@@ -85,6 +85,8 @@ export interface RecruitOpts {
   role?: string;
   tier?: RecruitTier;
   tacticModifier?: number;
+  /** What the player wrote to convince them. */
+  intentText?: string;
 }
 
 /**
@@ -109,8 +111,16 @@ export async function recruitCompanion(characterId: string, userId: string, opts
 
   const role = normalizeRole(opts.role);
   const tacticModifier = opts.tacticModifier ?? 0;
-  const chance = recruitChance({ willpower: c.willpower, intellect: c.intellect, tacticModifier, tier: opts.tier ?? "average" });
-  const accepted = rollRecruit(liveRng(), chance);
+  const difficulty = recruitDifficulty({ willpower: c.willpower, intellect: c.intellect, tacticModifier, tier: opts.tier ?? "average" });
+  const verdict = await judgeOutcome({
+    situation: `Convencer a ${name} (${role}) de unirse a la tripulación de ${c.name} en ${c.currentIsland.name}. Un candidato orgulloso o poderoso se resiste; un buen argumento y una voluntad fuerte ayudan`,
+    actor: { name: c.name, level: c.level, power: 50 + Math.round(c.willpower * 0.4 + c.intellect * 0.3 + tacticModifier * 0.8) },
+    intent: opts.intentText,
+    difficulty,
+    stakes: "éxito = el candidato acepta; fallo = declina por ahora",
+    characterId,
+  });
+  const accepted = verdict.outcome === "success" || verdict.outcome === "critical_success";
 
   const recentScene = await getRecentScene(characterId, 8);
   const prose = await narrateRecruit({ characterName: c.name, npcName: name, role, accepted, islandName: c.currentIsland.name, recentScene }, { characterId });
@@ -123,7 +133,7 @@ export async function recruitCompanion(characterId: string, userId: string, opts
     await prisma.gameLogEntry.create({ data: { characterId, kind: "recruit", text: line } });
     return { log: [prose, line], accepted: true, companionName: name };
   }
-  const line = `${name} declina por ahora (probabilidad de convencerle: ${chance}%).`;
+  const line = `${name} declina por ahora.`;
   await prisma.gameLogEntry.create({ data: { characterId, kind: "recruit_fail", text: `${name.toLowerCase()}|${line}` } });
   return { log: [prose, line], accepted: false };
 }

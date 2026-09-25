@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mulberry32 } from "./rng";
-import { marketWindow, msToNextWindow, MARKET_WINDOW_MS, offersForWindow, OFFERS_PER_WINDOW, offerPrice, stingChance, rollSting, rollFakeFruit, stingDamage, isBlackMarketIsland, pardonReduction, FAKE_FRUIT_CHANCE } from "./black-market";
+import { marketWindow, msToNextWindow, MARKET_WINDOW_MS, offersForWindow, OFFERS_PER_WINDOW, offerPrice, stingChance, stingSprung, fruitIsFake, stingDamage, isBlackMarketIsland, pardonReduction, FAKE_FRUIT_CHANCE } from "./black-market";
 
 describe("stock windows", () => {
   it("rotates every window and counts down", () => {
@@ -37,19 +37,21 @@ describe("risk", () => {
     expect(stingChance(0)).toBeLessThan(stingChance(3));
     expect(stingChance(99)).toBe(0.5);
   });
-  it("fake fruit rate is near its constant", () => {
-    const rng = mulberry32(2);
-    let fakes = 0;
-    for (let i = 0; i < 4000; i++) if (rollFakeFruit(rng)) fakes++;
-    expect(Math.abs(fakes / 4000 - FAKE_FRUIT_CHANCE)).toBeLessThan(0.04);
+});
+
+describe("no-chance risk", () => {
+  it("the sting comes on the third deal in a window, never before", () => {
+    expect([0, 1].map(stingSprung)).toEqual([false, false]);
+    expect(stingSprung(2)).toBe(true);
+    expect(stingSprung(9)).toBe(true);
   });
-  it("sting frequency tracks its chance and damage never kills", () => {
-    const rng = mulberry32(9);
-    let hits = 0;
-    for (let i = 0; i < 4000; i++) if (rollSting(rng, 2)) hits++;
-    expect(Math.abs(hits / 4000 - stingChance(2))).toBeLessThan(0.04);
-    expect(stingDamage(5, 100)).toBe(4);
-    expect(stingDamage(100, 100)).toBe(15);
+  it("which windows sell a rotten fruit is fixed by the stock, the same for every buyer", () => {
+    const flags = Array.from({ length: 40 }, (_, w) => fruitIsFake(w, 7));
+    expect(flags.some(Boolean) && flags.some((f) => !f)).toBe(true);
+    expect(fruitIsFake(12, 7)).toBe(fruitIsFake(12, 7));
+  });
+  it("damage never kills", () => {
     expect(stingDamage(1, 100)).toBe(0);
+    expect(stingDamage(50, 100)).toBeLessThan(50);
   });
 });

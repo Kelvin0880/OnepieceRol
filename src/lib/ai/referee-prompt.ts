@@ -88,11 +88,19 @@ const CORE_RULES =
   " No reveles que eres una IA. " +
   ROLE_RULES;
 
+// Reported: the rival threw the same fireball line every round and never learned from a repeated trick.
+const RIVAL_CRAFT =
+  "OFICIO DEL RIVAL (obligatorio): su \"intencion_rival\" es una SECUENCIA de 3 a 5 frases, no un golpe suelto: una finta o preparación, el golpe principal con su técnica (nómbrala) y un seguimiento o contraataque listo por si el jugador esquiva o bloquea (\"y si se aparta, gira y ...\"). " +
+  "NUNCA repitas la técnica, el ángulo ni la estructura del ataque anterior del rival (el pendiente): cambia de técnica, de distancia, de zona del cuerpo o usa el terreno, la multitud, un arma o un objeto. " +
+  "APRENDE: si el jugador ya usó el mismo truco (cambiar de sitio, contraatacar con lo mismo, un Haki), el rival lo nota, lo dice o lo piensa y cambia de plan (ataca desde otro flanco, rompe el contacto visual, engaña primero, ataca al espacio donde el jugador aparecería). " +
+  "Y mientras esté herido o cansado, su estilo lo muestra (más desesperado, más peligroso o más cauto), sin dejar de intentar ganar. ";
+
 const SOLO_FORMAT =
   "TRES TEXTOS EN EL JSON (en segunda persona hacia el jugador: \"tu espada\", \"te alcanza\"; nunca su nombre en tercera persona): " +
   "\"resultado\": qué pasó con el ataque pendiente y con el ataque que escribió el jugador, en pasado y neutral, sin atribuirle nada que no escribió. " +
   "\"reaccion_rival\": cómo queda el rival (con su nombre: en pie, herido, tambaleante, de rodillas, caído, inconsciente) y cómo responde (una línea suya si tiene personalidad); NUNCA vacío mientras siga en el combate. " +
   "\"intencion_rival\": el SIGUIENTE ataque del rival escrito como INTENCIÓN con su alcance, empezando por su nombre y con verbos de tentativa (\"Rocco intenta ... con la intención de ...; si llega a conectar, ...\"), creativo, encadenando combos y usando todo su repertorio para reventar a su enemigo aunque sea más fuerte. " +
+  RIVAL_CRAFT +
   "NO lo resuelvas ni hagas que dañe a nadie: el jugador decidirá en su siguiente mensaje cómo lo recibe. Si el rival cayó o no puede seguir, déjalo vacío y di en \"reaccion_rival\" que no puede continuar. ";
 
 const JSON_TAIL =
@@ -138,6 +146,7 @@ export function buildRefereePrompt(input: RefereeInput): PromptOut {
       ? "MODO GRUPO: varios aliados contra el mismo rival, todos escribieron intenciones a la vez. Da protagonismo a cada uno según lo que escribió y muestra la REACCIÓN del rival a cada intención. " +
         "Los aliados NPC (sin texto propio) actúan según su ficha y su papel, siempre en grado de tentativa. Si había un ataque pendiente del rival, resuélvelo contra quien corresponda según cómo cada jugador dijo recibirlo. " +
         "Quien queda con vida 0 está fuera de combate, pero no lo narres como muerto: el destino lo decide el juego después. Si el rival cae, añade al JSON \"golpe_final\" con el nombre exacto del aliado que le da el golpe decisivo. " +
+        "Si algún aliado INTENTA HUIR, decide con lógica quién escapa y pon sus nombres exactos en \"huyen\" (lista, vacía si nadie); quien huye con éxito no pierde vida y quien no lo logra sigue en el combate. " +
         SOLO_FORMAT
       : "MODO COMBATE SOLO CONTRA UN RIVAL. " + SOLO_FORMAT;
   const fleeRule = input.fleeAttempt

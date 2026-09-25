@@ -1,39 +1,12 @@
 import { describe, it, expect } from "vitest";
 import { mulberry32 } from "./rng";
-import { consequenceDelayMs, consequenceRipe, rollOutcome, rollConsequenceTrigger, boonRewards, tributeRewards, returningEnemy, nextStage, MAX_STAGE, TRIGGER_CHANCE } from "./consequence";
+import { consequenceDelayMs, consequenceRipe, OUTCOME_OPTIONS, boonRewards, tributeRewards, returningEnemy, nextStage, MAX_STAGE } from "./consequence";
 
 describe("consequence timing", () => {
   it("a thread is ripe only after its delay", () => {
     expect(consequenceRipe(1000, 999)).toBe(false);
     expect(consequenceRipe(1000, 1000)).toBe(true);
     expect(consequenceDelayMs("killed")).toBeLessThan(consequenceDelayMs("spared"));
-  });
-  it("triggers about TRIGGER_CHANCE of the time", () => {
-    const rng = mulberry32(7);
-    let hits = 0;
-    for (let i = 0; i < 4000; i++) if (rollConsequenceTrigger(rng)) hits++;
-    expect(hits / 4000).toBeGreaterThan(TRIGGER_CHANCE - 0.05);
-    expect(hits / 4000).toBeLessThan(TRIGGER_CHANCE + 0.05);
-  });
-});
-
-describe("outcomes branch by choice", () => {
-  it("sparing yields boons and betrayals only, killing avengers and tribute only, both mixes appear", () => {
-    const rng = mulberry32(3);
-    const spared = new Set<string>();
-    const killed = new Set<string>();
-    for (let i = 0; i < 200; i++) {
-      spared.add(rollOutcome(rng, "spared"));
-      killed.add(rollOutcome(rng, "killed"));
-    }
-    expect([...spared].sort()).toEqual(["betrayal", "boon"]);
-    expect([...killed].sort()).toEqual(["avenger", "tribute"]);
-  });
-  it("mercy is repaid more often than not", () => {
-    const rng = mulberry32(11);
-    let boons = 0;
-    for (let i = 0; i < 1000; i++) if (rollOutcome(rng, "spared") === "boon") boons++;
-    expect(boons).toBeGreaterThan(600);
   });
 });
 
@@ -51,5 +24,12 @@ describe("scaling", () => {
   it("the thread ends after the last stage", () => {
     expect(nextStage(1)).toBe(2);
     expect(nextStage(MAX_STAGE)).toBeNull();
+  });
+});
+
+describe("outcomes branch by choice", () => {
+  it("sparing can only come back as a boon or a betrayal, killing as an avenger or tribute", () => {
+    expect(OUTCOME_OPTIONS.spared).toEqual(["boon", "betrayal"]);
+    expect(OUTCOME_OPTIONS.killed).toEqual(["avenger", "tribute"]);
   });
 });

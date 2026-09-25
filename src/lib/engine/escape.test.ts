@@ -4,7 +4,7 @@ import {
   levelsToEscape,
   escapeDifficulty,
   escapeModifier,
-  attemptEscape,
+  escapeResultFrom,
   applyEscapeResult,
   escapeCooldownLeftMs,
   ESCAPE_COOLDOWN_MS,
@@ -33,22 +33,6 @@ describe("escapeModifier", () => {
   it("rewards a clever plan and is hampered by Kairoseki on a fruit user", () => {
     expect(escapeModifier({ ...m, tacticModifier: 15 })).toBeGreaterThan(escapeModifier(m));
     expect(escapeModifier({ ...m, hasDevilFruit: true })).toBeLessThan(escapeModifier(m));
-  });
-});
-
-describe("attemptEscape", () => {
-  it("is never a guaranteed outcome either way", () => {
-    const tally = (mod: number) => {
-      const t = { breakthrough: 0, climb: 0, setback: 0, caught: 0 };
-      for (let s = 0; s < 2000; s++) t[attemptEscape(mulberry32(s), mod, 90)]++;
-      return t;
-    };
-    const strong = tally(100);
-    const weak = tally(-60);
-    expect(strong.climb + strong.breakthrough).toBeGreaterThan(1700);
-    expect(strong.caught).toBeGreaterThan(0);
-    expect(weak.setback + weak.caught).toBeGreaterThan(1700);
-    expect(weak.breakthrough).toBeGreaterThan(0);
   });
 });
 
@@ -82,5 +66,14 @@ describe("escapeCooldownLeftMs", () => {
   });
   it("counts down after a recent try", () => {
     expect(escapeCooldownLeftMs(new Date(now.getTime() - 10 * 60_000), now)).toBe(ESCAPE_COOLDOWN_MS - 10 * 60_000);
+  });
+});
+
+describe("escapeResultFrom", () => {
+  it("maps the judge's outcome onto the escape steps", () => {
+    expect(escapeResultFrom("critical_success")).toBe("breakthrough");
+    expect(escapeResultFrom("success")).toBe("climb");
+    expect(escapeResultFrom("fail")).toBe("setback");
+    expect(escapeResultFrom("critical_fail")).toBe("caught");
   });
 });

@@ -1,7 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { levelResilience, estimateLevel, soakDamage, staminaCostAtLevel, applyFatigueToCombatant, npcStaminaAfterExchange, npcBaseEffort, RESILIENCE_FLOOR } from "./resilience";
-import { attackOnce, resolveExchange, Combatant } from "./combat";
-import { mulberry32 } from "./rng";
+import type { Combatant } from "./combat";
 
 describe("levelResilience", () => {
   it("is neutral at level 1 or when the level is unknown", () => {
@@ -36,25 +35,6 @@ describe("estimateLevel", () => {
   it("weak enemies read as level 1 and formidable ones as much higher", () => {
     expect(estimateLevel(8, 4)).toBe(1);
     expect(estimateLevel(70, 42)).toBeGreaterThan(20);
-  });
-});
-
-describe("combat integration", () => {
-  const fighter = (over: Partial<Combatant> = {}): Combatant => ({ name: "X", hp: 100, maxHp: 100, atk: 60, def: 10, spd: 10, ...over });
-  it("the same seeded attack deals less damage to a high-level defender", () => {
-    let novice = 0;
-    let veteran = 0;
-    for (let seed = 1; seed <= 300; seed++) {
-      novice += attackOnce(mulberry32(seed), fighter(), fighter({ level: 1 })).damage;
-      veteran += attackOnce(mulberry32(seed), fighter(), fighter({ level: 30 })).damage;
-    }
-    expect(veteran).toBeLessThan(novice * 0.8);
-  });
-  it("without a level nothing changes (older callers keep their numbers)", () => {
-    const a = resolveExchange(mulberry32(7), 1, fighter(), 100, fighter({ name: "Y" }), 100);
-    const b = resolveExchange(mulberry32(7), 1, fighter(), 100, fighter({ name: "Y", level: 1 }), 100);
-    expect(a.aHpAfter).toBe(b.aHpAfter);
-    expect(a.bHpAfter).toBe(b.bHpAfter);
   });
 });
 

@@ -63,8 +63,10 @@ export function stingChance(priorDealsThisWindow: number): number {
   return Math.min(0.5, BASE_STING_CHANCE + STING_PER_PRIOR_DEAL * Math.max(0, priorDealsThisWindow));
 }
 
-export const rollSting = (rng: Rng, prior: number) => rng() < stingChance(prior);
-export const rollFakeFruit = (rng: Rng) => rng() < FAKE_FRUIT_CHANCE;
+/** The sting comes for whoever has dealt too much in one window: the third deal is the trap. */
+export const stingSprung = (prior: number) => prior >= 2;
+/** Which windows sell a rotten fruit is fixed by the market's own stock, so the same buyer sees the same offer. */
+export const fruitIsFake = (windowIndex: number, islandSeed: number) => (windowIndex * 31 + islandSeed) % 5 === 0;
 
 /** A sting hurts but never kills: it leaves at least 1 HP. */
 export const stingDamage = (hp: number, maxHp: number) => Math.min(Math.max(0, hp - 1), Math.round(maxHp * STING_HP_FRACTION));

@@ -1,8 +1,8 @@
 /**
- * Deterministic, seedable RNG (mulberry32). Every engine function takes an
- * Rng instance instead of calling Math.random() directly, so combat/loot/
- * death rolls stay reproducible in tests while remaining truly random in
- * production (seeded from crypto-strength entropy per request).
+ * Deterministic pseudo-randomness for VARIETY only (which flavour text, which rumour, which shop stock): every
+ * generator is seeded from stable inputs (ids, the clock window), so the same seed always gives the same pick.
+ * Nothing that decides the result of a player's action may use this: those results are judged by the AI
+ * (ai/judge.ts, ai/narrate.ts refereeExchange) or follow fixed rules. src/lib/no-dice.test.ts enforces it.
  */
 export type Rng = () => number;
 
@@ -17,19 +17,25 @@ export function mulberry32(seed: number): Rng {
   };
 }
 
-export function liveRng(): Rng {
-  return Math.random;
+/** FNV-1a: a stable 32-bit hash of any string. */
+export function hashString(text: string): number {
+  let h = 0x811c9dc5;
+  for (let i = 0; i < text.length; i++) {
+    h ^= text.charCodeAt(i);
+    h = Math.imul(h, 0x01000193);
+  }
+  return h >>> 0;
+}
+
+/** A generator seeded from text (an id, a time window...): same seed, same sequence. */
+export function varietyRng(seed: string): Rng {
+  return mulberry32(hashString(seed));
 }
 
 /** Integer in [min, max], inclusive on both ends. */
 export function rollInt(rng: Rng, min: number, max: number): number {
   if (max < min) throw new Error(`rollInt: max (${max}) < min (${min})`);
   return Math.floor(rng() * (max - min + 1)) + min;
-}
-
-/** A d100 roll — the backbone of every skill check in the engine. */
-export function rollD100(rng: Rng): number {
-  return rollInt(rng, 1, 100);
 }
 
 /** Pick one entry from a weighted list. Weights must be positive. */

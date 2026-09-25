@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { companionSheet, normalizeRole, companionMaxHp, recruitChance, rollRecruit, startingLoyalty, loyaltyRank, MAX_COMPANIONS } from "./companions";
+import { companionSheet, normalizeRole, companionMaxHp, recruitDifficulty, startingLoyalty, loyaltyRank, MAX_COMPANIONS } from "./companions";
 import { mulberry32 } from "./rng";
 
 describe("normalizeRole", () => {
@@ -47,21 +47,6 @@ describe("companionSheet", () => {
 
 describe("recruitment", () => {
   const base = { willpower: 20, intellect: 20, tacticModifier: 0, tier: "average" as const };
-  it("a better pitch and stronger will raise the chance; a tougher target lowers it", () => {
-    expect(recruitChance({ ...base, tacticModifier: 15 })).toBeGreaterThan(recruitChance(base));
-    expect(recruitChance({ ...base, willpower: 80 })).toBeGreaterThan(recruitChance(base));
-    expect(recruitChance({ ...base, tier: "elite" })).toBeLessThan(recruitChance(base));
-  });
-  it("is always a real gamble: bounded between 15% and 90%", () => {
-    expect(recruitChance({ willpower: 0, intellect: 0, tacticModifier: -15, tier: "elite" })).toBe(15);
-    expect(recruitChance({ willpower: 99, intellect: 99, tacticModifier: 20, tier: "weak" })).toBe(90);
-  });
-  it("rolls follow the chance over many seeds", () => {
-    let wins = 0;
-    for (let i = 1; i <= 400; i++) if (rollRecruit(mulberry32(i), 50)) wins++;
-    expect(wins).toBeGreaterThan(140);
-    expect(wins).toBeLessThan(260);
-  });
   it("a convincing pitch buys a warmer start, within bounds", () => {
     expect(startingLoyalty(20)).toBeGreaterThan(startingLoyalty(0));
     expect(startingLoyalty(-50)).toBe(35);
@@ -92,5 +77,18 @@ describe("commander profiles", () => {
     expect(parseCompanionProfile("not json")).toBeNull();
     expect(parseCompanionProfile(null)).toBeNull();
     expect(parseCompanionProfile(JSON.stringify({ attrs: { strength: "x", agility: 5000 } }))?.attrs).toEqual({ strength: 0, agility: 999, durability: 0, willpower: 0, intellect: 0 });
+  });
+});
+
+describe("recruitDifficulty", () => {
+  const base = { willpower: 20, intellect: 20, tacticModifier: 0, tier: "average" as const };
+  it("a better pitch and stronger will make it easier; a tougher target makes it harder", () => {
+    expect(recruitDifficulty({ ...base, tacticModifier: 15 })).toBeLessThan(recruitDifficulty(base));
+    expect(recruitDifficulty({ ...base, willpower: 80 })).toBeLessThan(recruitDifficulty(base));
+    expect(recruitDifficulty({ ...base, tier: "elite" })).toBeGreaterThan(recruitDifficulty(base));
+  });
+  it("stays inside 10-85 so nothing is a wall or a gift", () => {
+    expect(recruitDifficulty({ willpower: 0, intellect: 0, tacticModifier: -15, tier: "elite" })).toBe(85);
+    expect(recruitDifficulty({ willpower: 99, intellect: 99, tacticModifier: 20, tier: "weak" })).toBe(10);
   });
 });

@@ -1,4 +1,5 @@
 process.env.REFEREE_STUB = "1"; // combat is judged by the AI; scripted checks use the deterministic stand-in
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Real N-vs-1 joint fight (2026-09-24): three players plus a companion against
 // one boss, then a hopeless one. Direct function calls against the dev DB; each
 // move is classified by the real AI (needs OPENROUTER_API_KEY).

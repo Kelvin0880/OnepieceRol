@@ -6,14 +6,13 @@ import {
   msToNextWindow,
   offersForWindow,
   offerPrice,
-  rollSting,
-  rollFakeFruit,
+  stingSprung,
+  fruitIsFake,
   stingDamage,
   pardonReduction,
   OfferId,
   MARKET_WINDOW_MS,
 } from "../engine/black-market";
-import { liveRng } from "../engine/rng";
 import { tryDropFruit } from "./perform-action";
 
 export class BlackMarketError extends Error {}
@@ -49,12 +48,11 @@ export async function buyFromBlackMarket(characterId: string, userId: string, of
   const price = offerPrice(offerId, { bounty: c.bounty, notoriety: c.notoriety, faction: c.faction });
   if (c.berries < price) throw new BlackMarketError(`Cuesta ฿ ${price.toLocaleString("es-ES")} y no los tienes.`);
 
-  const rng = liveRng();
   const prior = await dealsThisWindow(c.id, now);
   await prisma.character.update({ where: { id: c.id }, data: { berries: c.berries - price } });
   const log: string[] = [`Pagas ฿ ${price.toLocaleString("es-ES")} en un callejón sin nombre.`];
 
-  if (rollSting(rng, prior)) {
+  if (stingSprung(prior)) {
     const dmg = stingDamage(c.hp, c.maxHp);
     await prisma.character.update({ where: { id: c.id }, data: { hp: c.hp - dmg } });
     log.push("¡Era una trampa! Agentes encubiertos de la Marina irrumpen: te quitan el género, te dan una paliza y te dejan tirado con el bolsillo vacío.");
@@ -64,7 +62,7 @@ export async function buyFromBlackMarket(characterId: string, userId: string, of
 
   switch (offerId) {
     case "fruit": {
-      if (rollFakeFruit(rng)) log.push("Muerdes la fruta y sabe a barro: era una simple fruta podrida. Te han estafado.");
+      if (fruitIsFake(marketWindow(now), seedOf(c.currentIsland.name))) log.push("Muerdes la fruta y sabe a barro: era una simple fruta podrida. Te han estafado.");
       else {
         const name = await tryDropFruit(c.id, []);
         log.push(name ? `Es auténtica: la ${name}. La guardas en la mochila; en el Inventario decides si te la comes.` : "No tienes dónde guardarla y el vendedor se la lleva de vuelta: has perdido el dinero.");

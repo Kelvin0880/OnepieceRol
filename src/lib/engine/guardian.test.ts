@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mulberry32 } from "./rng";
-import { isActorHome, actorCombatStats, guardianMeeting, stealthDifficulty, stealthModifier, attemptStealthRead, REAL_ACTOR_MEET_CHANCE } from "./guardian";
+import { isActorHome, actorCombatStats, guardianMeeting, stealthDifficulty, stealthModifier, stealthResultFrom } from "./guardian";
 
 describe("isActorHome", () => {
   const now = new Date("2026-01-01T12:00:00Z");
@@ -26,18 +26,6 @@ describe("actorCombatStats", () => {
   });
 });
 
-describe("guardianMeeting", () => {
-  it("never meets the real holder when they are away", () => {
-    for (let s = 0; s < 200; s++) expect(guardianMeeting(mulberry32(s), false)).toBe("subordinate");
-  });
-  it("meets the real holder at roughly the configured rate when they are home", () => {
-    let actor = 0;
-    for (let s = 0; s < 2000; s++) if (guardianMeeting(mulberry32(s), true) === "actor") actor++;
-    expect(actor / 2000).toBeGreaterThan(REAL_ACTOR_MEET_CHANCE - 0.06);
-    expect(actor / 2000).toBeLessThan(REAL_ACTOR_MEET_CHANCE + 0.06);
-  });
-});
-
 describe("stealth", () => {
   const base = { islandDanger: 10, actorHome: false, poneglyphHeat: 0, grudgeHeat: 0 };
   it("is harder with the holder home, while hunted, and against a grudge", () => {
@@ -51,17 +39,20 @@ describe("stealth", () => {
     expect(stealthModifier({ ...m, tacticModifier: 15 })).toBeGreaterThan(stealthModifier(m));
     expect(stealthModifier({ ...m, agility: 80 })).toBeGreaterThan(stealthModifier(m));
   });
-  it("a strong sneaker mostly succeeds and a hopeless one mostly gets spotted, never with certainty", () => {
-    const tally = (mod: number) => {
-      const t = { clean: 0, noticed: 0, spotted: 0, caught: 0 };
-      for (let s = 0; s < 2000; s++) t[attemptStealthRead(mulberry32(s), mod, 90)]++;
-      return t;
-    };
-    const strong = tally(80);
-    const weak = tally(-40);
-    expect(strong.clean + strong.noticed).toBeGreaterThan(1500);
-    expect(strong.caught).toBeGreaterThan(0);
-    expect(weak.spotted + weak.caught).toBeGreaterThan(1500);
-    expect(weak.clean).toBeGreaterThan(0);
+});
+
+describe("guardianMeeting", () => {
+  it("the holder receives visitors in person when home and leaves a subordinate when away", () => {
+    expect(guardianMeeting(true)).toBe("actor");
+    expect(guardianMeeting(false)).toBe("subordinate");
+  });
+});
+
+describe("stealthResultFrom", () => {
+  it("maps the judge's outcome onto the four stealth results", () => {
+    expect(stealthResultFrom("critical_success")).toBe("clean");
+    expect(stealthResultFrom("success")).toBe("noticed");
+    expect(stealthResultFrom("fail")).toBe("spotted");
+    expect(stealthResultFrom("critical_fail")).toBe("caught");
   });
 });

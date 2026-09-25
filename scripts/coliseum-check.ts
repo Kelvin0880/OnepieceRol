@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Dressrosa Coliseum against the dev DB: announcement, registration rules, the draw, rounds, walkovers,
 // prizes into the inventory, news, and the calendar. Uses the real AI for the round stories.
 // Usage: npx tsx scripts/coliseum-check.ts

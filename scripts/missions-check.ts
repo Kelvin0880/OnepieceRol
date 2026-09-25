@@ -1,3 +1,4 @@
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Island missions against the dev DB: generation per level, progress, payout, patron standing, pacing.
 // Usage: npx tsx scripts/missions-check.ts
 import "dotenv/config";

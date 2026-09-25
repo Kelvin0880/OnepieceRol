@@ -68,10 +68,6 @@ export function seaAmbushChance(hops: number): number {
   return Math.min(0.55, 0.12 + 0.07 * (hops - 1));
 }
 
-export function rollSeaAmbush(rng: () => number, hops: number): boolean {
-  return rng() < seaAmbushChance(hops);
-}
-
 export interface SeaAmbush {
   name: string;
   blurb: string;

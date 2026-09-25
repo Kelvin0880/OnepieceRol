@@ -1,61 +1,36 @@
 import { describe, it, expect } from "vitest";
-import { mulberry32 } from "./rng";
-import { trainHaki, rollConquerorsHakiAwakening } from "./haki";
+import { trainHaki, conquerorsHakiAwakens } from "./haki";
 
 describe("trainHaki", () => {
   it("never trains past 100", () => {
-    const rng = mulberry32(1);
-    const result = trainHaki(rng, 100, 50);
-    expect(result.gained).toBe(0);
+    expect(trainHaki(100, 100)).toEqual({ gained: 0, breakthrough: false });
+    expect(trainHaki(99, 100).gained).toBeLessThanOrEqual(1);
   });
-
   it("never overshoots the 100 cap even near the ceiling", () => {
-    for (let seed = 0; seed < 200; seed++) {
-      const rng = mulberry32(seed);
-      const result = trainHaki(rng, 98, 50);
-      expect(98 + result.gained).toBeLessThanOrEqual(100);
-    }
+    for (let lvl = 90; lvl < 100; lvl++) expect(lvl + trainHaki(lvl, 100).gained).toBeLessThanOrEqual(100);
   });
-
-  it("gained is never negative", () => {
-    for (let seed = 0; seed < 200; seed++) {
-      const rng = mulberry32(seed);
-      const result = trainHaki(rng, 30, 10);
-      expect(result.gained).toBeGreaterThanOrEqual(0);
-    }
+  it("is steady: the same level and will always give the same session", () => {
+    expect(trainHaki(20, 40)).toEqual(trainHaki(20, 40));
+    expect(trainHaki(20, 40).gained).toBeGreaterThanOrEqual(1);
   });
-
-  it("higher willpower trends toward more total gain across many sessions", () => {
-    let lowTotal = 0;
-    let highTotal = 0;
-    for (let seed = 0; seed < 300; seed++) {
-      lowTotal += trainHaki(mulberry32(seed), 20, 2).gained;
-      highTotal += trainHaki(mulberry32(seed + 100000), 20, 50).gained;
-    }
-    expect(highTotal).toBeGreaterThan(lowTotal);
+  it("higher willpower gives more, and returns fade as the level climbs", () => {
+    expect(trainHaki(10, 90).gained).toBeGreaterThan(trainHaki(10, 5).gained);
+    expect(trainHaki(11, 50).gained).toBeGreaterThanOrEqual(trainHaki(80, 50).gained);
+  });
+  it("reaching a new tier of ten is a breakthrough that doubles the session", () => {
+    const plain = trainHaki(11, 40);
+    const tier = trainHaki(9, 40);
+    expect(plain.breakthrough).toBe(false);
+    expect(tier.breakthrough).toBe(true);
+    expect(tier.gained).toBeGreaterThan(plain.gained);
   });
 });
 
-describe("rollConquerorsHakiAwakening", () => {
-  it("is rare even at max willpower", () => {
-    let hits = 0;
-    const trials = 2000;
-    for (let seed = 0; seed < trials; seed++) {
-      const rng = mulberry32(seed);
-      if (rollConquerorsHakiAwakening(rng, 999)) hits++;
-    }
-    // Capped at 8% chance per roll -> expect well under half the trials to hit.
-    expect(hits / trials).toBeLessThan(0.15);
-    expect(hits).toBeGreaterThan(0);
-  });
-
-  it("almost never triggers at zero willpower", () => {
-    let hits = 0;
-    const trials = 2000;
-    for (let seed = 0; seed < trials; seed++) {
-      const rng = mulberry32(seed);
-      if (rollConquerorsHakiAwakening(rng, 0)) hits++;
-    }
-    expect(hits / trials).toBeLessThan(0.05);
+describe("conquerorsHakiAwakens", () => {
+  it("needs a formidable will and both Hakis already trained: a rule, not a chance", () => {
+    expect(conquerorsHakiAwakens(60, 40, 40)).toBe(true);
+    expect(conquerorsHakiAwakens(59, 100, 100)).toBe(false);
+    expect(conquerorsHakiAwakens(100, 39, 100)).toBe(false);
+    expect(conquerorsHakiAwakens(100, 100, 39)).toBe(false);
   });
 });

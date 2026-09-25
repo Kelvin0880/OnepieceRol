@@ -1,4 +1,3 @@
-import { Rng } from "./rng";
 
 /**
  * Per-(WorldActor, Character) memory of a specific past incident — the same
@@ -30,16 +29,7 @@ export function decayGrudgeHeat(currentHeat: number): number {
   return Math.max(0, currentHeat - DECAY_PER_EXPLORE);
 }
 
-/**
- * Chance a grudge-holder's ambush preempts the normal exploration roll this
- * turn. Capped below certainty, same shape as hunterAmbushChance — a grudge
- * makes the world more dangerous for you specifically, not inescapable.
- */
-export function grudgeAmbushChance(heat: number): number {
-  return Math.min(0.3, heat / 350);
-}
-
-export function rollGrudgeAmbush(rng: Rng, heat: number): boolean {
-  if (heat <= 0) return false;
-  return rng() < grudgeAmbushChance(heat);
+/** A grudge-holder comes looking on every fourth step of the heat countdown while the grudge is still hot. */
+export function grudgeAmbushDue(heat: number): boolean {
+  return heat >= 20 && Math.floor(heat / DECAY_PER_EXPLORE) % 4 === 0;
 }

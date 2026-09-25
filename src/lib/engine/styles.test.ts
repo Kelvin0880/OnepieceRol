@@ -141,13 +141,11 @@ describe("mastery-driven power", () => {
     expect(styleForText(known, "ataco", 1)!.def.id).toBe("ittoryu");
   });
   it("training and use raise mastery, slower near the top, capped at 100", () => {
-    expect(trainStyleMastery(mulberry32(1), 0, 10, 10)).toBeGreaterThan(trainStyleMastery(mulberry32(1), 90, 10, 10));
-    expect(trainStyleMastery(mulberry32(1), 100, 10, 10)).toBe(0);
-    expect(trainStyleMastery(mulberry32(1), 98, 50, 50)).toBeLessThanOrEqual(2);
-    let hits = 0;
-    for (let s = 1; s <= 500; s++) hits += styleGrowthFromUse(mulberry32(s), 20);
-    expect(hits).toBeGreaterThan(50);
-    expect(styleGrowthFromUse(mulberry32(1), 100)).toBe(0);
+    expect(trainStyleMastery(0, 10, 10)).toBeGreaterThan(trainStyleMastery(90, 10, 10));
+    expect(trainStyleMastery(100, 10, 10)).toBe(0);
+    expect(trainStyleMastery(98, 50, 50)).toBeLessThanOrEqual(2);
+    expect(styleGrowthFromUse(20)).toBe(1);
+    expect(styleGrowthFromUse(100)).toBe(0);
   });
 });
 

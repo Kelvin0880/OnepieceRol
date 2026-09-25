@@ -4,7 +4,6 @@ import { parseFruitEffects, fruitCombatModifier } from "../engine/fruits";
 import { regenStamina, fatigueLevel, FATIGUE_MULTIPLIERS, spendStamina, FatigueLevel, EffortLevel, DEFAULT_COMBAT_EFFORT, effortStaminaCost, staminaLossFromDamage, overexertionHpLoss } from "../engine/stamina";
 import { resolveTechnique, TechniqueEffect, TechniqueId, hakiGrowthFromUse } from "../engine/techniques";
 import { masteryGainFromUse } from "../engine/fruit-mastery";
-import { Rng } from "../engine/rng";
 import { staminaCostAtLevel } from "../engine/resilience";
 import { describeCapabilities } from "../engine/capabilities";
 import { toCombatant, characterFruitPhase, wieldedWeapons, CharacterWithGear } from "./derive";
@@ -83,26 +82,26 @@ export function prepareFighter(character: CharacterWithGear, technique: Techniqu
 }
 
 /** Everything a fight should persist about the fighter beyond HP: stamina, and any mastery/haki earned by actually using it. */
-export function combatProgressData(character: Character, prepared: PreparedFighter, rng: Rng, damageTaken = 0, staminaLoss?: number) {
+export function combatProgressData(character: Character, prepared: PreparedFighter, damageTaken = 0, staminaLoss?: number) {
   const data: { stamina: number; staminaUpdatedAt: Date; fruitMastery?: number; armamentHaki?: number; observationHaki?: number } = {
     stamina: spendStamina(prepared.staminaAfter, staminaLoss !== undefined ? staminaLoss : staminaCostAtLevel(staminaLossFromDamage(damageTaken, character.maxHp), character.level)),
     staminaUpdatedAt: new Date(),
   };
   const used = prepared.effect.used;
   if (used === "fruit") {
-    const gain = masteryGainFromUse(rng, character.fruitMastery, character.intellect);
+    const gain = masteryGainFromUse(character.fruitMastery, character.intellect);
     if (gain > 0) data.fruitMastery = character.fruitMastery + gain;
   }
-  if (used === "style" && prepared.effect.styleUse && styleGrowthFromUse(rng, styleMasteryNow(character, prepared.effect.styleUse.styleId)) > 0) {
+  if (used === "style" && prepared.effect.styleUse && styleGrowthFromUse(styleMasteryNow(character, prepared.effect.styleUse.styleId)) > 0) {
     // Fire-and-forget: mastery from use is a bonus and must never block or break the fight that earned it.
     void bumpStyleMastery(character.id, prepared.effect.styleUse.styleId);
   }
   if (used === "armament") {
-    const gain = hakiGrowthFromUse(rng, used, character.armamentHaki);
+    const gain = hakiGrowthFromUse(used, character.armamentHaki);
     if (gain > 0) data.armamentHaki = character.armamentHaki + gain;
   }
   if (used === "observation") {
-    const gain = hakiGrowthFromUse(rng, used, character.observationHaki);
+    const gain = hakiGrowthFromUse(used, character.observationHaki);
     if (gain > 0) data.observationHaki = character.observationHaki + gain;
   }
   return data;

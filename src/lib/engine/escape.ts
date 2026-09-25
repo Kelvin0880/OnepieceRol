@@ -1,5 +1,3 @@
-import { Rng } from "./rng";
-import { skillCheck } from "./checks";
 
 /**
  * Breaking out from the inside. An ordinary brig is one obstacle; Impel Down is
@@ -42,8 +40,7 @@ export function escapeModifier(i: EscapeModifierInput): number {
 export type EscapeResult = "breakthrough" | "climb" | "setback" | "caught";
 
 /** breakthrough: climb two levels at once. climb: one level. setback: no progress, guards more alert. caught: dragged back and punished. */
-export function attemptEscape(rng: Rng, modifier: number, difficulty: number): EscapeResult {
-  const outcome = skillCheck(rng, modifier, difficulty).outcome;
+export function escapeResultFrom(outcome: "critical_success" | "success" | "fail" | "critical_fail"): EscapeResult {
   if (outcome === "critical_success") return "breakthrough";
   if (outcome === "success") return "climb";
   if (outcome === "fail") return "setback";

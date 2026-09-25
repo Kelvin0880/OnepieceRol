@@ -1,6 +1,6 @@
 import { prisma } from "../db";
 import { Rng, weightedPick } from "../engine/rng";
-import { heatAfterGrudgeIncident, heatAfterMercy, decayGrudgeHeat, rollGrudgeAmbush } from "../engine/grudge";
+import { heatAfterGrudgeIncident, heatAfterMercy, decayGrudgeHeat, grudgeAmbushDue } from "../engine/grudge";
 
 export interface EnemySnapshot {
   hp: number;
@@ -53,13 +53,14 @@ export interface GrudgeAmbushResult {
   heat: number;
 }
 
-/** Weighted toward whichever grudge-holder currently wants this character most, then rolls that specific actor's ambush chance. Returns null on no grudges or a miss. */
-export async function rollGrudgeAmbushForCharacter(characterId: string, rng: Rng): Promise<GrudgeAmbushResult | null> {
+/** The grudge-holder who currently wants this character most, when their ambush is due. Returns null on no grudges or nothing due. */
+export async function rollGrudgeAmbushForCharacter(characterId: string): Promise<GrudgeAmbushResult | null> {
   const grudges = await prisma.grudge.findMany({ where: { characterId, heat: { gt: 0 } } });
   if (grudges.length === 0) return null;
 
-  const chosen = weightedPick(rng, grudges.map((g) => ({ item: g, weight: g.heat })));
-  if (!rollGrudgeAmbush(rng, chosen.heat)) return null;
+  // Whoever wants this character most comes first, and only while the grudge is still hot enough (a fixed cadence, see engine/grudge.ts).
+  const chosen = [...grudges].sort((a, b) => b.heat - a.heat)[0];
+  if (!grudgeAmbushDue(chosen.heat)) return null;
 
   const actor = await prisma.worldActor.findUnique({ where: { id: chosen.worldActorId } });
   if (!actor) return null;

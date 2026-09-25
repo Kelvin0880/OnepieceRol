@@ -1,4 +1,5 @@
 process.env.REFEREE_STUB = "1"; // combat is judged by the AI; scripted checks use the deterministic stand-in
+process.env.JUDGE_STUB = "1"; // results are judged by the AI; scripted checks use the deterministic stand-in
 // Deterministic check of the living world (2026-09-24) against the real dev DB: every canon actor has a place,
 // actors move only to neighbouring islands, a world event runs chapter by chapter WITHOUT anyone dying before the
 // owner's verdict, consent (approve / deny / auto-save by adventurers), news always carry a location, the narrator
