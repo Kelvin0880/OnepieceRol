@@ -155,6 +155,11 @@ export default function EmpirePanel({ characterId, onClose, onChanged }: { chara
                       ))}
                     </div>
                   )}
+                  {(state?.errands ?? []).some((e) => e.kind === "patrol") && patrollable.length === 0 && (
+                    <p className="text-xs text-ink-dim mt-1" data-testid="empire-patrol-hint">
+                      {(state?.domains ?? []).some((d) => d.isOwner) ? "Patrullar no hace falta ahora: todas tus guarniciones están al máximo." : "Para patrullar necesitas sostener un dominio (conquista una isla)."}
+                    </p>
+                  )}
                   {pick?.companionId === c.id && (
                     <div className="mt-2 flex flex-wrap gap-2" data-testid="empire-pick-domain">
                       {patrollable.map((d) => (
