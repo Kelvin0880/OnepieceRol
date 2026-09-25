@@ -265,8 +265,6 @@ interface Character {
     phase: "threat" | "fighting" | "victory";
     assessment: "weaker" | "even" | "superior";
     enemyName: string;
-    enemyHp: number;
-    enemyMaxHp: number;
   } | null;
   crew: PanelCrew | null;
   companions: PanelCompanion[];
@@ -1288,13 +1286,11 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                 </span>
               </div>
               {jointFight.stakes && <p className="text-xs text-ink-dim mb-2">{jointFight.stakes}</p>}
-              <div className="mb-3">
-                <StatBar label={jointFight.enemy.name} value={jointFight.enemy.hp} max={jointFight.enemy.maxHp} color="var(--blood)" />
-              </div>
+              <p className="text-sm mb-3">Te enfrentas a <span className="text-gold-bright">{jointFight.enemy.name}</span>. Cómo va la pelea lo cuenta el árbitro en la escena.</p>
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
                 {jointFight.participants.map((p) => (
                   <div key={p.name} data-testid="joint-participant">
-                    <StatBar label={`${p.name}${p.isNpc ? " (NPC)" : ""}`} value={p.hp} max={p.maxHp} color="var(--gold)" />
+                    {p.isNpc ? <p className="text-sm">{p.name} (NPC)</p> : <StatBar label={p.name} value={p.hp} max={p.maxHp} color="var(--gold)" />}
                     <p className="text-[11px] text-ink-dim mt-0.5">
                       {p.status === "DOWN" ? "Caído" : p.status === "FLED" ? "Huyó" : jointFight.status !== "ACTIVE" ? "" : p.isNpc ? "Lucha por su cuenta" : p.submitted ? "Movimiento enviado" : "Falta su movimiento"}
                     </p>
@@ -1420,12 +1416,6 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                 <p className={`text-xs mb-2 ${ASSESSMENT_LABEL[character.pendingEncounter.assessment].color}`}>
                   {ASSESSMENT_LABEL[character.pendingEncounter.assessment].text}
                 </p>
-                <StatBar
-                  label={character.pendingEncounter.enemyName}
-                  value={character.pendingEncounter.enemyHp}
-                  max={character.pendingEncounter.enemyMaxHp}
-                  color="var(--blood)"
-                />
               </div>
             )}
 

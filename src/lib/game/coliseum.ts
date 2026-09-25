@@ -70,8 +70,8 @@ export async function tickColiseum(): Promise<void> {
   }
 }
 
-const MAX_POSTPONE_MS = 45 * 60 * 1000;
-const POSTPONE_STEP_MS = 3 * 60 * 1000;
+const MAX_POSTPONE_MS = 24 * 60 * 60 * 1000;
+const POSTPONE_STEP_MS = 10 * 60 * 1000;
 const postponedSince = new Map<string, number>();
 
 // A round is never announced as decided while a competitor is still in a live fight of their own (reported: the news

@@ -10,7 +10,7 @@ export const TOURNAMENT_INTERVAL_MS = 48 * 60 * 60 * 1000;
 /** Announced this long before it starts, so people can sail to Dressrosa. */
 export const REGISTRATION_LEAD_MS = 3 * 60 * 60 * 1000;
 /** Time between rounds: long enough to describe a strategy, short enough to finish in an evening. */
-export const ROUND_INTERVAL_MS = 15 * 60 * 1000;
+export const ROUND_INTERVAL_MS = 60 * 60 * 1000;
 
 export interface PrizeSpec {
   kind: "weapon" | "fruit" | "berries" | "style";

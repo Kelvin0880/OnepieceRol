@@ -118,6 +118,23 @@ export async function getRecentScene(characterId: string, take = 12): Promise<st
 }
 
 /**
+ * The whole fight so far, compact: every move the player wrote and every result the referee narrated since the fight
+ * began (a few minutes before, to catch the provocation). Lets the referee remember wounds, techniques already used and
+ * tricks the rival has already seen, however long the fight runs.
+ */
+export async function getFightLog(characterId: string, since: Date, maxRounds = 30): Promise<string[]> {
+  const ch = await prisma.character.findUnique({ where: { id: characterId }, select: { sceneClearedAt: true } });
+  const from = new Date(Math.max(since.getTime() - 5 * 60_000, ch?.sceneClearedAt?.getTime() ?? 0));
+  const entries = await prisma.sceneMessage.findMany({
+    where: { characterId, createdAt: { gt: from } },
+    orderBy: [{ createdAt: "desc" }, { role: "asc" }],
+    take: maxRounds * 2,
+  });
+  const clip = (t: string, n: number) => (t.length > n ? `${t.slice(0, n)}…` : t);
+  return entries.reverse().map((e) => (e.role === "player" ? `[Jugador]: ${clip(e.text, 500)}` : `[Árbitro]: ${clip(e.text.replace(/^\(interpretado como:[^)]*\)\s*/i, ""), 650)}`));
+}
+
+/**
  * Narrates an explore outcome. Never throws: on any AI failure it falls
  * back to the exact static flavor/narrative text the caller already
  * computed, so a broken AI provider degrades quality, never availability.

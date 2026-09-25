@@ -76,4 +76,11 @@ describe("buildRefereePrompt", () => {
     expect(system).toContain("NUNCA repitas la técnica");
     expect(system).toContain("APRENDE");
   });
+  it("hands over the whole fight log, forbids life figures in the story and asks for memory", () => {
+    const { user, system } = buildRefereePrompt({ ...base, fightLog: ["[Jugador]: primer golpe", "[Árbitro]: el rival retrocede"] });
+    expect(user).toContain("REGISTRO COMPLETO DE ESTE COMBATE");
+    expect(user).toContain("primer golpe");
+    expect(system).toContain("NUNCA escribas cifras de vida");
+    expect(system).toContain("MEMORIA");
+  });
 });

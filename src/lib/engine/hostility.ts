@@ -26,7 +26,7 @@ export const HUNT_ONLINE_WINDOW_MS = 3 * 60_000;
 /** After a hunt ends (escape or kill) the same hunter can't re-target the same person for this long. */
 export const HUNT_REPEAT_COOLDOWN_MS = 30 * 60_000;
 /** How long a hunted player has to answer before they are considered to have slipped away. */
-export const HUNT_RESPONSE_WINDOW_MS = 5 * 60_000;
+export const HUNT_RESPONSE_WINDOW_MS = 24 * 3600_000;
 
 export function huntBlockReason(p: { targetLevel: number; targetLastSeenAt: Date | null; lastHuntEndedAt: Date | null; now?: Date }): string | null {
   const now = p.now ?? new Date();

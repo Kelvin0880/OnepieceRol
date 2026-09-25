@@ -468,7 +468,7 @@ De vez en cuando el coliseo convoca un torneo (armas, fruta o oro). Se anuncia
 en Noticias unas 3 horas antes, con el premio. Solo se inscribe quien esté en
 Dressrosa, y tiene que seguir allí al cerrar la inscripción. El sorteo del cuadro es
 imparcial (gladiadores de la isla cubren los huecos), los combates no
-son letales y cada ronda se resuelve cada 15 minutos: antes puedes escribir una
+son letales y cada ronda se resuelve cada hora (si sigues en una pelea tuya, la ronda te espera hasta 24 horas): antes puedes escribir una
 estrategia que inclina el combate. Cada victoria da experiencia y queda en tu
 bitácora; el campeón recibe el premio en su Inventario (un arma se equipa, una
 fruta se decide si se come). Todo aparece en Noticias, categoría Coliseo.

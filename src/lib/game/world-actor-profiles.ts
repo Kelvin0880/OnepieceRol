@@ -22,7 +22,7 @@ export interface ActorProfile {
 
 export const ACTOR_PROFILES: Record<string, ActorProfile> = {
   Shanks: { s: [94, 90, 92, 99, 90], h: [98, 96, true], ab: ["Gryphon", "Haoshoku Haki que detiene batallas", "Esgrima de un solo tajo decisivo"], home: "foosha" },
-  "Marshall D. Teach": { s: [93, 78, 99, 96, 88], h: [90, 82, false], phase: "awakened", ab: ["Kurouzu: atrae todo hacia su vacío", "Anula frutas al tocarlas", "Terremotos del Gura Gura", "Liberación de oscuridad"], home: "graveyardIsland" },
+  "Marshall D. Teach": { s: [93, 78, 99, 96, 88], h: [90, 82, false], phase: "awakened", ab: ["POSEE DOS FRUTAS DEL DIABLO a la vez (único en el mundo)", "Fruta 1, Yami Yami no Mi: Kurouzu atrae todo hacia su vacío, anula las frutas ajenas al tocarlas, Liberación de oscuridad", "Fruta 2, Gura Gura no Mi: terremotos que agrietan el suelo y el aire, ondas de choque con cada golpe", "Combina vacío y terremoto: atrae al rival y lo revienta con una onda sísmica"], home: "graveyardIsland" },
   Buggy: { s: [55, 60, 55, 70, 78], h: [30, 25, false], phase: "initial", ab: ["Bara Bara Festival", "Buggy Ball: cañón de payaso", "Faroleo y astucia política", "Cuerpo separable inmune a cortes"], home: "loguetown" },
   "Monkey D. Luffy": { s: [96, 92, 94, 99, 60], h: [95, 90, true], phase: "awakened", ab: ["Gear 5 — Sun God Nika", "Gomu Gomu no Bajrang Gun", "Haoshoku recubierto", "Cuerpo de goma sin límites"], home: "wano" },
   Kizaru: { s: [90, 99, 88, 80, 85], h: [92, 96, false], phase: "awakened", ab: ["Yasakani no Magatama: ráfaga de luz", "Ame no Habakiri: espada de luz", "Patada a velocidad lumínica", "Rayos de Amaterasu"], home: "eniesLobby" },

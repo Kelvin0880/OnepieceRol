@@ -33,7 +33,7 @@ import { verdictOptions } from "../engine/duel-outcome";
  */
 export { DuelError };
 
-const STALE_DUEL_MS = 30 * 60 * 1000;
+const STALE_DUEL_MS = 24 * 60 * 60 * 1000;
 const RECENT_FINISHED_MS = 15 * 60 * 1000;
 const FLEE_FAILED_TACTIC = -10;
 

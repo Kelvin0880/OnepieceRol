@@ -37,4 +37,9 @@ describe("OPENROUTER_MODELS", () => {
     const { OPENROUTER_MODELS } = await import("./models");
     expect(OPENROUTER_MODELS.length).toBeGreaterThan(0);
   });
+  it("never lists a free model by default", async () => {
+    delete process.env[ENV_KEY];
+    const { OPENROUTER_MODELS } = await import("./models");
+    expect(OPENROUTER_MODELS.some((m) => m.includes(":free") || m.includes("openrouter/free"))).toBe(false);
+  });
 });

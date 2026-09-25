@@ -40,7 +40,7 @@ import { isActorHome, stealthDifficulty, stealthModifier, stealthResultFrom, STE
 import { getOpenJointFightFor, submitJointAction, startJointFight, freePartyMemberIds } from "./joint-fight";
 import { DEVIL_FRUIT_CATALOG } from "./devil-fruit-catalog";
 import { applyBountyOrNotoriety } from "./reputation";
-import { narrateExplore, narrateEncounterIntro, narrateCombat, refereeExchange, narrateScene, narratePartyScene, getRecentScene, updateCharacterMemory } from "../ai/narrate";
+import { narrateExplore, narrateEncounterIntro, narrateCombat, refereeExchange, narrateScene, narratePartyScene, getRecentScene, getFightLog, updateCharacterMemory } from "../ai/narrate";
 import { classifyPlayerAction, ActionId } from "../ai/classify-action";
 import { beginPartyTurn, advancePartyTurn, releasePartyTurnLock, writePartyMessage, echoToParty, confirmLeaveParty as partyConfirmLeaveParty, rejoinParty as partyRejoinParty } from "./party";
 import { CharacterStatus } from "@prisma/client";
@@ -658,6 +658,7 @@ export async function engageCharacter(
 
   const enemyKitText = (await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId })).text;
   const scene = await getRecentScene(character.id, 10);
+  const fightLog = await getFightLog(character.id, pending.createdAt);
   const grudgeContext = enemy.worldActorId ? await getGrudgeContextForNarration(enemy.worldActorId, character.id) : null;
   // The rival's last announced attack is still in the air: this message is how the player receives it.
   const lastNarration = [...scene].reverse().find((l) => !l.startsWith("[Jugador]"));
@@ -671,6 +672,7 @@ export async function engageCharacter(
       pendingThreat: opts.openingStrike ? undefined : lastNarration,
       stakes: grudgeContext ? `${enemy.name} ya se enfrentó a este personaje antes y no lo olvida: ${grudgeContext.text}.` + (grudgeContext.critical ? " La situación es crítica para ellos: podrían amenazar con pedir refuerzos." : "") : undefined,
       recentScene: scene,
+      fightLog,
       memorySummary: character.memorySummary ?? undefined,
       actors: [
         {
@@ -964,6 +966,7 @@ export async function fleeCharacter(characterId: string, userId: string, intentT
       round: pending.roundNumber + 1,
       pendingThreat: lastNarration,
       recentScene: scene,
+      fightLog: await getFightLog(character.id, pending.createdAt),
       memorySummary: character.memorySummary ?? undefined,
       actors: [
         { name: character.name, side: "player", level: character.level, hp: character.hp, maxHp: character.maxHp, stamina, fatigue: playerFatigue !== "fresh" ? FATIGUE_LABELS[playerFatigue] : undefined, kit: characterCapabilityText(character), sheet: `ataque ${pc.atk}, defensa ${pc.def}, velocidad ${pc.spd}` },

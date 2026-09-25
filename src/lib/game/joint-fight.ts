@@ -49,7 +49,7 @@ export interface JointRewards {
 
 export type JointFightKind = "party" | "poneglyph" | "conquest" | "raid" | "arc";
 
-const STALE_FIGHT_MS = 45 * 60 * 1000;
+const STALE_FIGHT_MS = 24 * 60 * 60 * 1000;
 const RECENT_FINISHED_MS = 15 * 60 * 1000;
 const FLEE_FAILED_TACTIC = -10;
 const GUARD_TACTIC = -5;

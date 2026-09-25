@@ -45,6 +45,8 @@ export interface RefereeInput {
   isBoss?: boolean;
   stakes?: string;
   recentScene?: string[];
+  /** Every exchange of this fight so far (getFightLog); when present it replaces recentScene. */
+  fightLog?: string[];
   memorySummary?: string;
   /** Tone/notes directives of the player (loadDirectives), appended verbatim. */
   directives?: string;
@@ -80,6 +82,8 @@ const CORE_RULES =
   `${Math.round(MAX_HP_LOSS_FRACTION * 100)}%. Nadie pierde más de la mitad de su vida máxima en un intercambio, así que solo se puede rematar a quien ya está por debajo de la mitad; ` +
   `si el golpe lo deja sin vida, su pérdida de vida debe ser igual a su vida actual. Aguante: esfuerzo, impactos y técnicas costosas pesan (0 a ${MAX_STAMINA_LOSS} por intercambio). ` +
   "COHERENCIA OBLIGATORIA: la vida y el aguante de \"cambios\" deben corresponder EXACTAMENTE a lo que narras. Si un golpe alcanza con fuerza a alguien, no puede costar 0; si nadie recibe daño, todo va a 0; si narras una herida profunda, usa la escala de arriba. " +
+  "NUNCA escribas cifras de vida ni de aguante en la narración (ni \"434 de vida\" ni porcentajes): el estado de cada uno se cuenta con el cuerpo, la respiración, las heridas y la postura; solo el JSON lleva números. " +
+  "MEMORIA: recuerda TODO lo ocurrido en este combate (heridas acumuladas, técnicas y trucos ya usados, lo que el rival ya vio); un rival ya castigado no vuelve a estar fresco, y uno que ya vio un truco no cae dos veces igual. " +
   "NO repitas ni resumas lo que el jugador escribió (ya está en pantalla): empieza directamente por el resultado. " +
   "SOLO SE HIERE LO QUE SE ATACA DE VERDAD: si el jugador golpea el suelo, clava su arma en un muelle, provoca, habla o presume, el rival NO pierde vida por eso. " +
   "PODER RELATIVO: el daño que alguien puede causar depende de SU poder frente a la resistencia del otro (nivel, ficha, Haki). Un rival mucho más débil (diferencia de 10 o más niveles) no puede infligir golpes sólidos ni muy fuertes a alguien mucho más fuerte: como mucho roces, y solo si el más fuerte se lo permite; y al revés, un ataque bien descrito de alguien muy superior hace daño real. " +
@@ -116,10 +120,14 @@ export function damageScale(maxHp: number): string {
   return `daño que puede recibir: roce ${pts(2, 6)}; golpe sólido ${pts(8, 18)}; muy fuerte ${pts(20, 35)}; devastador hasta ${Math.floor(maxHp * MAX_HP_LOSS_FRACTION)}`;
 }
 
+function conditionWord(f: number): string {
+  return f > 0.85 ? "casi intacto" : f > 0.6 ? "algo herido" : f > 0.35 ? "malherido" : f > 0.15 ? "al borde de caer" : "a punto de desplomarse";
+}
+
 function actorLine(a: RefereeActor): string {
   const role = a.side === "enemy" ? "RIVAL (lo voceas tú)" : a.side === "ally" ? "ALIADO" : "JUGADOR";
   return (
-    `- ${a.name} [${role}]${a.level ? `, nivel ${a.level}` : ""}: vida ${a.hp}/${a.maxHp}` +
+    `- ${a.name} [${role}]${a.level ? `, nivel ${a.level}` : ""}: vida ${a.hp}/${a.maxHp} (${conditionWord(a.hp / Math.max(1, a.maxHp))})` +
     (a.stamina !== undefined ? `, aguante ${a.stamina}` : "") +
     (a.fatigue ? `, ${a.fatigue}` : "") +
     ` (${damageScale(a.maxHp)})` +
@@ -173,7 +181,9 @@ export function buildRefereePrompt(input: RefereeInput): PromptOut {
         : "No hay ataque pendiente del rival.\n\n"
       : "") +
     (input.memorySummary ? `Lo que se recuerda hasta ahora: ${input.memorySummary}\n` : "") +
-    (input.recentScene && input.recentScene.length > 0 ? `Escena reciente:\n${input.recentScene.join("\n")}\n` : "") +
+    (input.fightLog && input.fightLog.length > 0
+      ? `REGISTRO COMPLETO DE ESTE COMBATE, en orden (RECUÉRDALO TODO: heridas y estado del rival, técnicas y trucos ya usados por ambos, lo que cada uno ya vio, frases y promesas; sé coherente con ello y no lo contradigas):\n${input.fightLog.join("\n")}\n`
+      : input.recentScene && input.recentScene.length > 0 ? `Escena reciente:\n${input.recentScene.join("\n")}\n` : "") +
     (input.actions[0] && input.mode !== "duel" ? currentActionBlock(input.actions[0].text) : "") +
     "\n\nResponde solo con el JSON.";
   return { system, user, maxTokens: Math.round(maxWords * 2.6) + 300 };

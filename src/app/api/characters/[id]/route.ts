@@ -132,8 +132,6 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
             phase: pendingEncounter.phase,
             assessment: pendingEncounter.assessment,
             enemyName: enemySpec.name,
-            enemyMaxHp: enemySpec.hp,
-            enemyHp: pendingEncounter.enemyHp ?? enemySpec.hp,
             enemyFatigue: FATIGUE_LABELS[fatigueLevel(pendingEncounter.enemyStamina, 100)],
           };
         })()
