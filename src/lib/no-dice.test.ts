@@ -57,6 +57,7 @@ const VARIETY_ALLOWED = new Set([
   "lib/game/world-arcs.ts", // which actor moves in the living world
   "lib/game/world-tick.ts", // which ambient headline
   "lib/game/world-happenings.ts", // which island/idea when the AI is offline
+  "lib/game/player-events.ts", // which unique fruit an event offers among equivalents
   "lib/engine/inventory.ts", // which catalogue item among equivalents (lootFor)
 ]);
 

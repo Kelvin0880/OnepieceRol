@@ -141,7 +141,74 @@ function ActorCard({ a }: { a: Actor }) {
   );
 }
 
+interface PlayerRow {
+  id: string;
+  name: string;
+  faction: string;
+  rank: string;
+  title: string | null;
+  level: number;
+  bounty: number | null;
+  notoriety: number | null;
+  status: string;
+  location: string | null;
+  fruit: string | null;
+  crew: string | null;
+  joinedAt: string;
+  diedAt: string | null;
+  deathCause: string | null;
+}
+
+const PLAYER_STATUS: Record<string, string> = { ALIVE: "Vivo", DEAD: "Muerto", IMPRISONED: "Preso" };
+
+function PlayersSection({ query }: { query: string }) {
+  const [players, setPlayers] = useState<PlayerRow[] | null>(null);
+  useEffect(() => {
+    fetch("/api/codex/players")
+      .then((r) => r.json())
+      .then((d) => setPlayers(d.players))
+      .catch(() => setPlayers([]));
+  }, []);
+  const q = query.trim().toLowerCase();
+  const shown = (players ?? []).filter((p) => !q || p.name.toLowerCase().includes(q) || (p.crew ?? "").toLowerCase().includes(q) || p.faction.toLowerCase().includes(q));
+  if (players === null) return <p className="text-ink-dim">Cargando…</p>;
+  return (
+    <>
+      <p className="text-xs text-ink-dim" data-testid="codex-players-count">
+        {shown.length} jugador{shown.length === 1 ? "" : "es"} en el registro
+      </p>
+      <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+        {shown.map((p) => (
+          <div key={p.id} className={`panel p-3 flex flex-col gap-1 ${p.status === "DEAD" ? "opacity-70" : ""}`} data-testid="codex-player">
+            <div className="flex items-start justify-between gap-2">
+              <strong className="text-gold-bright">{p.name}</strong>
+              <span className={`text-xs ${p.status === "DEAD" ? "text-blood" : p.status === "IMPRISONED" ? "text-orange-300" : "text-emerald-300"}`}>{PLAYER_STATUS[p.status] ?? p.status}</span>
+            </div>
+            <p className="text-xs text-gold">
+              {p.title ? `${p.title} · ` : ""}
+              {p.rank}
+            </p>
+            <p className="text-xs text-ink-dim">
+              {p.faction} · Nv. {p.level}
+              {p.crew ? ` · ${p.crew}` : ""}
+              {p.location ? ` · ${p.location}` : ""}
+            </p>
+            <p className="text-xs text-ink-dim">
+              {p.bounty != null ? `Recompensa: ฿ ${p.bounty.toLocaleString("es-ES")}` : `Renombre: ${p.notoriety ?? 0}`} · {p.fruit ? `Fruta: ${p.fruit}` : "Sin fruta del Diablo"}
+            </p>
+            <p className="text-[11px] text-ink-dim">
+              Desde {new Date(p.joinedAt).toLocaleDateString("es-ES")}
+              {p.status === "DEAD" && p.diedAt ? ` · murió el ${new Date(p.diedAt).toLocaleDateString("es-ES")}${p.deathCause ? `: ${p.deathCause}` : ""}` : ""}
+            </p>
+          </div>
+        ))}
+      </div>
+    </>
+  );
+}
+
 export default function CodexPage() {
+  const [section, setSection] = useState<"canon" | "players">("canon");
   const [actors, setActors] = useState<Actor[] | null>(null);
   const [faction, setFaction] = useState("ALL");
   const [showHistory, setShowHistory] = useState(false);
@@ -174,6 +241,23 @@ export default function CodexPage() {
         Todos los personajes que mueven el mundo: recompensa, fruta, arma, habilidades, estadísticas y dónde están ahora. Quien se mueve en secreto aparece como «Ubicación desconocida»; quien va navegando, como «En el mar, entre X y Y».
       </p>
 
+      <div className="flex gap-2">
+        <button onClick={() => setSection("canon")} className={`px-3 py-1.5 rounded text-sm border ${section === "canon" ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="codex-tab-canon">
+          Personajes canon
+        </button>
+        <button onClick={() => setSection("players")} className={`px-3 py-1.5 rounded text-sm border ${section === "players" ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="codex-tab-players">
+          Jugadores
+        </button>
+      </div>
+
+      {section === "players" && (
+        <>
+          <input className="input w-full sm:w-72" placeholder="Buscar jugador, tripulación o facción…" value={query} onChange={(e) => setQuery(e.target.value)} data-testid="codex-search" />
+          <PlayersSection query={query} />
+        </>
+      )}
+
+      {section === "canon" && (<>
       <div className="flex flex-wrap gap-2 items-center">
         {FACTIONS.map((f) => (
           <button key={f.id} onClick={() => setFaction(f.id)} className={`px-3 py-1 rounded-full text-xs border ${faction === f.id ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`}>
@@ -202,6 +286,7 @@ export default function CodexPage() {
           </div>
         </>
       )}
+      </>)}
     </main>
   );
 }

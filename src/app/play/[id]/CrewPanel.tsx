@@ -41,6 +41,13 @@ export interface PanelCompanion {
   nextAbilityAtLevel: number | null;
   personality: string | null;
   belongings: string[];
+  stay?: boolean;
+  errand?: { label: string; msLeft: number } | null;
+}
+
+interface EmpireInfo {
+  domains: { islandId: string; islandName: string; garrison: number; isOwner: boolean }[];
+  errands: { kind: "patrol" | "tribute" | "scout"; label: string; brief: string; durationMs: number }[];
 }
 
 export interface PanelCrew {
@@ -160,6 +167,31 @@ export default function CrewPanel({
   const [error, setError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
   const [confirmLeave, setConfirmLeave] = useState(false);
+  const [empire, setEmpire] = useState<EmpireInfo | null>(null);
+  const [missionFor, setMissionFor] = useState<string | null>(null);
+
+  const loadEmpire = useCallback(async () => {
+    const res = await fetch(`/api/characters/${characterId}/empire`);
+    if (res.ok) setEmpire(await res.json());
+  }, [characterId]);
+
+  async function sendMission(companionId: string, kind: string, islandId?: string) {
+    setBusy(true);
+    setError(null);
+    setNotice(null);
+    try {
+      const res = await fetch(`/api/characters/${characterId}/empire`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ op: "errand", companionId, kind, islandId }) });
+      const r = await res.json().catch(() => ({}));
+      if (!res.ok) setError(r.error ?? "No se pudo dar la orden.");
+      else {
+        setNotice((r.log as string[]).join(" "));
+        setMissionFor(null);
+        onChanged();
+      }
+    } finally {
+      setBusy(false);
+    }
+  }
 
   const reload = useCallback(
     async (q?: string) => {
@@ -379,10 +411,69 @@ export default function CrewPanel({
                   <p className="text-[11px] text-gold">Habilidades: {c.abilities.join(" · ")}</p>
                   <p className="text-[11px] text-ink-dim" data-testid="companion-belongings">Lleva: {c.belongings.join(", ")}</p>
                   {c.nextAbilityAtLevel && <p className="text-[11px] text-ink-dim">Nueva habilidad al nivel {c.nextAbilityAtLevel}.</p>}
+                  {c.status === "ALIVE" && c.errand && (
+                    <p className="text-[11px] text-gold" data-testid="nakama-away">
+                      En misión: {c.errand.label} · vuelve en {Math.max(1, Math.round(c.errand.msLeft / 60000))} min
+                    </p>
+                  )}
+                  {c.status === "ALIVE" && !c.errand && (
+                    <p className="text-[11px]" data-testid="nakama-presence">
+                      {c.stay ? <span className="text-ink-dim">Se queda en el barco</span> : <span className="text-emerald-300">Te acompaña</span>}
+                    </p>
+                  )}
                   {c.status === "ALIVE" && (
-                    <button className="btn-ghost px-2 py-1 text-[11px] self-start" disabled={busy} onClick={() => op({ op: "dismiss_companion", companionId: c.id })}>
-                      Despedir
-                    </button>
+                    <div className="flex flex-wrap gap-1.5">
+                      {!c.errand && (
+                        <button className="btn-ghost px-2 py-1 text-[11px]" disabled={busy} onClick={() => op({ op: "set_companion_stay", companionId: c.id, stay: !c.stay })} data-testid="nakama-toggle-stay">
+                          {c.stay ? "Que me acompañe" : "Que se quede en el barco"}
+                        </button>
+                      )}
+                      {!c.errand && !c.stay && companions.filter((x) => x.status === "ALIVE").length > 1 && (
+                        <button className="btn-ghost px-2 py-1 text-[11px]" disabled={busy} onClick={() => op({ op: "set_companion_focus", companionId: c.id })} data-testid="nakama-only-this">
+                          Solo este me acompaña
+                        </button>
+                      )}
+                      {!c.errand && (
+                        <button
+                          className="btn-ghost px-2 py-1 text-[11px]"
+                          disabled={busy}
+                          onClick={() => {
+                            setMissionFor(missionFor === c.id ? null : c.id);
+                            loadEmpire();
+                          }}
+                          data-testid="nakama-mission-open"
+                        >
+                          Encargarle una misión
+                        </button>
+                      )}
+                      <button className="btn-ghost px-2 py-1 text-[11px]" disabled={busy} onClick={() => op({ op: "dismiss_companion", companionId: c.id })}>
+                        Despedir
+                      </button>
+                    </div>
+                  )}
+                  {missionFor === c.id && !c.errand && (
+                    <div className="flex flex-col gap-1.5 rounded border border-white/10 p-2" data-testid="nakama-missions">
+                      {(empire?.errands ?? []).map((e) => {
+                        const domains = (empire?.domains ?? []).filter((d) => d.isOwner && d.garrison < 100);
+                        if (e.kind === "patrol") {
+                          return (
+                            <div key={e.kind} className="flex flex-col gap-1">
+                              <span className="text-[11px] text-ink-dim">{e.label}: {e.brief}</span>
+                              {domains.length === 0 ? <span className="text-[11px] text-ink-dim">Necesitas sostener un dominio con la guarnición por debajo de 100.</span> : domains.map((d) => (
+                                <button key={d.islandId} className="btn-gold px-2 py-1 text-[11px] self-start" disabled={busy} onClick={() => sendMission(c.id, "patrol", d.islandId)}>
+                                  Patrullar {d.islandName}
+                                </button>
+                              ))}
+                            </div>
+                          );
+                        }
+                        return (
+                          <button key={e.kind} className="btn-gold px-2 py-1 text-[11px] self-start text-left" disabled={busy} onClick={() => sendMission(c.id, e.kind)} data-testid={`nakama-mission-${e.kind}`} title={e.brief}>
+                            {e.label} ({Math.round(e.durationMs / 60000)} min): {e.brief}
+                          </button>
+                        );
+                      })}
+                    </div>
                   )}
                 </div>
               ))}

@@ -2,14 +2,16 @@
 
 import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
-import { Backpack, BookOpen, Compass, Crown, Flag, Map as MapIcon, MessageCircleQuestion, Newspaper, Radio, ShieldAlert, Trophy, UserRound, Users, Zap } from "lucide-react";
+import { Backpack, BookOpen, CalendarDays, Compass, Crown, Flag, Map as MapIcon, MessageCircleQuestion, Newspaper, Radio, ShieldAlert, Trophy, UserRound, Users, Zap } from "lucide-react";
 import StatBar from "@/components/ui/StatBar";
 import { factionTitle, type FactionKey } from "@/lib/engine/progression";
 import { crewNounForFaction } from "@/lib/engine/crew-noun";
 import { FACTION_ACCENT, FACTION_LABEL } from "./labels";
 import type { StateResponse } from "./types";
+import { badgeLabel, type BadgeKey } from "./useBadges";
+import type { BadgeCounts } from "./useBadges";
 
-export type PanelKey = "crew" | "coliseum" | "empire" | "denden" | "voyage" | "styles" | "inventory" | "ooc" | "guide" | "power";
+export type PanelKey = "crew" | "coliseum" | "empire" | "denden" | "voyage" | "styles" | "inventory" | "ooc" | "guide" | "power" | "events";
 
 interface NavItem {
   key: string;
@@ -20,6 +22,9 @@ interface NavItem {
   href?: string;
   badge?: number;
   highlight?: boolean;
+  // "new since you last opened it" markers (useBadges)
+  fresh?: { text: string; testId: string; title: string; tone?: "green" };
+  onSeen?: () => void;
 }
 
 function NavButton({ item }: { item: NavItem }) {
@@ -30,10 +35,15 @@ function NavButton({ item }: { item: NavItem }) {
       <Icon className="w-4 h-4 opacity-80" />
       {item.label}
       {!!item.badge && item.badge > 0 && <span className="badge-count">{item.badge}</span>}
+      {item.fresh && (
+        <span className="badge-count" style={item.fresh.tone === "green" ? { background: "#047857" } : undefined} data-testid={item.fresh.testId} title={item.fresh.title}>
+          {item.fresh.text}
+        </span>
+      )}
     </>
   );
   return item.href ? (
-    <Link href={item.href} className={cls} data-testid={item.testId}>
+    <Link href={item.href} className={cls} data-testid={item.testId} onClick={item.onSeen}>
       {inner}
     </Link>
   ) : (
@@ -45,7 +55,7 @@ function NavButton({ item }: { item: NavItem }) {
 
 // Sticky header: identity + live vitals (so a phone player never scrolls away from their life bar mid-fight) and
 // one strip with every tool. On phones the strip scrolls sideways instead of wrapping into half a screen.
-export default function PlayHeader({ data, onOpen }: { data: StateResponse; onOpen: (p: PanelKey) => void }) {
+export default function PlayHeader({ data, onOpen, badges, markSeen }: { data: StateResponse; onOpen: (p: PanelKey) => void; badges: BadgeCounts; markSeen: (k: BadgeKey) => void }) {
   const { character, coliseum, territory } = data;
   const isDead = character.status === "DEAD";
   const isImprisoned = character.status === "IMPRISONED";
@@ -58,18 +68,19 @@ export default function PlayHeader({ data, onOpen }: { data: StateResponse; onOp
     items.push({ key: "coliseum", label: "Coliseo", icon: Trophy, testId: "coliseum-open", onClick: () => onOpen("coliseum"), highlight: !!(coliseum && coliseum.onDressrosa && coliseum.status === "ANNOUNCED" && !coliseum.registered) });
   if (character.companions.length > 0 || territory?.isOwner) items.push({ key: "empire", label: "Imperio", icon: Crown, testId: "empire-open", onClick: () => onOpen("empire") });
   if (!isDead) items.push({ key: "power", label: "Poder", icon: Flag, testId: "power-open", onClick: () => onOpen("power") });
-  if (!isDead && !isImprisoned) items.push({ key: "denden", label: "Den Den Mushi", icon: Radio, testId: "denden-open", onClick: () => onOpen("denden") });
+  if (!isDead && !isImprisoned) items.push({ key: "denden", label: "Den Den Mushi", icon: Radio, testId: "denden-open", onClick: () => { markSeen("denden"); onOpen("denden"); }, fresh: badges.denden > 0 ? { text: badgeLabel(badges.denden), testId: "badge-denden", title: "Mensajes nuevos" } : undefined });
+  items.push({ key: "events", label: "Eventos", icon: CalendarDays, testId: "events-open", onClick: () => { markSeen("events"); onOpen("events"); }, highlight: badges.events > 0, fresh: badges.events > 0 ? { text: badgeLabel(badges.events), testId: "badge-events", title: "Eventos nuevos" } : undefined });
   items.push(
     { key: "voyage", label: "Rumbo", icon: Compass, testId: "voyage-open", onClick: () => onOpen("voyage") },
     { key: "styles", label: "Estilos", icon: Zap, testId: "styles-open", onClick: () => onOpen("styles") },
-    { key: "inventory", label: "Inventario", icon: Backpack, testId: "inventory-open", onClick: () => onOpen("inventory"), badge: character.attributePoints ?? 0 },
+    { key: "inventory", label: "Inventario", icon: Backpack, testId: "inventory-open", onClick: () => { markSeen("inventory"); onOpen("inventory"); }, badge: character.attributePoints ?? 0, fresh: badges.inventory > 0 ? { text: "nuevo", testId: "badge-inventory", title: "Objetos nuevos", tone: "green" } : undefined },
     { key: "ooc", label: "Fuera de rol", icon: MessageCircleQuestion, testId: "ooc-open", onClick: () => onOpen("ooc") },
     { key: "guide", label: "Mapa y Guía", icon: MapIcon, onClick: () => onOpen("guide") }
   );
   if (data.admin) items.push({ key: "admin", label: "Administración", icon: ShieldAlert, href: "/admin", testId: "admin-header-link", badge: data.admin.pending, highlight: data.admin.pending > 0 });
   items.push(
     { key: "codex", label: "Códice", icon: BookOpen, href: "/codex" },
-    { key: "news", label: "Noticias", icon: Newspaper, href: "/news" },
+    { key: "news", label: "Noticias", icon: Newspaper, href: "/news", testId: "news-link", onSeen: () => markSeen("news"), fresh: badges.news > 0 ? { text: badgeLabel(badges.news), testId: "badge-news", title: "Noticias nuevas" } : undefined },
     { key: "home", label: "Mis personajes", icon: UserRound, href: "/" }
   );
 

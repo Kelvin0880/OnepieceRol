@@ -56,3 +56,7 @@ next-env.d.ts
 
 # contains live API keys pasted by the user — never commit this
 /Sugerencias.txt
+
+# local secrets, never commit
+env.txt
+*.env.txt

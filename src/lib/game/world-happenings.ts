@@ -10,12 +10,13 @@ let running = false;
  * Lazily publishes one AI-invented happening per 24 h (fire-and-forget from the world tick). The publication time of the
  * newest one IS the clock, so no schema is needed and a restart never double-fires.
  */
-export async function tickWorldHappenings(now = new Date()): Promise<boolean> {
+export async function tickWorldHappenings(now = new Date(), opts: { force?: boolean; idea?: string | null; islandName?: string | null } = {}): Promise<boolean> {
   if (running) return false;
   running = true;
   try {
     const recent = await prisma.newsItem.findMany({ where: { category: HAPPENING_CATEGORY }, orderBy: { createdAt: "desc" }, take: HAPPENING_MEMORY, select: { headline: true, createdAt: true } });
-    if (!happeningDue(recent[0]?.createdAt ?? null, now)) return false;
+    // The owner can publish one at any time (force); the automatic clock is untouched by that except that it counts as the newest.
+    if (!opts.force && !happeningDue(recent[0]?.createdAt ?? null, now)) return false;
     const [islands, clock] = await Promise.all([prisma.island.findMany({ select: { id: true, name: true, sea: true, dangerLevel: true, factionControl: true } }), prisma.worldClock.findUnique({ where: { id: 1 } })]);
     if (islands.length === 0) return false;
     const rng = varietyRng(`happening:${Math.floor(now.getTime() / 3_600_000)}`);
@@ -25,13 +26,15 @@ export async function tickWorldHappenings(now = new Date()): Promise<boolean> {
       recentHeadlines: recent.map((r) => r.headline),
       seeds,
       heat: clock?.heat ?? 10,
+      idea: opts.idea ?? null,
+      forceIsland: opts.islandName ?? null,
     });
-    const fallbackIsland = islands[Math.floor(rng() * islands.length)];
-    const h = ai ?? fallbackHappening(seeds[0], fallbackIsland.name);
+    const fallbackIsland = (opts.islandName ? islands.find((i) => i.name === opts.islandName) : null) ?? islands[Math.floor(rng() * islands.length)];
+    const h = ai ?? (opts.idea ? { headline: opts.idea.slice(0, 80), body: `${opts.idea} (Anuncio del organizador; la redacción completa no estuvo disponible.)`, kind: "propuesta", islandName: fallbackIsland.name } : fallbackHappening(seeds[0], fallbackIsland.name));
     const island = islands.find((i) => i.name === h.islandName) ?? fallbackIsland;
     // Re-check right before writing: another request may have published while the AI was thinking.
     const again = await prisma.newsItem.findFirst({ where: { category: HAPPENING_CATEGORY }, orderBy: { createdAt: "desc" }, select: { createdAt: true } });
-    if (!happeningDue(again?.createdAt ?? null, new Date())) return false;
+    if (!opts.force && !happeningDue(again?.createdAt ?? null, new Date())) return false;
     await prisma.newsItem.create({ data: { headline: h.headline, body: h.body, category: HAPPENING_CATEGORY, severity: "normal", islandId: island.id, locationName: island.name } });
     return true;
   } catch (err) {

@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
 import BackToCharacter from "@/components/ui/BackToCharacter";
+import AdminTools from "./AdminTools";
 
 interface AdminArc {
   id: string;
@@ -79,6 +80,8 @@ export default function AdminPage() {
         Aquí decides el destino de los personajes canon. La IA construye la historia poco a poco, pero <strong>nunca mata ni captura a nadie por su cuenta</strong>:
         al llegar al momento decisivo se detiene y te pregunta.
       </p>
+
+      <AdminTools />
 
       {error && (
         <p className="text-blood text-sm" data-testid="admin-error">

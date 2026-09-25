@@ -7,7 +7,7 @@ import { classifyPlayerAction } from "../ai/classify-action";
 import { refereeExchange, getRecentScene } from "../ai/narrate";
 import { applyVerdict, NO_VERDICT_TEXT } from "../engine/referee";
 import { FATIGUE_LABELS, fatigueLevel } from "../engine/stamina";
-import { isOnErrand } from "../engine/empire";
+import { isWithPlayer } from "../engine/empire";
 import { companionSheet, parseCompanionProfile, type CompanionProfile } from "../engine/companions";
 import { estimateLevel, applyFatigueToCombatant, npcStaminaAfterExchange, npcBaseEffort } from "../engine/resilience";
 import { prepareFighter, combatProgressData, PreparedFighter, characterCapabilityText } from "./combat-prep";
@@ -133,7 +133,7 @@ export async function startJointFight(opts: StartJointFightOpts): Promise<{ figh
     if (jailed && !jailed.releasedAt) throw new JointFightError(`${c.name} está preso.`);
   }
 
-  const npcs = chars.flatMap((c) => c.companions.filter((n) => n.status === "ALIVE" && n.hp / n.maxHp > 0.5 && !isOnErrand(n.profileJson, Date.now())).map((n) => ({ owner: c, n })));
+  const npcs = chars.flatMap((c) => c.companions.filter((n) => n.status === "ALIVE" && n.hp / n.maxHp > 0.5 && isWithPlayer(n.profileJson, Date.now())).map((n) => ({ owner: c, n })));
   const extra = opts.extraNpcs ?? [];
   const headcount = chars.length + npcs.length + extra.length;
   const base: Combatant = { name: opts.enemy.name, hp: opts.enemy.hp, maxHp: opts.enemy.hp, atk: opts.enemy.atk, def: opts.enemy.def, spd: opts.enemy.spd };

@@ -348,3 +348,12 @@ Cada 24 horas la IA inventa un suceso nuevo en una isla real (fiestas, tormentas
 - **Oleada 4**: 7 islas (`game/islands-wave4.ts`: Tequila Wolf, que es el inicio del CP-0, G-8 Navarone, Banaro, Rusukaina, Kamabakka, Hachinosu y Nuevo Marineford) y 33 personajes canon (`game/world-actor-wave4.ts`) con ficha y ubicación; traslados de Sakazuki, Kuzan e Ivankov. Doku Doku es única (Magellan). La cartelera de recompensas ya no cita a piratas muertos.
 - **Esquema (solo añadidos)**: `Character.emperorSince/lastEmperorChallengeAt/warlordSince/warlordTributeDueAt/warlordRevokedAt/lastFigureNewsAt` y el modelo `War`. Producción necesita el push a Neon de siempre y un resembrado (idempotente).
 - **Verificación**: `scripts/sovereignty-check.ts` (37 comprobaciones), `scripts/sovereignty-ui-check.mjs` y `scripts/design-tour.mjs` (390 y 1280 px, sin desbordes ni errores de página).
+## Eventos para principiantes, avisos, panel de administración y registro de jugadores (2026-09-25)
+- **Eventos**: la IA inventa una prueba (carrera, caza, enigma...) con 3 rivales NPC y se anuncia en las noticias. Para niveles bajos, en una isla concreta: hay que estar allí para inscribirse. Inscripciones abiertas al menos 6 h; sin límite para completar la prueba. Cuando todos los inscritos terminan, el juez IA puntúa a todos, el sistema elige al ganador y se publica el resultado completo. El ganador se lleva el premio (a veces una fruta única inventada, que nadie más puede conseguir) y los demás una pequeña compensación. Botón "Eventos" en la cabecera.
+- **Avisos**: los botones Noticias, Den Den Mushi, Eventos e Inventario muestran una insignia cuando hay algo nuevo desde la última vez que los abriste.
+- **Chat de tripulación**: pestaña "Tripulación" dentro del Den Den Mushi.
+- **Administración**: resumen del mundo, reportes de jugadores, anuncios oficiales, proponer un suceso a la IA, crear/cancelar/cerrar eventos e iniciar un evento mundial entre dos personajes canon.
+- **Códice**: pestaña "Jugadores" con todos los jugadores registrados (vivos, presos y muertos).
+
+## Nakamas: quién te acompaña y misiones (2026-09-25)
+En el panel de tripulación, pestaña "Nakamas NPC": cada nakama puede quedarse en el barco o acompañarte, puedes elegir que solo uno te acompañe, y puedes encargarle misiones (patrullar un dominio, cobrar tributos, explorar el mar) sin pasar por el Imperio. Un nakama que se queda o está de misión no pelea contigo ni sale en la escena.

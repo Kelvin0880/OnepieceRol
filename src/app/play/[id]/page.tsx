@@ -12,6 +12,8 @@ import OocPanel from "./OocPanel";
 import CrewPanel from "./CrewPanel";
 import SovereigntyPanel from "./SovereigntyPanel";
 import PlayHeader, { type PanelKey } from "./PlayHeader";
+import EventsPanel from "./EventsPanel";
+import { useBadges } from "./useBadges";
 import DuelPanel from "./DuelPanel";
 import JointFightPanel from "./JointFightPanel";
 import ScenePanel from "./ScenePanel";
@@ -45,6 +47,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [escapePlan, setEscapePlan] = useState("");
   const [showLeaveConfirm, setShowLeaveConfirm] = useState(false);
   const [panel, setPanel] = useState<PanelKey | null>(null);
+  const { counts: badges, markSeen } = useBadges(id);
   const [oocStarter, setOocStarter] = useState<string | undefined>(undefined);
   const { toasts, push } = useToasts();
   const lastVitals = useRef<{ id: string; v: VitalsSnapshot } | null>(null);
@@ -253,10 +256,11 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
 
   return (
     <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 pb-16 flex flex-col gap-4">
-      <PlayHeader data={data} onOpen={(p) => (p === "ooc" ? openOoc() : setPanel(p))} />
+      <PlayHeader data={data} badges={badges} markSeen={markSeen} onOpen={(p) => (p === "ooc" ? openOoc() : setPanel(p))} />
       <ToastStack toasts={toasts} />
 
       {panel === "power" && <SovereigntyPanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
+      {panel === "events" && <EventsPanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
       {panel === "denden" && <DenDenPanel characterId={character.id} onClose={() => setPanel(null)} />}
       {panel === "empire" && <EmpirePanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
       {panel === "voyage" && <VoyagePanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
