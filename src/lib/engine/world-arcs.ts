@@ -10,7 +10,7 @@ import type { Rng } from "./rng";
 
 export const ARC_TOTAL_STAGES = 6;
 export const ARC_BEAT_GAP_MS = 8 * 60 * 60 * 1000;
-export const ARC_COOLDOWN_MS = 72 * 60 * 60 * 1000;
+export const ARC_COOLDOWN_MS = 24 * 60 * 60 * 1000;
 export const ARC_MIN_HEAT = 20;
 export const ARC_START_CHANCE_PER_TICK = 0.02;
 export const ARC_CONTEXT_LINES = 8;

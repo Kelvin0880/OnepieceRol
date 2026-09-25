@@ -56,6 +56,7 @@ const VARIETY_ALLOWED = new Set([
   "lib/game/missions.ts", // which optional goal is offered
   "lib/game/world-arcs.ts", // which actor moves in the living world
   "lib/game/world-tick.ts", // which ambient headline
+  "lib/game/world-happenings.ts", // which island/idea when the AI is offline
   "lib/engine/inventory.ts", // which catalogue item among equivalents (lootFor)
 ]);
 
@@ -89,6 +90,7 @@ describe("no dice anywhere", () => {
       "lib/engine/events.ts",
       "lib/engine/missions.ts",
       "lib/engine/world-arcs.ts",
+      "lib/engine/world-happenings.ts",
       "lib/engine/world.ts",
       "lib/engine/voyage.ts",
       "lib/engine/rng.ts",

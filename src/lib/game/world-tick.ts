@@ -5,6 +5,7 @@ import { narrateNews, narrateBountyDigest } from "../ai/narrate";
 import { tickWorldArcs, moveActorsTick, actorLocation } from "./world-arcs";
 import { logError } from "../log-error";
 import { tickColiseum } from "./coliseum";
+import { tickWorldHappenings } from "./world-happenings";
 
 const TICK_INTERVAL_MS = 30 * 60 * 1000; // a new world beat roughly every 30 real minutes — the user found 5 too fast/noisy for a "living but calm" world
 const DIGEST_INTERVAL_MS = 6 * 60 * 60 * 1000; // a couple of bounty roundups a day, deliberately much rarer than the ambient tick
@@ -33,6 +34,8 @@ async function tickWorldIfDueInner(): Promise<void> {
   void tickWorldArcs().catch((err) => logError("world-arcs/tick", err));
   // The Dressrosa Coliseum runs its own calendar (announcement, rounds hours/minutes apart), also fire-and-forget.
   void tickColiseum();
+  // One AI-invented happening per 24 h, also fire-and-forget.
+  void tickWorldHappenings();
   const clock = await prisma.worldClock.upsert({
     where: { id: 1 },
     update: {},

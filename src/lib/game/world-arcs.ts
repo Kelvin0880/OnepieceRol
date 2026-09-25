@@ -22,6 +22,7 @@ import { narrateWorldEvent } from "../ai/narrate";
 import { Contribution, InterventionSide, addContribution, interventionBlockReason, interventionMinLevel, interventionTilt, isInterventionSide, vanguardFor } from "../engine/arc-intervention";
 import { startJointFight, freePartyMemberIds, JointFightError } from "./joint-fight";
 import { postNews } from "./death-resolution";
+import { recentHappeningsFor } from "./world-happenings";
 
 const OPEN_STATUSES = ["ACTIVE", "AWAITING_CONSENT"];
 const inFlight = new Set<string>();
@@ -109,12 +110,13 @@ export async function worldPresenceFor(islandId: string): Promise<string> {
     prisma.worldActor.findMany({ where: { status: "ACTIVE", currentIslandId: { in: nearIds }, locationHidden: false }, orderBy: { powerLevel: "desc" }, take: 6 }),
     prisma.worldArc.findMany({ where: { status: { in: OPEN_STATUSES } } }),
   ]);
+  const happenings = await recentHappeningsFor(islandId);
   const toPresence = (a: (typeof hereActors)[number]): PresenceActor => ({ name: a.name, role: a.role, factionName: a.factionName, rankLabel: a.rankLabel, hidden: a.locationHidden });
   const text = describePresence({
     islandName: here.name,
     here: hereActors.map(toPresence),
     nearby: nearActors.map((a) => ({ name: a.name, islandName: islands.get(a.currentIslandId ?? "")?.name ?? "?", hidden: a.locationHidden })),
-    worldEvents: arcs.map((a) => `${a.title} (capítulo ${Math.min(a.stage, a.totalStages)}/${a.totalStages}${a.status === "AWAITING_CONSENT" ? ", desenlace en suspenso" : ""})`),
+    worldEvents: [...arcs.map((a) => `${a.title} (capítulo ${Math.min(a.stage, a.totalStages)}/${a.totalStages}${a.status === "AWAITING_CONSENT" ? ", desenlace en suspenso" : ""})`), ...happenings.map((h) => `Suceso reciente en esta isla: ${h}`)],
   });
   presenceCache.set(islandId, { at: Date.now(), text });
   return text;

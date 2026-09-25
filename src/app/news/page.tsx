@@ -33,10 +33,11 @@ const CATEGORY_COLOR: Record<string, string> = {
   Muertes: "text-blood",
   "Gobierno Mundial": "text-ink-dim",
   "Eventos mundiales": "text-orange-300",
+  "Sucesos del mundo": "text-teal-300",
   Coliseo: "text-amber-300",
 };
 
-const CATEGORIES = ["Coliseo", "Eventos mundiales", "Recompensas", "Frutas", "Poneglifos", "Tripulaciones", "Guerra", "Muertes", "Gobierno Mundial"];
+const CATEGORIES = ["Coliseo", "Eventos mundiales", "Sucesos del mundo", "Recompensas", "Frutas", "Poneglifos", "Tripulaciones", "Guerra", "Muertes", "Gobierno Mundial"];
 
 function dayLabel(dateStr: string): string {
   const date = new Date(dateStr);
