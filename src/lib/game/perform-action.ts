@@ -38,7 +38,7 @@ import { grantLoot, storeFruitInBag } from "./inventory";
 import { intellectTacticEdge } from "../engine/attributes";
 import { applyGuardianPresence, guardianBaseRewards, markActorDefeated, findPoneglyphGuardian, ACTOR_REWARD_MULTIPLIER } from "./guardian";
 import { isActorHome, stealthDifficulty, stealthModifier, stealthResultFrom, STEALTH_HEAT, STEALTH_STAMINA_COST, CAUGHT_HP_FRACTION } from "../engine/guardian";
-import { getOpenJointFightFor, submitJointAction, startJointFight, freePartyMemberIds } from "./joint-fight";
+import { getOpenJointFightFor, submitJointAction, startJointFight, freePartyMemberIds, closeJointFight, retryJointRound } from "./joint-fight";
 import { DEVIL_FRUIT_CATALOG } from "./devil-fruit-catalog";
 import { applyBountyOrNotoriety } from "./reputation";
 import { narrateExplore, narrateEncounterIntro, narrateCombat, refereeExchange, narrateScene, narratePartyScene, getRecentScene, getFightLog, updateCharacterMemory } from "../ai/narrate";
@@ -2078,8 +2078,22 @@ export async function travelCharacter(characterId: string, userId: string, targe
  * reads the whole fight (getFightLog) and decides who won; the result then follows the normal endings: a win leaves the
  * rival at your mercy (spare/finish), a loss goes through the fate judge, no winner just closes the encounter.
  */
+/** The "Reintentar ronda" button of a group fight whose referee failed: re-judges the round everyone already answered. */
+export async function retryJointRoundFor(characterId: string, userId: string): Promise<ActionResult> {
+  const character = await loadCharacterOrThrow(characterId, userId);
+  const fight = await getOpenJointFightFor(character.id);
+  if (!fight) throw new GameActionError("No estás en ninguna pelea conjunta.");
+  const r = await retryJointRound(fight.id);
+  return { ...emptyResult(r.log, character.level), jointFight: true };
+}
+
 export async function closeFight(characterId: string, userId: string, note?: string): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
+  // A fight with allies is closed by the group judge, on the shared transcript.
+  if (await getOpenJointFightFor(character.id)) {
+    const closed = await closeJointFight(character.id, userId, note);
+    return { ...emptyResult(closed.log, character.level), jointFight: true };
+  }
   const pending = character.pendingEncounter;
   if (!pending || pending.phase !== "fighting") throw new GameActionError("No hay ninguna pelea en curso que finalizar.");
   const enemy = JSON.parse(pending.enemyJson) as StoredEnemy;

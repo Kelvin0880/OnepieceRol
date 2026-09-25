@@ -14,7 +14,8 @@ import { prepareFighter, combatProgressData, PreparedFighter, characterCapabilit
 import { resolveEnemyKit } from "./enemy-kit";
 import { toCombatant } from "./derive";
 import { postNews, handleDeathCheck } from "./death-resolution";
-import { judgeFate } from "../ai/judge";
+import { judgeFate, judgeJointFightEnd } from "../ai/judge";
+import { clampJointEnd } from "../engine/judge";
 import { applyBountyOrNotoriety } from "./reputation";
 import { grantPoneglyphRead } from "./poneglyph";
 import { recordGrudgeIncident } from "./grudges";
@@ -201,7 +202,7 @@ export async function submitJointAction(characterId: string, userId: string, fre
   if (part.action) {
     // Everyone already answered but the round was never judged (the referee failed): sending again retries it.
     const stalled = await prisma.jointFightParticipant.count({ where: { fightId: fight.id, isNpc: false, status: "FIGHTING", action: null } });
-    if (stalled === 0) return advanceIfReady(fight.id);
+    if (stalled === 0) return retryJointRound(fight.id);
     throw new JointFightError("Ya enviaste tu movimiento de esta ronda; espera a tus aliados.");
   }
 
@@ -218,6 +219,84 @@ export async function submitJointAction(characterId: string, userId: string, fre
   return advanceIfReady(fight.id);
 }
 
+const JOINT_NO_VERDICT_NOTICE = "(El árbitro no pudo juzgar esta ronda a tiempo. Nada cambió: se reintenta sola en unos minutos, o pulsa Reintentar ronda.)";
+
+/** A round that everyone answered but nobody judged for this long is stalled (the referee failed), not still being judged. */
+const STALLED_AFTER_MS = 150_000;
+
+/** Owner/ops entry point: re-judges a round everyone answered, skipping the stall timer. */
+export async function forceResolveJointRound(fightId: string) {
+  return advanceIfReady(fightId);
+}
+
+export async function retryJointRound(fightId: string) {
+  const fight = await prisma.jointFight.findUnique({ where: { id: fightId } });
+  if (!fight || fight.status !== "ACTIVE") return { log: ["La pelea ya terminó."], waiting: false };
+  if (Date.now() - fight.roundStartedAt.getTime() < STALLED_AFTER_MS) throw new JointFightError("El árbitro sigue juzgando la ronda; espera un momento.");
+  return advanceIfReady(fightId);
+}
+
+/** The whole fight so far, in order: the shared transcript minus this round's moves (the referee receives those as the current actions). */
+async function jointFightLog(fightId: string, excludeMoves: Set<string> = new Set()): Promise<string[]> {
+  const clip = (text: string, max: number) => (text.length > max ? `${text.slice(0, max)}…` : text);
+  const transcript = await prisma.jointFightMessage.findMany({ where: { fightId }, orderBy: { createdAt: "asc" } });
+  return transcript
+    .filter((m) => !(m.authorCharacterId && excludeMoves.has(m.text)))
+    .slice(-40)
+    .map((m) => (m.authorCharacterId ? `[${m.authorName}]: ${clip(m.text, 500)}` : `[Árbitro]: ${clip(m.text, 650)}`));
+}
+
+/**
+ * Any ally still in the fight can ask to close it. The judge reads the whole transcript and decides how it really ended;
+ * code accepts a win or a loss only when the numbers agree (clampJointEnd), otherwise it closes with no winner.
+ */
+export async function closeJointFight(characterId: string, userId: string, note?: string) {
+  const fight = await getOpenJointFightFor(characterId);
+  if (!fight) throw new JointFightError("No estás en ninguna pelea conjunta.");
+  const me = await prisma.character.findUnique({ where: { id: characterId }, select: { userId: true } });
+  if (!me || me.userId !== userId) throw new JointFightError("Personaje no encontrado.");
+  const full = await prisma.jointFight.findUniqueOrThrow({ where: { id: fight.id }, include: { participants: true } });
+  if (full.status !== "ACTIVE") throw new JointFightError("La pelea ya terminó.");
+  const mine = full.participants.find((p) => p.characterId === characterId);
+  if (!mine || mine.status === "FLED") throw new JointFightError("Ya no estás en esta pelea.");
+
+  const enemy = JSON.parse(full.enemyJson) as JointEnemy;
+  const rewards = JSON.parse(full.rewardsJson) as JointRewards;
+  const inFight = full.participants.filter((p) => p.status !== "FLED");
+  const humans = inFight.filter((p) => !p.isNpc);
+  const verdict = await judgeJointFightEnd({
+    allyNames: inFight.map((p) => p.name),
+    enemyName: enemy.name,
+    fightLog: await jointFightLog(full.id),
+    allies: { hp: inFight.reduce((n, p) => n + p.hp, 0), maxHp: inFight.reduce((n, p) => n + p.maxHp, 0) },
+    enemy: { hp: full.enemyHp, maxHp: full.enemyMaxHp },
+    note: note?.trim() || undefined,
+    characterId,
+  });
+  const outcome = clampJointEnd(verdict.outcome, inFight.map((p) => ({ hp: p.hp, maxHp: p.maxHp })), full.enemyHp, full.enemyMaxHp);
+  const result = outcome === "player_won" ? "victory" : outcome === "player_lost" ? "defeat" : null;
+
+  const text =
+    result === "victory"
+      ? `Pelea finalizada: ${verdict.reason} ${enemy.name} cae ante el grupo.`
+      : result === "defeat"
+        ? `Pelea finalizada: ${verdict.reason} ${enemy.name} vence al grupo.`
+        : `Pelea finalizada sin un ganador claro: ${verdict.reason}`;
+  await prisma.jointFightMessage.create({ data: { fightId: full.id, authorCharacterId: null, authorName: "Narrador", text: text.replace(/\s+/g, " ") } });
+  await prisma.jointFightParticipant.updateMany({ where: { fightId: full.id }, data: { action: null, tactic: 0, technique: "none" } });
+  if (result === "victory") {
+    const striker = humans.find((p) => p.status === "FIGHTING");
+    if (striker) {
+      const ctx = JSON.parse(full.contextJson) as Record<string, unknown>;
+      await prisma.jointFight.update({ where: { id: full.id }, data: { contextJson: JSON.stringify({ ...ctx, finalBlowCharacterId: striker.characterId }) } });
+    }
+  }
+  await settleJointFight(full.id, result, enemy, rewards);
+  await notifyFightParticipants(full.id);
+  await notifyIsland(full.islandId, "joint-fight-settled");
+  return { log: [text], waiting: false, finished: true, outcome: result ?? undefined };
+}
+
 async function advanceIfReady(fightId: string) {
   const fight = await prisma.jointFight.findUnique({ where: { id: fightId }, include: { participants: true } });
   if (!fight || fight.status !== "ACTIVE") return { log: ["La pelea ya terminó."], waiting: false };
@@ -230,7 +309,7 @@ async function advanceIfReady(fightId: string) {
 async function resolveJointRoundFor(fightId: string) {
   const start = await prisma.jointFight.findUniqueOrThrow({ where: { id: fightId } });
   // Whoever bumps the round counter first owns this resolution; concurrent submitters see 0 rows and just wait.
-  const claimed = await prisma.jointFight.updateMany({ where: { id: fightId, round: start.round, status: "ACTIVE" }, data: { round: { increment: 1 }, roundStartedAt: new Date() } });
+  const claimed = await prisma.jointFight.updateMany({ where: { id: fightId, round: start.round, status: "ACTIVE", roundStartedAt: start.roundStartedAt }, data: { round: { increment: 1 }, roundStartedAt: new Date() } });
   if (claimed.count === 0) return { log: ["Movimiento registrado. Esperando a tus aliados..."], waiting: true };
 
   const fight = await prisma.jointFight.findUniqueOrThrow({ where: { id: fightId }, include: { participants: true } });
@@ -297,14 +376,7 @@ async function resolveJointRoundFor(fightId: string) {
   }
 
   const enemyKitText = (await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId })).text;
-  // The whole fight so far (the shared transcript), minus the moves of THIS round, which the referee gets as the current actions.
-  const clip = (text: string, max: number) => (text.length > max ? `${text.slice(0, max)}…` : text);
-  const currentMoves = new Set(fighting.map((p) => p.action).filter((a): a is string => !!a));
-  const transcript = await prisma.jointFightMessage.findMany({ where: { fightId }, orderBy: { createdAt: "asc" } });
-  const fightLog = transcript
-    .filter((m) => !(m.authorCharacterId && currentMoves.has(m.text)))
-    .slice(-24)
-    .map((m) => (m.authorCharacterId ? `[${m.authorName}]: ${clip(m.text, 500)}` : `[Árbitro]: ${clip(m.text, 650)}`));
+  const fightLog = await jointFightLog(fightId, new Set(fighting.map((p) => p.action).filter((a): a is string => !!a)));
   const lastNarrator = await prisma.jointFightMessage.findFirst({ where: { fightId, authorName: "Narrador" }, orderBy: { createdAt: "desc" } });
   const kitOf = (id: string): string | undefined => {
     const human = chars.get(id);
@@ -359,8 +431,11 @@ async function resolveJointRoundFor(fightId: string) {
     if (!verdict) {
       // Nothing was judged: hand the round back so the same moves can be resubmitted.
       await prisma.jointFight.updateMany({ where: { id: fightId, round: round + 1 }, data: { round } });
-      await prisma.jointFightMessage.create({ data: { fightId, authorCharacterId: null, authorName: "Narrador", text: "(El árbitro no pudo juzgar esta ronda a tiempo. Nada cambió: cualquiera de los dos puede pulsar Actuar otra vez para reintentarla.)" } });
-      await notifyFightParticipants(fightId);
+      const lastNotice = await prisma.jointFightMessage.findFirst({ where: { fightId }, orderBy: { createdAt: "desc" } });
+      if (lastNotice?.text !== JOINT_NO_VERDICT_NOTICE) {
+        await prisma.jointFightMessage.create({ data: { fightId, authorCharacterId: null, authorName: "Narrador", text: JOINT_NO_VERDICT_NOTICE } });
+        await notifyFightParticipants(fightId);
+      }
       return { log: [NO_VERDICT_TEXT], waiting: true };
     }
   }
@@ -560,13 +635,19 @@ export async function getJointFightStateForCharacter(characterId: string) {
   if (!fight) return null;
   const enemy = JSON.parse(fight.enemyJson) as JointEnemy;
   const participants = await prisma.jointFightParticipant.findMany({ where: { fightId: fight.id }, orderBy: { joinedAt: "asc" } });
-  const messages = await prisma.jointFightMessage.findMany({ where: { fightId: fight.id }, orderBy: { createdAt: "asc" }, take: 50 });
+  // The LAST messages: taking the oldest ones hid the newest replies in a long fight.
+  const messages = (await prisma.jointFightMessage.findMany({ where: { fightId: fight.id }, orderBy: { createdAt: "desc" }, take: 60 })).reverse();
+  const standing = participants.filter((p) => !p.isNpc && p.status === "FIGHTING");
+  const stalled = fight.status === "ACTIVE" && standing.length > 0 && standing.every((p) => !!p.action) && Date.now() - fight.roundStartedAt.getTime() >= STALLED_AFTER_MS;
+  // Self-healing: the 10 s poll of any ally re-judges a stalled round (at most one attempt per stall window, guarded by the round claim).
+  if (stalled) void retryJointRound(fight.id).catch(() => {});
   const mine = participants.find((p) => p.characterId === characterId);
   return {
     id: fight.id,
     kind: fight.kind,
     status: fight.status,
     round: fight.round,
+    stalled,
     stakes: fight.stakes,
     enemy: { name: enemy.name, hp: fight.enemyHp, maxHp: fight.enemyMaxHp, isBoss: enemy.isBoss },
     me: mine ? { status: mine.status, submitted: !!mine.action, hp: mine.hp, maxHp: mine.maxHp } : null,

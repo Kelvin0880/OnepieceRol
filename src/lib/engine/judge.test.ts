@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { difficultyLabel, parseFateVerdict, parseMatchVerdict, parseOutcomeVerdict, stubFate, stubMatch, stubOutcome } from "./judge";
+import { clampJointEnd, parseFightEndVerdict, difficultyLabel, parseFateVerdict, parseMatchVerdict, parseOutcomeVerdict, stubFate, stubMatch, stubOutcome } from "./judge";
 
 describe("parseOutcomeVerdict", () => {
   it("reads the four outcomes in Spanish and English, ignoring accents and case", () => {
@@ -70,5 +70,24 @@ describe("deterministic stand-ins", () => {
     expect(stubMatch({ level: 10, atk: 50, def: 50 }, { level: 10, atk: 20, def: 20 })).toBe("a");
     expect(stubMatch({ level: 1, atk: 5, def: 5 }, { level: 10, atk: 50, def: 50 })).toBe("b");
     expect(stubMatch({ level: 1, atk: 5, def: 5 }, { level: 1, atk: 5, def: 5 })).toBe("a");
+  });
+});
+
+describe("group fight end (clampJointEnd, group words)", () => {
+  const healthy = [{ hp: 90, maxHp: 100 }, { hp: 20, maxHp: 100 }];
+  it("understands the group's words", () => {
+    expect(parseFightEndVerdict('{"resultado":"gana_grupo","motivo":"todos cayeron"}')?.outcome).toBe("player_won");
+    expect(parseFightEndVerdict('{"resultado":"pierde_grupo","motivo":"x"}')?.outcome).toBe("player_lost");
+  });
+  it("accepts a win only when the rival is at half life or less", () => {
+    expect(clampJointEnd("player_won", healthy, 88, 88)).toBe("ended");
+    expect(clampJointEnd("player_won", healthy, 44, 88)).toBe("player_won");
+  });
+  it("accepts a loss only when every ally is at half life or less", () => {
+    expect(clampJointEnd("player_lost", healthy, 88, 88)).toBe("ended");
+    expect(clampJointEnd("player_lost", [{ hp: 30, maxHp: 100 }, { hp: 0, maxHp: 100 }], 88, 88)).toBe("player_lost");
+  });
+  it("never touches a no-winner verdict", () => {
+    expect(clampJointEnd("ended", healthy, 1, 88)).toBe("ended");
   });
 });

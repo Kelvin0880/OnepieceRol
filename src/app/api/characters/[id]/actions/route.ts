@@ -10,6 +10,7 @@ import {
   fleeCharacter,
   resolveMercyChoice,
   closeFight,
+  retryJointRoundFor,
   resolveFreeTextAction,
   confirmLeaveParty,
   rejoinParty,
@@ -29,6 +30,7 @@ const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("flee") }),
   z.object({ action: z.literal("mercy"), spare: z.boolean() }),
   z.object({ action: z.literal("close_fight"), note: z.string().max(500).optional() }),
+  z.object({ action: z.literal("retry_joint_round") }),
   z.object({ action: z.literal("confirm_leave_party") }),
   z.object({ action: z.literal("rejoin_party") }),
 ]);
@@ -102,6 +104,8 @@ async function dispatch(
       return await resolveMercyChoice(id, userId, data.spare);
     case "close_fight":
       return await closeFight(id, userId, data.note);
+    case "retry_joint_round":
+      return await retryJointRoundFor(id, userId);
     case "confirm_leave_party":
       return await confirmLeaveParty(id, userId);
     case "rejoin_party":

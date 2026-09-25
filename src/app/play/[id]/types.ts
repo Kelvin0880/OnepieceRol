@@ -303,6 +303,8 @@ export interface JointFightState {
   kind: string;
   status: "ACTIVE" | "WON" | "LOST";
   round: number;
+  /** Everyone answered but the referee never judged the round. */
+  stalled?: boolean;
   stakes: string | null;
   enemy: { name: string; hp: number; maxHp: number; isBoss: boolean };
   me: { status: "FIGHTING" | "DOWN" | "FLED"; submitted: boolean; hp: number; maxHp: number } | null;

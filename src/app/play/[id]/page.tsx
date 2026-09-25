@@ -330,7 +330,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           {duel && <DuelPanel duel={duel} characterId={character.id} busy={busy} doDuelOp={doDuelOp} onOoc={openOoc} />}
           {busterCall && !isDead && <BusterCallPanel busterCall={busterCall} islandName={character.currentIsland.name} jointActive={!!jointActive} {...actions} />}
           {data.worldEvent && <WorldEventPanel worldEvent={data.worldEvent} jointActive={!!jointActive} onIntervene={doWorldEvent} busy={battleBusy} error={battleError} />}
-          {jointFight && <JointFightPanel jointFight={jointFight} onOoc={openOoc} />}
+          {jointFight && <JointFightPanel jointFight={jointFight} onOoc={openOoc} busy={busy} doAction={doAction} />}
 
           <IslandCard character={character} connectedIslands={connectedIslands} voyage={voyage} busy={busy} onTravel={(islandId) => doAction({ action: "travel", targetIslandId: islandId })} />
 

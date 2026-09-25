@@ -127,6 +127,8 @@ export function stubMatch(a: { level: number; atk: number; def: number }, b: { l
 
 export type FightEnd = "player_won" | "player_lost" | "ended";
 const FIGHT_END_WORDS: Record<string, FightEnd> = {
+  gana_grupo: "player_won", gana_aliados: "player_won", gana_equipo: "player_won",
+  pierde_grupo: "player_lost", pierde_aliados: "player_lost", pierde_equipo: "player_lost",
   gana_jugador: "player_won", gana: "player_won", victoria: "player_won", player_won: "player_won",
   pierde_jugador: "player_lost", pierde: "player_lost", derrota: "player_lost", player_lost: "player_lost",
   terminada: "ended", sin_ganador: "ended", empate: "ended", ended: "ended",
@@ -149,6 +151,16 @@ export function stubFightEnd(playerHp: number, playerMaxHp: number, enemyHp: num
   const p = playerHp / Math.max(1, playerMaxHp);
   const e = enemyHp / Math.max(1, enemyMaxHp);
   return p > e ? "player_won" : p < e ? "player_lost" : "ended";
+}
+
+/**
+ * Group version of clampFightEnd: the group wins only if the rival is at half life or less, and loses only if every ally
+ * still in the fight is at half life or less. Nobody can hand the fight to their side by asking.
+ */
+export function clampJointEnd(outcome: FightEnd, allies: { hp: number; maxHp: number }[], enemyHp: number, enemyMaxHp: number): FightEnd {
+  if (outcome === "player_won" && enemyHp > enemyMaxHp / 2) return "ended";
+  if (outcome === "player_lost" && allies.some((a) => a.hp > a.maxHp / 2)) return "ended";
+  return outcome;
 }
 
 /**
