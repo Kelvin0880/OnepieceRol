@@ -15,6 +15,8 @@ export default function JointFightPanel({ jointFight, onOoc, busy, doAction }: {
     if (box) box.scrollTop = box.scrollHeight;
   }, [jointFight.messages.length]);
   const active = jointFight.status === "ACTIVE";
+  const [dismissed, setDismissed] = useState(false);
+  if (!active && dismissed) return null;
 
   return (
     <section className={`panel panel-danger p-4 animate-rise ${active ? "animate-danger" : ""}`}>
@@ -30,6 +32,11 @@ export default function JointFightPanel({ jointFight, onOoc, busy, doAction }: {
           )}
         </h3>
         <span className="text-xs text-ink-dim flex items-center gap-2">
+          {!active && (
+            <button className="btn-ghost px-2 py-0.5 text-[11px]" data-testid="joint-dismiss" onClick={() => setDismissed(true)}>
+              Cerrar resumen
+            </button>
+          )}
           {active ? `Ronda ${jointFight.round}` : jointFight.status === "WON" ? "Victoria" : jointFight.status === "LOST" ? "Derrota" : "Terminada"}
           <button className="btn-ghost px-2 py-0.5 text-[11px]" onClick={() => onOoc("Sobre esta pelea en grupo (fuera de rol): ")}>
             Fuera de rol
