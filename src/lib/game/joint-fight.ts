@@ -224,6 +224,16 @@ const JOINT_NO_VERDICT_NOTICE = "(El árbitro no pudo juzgar esta ronda a tiempo
 /** A round that everyone answered but nobody judged for this long is stalled (the referee failed), not still being judged. */
 const STALLED_AFTER_MS = 150_000;
 
+/** Owner/ops entry point: ends a fight by the owner's decision, paying (or not) exactly like a natural ending. */
+export async function ownerSettleJointFight(fightId: string, outcome: "victory" | "defeat" | null) {
+  const fight = await prisma.jointFight.findUniqueOrThrow({ where: { id: fightId } });
+  if (fight.status !== "ACTIVE") throw new JointFightError("La pelea ya terminó.");
+  await prisma.jointFightParticipant.updateMany({ where: { fightId }, data: { action: null, tactic: 0, technique: "none" } });
+  await settleJointFight(fightId, outcome, JSON.parse(fight.enemyJson) as JointEnemy, JSON.parse(fight.rewardsJson) as JointRewards);
+  await notifyFightParticipants(fightId);
+  await notifyIsland(fight.islandId, "joint-fight-settled");
+}
+
 /** Owner/ops entry point: re-judges a round everyone answered, skipping the stall timer. */
 export async function forceResolveJointRound(fightId: string) {
   return advanceIfReady(fightId);
