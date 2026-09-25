@@ -139,7 +139,7 @@
 
 <header>
   <h1><i class="fas fa-map-marked-alt"></i> GRAND LINE RPG — MAPA DE RUTA</h1>
-  <p>Las 39 islas jugables de hoy, sus conexiones, y qué te espera en cada una.</p>
+  <p>Las 40 islas jugables de hoy, sus conexiones, y qué te espera en cada una.</p>
   <a class="back" href="index.html"><i class="fas fa-arrow-left"></i> Volver</a>
 </header>
 
@@ -303,6 +303,9 @@ const ISLANDS = [
   { key: "kuraigana", name: "Isla Kuraigana", sea: "Paradise", danger: 9, minLevel: 27, faction: "Sin gobierno (castillo de un espadachín)", poneglyph: false, x: 1040, y: 200,
     desc: "Una isla de niebla, cuervos y un castillo en ruinas donde vive un espadachín que solo se levanta por los duelos que le interesan. Nadie llega por casualidad.",
     hook: "El espadachín no recibe visitas, pero de vez en cuando deja una espada clavada en la puerta de quien le haya intrigado. Es una invitación, no un regalo." },
+  { key: "toroNegro", name: "Isla del Toro Negro", sea: "New World", danger: 8, minLevel: 30, faction: "Piratas Black Bulls (Yonko Kirito)", poneglyph: false, x: 540, y: 740,
+    desc: "Una isla volcánica en pleno Nuevo Mundo, con un puerto excavado en la roca y una fortaleza de basalto negro sobre el acantilado. Sobre la torre más alta ondea la bandera de un toro negro. Aquí no se pide permiso: se pide audiencia.",
+    hook: "Los Black Bulls no reciben a cualquiera. Los vigías cuentan los barcos que se acercan y el Emperador decide, mirando la bahía, quién atraca y quién da la vuelta." },
   { key: "elbaf", name: "Elbaf", sea: "New World", danger: 10, minLevel: 34, faction: "Guerreros de Elbaf (gigantes)", poneglyph: false, x: 400, y: 735,
     desc: "La tierra de los gigantes: bosques colosales, árboles como montañas y guerreros que llevan generaciones peleando por un honor que ya casi nadie sabe explicar. Los humanos aquí son los que caben en una mano.",
     hook: "Dos gigantes legendarios llevan décadas luchando por una promesa que ninguno recuerda. Alguien ha prometido a los forasteros una respuesta si logran reconciliarlos." },
@@ -310,7 +313,7 @@ const ISLANDS = [
 
 const EDGES = [
   ["jaya","alabasta"], ["jaya","skypiea"], ["longRing","skypiea"], ["longRing","waterSeven"], ["thrillerBark","waterSeven"], ["thrillerBark","sabaody"],
-  ["amazonLily","sabaody"], ["amazonLily","impelDown"], ["kuraigana","whiskyPeak"], ["kuraigana","thrillerBark"], ["elbaf","wano"], ["elbaf","wholeCake"],
+  ["amazonLily","sabaody"], ["amazonLily","impelDown"], ["kuraigana","whiskyPeak"], ["kuraigana","thrillerBark"], ["elbaf","wano"], ["elbaf","wholeCake"], ["elbaf","toroNegro"], ["dressrosa","toroNegro"],
   ["foosha","shimotsuki"], ["foosha","marineG5"], ["foosha","baltigo"], ["foosha","orangeTown"], ["orangeTown","shimotsuki"],
   ["marineG5","loguetown"], ["gecko","shimotsuki"], ["gecko","loguetown"],
   ["shimotsuki","baratie"], ["shimotsuki","syrup"], ["baratie","syrup"], ["baratie","conomi"], ["conomi","loguetown"],

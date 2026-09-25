@@ -5,7 +5,7 @@ export type CompetitionKind = "weapons" | "fruit" | "gold";
 
 export const COLISEUM_ISLAND_NAME = "Dressrosa";
 /** Rare on purpose: a special event, not a daily grind. */
-export const TOURNAMENT_INTERVAL_MS = 24 * 60 * 60 * 1000;
+export const TOURNAMENT_INTERVAL_MS = 48 * 60 * 60 * 1000;
 /** Announced this long before it starts, so people can sail to Dressrosa. */
 export const REGISTRATION_LEAD_MS = 3 * 60 * 60 * 1000;
 /** Time between rounds: long enough to describe a strategy, short enough to finish in an evening. */

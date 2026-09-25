@@ -6,6 +6,7 @@ import AttributesCard from "./AttributesCard";
 import InventoryPanel from "./InventoryPanel";
 import StylesPanel from "./StylesPanel";
 import ColiseumPanel from "./ColiseumPanel";
+import VoyagePanel from "./VoyagePanel";
 import OocPanel from "./OocPanel";
 import CrewPanel, { type PanelCompanion, type PanelCrew } from "./CrewPanel";
 import { characterCondition, conditionLabel } from "@/lib/engine/condition";
@@ -324,6 +325,7 @@ interface StateResponse {
   admin: AdminHint | null;
   character: Character;
   connectedIslands: Island[];
+  voyage: { toName: string; fromName: string; arrivesAt: string; msLeft: number } | null;
   othersHere: OtherHere[];
   prisonersHere: PrisonerHere[];
   crewBattles: BattleSummary[];
@@ -404,6 +406,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [showInventory, setShowInventory] = useState(false);
   const [showStyles, setShowStyles] = useState(false);
   const [showColiseum, setShowColiseum] = useState(false);
+  const [showVoyage, setShowVoyage] = useState(false);
   const sceneEndRef = useRef<HTMLDivElement>(null);
   const duelBoxRef = useRef<HTMLDivElement>(null);
   const jointBoxRef = useRef<HTMLDivElement>(null);
@@ -631,7 +634,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     );
   }
 
-  const { character, connectedIslands, party, duel, jointFight, territory, busterCall, raid, blackMarket, coliseum, missions } = data;
+  const { character, connectedIslands, voyage, party, duel, jointFight, territory, busterCall, raid, blackMarket, coliseum, missions } = data;
   const duelActive = duel?.status === "ACTIVE";
   const jointActive = jointFight?.status === "ACTIVE";
   const isDead = character.status === "DEAD";
@@ -672,6 +675,9 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               Coliseo
             </button>
           )}
+          <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowVoyage(true)} data-testid="voyage-open">
+            Rumbo
+          </button>
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowStyles(true)} data-testid="styles-open">
             Estilos
           </button>
@@ -703,6 +709,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
         </div>
       </div>
 
+      {showVoyage && <VoyagePanel characterId={character.id} onClose={() => setShowVoyage(false)} onChanged={() => load()} />}
       {showColiseum && <ColiseumPanel characterId={character.id} onClose={() => setShowColiseum(false)} onChanged={() => load()} />}
 
       {showStyles && <StylesPanel characterId={character.id} onClose={() => setShowStyles(false)} onChanged={() => load()} />}
@@ -1335,7 +1342,13 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               </div>
             )}
 
-            {connectedIslands.length > 0 && !isDead && !isImprisoned && !character.pendingEncounter && (
+            {voyage && (
+              <div className="mt-4 rounded border border-gold/50 p-3 text-sm" data-testid="voyage-banner">
+                En alta mar: {voyage.fromName} → <strong>{voyage.toName}</strong>. Llegarás en unos {Math.max(1, Math.ceil(voyage.msLeft / 60000))} min. Hasta entonces no puedes explorar, entrenar ni descansar.
+              </div>
+            )}
+
+            {connectedIslands.length > 0 && !voyage && !isDead && !isImprisoned && !character.pendingEncounter && (
               <div className="mt-4 pt-4 border-t border-[--line]">
                 <p className="text-xs text-ink-dim mb-2">Zarpar hacia:</p>
                 <div className="flex flex-wrap gap-2">

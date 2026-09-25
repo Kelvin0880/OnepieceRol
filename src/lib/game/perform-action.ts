@@ -16,6 +16,8 @@ import { FATIGUE_LABELS, fatigueLevel, restStamina, spendStamina } from "../engi
 import { prepareFighter, combatProgressData, currentStamina } from "./combat-prep";
 import { bountyReward, berryReward, xpToNextLevel } from "../engine/economy";
 import { assessThreat, attemptFlee, ThreatAssessment } from "../engine/encounter";
+import { settleVoyage, assertNotAtSea, startVoyage } from "./voyage";
+import { canSailAnywhere, hopsBetween, voyageDurationMs, rollSeaAmbush, pickSeaAmbush, seaAmbushPower } from "../engine/voyage";
 import { canEnterIsland, travelWaitMs, TRAVEL_STAMINA_COST, tideStatus, knowsTheRoad } from "../engine/travel";
 import { rollHunterAmbush, decayPursuitHeat, heatAfterReadingPoneglyph } from "../engine/pursuit";
 import { recordGrudgeIncident, recordMercyIncident, decayGrudgesForCharacter, rollGrudgeAmbushForCharacter, getGrudgeContextForNarration } from "./grudges";
@@ -52,6 +54,7 @@ export class GameActionError extends Error {}
 type LoadedCharacter = Awaited<ReturnType<typeof loadCharacterOrThrow>>;
 
 async function loadCharacterOrThrow(characterId: string, userId: string) {
+  await settleVoyage(characterId);
   const character = await prisma.character.findUnique({
     where: { id: characterId },
     include: {
@@ -165,6 +168,7 @@ const emptyResult = (log: string[], newLevel: number): ActionResult => ({
 async function exploreCharacterInner(characterId: string, userId: string, intentText?: string): Promise<ActionResult> {
   await tickWorldIfDue();
   const character = await loadCharacterOrThrow(characterId, userId);
+  assertNotAtSea(character);
   if (character.pendingEncounter) {
     throw new GameActionError("Tienes un enfrentamiento sin resolver. Decide si luchar o huir primero.");
   }
@@ -1191,6 +1195,7 @@ export async function assertCalm(characterId: string, userId: string, what: "usa
 async function trainCharacterInner(characterId: string, userId: string, focus: "armament" | "observation" | "fruit" | "auto" = "auto"): Promise<ActionResult> {
   await tickWorldIfDue();
   const character = await loadCharacterOrThrow(characterId, userId);
+  assertNotAtSea(character);
   await assertSafeToRecover(character, "entrenar");
 
   if (character.lastTrainedAt) {
@@ -1272,9 +1277,19 @@ async function travelCharacterInner(characterId: string, userId: string, targetI
   const character = await loadCharacterOrThrow(characterId, userId);
   if (character.pendingEncounter) throw new GameActionError("No puedes zarpar con un enfrentamiento sin resolver.");
   if (await getOpenDuelFor(character.id)) throw new GameActionError("No puedes zarpar en mitad de un duelo.");
+  assertNotAtSea(character);
+  if (targetIslandId === character.currentIslandId) throw new GameActionError("Ya estás en esa isla.");
   const connections = JSON.parse(character.currentIsland.connections) as string[];
+  let hops = 1;
   if (!connections.includes(targetIslandId)) {
-    throw new GameActionError("Esa isla no es alcanzable directamente desde tu posición actual.");
+    if (!canSailAnywhere(character.level)) {
+      throw new GameActionError("Esa isla no es alcanzable directamente desde tu posición actual. Desde el nivel 20 podrás trazar rumbo a cualquier isla.");
+    }
+    const all = await prisma.island.findMany({ select: { id: true, connections: true } });
+    const graph = Object.fromEntries(all.map((i) => [i.id, JSON.parse(i.connections) as string[]]));
+    const found = hopsBetween(graph, character.currentIslandId, targetIslandId);
+    if (found === null) throw new GameActionError("No hay ruta marítima conocida hasta esa isla.");
+    hops = found;
   }
   const target = await prisma.island.findUnique({
     where: { id: targetIslandId },
@@ -1331,6 +1346,13 @@ async function travelCharacterInner(characterId: string, userId: string, targetI
   const staminaNow = currentStamina(character);
   if (staminaNow < TRAVEL_STAMINA_COST) throw new GameActionError("Estás demasiado exhausto para gobernar el barco. Descansa antes de zarpar.");
 
+  if (hops > 1) {
+    const ambushRng = liveRng();
+    const ambush = rollSeaAmbush(ambushRng, hops) ? { ...pickSeaAmbush(ambushRng, character.faction), power: seaAmbushPower(hops) } : null;
+    const log = await startVoyage(character, character.currentIsland.name, target, voyageDurationMs(hops), { stamina: spendStamina(staminaNow, TRAVEL_STAMINA_COST), staminaUpdatedAt: new Date() }, ambush);
+    return { log };
+  }
+
   const visited = JSON.parse(character.islandsVisited) as string[];
   const firstVisit = !visited.includes(target.id);
 
@@ -1366,6 +1388,7 @@ async function travelCharacterInner(characterId: string, userId: string, targetI
 
 export async function restCharacter(characterId: string, userId: string): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
+  assertNotAtSea(character);
   await assertSafeToRecover(character, "descansar");
   const healed = Math.min(character.maxHp, character.hp + Math.round(character.maxHp * 0.4));
   await prisma.character.update({

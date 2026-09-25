@@ -1433,6 +1433,8 @@ absolutely everything: **`APLICACION_COMPLETA.md`** — keep it in sync.
 - Tooling gotcha: a Bash heredoc that contains Python with `\n` inside strings can turn those into real newlines (broke two files this session); write patch scripts with the Write tool, or build backslashes with `chr(92)`.
 - Verified by `scripts/attributes-inventory-check.ts`, `styles-check.ts`, `coliseum-check.ts` (DB) and `features-ui-check.mjs` (390 px browser), all part of `run-all-checks.mjs`.
 
+**Long voyages, player Yonko, named commanders (2026-09-24)** — see `APLICACION_COMPLETA.md` section 4.19. Remember: from level 20 any island is reachable by a timed crossing (`engine/voyage.ts`; arrival settled lazily in `loadCharacterOrThrow` + the character GET; at-sea characters stay on the origin island in the DB and `assertNotAtSea` blocks explore/train/rest/travel); ambushes are rolled at departure and sprung at arrival. `scripts/make-yonko.ts` is the owner tool that made "Kirito" a Yonko (run against prod with an inline `DATABASE_URL`, never store it). `NPCCompanion.profileJson` gives commanders hand-written abilities/style/attributes. Coliseum interval is now 48 h. Checks: `voyage-check.ts`, `voyage-ui-check.mjs`.
+
 ## Conventions to keep matching
 
 - All player-facing text is in Spanish (the user writes in Spanish).

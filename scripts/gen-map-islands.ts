@@ -21,9 +21,10 @@ const NEW: Record<string, { key: string; x: number; y: number }> = {
   "Amazon Lily": { key: "amazonLily", x: 1550, y: 640 },
   "Isla Kuraigana": { key: "kuraigana", x: 1040, y: 200 },
   Elbaf: { key: "elbaf", x: 400, y: 735 },
+  "Isla del Toro Negro": { key: "toroNegro", x: 540, y: 740 },
 };
 
-const ONLY = new Set(["Jaya", "Long Ring Long Land", "Thriller Bark", "Amazon Lily", "Isla Kuraigana", "Elbaf"]);
+const ONLY = new Set(["Jaya", "Long Ring Long Land", "Thriller Bark", "Amazon Lily", "Isla Kuraigana", "Elbaf", "Isla del Toro Negro"]);
 
 async function main() {
   const rows = await prisma.island.findMany({ include: { poneglyph: true } });

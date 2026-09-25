@@ -69,3 +69,28 @@ describe("recruitment", () => {
   });
   it("caps the crew at a sensible size", () => expect(MAX_COMPANIONS).toBe(3));
 });
+
+import { parseCompanionProfile } from "./companions";
+
+describe("commander profiles", () => {
+  const profile = { epithet: "Corta-Tormentas", styleId: "santoryu", abilities: ["Corte Tormenta"], attrs: { strength: 140, agility: 100, durability: 100, willpower: 50, intellect: 50 } };
+  it("replaces the role abilities with the hand-written ones and adds attributes on top", () => {
+    const plain = companionSheet("Espadachín", 45, 90);
+    const named = companionSheet("Espadachín", 45, 90, profile);
+    expect(named.abilities[0]).toBe("Corte Tormenta");
+    expect(named.abilities.length).toBeGreaterThan(1);
+    expect(named.atk).toBeGreaterThan(plain.atk);
+    expect(named.maxHp).toBeGreaterThan(plain.maxHp);
+    expect(named.epithet).toBe("Corta-Tormentas");
+    expect(named.styleId).toBe("santoryu");
+  });
+  it("without a profile nothing changes", () => {
+    expect(companionSheet("Navegante", 10, 50, null)).toEqual(companionSheet("Navegante", 10, 50));
+  });
+  it("parses stored JSON defensively", () => {
+    expect(parseCompanionProfile(JSON.stringify(profile))?.attrs?.strength).toBe(140);
+    expect(parseCompanionProfile("not json")).toBeNull();
+    expect(parseCompanionProfile(null)).toBeNull();
+    expect(parseCompanionProfile(JSON.stringify({ attrs: { strength: "x", agility: 5000 } }))?.attrs).toEqual({ strength: 0, agility: 999, durability: 0, willpower: 0, intellect: 0 });
+  });
+});

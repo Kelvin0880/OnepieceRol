@@ -2,7 +2,7 @@ import { belongingsFor } from "../engine/inventory";
 import { prisma } from "../db";
 import { CharacterStatus } from "@prisma/client";
 import { liveRng } from "../engine/rng";
-import { MAX_COMPANIONS, RecruitTier, companionMaxHp, companionSheet, normalizeRole, recruitChance, rollRecruit, startingLoyalty } from "../engine/companions";
+import { MAX_COMPANIONS, RecruitTier, companionMaxHp, companionSheet, parseCompanionProfile, normalizeRole, recruitChance, rollRecruit, startingLoyalty } from "../engine/companions";
 import { narrateRecruit, getRecentScene } from "../ai/narrate";
 
 export class CompanionError extends Error {}
@@ -25,6 +25,8 @@ export interface CompanionView {
   abilities: string[];
   nextAbilityAtLevel: number | null;
   personality: string | null;
+  epithet: string | null;
+  styleId: string | null;
   /** What this nakama carries (engine/inventory.ts belongingsFor): shown on the card and told to the narrator. */
   belongings: string[];
 }
@@ -38,7 +40,7 @@ const ABILITY_LEVELS = [1, 5, 12];
 export async function syncCompanions(characterId: string, ownerLevel: number): Promise<void> {
   const rows = await prisma.nPCCompanion.findMany({ where: { characterId, status: CharacterStatus.ALIVE } });
   for (const c of rows) {
-    const max = companionMaxHp(ownerLevel, c.role);
+    const max = companionSheet(c.role, ownerLevel, c.loyalty, parseCompanionProfile(c.profileJson)).maxHp;
     if (max === c.maxHp) continue;
     await prisma.nPCCompanion.update({ where: { id: c.id }, data: { maxHp: max, hp: Math.max(1, Math.min(max, Math.round((c.hp * max) / Math.max(1, c.maxHp)))) } });
   }
@@ -48,7 +50,7 @@ export async function getCompanionViews(characterId: string, ownerLevel: number)
   await syncCompanions(characterId, ownerLevel);
   const rows = await prisma.nPCCompanion.findMany({ where: { characterId }, orderBy: { joinedAt: "asc" } });
   return rows.map((c) => {
-    const sheet = companionSheet(c.role, ownerLevel, c.loyalty);
+    const sheet = companionSheet(c.role, ownerLevel, c.loyalty, parseCompanionProfile(c.profileJson));
     return {
       id: c.id,
       name: c.name,
@@ -65,6 +67,8 @@ export async function getCompanionViews(characterId: string, ownerLevel: number)
       abilities: sheet.abilities,
       nextAbilityAtLevel: ABILITY_LEVELS.find((l) => l > ownerLevel) ?? null,
       personality: c.personality,
+      epithet: sheet.epithet ?? null,
+      styleId: sheet.styleId ?? null,
       belongings: belongingsFor(c.role),
     };
   });

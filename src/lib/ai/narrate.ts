@@ -33,6 +33,7 @@ import {
 } from "./narrate-prompt";
 import { callOpenRouter } from "./openrouter-client";
 import { OPENROUTER_MODELS } from "./models";
+import { parseCompanionProfile } from "../engine/companions";
 import { describeCapabilities } from "../engine/capabilities";
 import { describeAttributes } from "../engine/attributes";
 import { describeStyles } from "../engine/styles";
@@ -72,13 +73,16 @@ export async function loadDirectives(characterId: string): Promise<string> {
   try {
     const c = await prisma.character.findUnique({
       where: { id: characterId },
-      include: { devilFruit: { select: { name: true } }, equippedWeapon: { select: { name: true } }, companions: { where: { status: "ALIVE" }, select: { name: true } }, styles: true, ownedWeapons: { where: { wielded: true }, select: { id: true, name: true } } },
+      include: { devilFruit: { select: { name: true } }, equippedWeapon: { select: { name: true } }, companions: { where: { status: "ALIVE" }, select: { name: true, role: true, profileJson: true } }, styles: true, ownedWeapons: { where: { wielded: true }, select: { id: true, name: true } } },
     });
     if (!c) return directivesBlock();
     const caps = describeCapabilities({
       name: c.name, level: c.level, armamentHaki: c.armamentHaki, observationHaki: c.observationHaki, conquerorsHaki: c.conquerorsHaki,
       fruitName: c.devilFruit?.name, fruitMastery: c.fruitMastery, fruitAwakened: c.fruitAwakened, weaponName: c.equippedWeapon?.name,
-      stamina: currentStamina(c), maxStamina: c.maxStamina, hp: c.hp, maxHp: c.maxHp, companions: c.companions.map((n) => n.name),
+      stamina: currentStamina(c), maxStamina: c.maxStamina, hp: c.hp, maxHp: c.maxHp, companions: c.companions.map((n) => {
+        const p = parseCompanionProfile(n.profileJson);
+        return p ? `${n.name} (${[p.epithet, n.role, p.styleId ? `estilo ${p.styleId}` : null].filter(Boolean).join(", ")})` : n.name;
+      }),
       styles: describeStyles(c.styles.map((s) => ({ id: s.styleId, mastery: s.mastery })), (c.equippedWeapon ? 1 : 0) + c.ownedWeapons.filter((w) => w.id !== c.equippedWeaponId).length, [...(c.equippedWeapon ? [c.equippedWeapon.name] : []), ...c.ownedWeapons.filter((w) => w.id !== c.equippedWeaponId).map((w) => w.name)]),
       attributes: describeAttributes({ strength: c.strength, agility: c.agility, durability: c.durability, willpower: c.willpower, intellect: c.intellect }),
       inventory: await inventoryLineForNarrator(c.id),

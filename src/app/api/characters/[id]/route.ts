@@ -5,6 +5,7 @@ import { logError } from "@/lib/log-error";
 import { getCompanionViews } from "@/lib/game/companions";
 import { syncAttributePoints } from "@/lib/game/attributes";
 import { getColiseumState } from "@/lib/game/coliseum";
+import { getVoyageView, settleVoyage } from "@/lib/game/voyage";
 import { getWorldEventForCharacter } from "@/lib/game/world-arcs";
 import { sessionIsAdmin } from "@/lib/require-user";
 import { syncPartyForCharacter, getPartyStateForCharacter } from "@/lib/game/party";
@@ -31,6 +32,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     // on current crew+island togetherness — same request-driven style as
     // tickWorldIfDue, no cron/background job. Cheap: scoped to this one
     // character's crew, not a world-wide scan.
+    await settleVoyage(id);
     await syncPartyForCharacter(id);
     await syncAttributePoints(id);
 
@@ -76,6 +78,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const busterCall = await getBusterCallState(id);
     const raid = await getRaidState(id);
     const blackMarket = await getBlackMarketState(id);
+    const voyage = await getVoyageView(id);
     const coliseumFull = await getColiseumState(id);
     const coliseum = coliseumFull?.tournament ? { status: coliseumFull.tournament.status, kindLabel: coliseumFull.tournament.kindLabel, prize: coliseumFull.tournament.prize.label, startsAt: coliseumFull.tournament.startsAt, onDressrosa: coliseumFull.onDressrosa, registered: !!coliseumFull.me, round: coliseumFull.tournament.roundLabel } : null;
     await ensureIslandMissions(id);
@@ -182,6 +185,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         imprisonment: shapedImprisonment,
       },
       connectedIslands,
+      voyage,
       othersHere: othersHere.map((o) => ({ ...o, hostile: areHostile(character.faction as PlayerFaction, o.faction as PlayerFaction) })),
       prisonersHere,
       crewBattles: shapedBattles,

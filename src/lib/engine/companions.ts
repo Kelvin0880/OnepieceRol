@@ -53,6 +53,32 @@ export function loyaltyRank(loyalty: number): string {
   return "Recién llegado";
 }
 
+export interface CompanionProfile {
+  epithet?: string;
+  abilities?: string[];
+  styleId?: string;
+  attrs?: { strength: number; agility: number; durability: number; willpower: number; intellect: number };
+}
+
+/** Never trusts stored JSON: anything malformed reads as "no profile". */
+export function parseCompanionProfile(json: string | null | undefined): CompanionProfile | null {
+  if (!json) return null;
+  try {
+    const raw = JSON.parse(json) as Record<string, unknown>;
+    if (!raw || typeof raw !== "object") return null;
+    const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.min(999, Math.round(v))) : 0);
+    const a = raw.attrs as Record<string, unknown> | undefined;
+    return {
+      epithet: typeof raw.epithet === "string" ? raw.epithet.slice(0, 60) : undefined,
+      abilities: Array.isArray(raw.abilities) ? raw.abilities.filter((x): x is string => typeof x === "string").slice(0, 6) : undefined,
+      styleId: typeof raw.styleId === "string" ? raw.styleId : undefined,
+      attrs: a ? { strength: num(a.strength), agility: num(a.agility), durability: num(a.durability), willpower: num(a.willpower), intellect: num(a.intellect) } : undefined,
+    };
+  } catch {
+    return null;
+  }
+}
+
 export interface CompanionSheet {
   level: number;
   maxHp: number;
@@ -61,24 +87,33 @@ export interface CompanionSheet {
   spd: number;
   abilities: string[];
   rank: string;
+  epithet?: string;
+  styleId?: string;
 }
 
-/** A companion is always at their captain's level: that is how they "level up with you". */
-export function companionSheet(role: string, ownerLevel: number, loyalty: number): CompanionSheet {
+/**
+ * A companion is always at their captain's level: that is how they "level up with you".
+ * A hand-written profile (named commanders) replaces the role's ability list and adds its attributes on top.
+ */
+export function companionSheet(role: string, ownerLevel: number, loyalty: number, profile?: CompanionProfile | null): CompanionSheet {
   const a = archetypeFor(role);
   const lvl = Math.max(1, ownerLevel);
   const atkBase = 8 + lvl * 2 + Math.round(loyalty / 20);
   const defBase = 5 + lvl;
   const spdBase = 7 + lvl;
   const unlocked = a.abilities.filter((_, i) => lvl >= [1, 5, 12][i]);
+  const at = profile?.attrs;
+  const abilities = profile?.abilities?.length ? [...profile.abilities, ...unlocked.filter((u) => !profile.abilities!.includes(u))] : unlocked;
   return {
     level: lvl,
-    maxHp: companionMaxHp(lvl, role),
-    atk: Math.max(1, Math.round(atkBase * a.atk)),
-    def: Math.max(1, Math.round(defBase * a.def)),
-    spd: Math.max(1, Math.round(spdBase * a.spd)),
-    abilities: unlocked,
+    maxHp: companionMaxHp(lvl, role) + (at ? at.durability * 3 : 0),
+    atk: Math.max(1, Math.round(atkBase * a.atk + (at ? at.strength * 0.4 : 0))),
+    def: Math.max(1, Math.round(defBase * a.def + (at ? at.durability * 0.3 : 0))),
+    spd: Math.max(1, Math.round(spdBase * a.spd + (at ? at.agility * 0.3 : 0))),
+    abilities,
     rank: loyaltyRank(loyalty),
+    epithet: profile?.epithet,
+    styleId: profile?.styleId,
   };
 }
 

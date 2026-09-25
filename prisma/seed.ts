@@ -470,6 +470,18 @@ async function main() {
         "Dos gigantes legendarios llevan décadas luchando por una promesa que ninguno recuerda. Alguien ha prometido a los forasteros una respuesta si logran reconciliarlos.",
     },
     {
+      key: "toroNegro",
+      name: "Isla del Toro Negro",
+      sea: Sea.NEW_WORLD,
+      danger: 8,
+      minLevel: 30,
+      factionControl: "Piratas Black Bulls (Yonko Kirito)",
+      description:
+        "Una isla volcánica en pleno Nuevo Mundo, con un puerto excavado en la roca y una fortaleza de basalto negro sobre el acantilado. Sobre la torre más alta ondea la bandera de un toro negro. Aquí no se pide permiso: se pide audiencia.",
+      arcHook:
+        "Los Black Bulls no reciben a cualquiera. Los vigías cuentan los barcos que se acercan y el Emperador decide, mirando la bahía, quién atraca y quién da la vuelta.",
+    },
+    {
       key: "laughTale",
       name: "Laugh Tale",
       sea: Sea.NEW_WORLD,
@@ -511,13 +523,14 @@ async function main() {
     syrup: ["shimotsuki", "baratie"],
     ohara: ["waterSeven"],
     marineford: ["sabaody", "eniesLobby"],
-    dressrosa: ["wholeCake", "zou", "egghead"],
+    dressrosa: ["wholeCake", "zou", "egghead", "toroNegro"],
+    toroNegro: ["elbaf", "dressrosa"],
     jaya: ["alabasta", "skypiea"],
     longRing: ["skypiea", "waterSeven"],
     thrillerBark: ["waterSeven", "sabaody"],
     amazonLily: ["sabaody", "impelDown"],
     kuraigana: ["whiskyPeak", "thrillerBark"],
-    elbaf: ["wano", "wholeCake"],
+    elbaf: ["wano", "wholeCake", "toroNegro"],
     zou: ["dressrosa", "wano"],
     egghead: ["punkHazard", "dressrosa"],
     marineG5: ["foosha", "loguetown"],
@@ -566,7 +579,7 @@ async function main() {
   // isSingleton's schema default (false) instead of the catalog's true.
   const fruitsByName: Record<string, { id: string }> = {};
   for (const f of DEVIL_FRUIT_CATALOG) {
-    const existing = await prisma.devilFruit.findFirst({ where: { name: f.name } });
+    const existing = await prisma.devilFruit.findFirst({ where: { name: f.name }, orderBy: { createdAt: "asc" } });
     const data = {
       englishName: f.englishName,
       type: f.type,

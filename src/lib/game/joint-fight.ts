@@ -7,7 +7,7 @@ import { resolveJointRound, scaleEnemyForGroup, JointFighter } from "../engine/j
 import { TECHNIQUE_LABELS, TechniqueId } from "../engine/techniques";
 import { classifyPlayerAction } from "../ai/classify-action";
 import { narrateJointFight, getRecentScene } from "../ai/narrate";
-import { companionSheet } from "../engine/companions";
+import { companionSheet, parseCompanionProfile, type CompanionProfile } from "../engine/companions";
 import { estimateLevel, applyFatigueToCombatant, npcStaminaAfterExchange, npcBaseEffort } from "../engine/resilience";
 import { prepareFighter, combatProgressData, PreparedFighter, characterCapabilityText } from "./combat-prep";
 import { resolveEnemyKit } from "./enemy-kit";
@@ -88,8 +88,8 @@ export async function freePartyMemberIds(characterId: string): Promise<string[]>
   return free.includes(me.id) ? free : [me.id, ...free];
 }
 
-function npcCombatant(c: { name: string; hp: number; maxHp: number; loyalty: number; role: string }, ownerLevel: number): Combatant {
-  const sheet = companionSheet(c.role, ownerLevel, c.loyalty);
+function npcCombatant(c: { name: string; hp: number; maxHp: number; loyalty: number; role: string; profile?: CompanionProfile | null }, ownerLevel: number): Combatant {
+  const sheet = companionSheet(c.role, ownerLevel, c.loyalty, c.profile);
   return { name: c.name, hp: c.hp, maxHp: c.maxHp, atk: sheet.atk, def: sheet.def, spd: sheet.spd, level: sheet.level };
 }
 
@@ -244,8 +244,8 @@ async function resolveJointRoundFor(fightId: string) {
     const c = await loadFull(p.characterId);
     if (c) chars.set(p.characterId, c);
   }
-  const companions = new Map<string, { name: string; loyalty: number; ownerLevel: number; role: string }>();
-  for (const c of chars.values()) for (const n of c.companions) companions.set(`${NPC_PREFIX}${n.id}`, { name: n.name, loyalty: n.loyalty, ownerLevel: c.level, role: n.role });
+  const companions = new Map<string, { name: string; loyalty: number; ownerLevel: number; role: string; profile: CompanionProfile | null }>();
+  for (const c of chars.values()) for (const n of c.companions) companions.set(`${NPC_PREFIX}${n.id}`, { name: n.name, loyalty: n.loyalty, ownerLevel: c.level, role: n.role, profile: parseCompanionProfile(n.profileJson) });
 
   const fled: string[] = [];
   const failedFlight: string[] = [];
@@ -264,7 +264,7 @@ async function resolveJointRoundFor(fightId: string) {
     }
     if (p.isNpc) {
       const info = companions.get(p.characterId);
-      const combatant = applyFatigueToCombatant(npcCombatant({ name: p.name, hp: p.hp, maxHp: p.maxHp, loyalty: info?.loyalty ?? 50, role: info?.role ?? "" }, info?.ownerLevel ?? 1), p.stamina);
+      const combatant = applyFatigueToCombatant(npcCombatant({ name: p.name, hp: p.hp, maxHp: p.maxHp, loyalty: info?.loyalty ?? 50, role: info?.role ?? "", profile: info?.profile }, info?.ownerLevel ?? 1), p.stamina);
       fighters.push({ id: p.characterId, hp: p.hp, combatant });
       actionsForNarration.push({ name: p.name, text: "lucha junto a su capitán", isNpc: true });
       continue;
@@ -332,8 +332,8 @@ async function resolveJointRoundFor(fightId: string) {
   const allyKits = [
     ...[...chars.values()].slice(0, 6).map((c) => characterCapabilityText(c)),
     ...[...companions.entries()].slice(0, 4).map(([, n]) => {
-      const sheet = companionSheet(n.role, n.ownerLevel, n.loyalty);
-      return `NAKAMA ${n.name.toUpperCase()} (${n.role}, nivel ${sheet.level}, ${sheet.rank}): técnicas ${sheet.abilities.join("; ")}. Lucha por ganar con ellas.`;
+      const sheet = companionSheet(n.role, n.ownerLevel, n.loyalty, n.profile);
+      return `NAKAMA ${n.name.toUpperCase()} (${n.role}${sheet.epithet ? `, «${sheet.epithet}»` : ""}, nivel ${sheet.level}, ${sheet.rank}): técnicas ${sheet.abilities.join("; ")}. Lucha por ganar con ellas.`;
     }),
   ];
   const roster = (await prisma.jointFightParticipant.findMany({ where: { fightId } })).map((p) => ({ name: p.name, hp: p.hp, maxHp: p.maxHp, down: p.status === "DOWN", fled: p.status === "FLED" }));

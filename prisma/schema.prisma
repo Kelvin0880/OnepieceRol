@@ -117,6 +117,12 @@ model Character {
   // danger (engine/travel.ts). null = never traveled, always eligible.
   lastTravelAt DateTime?
 
+  // Long crossings take real time (engine/voyage.ts): while voyageArrivesAt is in the future the character is at sea; the arrival is settled lazily.
+  voyageToIslandId   String?
+  voyageFromIslandId String?
+  voyageArrivesAt    DateTime?
+  voyageAmbushJson    String? // rolled at departure, sprung on arrival: {name, blurb, power}
+
   // Refreshed by the character poll (throttled) — real PvP hunts only land on
   // people who are actually online (engine/hostility.ts).
   lastSeenAt DateTime?
@@ -473,6 +479,8 @@ model NPCCompanion {
   maxHp       Int             @default(60)
   loyalty     Int             @default(50) // 0-100, affects desertion/rescue behavior
   personality String? // a short in-character voice line, fed to the narrator
+  // Optional hand-written profile for named commanders: {epithet, abilities[], styleId, attrs{...}} (engine/companions.ts). null = archetype only.
+  profileJson String?
   status      CharacterStatus @default(ALIVE)
   deathCause  String?
   joinedAt    DateTime        @default(now())

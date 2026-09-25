@@ -470,6 +470,18 @@ estrategia que inclina el combate. Cada victoria da experiencia y queda en tu
 bitácora; el campeón recibe el premio en su Inventario (un arma se equipa, una
 fruta se decide si se come). Todo aparece en Noticias, categoría Coliseo.
 
+VIAJES LARGOS (desde el nivel 20)
+Hasta el nivel 19 solo cruzas a islas vecinas. Desde el nivel 20, cualquier
+facción puede pulsar "Rumbo": el menú muestra dónde estás y todas las islas
+del mundo con el tiempo de travesía (5 minutos por cada isla de por medio,
+máximo una hora), el peligro y el riesgo de emboscada en el mar (0 % en un
+cruce directo, hasta 55 % en las travesías más largas). Mientras navegas no
+puedes explorar, entrenar ni descansar; llegas solo cuando pasa el tiempo. Si
+te emboscan (patrullas, rivales, bestias marinas), la pelea te espera al tocar
+puerto y su fuerza crece con la distancia. Las islas cerradas por nivel, por
+marea o por los Poneglifos de Ruta aparecen bloqueadas con el motivo. Los
+Yonko salen en las Noticias cada vez que zarpan o desembarcan.
+
 LONGITUD DE LAS RESPUESTAS
 El narrador ajusta el largo a lo que escribes: una pregunta o una acción simple
 recibe una respuesta corta y directa; solo se extiende con giros importantes,
