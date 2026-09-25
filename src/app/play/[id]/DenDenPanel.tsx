@@ -12,6 +12,9 @@ interface Message {
 
 export default function DenDenPanel({ characterId, onClose }: { characterId: string; onClose: () => void }) {
   const [channel, setChannel] = useState("");
+  const [scope, setScope] = useState<"faction" | "crew">("faction");
+  const [hasCrew, setHasCrew] = useState(false);
+  const [factionLabel, setFactionLabel] = useState("");
   const [messages, setMessages] = useState<Message[]>([]);
   const [text, setText] = useState("");
   const [error, setError] = useState<string | null>(null);
@@ -19,12 +22,17 @@ export default function DenDenPanel({ characterId, onClose }: { characterId: str
   const boxRef = useRef<HTMLDivElement>(null);
 
   const refresh = useCallback(async () => {
-    const res = await fetch(`/api/characters/${characterId}/denden`);
-    if (!res.ok) return;
+    const res = await fetch(`/api/characters/${characterId}/denden?scope=${scope}`);
+    if (!res.ok) {
+      if (scope === "crew") setScope("faction");
+      return;
+    }
     const data = await res.json();
     setChannel(data.channel);
+    setHasCrew(!!data.hasCrew);
+    setFactionLabel(data.factionLabel ?? "");
     setMessages(data.messages);
-  }, [characterId]);
+  }, [characterId, scope]);
 
   useEffect(() => {
     refresh();
@@ -43,7 +51,7 @@ export default function DenDenPanel({ characterId, onClose }: { characterId: str
     setBusy(true);
     setError(null);
     try {
-      const res = await fetch(`/api/characters/${characterId}/denden`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: body }) });
+      const res = await fetch(`/api/characters/${characterId}/denden`, { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ text: body, scope }) });
       const data = await res.json().catch(() => ({}));
       if (!res.ok) setError(data.error ?? "No se pudo enviar.");
       else {
@@ -62,8 +70,18 @@ export default function DenDenPanel({ characterId, onClose }: { characterId: str
           <div className="min-w-0">
             <h2 className="font-display text-xl text-gold">Den Den Mushi</h2>
             <p className="text-xs text-ink-dim">
-              Canal de <strong className="text-ink" data-testid="denden-channel">{channel || "…"}</strong>: solo lo oyen los de tu facción.
+              Canal de <strong className="text-ink" data-testid="denden-channel">{channel || "…"}</strong>: {scope === "crew" ? "solo lo oyen los miembros de tu tripulación." : "solo lo oyen los de tu facción."}
             </p>
+            {hasCrew && (
+              <div className="flex gap-2 mt-2">
+                <button className={`px-3 py-1 text-xs rounded border ${scope === "faction" ? "border-gold text-gold" : "border-[--line] text-ink-dim"}`} onClick={() => { setMessages([]); setScope("faction"); }} data-testid="denden-tab-faction">
+                  {factionLabel || "Facción"}
+                </button>
+                <button className={`px-3 py-1 text-xs rounded border ${scope === "crew" ? "border-gold text-gold" : "border-[--line] text-ink-dim"}`} onClick={() => { setMessages([]); setScope("crew"); }} data-testid="denden-tab-crew">
+                  Tripulación
+                </button>
+              </div>
+            )}
           </div>
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={onClose}>
             Cerrar

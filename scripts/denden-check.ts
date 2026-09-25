@@ -50,10 +50,24 @@ async function main() {
     assert(await rejects(() => getDenDen(p1.c.id, p2.u.id), "no encontrado"), "nobody can read the line through someone else's character");
     assert(await rejects(() => sendDenDen(p1.c.id, p2.u.id, "suplantando"), "no encontrado"), "nor speak as them");
 
+    // Crew channel: only the crew hears it, faction mates outside the crew do not.
+    const crewA = await prisma.crew.create({ data: { name: `Crew${stamp}`, flagDesc: "x", captainId: p1.c.id } });
+    await prisma.character.update({ where: { id: p1.c.id }, data: { crewId: crewA.id } });
+    await prisma.character.update({ where: { id: p2.c.id }, data: { crewId: crewA.id } });
+    const p3 = await mk("Pirata3", "PIRATE");
+    assert(await rejects(() => getDenDen(p3.c.id, p3.u.id, "crew"), "tripulación"), "without a crew there is no crew channel");
+    await new Promise((r) => setTimeout(r, 2100));
+    await sendDenDen(p1.c.id, p1.u.id, "Solo la tripulación", "crew");
+    assert((await getDenDen(p2.c.id, p2.u.id, "crew")).messages.some((m) => m.text === "Solo la tripulación" && !m.mine), "a crewmate hears the crew message");
+    assert(!(await getDenDen(p2.c.id, p2.u.id, "faction")).messages.some((m) => m.text === "Solo la tripulación"), "it does not leak into the faction channel");
+    assert(await rejects(() => sendDenDen(p3.c.id, p3.u.id, "colándome", "crew"), "tripulación"), "an outsider cannot speak in the crew channel");
+
     await prisma.character.update({ where: { id: p2.c.id }, data: { status: "IMPRISONED" } });
     assert(await rejects(() => sendDenDen(p2.c.id, p2.u.id, "desde la celda"), "vivo"), "a prisoner has no line");
   } finally {
     await prisma.denDenMessage.deleteMany({ where: { authorCharacterId: { in: made.map((x) => x.c) } } });
+    await prisma.character.updateMany({ where: { id: { in: made.map((x) => x.c) } }, data: { crewId: null } });
+    await prisma.crew.deleteMany({ where: { name: { startsWith: `Crew${stamp}` } } });
     for (const x of made) {
       await prisma.character.delete({ where: { id: x.c } }).catch(() => undefined);
       await prisma.user.delete({ where: { id: x.u } }).catch(() => undefined);

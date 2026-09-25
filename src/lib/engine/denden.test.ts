@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { DENDEN_MAX_LENGTH, channelFor, channelLabel, cleanMessage, tooFast } from "./denden";
+import { DENDEN_MAX_LENGTH, channelFor, channelLabel, cleanMessage, crewChannelKey, parseScope, tooFast } from "./denden";
 
 describe("den den mushi rules", () => {
   it("one channel per faction, case-insensitive", () => {
@@ -20,6 +20,17 @@ describe("den den mushi rules", () => {
     expect(cleanMessage("a".repeat(DENDEN_MAX_LENGTH + 1))).toBeNull();
     expect(cleanMessage("a\n\n\n\n\nb")).toBe("a\n\nb");
     expect(cleanMessage("a\u0001b")).toBe("ab");
+  });
+  it("crew channels never collide with a faction channel", () => {
+    expect(crewChannelKey("abc")).toBe("CREW:abc");
+    expect(crewChannelKey("abc")).not.toBe(channelFor("PIRATE"));
+    expect(crewChannelKey("a")).not.toBe(crewChannelKey("b"));
+  });
+  it("scope defaults to the faction unless the crew is asked for", () => {
+    expect(parseScope("crew")).toBe("crew");
+    expect(parseScope("faction")).toBe("faction");
+    expect(parseScope("CREW:x")).toBe("faction");
+    expect(parseScope(null)).toBe("faction");
   });
   it("rate limits fast senders", () => {
     expect(tooFast(null, 5000)).toBe(false);
