@@ -1,6 +1,7 @@
 // Test helper for events-ui-check.mjs. Usage:
 //   npx tsx scripts/events-setup.ts event            -> announces a beginner event on Pueblo Foosha (real AI unless EVENT_STUB=1)
 //   npx tsx scripts/events-setup.ts backdate         -> ends the registration window of every open event
+//   npx tsx scripts/events-setup.ts report          -> adds a player report for the admin panel
 //   npx tsx scripts/events-setup.ts item <characterId> -> drops a new item in the character's bag
 import "dotenv/config";
 import { prisma } from "../src/lib/db";
@@ -14,6 +15,9 @@ async function main() {
   } else if (cmd === "backdate") {
     const n = await prisma.playerEvent.updateMany({ where: { status: "OPEN" }, data: { createdAt: new Date(Date.now() - 7 * 3600_000) } });
     console.log(`backdated ${n.count}`);
+  } else if (cmd === "report") {
+    await prisma.oocReport.create({ data: { characterId: "gone", kind: "report", text: "Reporte de prueba: el narrador olvidó mi inventario." } });
+    console.log("report added");
   } else if (cmd === "item" && arg) {
     await prisma.inventoryItem.create({ data: { characterId: arg, name: "Mapa desgastado", kind: "Mapa", quantity: 1 } });
     console.log("item added");

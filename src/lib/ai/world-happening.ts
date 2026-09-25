@@ -8,6 +8,9 @@ export interface HappeningInput {
   recentHeadlines: string[];
   seeds: HappeningSeed[];
   heat: number;
+  /** The owner's own idea to develop (admin panel); the AI writes it up as a news item instead of inventing from scratch. */
+  idea?: string | null;
+  forceIsland?: string | null;
 }
 
 const SYSTEM =
@@ -23,7 +26,9 @@ export async function inventHappening(input: HappeningInput): Promise<Happening 
     `Islas del mundo:\n${input.islands.map((i) => `- ${i.name} (${i.sea}, peligro ${i.danger}${i.control ? `, controla: ${i.control}` : ""})`).join("\n")}\n\n` +
     `Tensión general del mundo: ${input.heat}/100.\n` +
     `Sucesos recientes (NO los repitas ni su tipo):\n${input.recentHeadlines.length ? input.recentHeadlines.map((h) => `- ${h}`).join("\n") : "- (ninguno todavía)"}\n\n` +
-    `Ideas de tipo, solo como inspiración (mejor inventa algo propio): ${input.seeds.map((s) => s.kind).join(", ")}.`;
+    `Ideas de tipo, solo como inspiración (mejor inventa algo propio): ${input.seeds.map((s) => s.kind).join(", ")}.` +
+    (input.idea ? `\n\nEL DUEÑO DEL JUEGO PROPONE ESTE SUCESO, DESARROLLALO fielmente (respetando las reglas duras): ${input.idea}` : "") +
+    (input.forceIsland ? `\nDebe ocurrir en: ${input.forceIsland}.` : "");
   try {
     const raw = await callOpenRouter(SYSTEM, user, {
       models: OPENROUTER_MODELS,
@@ -32,7 +37,8 @@ export async function inventHappening(input: HappeningInput): Promise<Happening 
       maxTokens: 900,
       validate: (t) => parseHappening(t, input.islands.map((i) => i.name)) !== null,
     });
-    return parseHappening(raw, input.islands.map((i) => i.name));
+    const h = parseHappening(raw, input.islands.map((i) => i.name));
+    return h && input.forceIsland ? { ...h, islandName: input.forceIsland } : h;
   } catch (err) {
     await logError("ai/world-happening", err, {});
     return null;

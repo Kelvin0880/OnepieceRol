@@ -340,3 +340,10 @@ Botón/enlace en el panel de pelea contra un NPC ("¿La pelea se atascó o ya te
 
 ## Sucesos del mundo (2026-09-25)
 Cada 24 horas la IA inventa un suceso nuevo en una isla real (fiestas, tormentas, hallazgos, crímenes, misterios...). Aparece en /news como "Sucesos del mundo" y el narrador lo conoce mientras estés en esa isla. Nunca mata ni captura a personajes canon ni regala objetos. Los eventos mundiales largos (con veredicto del dueño) ahora pueden empezar 24 h después de terminar el anterior (antes 72 h).
+
+## Eventos para principiantes, avisos, panel de administración y registro de jugadores (2026-09-25)
+- **Eventos**: la IA inventa una prueba (carrera, caza, enigma...) con 3 rivales NPC y se anuncia en las noticias. Para niveles bajos, en una isla concreta: hay que estar allí para inscribirse. Inscripciones abiertas al menos 6 h; sin límite para completar la prueba. Cuando todos los inscritos terminan, el juez IA puntúa a todos, el sistema elige al ganador y se publica el resultado completo. El ganador se lleva el premio (a veces una fruta única inventada, que nadie más puede conseguir) y los demás una pequeña compensación. Botón "Eventos" en la cabecera.
+- **Avisos**: los botones Noticias, Den Den Mushi, Eventos e Inventario muestran una insignia cuando hay algo nuevo desde la última vez que los abriste.
+- **Chat de tripulación**: pestaña "Tripulación" dentro del Den Den Mushi.
+- **Administración**: resumen del mundo, reportes de jugadores, anuncios oficiales, proponer un suceso a la IA, crear/cancelar/cerrar eventos e iniciar un evento mundial entre dos personajes canon.
+- **Códice**: pestaña "Jugadores" con todos los jugadores registrados (vivos, presos y muertos).

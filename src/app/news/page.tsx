@@ -34,10 +34,12 @@ const CATEGORY_COLOR: Record<string, string> = {
   "Gobierno Mundial": "text-ink-dim",
   "Eventos mundiales": "text-orange-300",
   "Sucesos del mundo": "text-teal-300",
+  Eventos: "text-lime-300",
+  Anuncios: "text-yellow-300",
   Coliseo: "text-amber-300",
 };
 
-const CATEGORIES = ["Coliseo", "Eventos mundiales", "Sucesos del mundo", "Recompensas", "Frutas", "Poneglifos", "Tripulaciones", "Guerra", "Muertes", "Gobierno Mundial"];
+const CATEGORIES = ["Coliseo", "Eventos mundiales", "Sucesos del mundo", "Eventos", "Anuncios", "Recompensas", "Frutas", "Poneglifos", "Tripulaciones", "Guerra", "Muertes", "Gobierno Mundial"];
 
 function dayLabel(dateStr: string): string {
   const date = new Date(dateStr);
@@ -210,9 +212,9 @@ export default function NewsPage() {
 
   return (
     <main className="flex-1 max-w-2xl w-full mx-auto p-6">
-      <div className="flex items-center justify-between mb-6">
+      <div className="flex flex-wrap items-center justify-between gap-3 mb-6">
         <h1 className="font-display text-2xl text-gold-bright">El Heraldo del Mundo</h1>
-        <div className="flex gap-2">
+        <div className="flex flex-wrap gap-2">
           <Link href="/codex" className="btn-ghost px-3 py-1.5 text-sm" data-testid="codex-link">
             Códice
           </Link>
