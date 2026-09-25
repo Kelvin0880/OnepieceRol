@@ -5,6 +5,8 @@
  */
 
 export const EVENT_MAX_OPEN = 3;
+/** Registration stays open at least this long, so one early finisher cannot close the event before anyone else can join. Finishing has no time limit. */
+export const REGISTRATION_WINDOW_MS = 6 * 60 * 60 * 1000;
 export const EVENT_CREATE_INTERVAL_MS = 24 * 60 * 60 * 1000;
 export const EVENT_DEFAULT_MIN_LEVEL = 1;
 export const EVENT_DEFAULT_MAX_LEVEL = 10;
@@ -42,8 +44,9 @@ export function cleanSubmission(text: string): string | null {
   return t.length >= SUBMISSION_MIN && t.length <= SUBMISSION_MAX ? t : null;
 }
 
-/** An event is ready to be judged when at least one human submitted and nobody human is still working on it. */
-export function readyToResolve(entries: Pick<EntryLike, "isNpc" | "status">[]): boolean {
+/** An event is ready to be judged when the registration window is over, at least one human submitted and nobody human is still working on it. */
+export function readyToResolve(entries: Pick<EntryLike, "isNpc" | "status">[], window?: { createdAt: Date; now: Date }): boolean {
+  if (window && window.now.getTime() < window.createdAt.getTime() + REGISTRATION_WINDOW_MS) return false;
   const humans = entries.filter((e) => !e.isNpc);
   if (humans.some((e) => e.status === "REGISTERED")) return false;
   return humans.some((e) => e.status === "SUBMITTED");

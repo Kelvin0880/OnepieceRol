@@ -62,6 +62,9 @@ async function main() {
     assert((await prisma.newsItem.count({ where: { category: EVENT_NEWS_CATEGORY, body: { contains: "ha completado la prueba" } } })) >= 1, "the progress is in the news");
 
     await submitEventEntry(p2.c, p2.u, ev.id, "Estudio las corrientes, uso mi Haki de observación para leer el banco de peces y tiendo trampas escalonadas. ".repeat(6));
+    assert((await prisma.playerEvent.findUniqueOrThrow({ where: { id: ev.id } })).status === "OPEN", "even when every entrant has finished, the registration window keeps the event open");
+    await prisma.playerEvent.update({ where: { id: ev.id }, data: { createdAt: new Date(Date.now() - 7 * 3600_000) } });
+    await resolveIfReady(ev.id);
     const done = await prisma.playerEvent.findUniqueOrThrow({ where: { id: ev.id } });
     assert(done.status === "RESOLVED" && done.winnerName === p2.name, "when the last human finishes the judge crowns the best entry");
     assert(!!done.resultText && done.resultText.includes("Clasificación"), "the result lists the whole ranking");
@@ -84,6 +87,7 @@ async function main() {
     await joinEvent(q1.c, q1.u, ev2.id);
     await joinEvent(q2.c, q2.u, ev2.id);
     await submitEventEntry(q1.c, q1.u, ev2.id, "Sigo el rastro de huellas hasta el claro y preparo un señuelo con carne salada para atraerlo.");
+    await prisma.playerEvent.update({ where: { id: ev2.id }, data: { createdAt: new Date(Date.now() - 7 * 3600_000) } });
     await withdrawFromEvent(q2.c, q2.u, ev2.id);
     assert((await prisma.playerEvent.findUniqueOrThrow({ where: { id: ev2.id } })).status === "RESOLVED", "if the last unfinished human withdraws the event closes");
 

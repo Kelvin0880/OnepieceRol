@@ -9,6 +9,8 @@ import ColiseumPanel from "./ColiseumPanel";
 import VoyagePanel from "./VoyagePanel";
 import EmpirePanel from "./EmpirePanel";
 import DenDenPanel from "./DenDenPanel";
+import EventsPanel from "./EventsPanel";
+import { useBadges, badgeLabel } from "./useBadges";
 import OocPanel from "./OocPanel";
 import CrewPanel, { type PanelCompanion, type PanelCrew } from "./CrewPanel";
 import { characterCondition, conditionLabel } from "@/lib/engine/condition";
@@ -416,6 +418,8 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [showVoyage, setShowVoyage] = useState(false);
   const [showEmpire, setShowEmpire] = useState(false);
   const [showDenDen, setShowDenDen] = useState(false);
+  const [showEvents, setShowEvents] = useState(false);
+  const { counts: badges, markSeen } = useBadges(id);
   const [fleeOpen, setFleeOpen] = useState(false);
   const [fleeText, setFleeText] = useState("");
   const [confirmYield, setConfirmYield] = useState(false);
@@ -693,18 +697,24 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
             </button>
           )}
           {!isDead && !isImprisoned && (
-            <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowDenDen(true)} data-testid="denden-open">
+            <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => { markSeen("denden"); setShowDenDen(true); }} data-testid="denden-open">
               Den Den Mushi
+              {badges.denden > 0 && <span className="ml-1.5 text-[11px] px-1.5 rounded bg-blood text-white" data-testid="badge-denden" title="Mensajes nuevos">{badgeLabel(badges.denden)}</span>}
             </button>
           )}
+          <button className={badges.events > 0 ? "btn-gold px-3 py-1.5 text-sm" : "btn-ghost px-3 py-1.5 text-sm"} onClick={() => { markSeen("events"); setShowEvents(true); }} data-testid="events-open">
+            Eventos
+            {badges.events > 0 && <span className="ml-1.5 text-[11px] px-1.5 rounded bg-blood text-white" data-testid="badge-events" title="Eventos nuevos">{badgeLabel(badges.events)}</span>}
+          </button>
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowVoyage(true)} data-testid="voyage-open">
             Rumbo
           </button>
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowStyles(true)} data-testid="styles-open">
             Estilos
           </button>
-          <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowInventory(true)} data-testid="inventory-open">
+          <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => { markSeen("inventory"); setShowInventory(true); }} data-testid="inventory-open">
             Inventario
+            {badges.inventory > 0 && <span className="ml-1.5 text-[11px] px-1.5 rounded bg-emerald-700 text-white" data-testid="badge-inventory" title="Objetos nuevos">nuevo</span>}
             {(character.attributePoints ?? 0) > 0 && <span className="ml-1.5 text-[11px] px-1.5 rounded bg-blood text-white" title="Puntos de atributo por repartir">{character.attributePoints}</span>}
           </button>
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setOoc({})} data-testid="ooc-open">
@@ -722,8 +732,9 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           <Link href="/codex" className="btn-ghost px-3 py-1.5 text-sm">
             Códice
           </Link>
-          <Link href="/news" className="btn-ghost px-3 py-1.5 text-sm">
+          <Link href="/news" className="btn-ghost px-3 py-1.5 text-sm" onClick={() => markSeen("news")} data-testid="news-link">
             Noticias
+            {badges.news > 0 && <span className="ml-1.5 text-[11px] px-1.5 rounded bg-blood text-white" data-testid="badge-news" title="Noticias nuevas">{badgeLabel(badges.news)}</span>}
           </Link>
           <Link href="/" className="btn-ghost px-3 py-1.5 text-sm">
             Mis personajes
@@ -731,6 +742,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
         </div>
       </div>
 
+      {showEvents && <EventsPanel characterId={character.id} onClose={() => setShowEvents(false)} onChanged={() => load()} />}
       {showDenDen && <DenDenPanel characterId={character.id} onClose={() => setShowDenDen(false)} />}
       {showEmpire && <EmpirePanel characterId={character.id} onClose={() => setShowEmpire(false)} onChanged={() => load()} />}
       {showVoyage && <VoyagePanel characterId={character.id} onClose={() => setShowVoyage(false)} onChanged={() => load()} />}

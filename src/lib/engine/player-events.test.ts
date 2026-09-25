@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { canCreateMore, canJoin, cleanSubmission, clampScore, defaultPrize, parseTrialScores, pendingHumans, pickWinner, readyToResolve, rewardFor, rewardSummary, stubTrialScores, EVENT_MAX_OPEN } from "./player-events";
+import { canCreateMore, canJoin, cleanSubmission, clampScore, defaultPrize, parseTrialScores, pendingHumans, pickWinner, readyToResolve, rewardFor, rewardSummary, stubTrialScores, EVENT_MAX_OPEN, REGISTRATION_WINDOW_MS } from "./player-events";
 
 const base = { level: 3, status: "ALIVE", minLevel: 1, maxLevel: 10, onIslandId: "a", eventIslandId: "a", alreadyIn: false, busyReason: null };
 const e = (o: Partial<Parameters<typeof pickWinner>[0][number]> = {}) => ({ characterId: "c", isNpc: false, status: "SUBMITTED", score: 50, submittedAt: new Date(1000), level: 3, name: "x", ...o });
@@ -27,6 +27,13 @@ describe("player events", () => {
     expect(readyToResolve([{ isNpc: false, status: "WITHDRAWN" }, { isNpc: true, status: "SUBMITTED" }])).toBe(false);
     expect(readyToResolve([{ isNpc: true, status: "SUBMITTED" }])).toBe(false);
     expect(pendingHumans([{ isNpc: false, status: "REGISTERED" }, { isNpc: true, status: "REGISTERED" }, { isNpc: false, status: "SUBMITTED" }])).toBe(1);
+  });
+
+  it("keeps registration open for a minimum window even if the only entrant already finished", () => {
+    const entries = [{ isNpc: false, status: "SUBMITTED" }];
+    const created = new Date("2026-01-01T00:00:00Z");
+    expect(readyToResolve(entries, { createdAt: created, now: new Date(created.getTime() + 60_000) })).toBe(false);
+    expect(readyToResolve(entries, { createdAt: created, now: new Date(created.getTime() + REGISTRATION_WINDOW_MS) })).toBe(true);
   });
 
   it("clamps scores to 0-100 whole numbers", () => {

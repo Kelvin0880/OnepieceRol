@@ -17,6 +17,7 @@ import {
   joinLine,
   pendingHumans,
   pickWinner,
+  REGISTRATION_WINDOW_MS,
   progressLine,
   readyToResolve,
   rewardFor,
@@ -108,7 +109,7 @@ export async function createPlayerEvent(opts: CreateEventOptions = {}) {
   });
   await postNews(
     `Evento para principiantes en ${island.name}: ${ev.title}`,
-    `${ev.description}\n\nPremio para el ganador: ${rewardText}. Abierto a niveles ${ev.minLevel}-${ev.maxLevel}. Para participar debes estar en ${island.name}. No hay límite de tiempo: el evento termina cuando todos los inscritos hayan completado la prueba. Rivales ya inscritos: ${draft.rivals.map((r) => r.name).join(", ")}.`,
+    `${ev.description}\n\nPremio para el ganador: ${rewardText}. Abierto a niveles ${ev.minLevel}-${ev.maxLevel}. Para participar debes estar en ${island.name}. Las inscripciones están abiertas al menos ${REGISTRATION_WINDOW_MS / 3_600_000} horas y no hay límite de tiempo para completar la prueba: el evento termina cuando todos los inscritos hayan terminado. Rivales ya inscritos: ${draft.rivals.map((r) => r.name).join(", ")}.`,
     EVENT_NEWS_CATEGORY,
     undefined,
     "major",
@@ -167,7 +168,7 @@ export async function submitEventEntry(characterId: string, userId: string, even
   const entries = await prisma.playerEventEntry.findMany({ where: { eventId } });
   await postNews(`${ev.title}: prueba completada`, progressLine(c.name, pendingHumans(entries)), EVENT_NEWS_CATEGORY, undefined, "normal", { locationName: ev.islandName, islandId: ev.islandId });
   const done = await resolveIfReady(eventId);
-  return { log: [done ? "Tu intento fue el último: el juez ya dio el veredicto. Mira las noticias." : "Intento enviado. El evento termina cuando todos los inscritos hayan completado la prueba; te avisará en las noticias."] };
+  return { log: [done ? "Tu intento fue el último: el juez ya dio el veredicto. Mira las noticias." : "Intento enviado. El evento termina cuando pase la ventana de inscripción y todos los inscritos hayan completado la prueba; el veredicto saldrá en las noticias."] };
 }
 
 async function characterSheet(id: string): Promise<string> {
@@ -178,14 +179,14 @@ async function characterSheet(id: string): Promise<string> {
 }
 
 /** Judges the event if every human is done. Safe to call anywhere: a claim guarantees one resolution. */
-export async function resolveIfReady(eventId: string): Promise<boolean> {
+export async function resolveIfReady(eventId: string, opts: { ignoreWindow?: boolean } = {}): Promise<boolean> {
   if (inFlight.has(eventId)) return false;
   inFlight.add(eventId);
   try {
     const ev = await prisma.playerEvent.findUnique({ where: { id: eventId } });
     if (!ev || ev.status !== "OPEN") return false;
     const entries = await prisma.playerEventEntry.findMany({ where: { eventId, status: { not: "WITHDRAWN" } }, orderBy: { createdAt: "asc" } });
-    if (!readyToResolve(entries)) return false;
+    if (!readyToResolve(entries, opts.ignoreWindow ? undefined : { createdAt: ev.createdAt, now: new Date() })) return false;
     const claimed = await prisma.playerEvent.updateMany({ where: { id: eventId, status: "OPEN" }, data: { status: "RESOLVING" } });
     if (claimed.count === 0) return false;
     try {
@@ -343,7 +344,7 @@ export async function forceResolvePlayerEvent(eventId: string): Promise<boolean>
   const ev = await prisma.playerEvent.findUnique({ where: { id: eventId } });
   if (!ev || ev.status !== "OPEN") throw new PlayerEventError("Ese evento no está abierto.");
   await prisma.playerEventEntry.updateMany({ where: { eventId, isNpc: false, status: "REGISTERED" }, data: { status: "WITHDRAWN" } });
-  const ok = await resolveIfReady(eventId);
+  const ok = await resolveIfReady(eventId, { ignoreWindow: true });
   if (!ok) throw new PlayerEventError("No hay ningún intento humano enviado que juzgar (o el juez no respondió): cancela el evento o espera.");
   return true;
 }
