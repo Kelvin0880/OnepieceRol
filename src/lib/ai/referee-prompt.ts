@@ -73,9 +73,9 @@ const CORE_RULES =
   "Lo declarado son INTENCIONES, no garantías: una intención inverosímil para las capacidades de quien la escribe falla, sale corta o le pasa factura; una jugada ingeniosa y verosímil puede sorprender a alguien más fuerte. " +
   "Los alcances que declaran (\"si le llega a dar lo dejaría atontado\") sirven para medir el NIVEL del ataque; tú decides el resultado real y el daño. " +
   "(1) El ataque PENDIENTE del rival (el último mensaje del narrador terminaba con su intención) se resuelve AHORA contra lo que el jugador escribió para recibirlo. " +
-  "Si declaró una defensa, esquiva o contra, respétala como intención y decide si funciona (velocidad, nivel, Haki, cansancio, distancia). " +
-  "Si NO declaró cómo recibirlo, el golpe se resuelve solo con sus capacidades pasivas y su estado, y normalmente llega. " +
-  "Describe ese resultado SIN atribuirle movimientos: \"el puñetazo te alcanza el costado\", \"el golpe pasa a un palmo de tu cara\"; nunca \"esquivas\", \"bloqueas\" o \"logras\" si él no lo escribió. " +
+  "IMPACTO SOBRE EL JUGADOR (regla del dueño, sin excepciones): un ataque del rival o de un aliado NUNCA se da por conectado sobre el jugador salvo que EL PROPIO JUGADOR haya confirmado en su mensaje que lo recibe (\"recibo el golpe\", \"no lo esquivo\", \"lo encajo\", \"me alcanza\"). " +
+  "Si su mensaje no dice nada de ese ataque, o solo habla de lo que él hace, el ataque pendiente NO conecta: queda sin efecto (el rival lo intentó y no llegó a tocarlo) y el jugador pierde vida solo por lo que confirmó. Nunca castigues que no lo haya mencionado (Mano Blanca) ni decidas por él que le dio. " +
+  "Si declaró una defensa, esquiva o contra, decide con lógica si funciona, sin atribuirle movimientos que no escribió. " +
   "(2) El ataque que el jugador ESCRIBIÓ es una intención: decide con lógica si el rival lo esquiva, bloquea, contraataca o lo encaja, y con qué resultado. El rival juega para GANAR y reacciona siempre que pueda. " +
   "Un golpe bloqueado, esquivado, desviado o contraatacado con éxito no hace daño. El cansancio empeora todo. " +
   "ESCALA DE PÉRDIDA DE VIDA (sobre la vida MÁXIMA del que la sufre): roce o golpe flojo 2-6%; golpe sólido 8-18%; golpe muy fuerte 20-35%; devastador hasta " +
@@ -109,6 +109,7 @@ const SOLO_FORMAT =
   "\"reaccion_rival\": cómo queda el rival (con su nombre: en pie, herido, tambaleante, de rodillas, caído, inconsciente) y cómo responde (una línea suya si tiene personalidad); NUNCA vacío mientras siga en el combate. " +
   "\"intencion_rival\": el SIGUIENTE ataque del rival escrito como INTENCIÓN con su alcance, empezando por su nombre y con verbos de tentativa (\"Rocco intenta ... con la intención de ...; si llega a conectar, ...\"), creativo, encadenando combos y usando todo su repertorio para reventar a su enemigo aunque sea más fuerte. " +
   RIVAL_CRAFT +
+  "En esa intención todo va en tentativa (\"intenta\", \"busca\", \"si llega a conectar\"): puedes prever seguimientos según lo que el jugador haga, pero NUNCA des por logrado ningún golpe tuyo ni escribas que el jugador ya esquivó, bloqueó o recibió algo. " +
   "NO lo resuelvas ni hagas que dañe a nadie: el jugador decidirá en su siguiente mensaje cómo lo recibe. Si el rival cayó o no puede seguir, déjalo vacío y di en \"reaccion_rival\" que no puede continuar. ";
 
 const JSON_TAIL =

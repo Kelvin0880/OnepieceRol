@@ -99,6 +99,7 @@ try {
     // News and codex lead back to the character
     await p.page.goto(`${BASE}/news`);
     await p.page.waitForSelector("text=El Heraldo del Mundo");
+    await p.page.waitForSelector("text=desafía a Shanks", { timeout: 20000 }).catch(() => {});
     check(`${width}: the news show the challenge`, (await p.page.textContent("body")).includes("desafía a Shanks"));
     check(`${width}: the news page has a way back to the character`, (await p.page.textContent('[data-testid="back-to-character"]')).includes(name));
     await p.page.screenshot({ path: path.join(shots, `sov-05-news-${width}.png`) });

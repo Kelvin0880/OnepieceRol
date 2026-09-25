@@ -227,6 +227,7 @@ h1, h2, h3, h4, .font-display {
   animation: rise 0.35s ease both;
 }
 .bubble-mine {
+  white-space: pre-wrap; /* the player's own words keep every space, indent and blank line */
   align-self: flex-end;
   background: linear-gradient(180deg, var(--gold-bright), var(--gold));
   color: var(--sea-deep);
@@ -240,6 +241,7 @@ h1, h2, h3, h4, .font-display {
   border-bottom-left-radius: 0.2rem;
 }
 .bubble-other {
+  white-space: pre-wrap;
   align-self: flex-start;
   background: rgba(0, 0, 0, 0.12);
   border: 1px solid var(--line);
