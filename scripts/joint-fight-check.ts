@@ -1,3 +1,4 @@
+process.env.REFEREE_STUB = "1"; // combat is judged by the AI; scripted checks use the deterministic stand-in
 // Real N-vs-1 joint fight (2026-09-24): three players plus a companion against
 // one boss, then a hopeless one. Direct function calls against the dev DB; each
 // move is classified by the real AI (needs OPENROUTER_API_KEY).
@@ -107,6 +108,12 @@ async function main() {
     rewards: { berries: 0, xp: 0, bounty: 0, islandDanger: 5 },
     opening: { characterId: weak.char.id, text: "Ataco.", tactic: 0, technique: "none" },
   });
+  // A verdict never takes more than half a fighter's life per exchange, so a doomed fight takes a couple of rounds.
+  for (let i = 0; i < 6; i++) {
+    const cur = await prisma.jointFight.findUniqueOrThrow({ where: { id: doom.fightId } });
+    if (cur.status !== "ACTIVE") break;
+    await submitJointAction(weak.char.id, weak.user.id, "Sigo atacando.");
+  }
   const doomStatus = await prisma.jointFight.findUniqueOrThrow({ where: { id: doom.fightId } });
   assert(doomStatus.status === "LOST", "a hopeless fight is lost");
   const wc = await prisma.character.findUniqueOrThrow({ where: { id: weak.char.id } });

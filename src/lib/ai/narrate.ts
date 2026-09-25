@@ -32,6 +32,8 @@ import {
   ColiseumNarrationInput,
 } from "./narrate-prompt";
 import { callOpenRouter } from "./openrouter-client";
+import { buildRefereePrompt, type RefereeInput } from "./referee-prompt";
+import { parseRefereeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
 import { OPENROUTER_MODELS } from "./models";
 import { parseCompanionProfile } from "../engine/companions";
 import { describeCapabilities } from "../engine/capabilities";
@@ -400,5 +402,28 @@ export async function narrateColiseumRound(input: ColiseumNarrationInput, meta: 
   } catch (err) {
     await logError("ai/narrate-coliseum", err, meta);
     return fallback;
+  }
+}
+
+/**
+ * The dice-free judge of one combat exchange (solo, duel or group). Returns null when no model produced a
+ * valid verdict: callers then leave the fight untouched instead of inventing numbers.
+ */
+export async function refereeExchange(input: RefereeInput, meta: { characterId?: string; context: string }): Promise<RefereeVerdict | null> {
+  if (process.env.REFEREE_STUB === "1") return stubVerdict(input.actors);
+  try {
+    const { system: base, user, maxTokens } = buildRefereePrompt(input);
+    const directives = input.directives ?? (meta.characterId ? await loadDirectives(meta.characterId) : "");
+    const raw = await callOpenRouter(base + directives, user, {
+      models: OPENROUTER_MODELS,
+      timeoutMs: NARRATION_TIMEOUT_MS,
+      maxTokens,
+      temperature: 0.8,
+      validate: (t) => parseRefereeVerdict(t) !== null,
+    });
+    return parseRefereeVerdict(raw);
+  } catch (err) {
+    await logError(`ai/referee-${meta.context}`, err, meta.characterId ? { characterId: meta.characterId } : undefined);
+    return null;
   }
 }

@@ -6,7 +6,9 @@ import { berryReward, bountyReward } from "../engine/economy";
 import { resolveJointRound, scaleEnemyForGroup, JointFighter } from "../engine/joint-fight";
 import { TECHNIQUE_LABELS, TechniqueId } from "../engine/techniques";
 import { classifyPlayerAction } from "../ai/classify-action";
-import { narrateJointFight, getRecentScene } from "../ai/narrate";
+import { refereeExchange, getRecentScene } from "../ai/narrate";
+import { applyVerdict, NO_VERDICT_TEXT } from "../engine/referee";
+import { FATIGUE_LABELS, fatigueLevel } from "../engine/stamina";
 import { isOnErrand } from "../engine/empire";
 import { companionSheet, parseCompanionProfile, type CompanionProfile } from "../engine/companions";
 import { estimateLevel, applyFatigueToCombatant, npcStaminaAfterExchange, npcBaseEffort } from "../engine/resilience";
@@ -296,9 +298,79 @@ async function resolveJointRoundFor(fightId: string) {
     actionsForNarration.push({ name: p.name, text, technique: p.technique !== "none" ? TECHNIQUE_LABELS[p.technique as TechniqueId] : undefined });
   }
 
-  const result = fighters.length
-    ? resolveJointRound(rng, round, fighters, enemyBase, fight.enemyHp, { maxEnemyAttacks: (JSON.parse(fight.contextJson) as { maxEnemyAttacks?: number }).maxEnemyAttacks })
-    : { fighters: [], enemyHpAfter: fight.enemyHp, log: [], finished: true, outcome: "defeat" as const };
+  const enemyKitText = (await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId })).text;
+  const recent = await getRecentScene(fight.participants.find((p) => !p.isNpc)?.characterId ?? "", 4).catch(() => [] as string[]);
+  const lastNarrator = await prisma.jointFightMessage.findFirst({ where: { fightId, authorName: "Narrador" }, orderBy: { createdAt: "desc" } });
+  const kitOf = (id: string): string | undefined => {
+    const human = chars.get(id);
+    if (human) return characterCapabilityText(human);
+    const n = companions.get(id);
+    if (!n) return undefined;
+    const sheet = companionSheet(n.role, n.ownerLevel, n.loyalty, n.profile);
+    return `NAKAMA ${n.name.toUpperCase()} (${n.role}${sheet.epithet ? `, «${sheet.epithet}»` : ""}, nivel ${sheet.level}): técnicas ${sheet.abilities.join("; ")}. Lucha por ganar con ellas.`;
+  };
+  const enemyFatigue = fatigueLevel(fight.enemyStamina, 100);
+  let verdict: Awaited<ReturnType<typeof refereeExchange>> = null;
+  if (fighters.length) {
+    verdict = await refereeExchange(
+      {
+        mode: "joint",
+        round,
+        isBoss: enemy.isBoss,
+        stakes: fight.stakes ?? undefined,
+        pendingThreat: lastNarrator?.text,
+        recentScene: recent,
+        actors: [
+          ...fighters.map((f) => {
+            const part = fighting.find((p) => p.characterId === f.id);
+            return {
+              name: f.combatant.name,
+              side: "ally" as const,
+              level: f.combatant.level,
+              hp: f.hp,
+              maxHp: f.combatant.maxHp,
+              stamina: prepared.get(f.id)?.staminaAfter ?? part?.stamina,
+              kit: kitOf(f.id),
+              sheet: `ataque ${f.combatant.atk}, defensa ${f.combatant.def}, velocidad ${f.combatant.spd}`,
+            };
+          }),
+          {
+            name: enemy.name,
+            side: "enemy" as const,
+            level: enemyLevel,
+            hp: fight.enemyHp,
+            maxHp: fight.enemyMaxHp,
+            stamina: fight.enemyStamina,
+            fatigue: enemyFatigue !== "fresh" ? FATIGUE_LABELS[enemyFatigue] : undefined,
+            kit: enemyKitText,
+            personality: enemy.personality,
+            sheet: `ataque ${enemy.atk}, defensa ${enemy.def}, velocidad ${enemy.spd}`,
+          },
+        ],
+        actions: actionsForNarration.map((a) => ({ name: a.name, text: a.text, technique: a.technique })),
+      },
+      { context: "joint" }
+    );
+    if (!verdict) {
+      // Nothing was judged: hand the round back so the same moves can be resubmitted.
+      await prisma.jointFight.updateMany({ where: { id: fightId, round: round + 1 }, data: { round } });
+      return { log: [NO_VERDICT_TEXT], waiting: true };
+    }
+  }
+  const applied = verdict
+    ? applyVerdict(verdict, [
+        ...fighters.map((f) => ({ name: f.combatant.name, hp: f.hp, maxHp: f.combatant.maxHp, stamina: prepared.get(f.id)?.staminaAfter ?? fighting.find((p) => p.characterId === f.id)?.stamina })),
+        { name: enemy.name, hp: fight.enemyHp, maxHp: fight.enemyMaxHp, stamina: fight.enemyStamina },
+      ])
+    : [];
+  const foe = applied[applied.length - 1];
+  const result = {
+    fighters: fighters.map((f, i) => ({ id: f.id, hpAfter: applied[i]?.hpAfter ?? f.hp, down: (applied[i]?.hpAfter ?? f.hp) <= 0, staminaLoss: applied[i]?.staminaLoss ?? 0, staminaAfter: applied[i]?.staminaAfter ?? null })),
+    enemyHpAfter: foe ? foe.hpAfter : fight.enemyHp,
+    log: [] as { attacker: string; defender: string; damage: number }[],
+    finished: !!foe && (foe.hpAfter <= 0 || applied.slice(0, -1).every((x) => x.hpAfter <= 0)),
+    outcome: (!foe ? "defeat" : foe.hpAfter <= 0 ? "victory" : applied.slice(0, -1).every((x) => x.hpAfter <= 0) ? "defeat" : null) as "victory" | "defeat" | null,
+  };
   // Everyone escaped: nobody won, nobody died.
   const allFled = fighters.length === 0 && fled.length > 0;
   const finished = result.finished || allFled;
@@ -306,17 +378,7 @@ async function resolveJointRoundFor(fightId: string) {
 
   for (const r of result.fighters) {
     const part = fighting.find((p) => p.characterId === r.id);
-    const npcTired = part?.isNpc
-      ? {
-          stamina: npcStaminaAfterExchange({
-            stamina: part.stamina,
-            level: fighters.find((f) => f.id === r.id)?.combatant.level,
-            effort: npcBaseEffort(false),
-            damageTaken: Math.max(0, part.hp - r.hpAfter),
-            maxHp: part.maxHp,
-          }),
-        }
-      : {};
+    const npcTired = part?.isNpc && r.staminaAfter !== null ? { stamina: r.staminaAfter } : {};
     await prisma.jointFightParticipant.updateMany({ where: { fightId, characterId: r.id }, data: { hp: r.hpAfter, status: r.down ? "DOWN" : "FIGHTING", ...npcTired } });
   }
   if (fled.length) await prisma.jointFightParticipant.updateMany({ where: { fightId, characterId: { in: fled } }, data: { status: "FLED" } });
@@ -326,39 +388,10 @@ async function resolveJointRoundFor(fightId: string) {
     const c = chars.get(id)!;
     const after = result.fighters.find((f) => f.id === id);
     const startHp = fighting.find((p) => p.characterId === id)?.hp ?? c.hp;
-    await prisma.character.update({ where: { id }, data: { hp: Math.max(0, after?.hpAfter ?? c.hp), ...combatProgressData(c, prep, rng, Math.max(0, startHp - (after?.hpAfter ?? startHp))) } });
+    await prisma.character.update({ where: { id }, data: { hp: Math.max(0, after?.hpAfter ?? c.hp), ...combatProgressData(c, prep, rng, Math.max(0, startHp - (after?.hpAfter ?? startHp)), after?.staminaLoss) } });
   }
 
-  const enemyKitText = (await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId })).text;
-  const allyKits = [
-    ...[...chars.values()].slice(0, 6).map((c) => characterCapabilityText(c)),
-    ...[...companions.entries()].slice(0, 4).map(([, n]) => {
-      const sheet = companionSheet(n.role, n.ownerLevel, n.loyalty, n.profile);
-      return `NAKAMA ${n.name.toUpperCase()} (${n.role}${sheet.epithet ? `, «${sheet.epithet}»` : ""}, nivel ${sheet.level}, ${sheet.rank}): técnicas ${sheet.abilities.join("; ")}. Lucha por ganar con ellas.`;
-    }),
-  ];
-  const roster = (await prisma.jointFightParticipant.findMany({ where: { fightId } })).map((p) => ({ name: p.name, hp: p.hp, maxHp: p.maxHp, down: p.status === "DOWN", fled: p.status === "FLED" }));
-  const recent = await getRecentScene(fight.participants.find((p) => !p.isNpc)?.characterId ?? "", 4).catch(() => [] as string[]);
-  const narration = await narrateJointFight(
-    {
-      round,
-      enemyName: enemy.name,
-      enemyPersonality: enemy.personality,
-      isBoss: enemy.isBoss,
-      actions: actionsForNarration,
-      rounds: result.log,
-      roster,
-      enemyHp: result.enemyHpAfter,
-      enemyMaxHp: fight.enemyMaxHp,
-      finished,
-      outcome: outcome ?? undefined,
-      stakes: fight.stakes ?? undefined,
-      enemyKit: enemyKitText,
-      allyKits,
-      recentScene: recent,
-    },
-    { fightId }
-  );
+  const narration = verdict ? verdict.narration : "Todos han escapado del combate.";
   const extra = [
     ...(failedFlight.length ? [`Intentaron huir sin éxito: ${failedFlight.join(", ")}.`] : []),
     ...(guarding.length ? [`Sin decidirse a tiempo, aguantan a la defensiva: ${guarding.join(", ")}.`] : []),
@@ -368,21 +401,14 @@ async function resolveJointRoundFor(fightId: string) {
     where: { id: fightId },
     data: {
       enemyHp: result.enemyHpAfter,
-      enemyStamina: npcStaminaAfterExchange({
-        stamina: fight.enemyStamina,
-        level: enemyLevel,
-        effort: npcBaseEffort(enemy.isBoss),
-        damageTaken: Math.max(0, fight.enemyHp - result.enemyHpAfter) / Math.max(1, fighters.length),
-        maxHp: fight.enemyMaxHp,
-      }),
+      enemyStamina: foe?.staminaAfter ?? fight.enemyStamina,
     },
   });
 
   if (finished) {
     if (outcome === "victory") {
       // Who dealt the last damage matters for disputes over spoils (territory claims).
-      const last = [...result.log].reverse().find((l) => l.defender === enemy.name && l.damage > 0);
-      const striker = last ? fight.participants.find((p) => p.name === last.attacker && !p.isNpc) : undefined;
+      const striker = verdict?.finalBlow ? fight.participants.find((p) => !p.isNpc && p.name.toLowerCase() === verdict!.finalBlow!.toLowerCase()) : fight.participants.find((p) => !p.isNpc && p.status === "FIGHTING");
       if (striker) {
         const ctx = JSON.parse(fight.contextJson) as Record<string, unknown>;
         await prisma.jointFight.update({ where: { id: fightId }, data: { contextJson: JSON.stringify({ ...ctx, finalBlowCharacterId: striker.characterId }) } });

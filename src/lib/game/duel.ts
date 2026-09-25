@@ -1,11 +1,12 @@
 import { prisma } from "../db";
 import { liveRng } from "../engine/rng";
-import { resolveDuelRound } from "../engine/duel";
+import { applyVerdict, NO_VERDICT_TEXT } from "../engine/referee";
+import { FATIGUE_LABELS } from "../engine/stamina";
 import { attemptFlee } from "../engine/encounter";
 import { areHostile, huntBlockReason, HUNT_RESPONSE_WINDOW_MS, HUNT_REPEAT_COOLDOWN_MS, PlayerFaction } from "../engine/hostility";
 import { TECHNIQUE_LABELS, TechniqueId } from "../engine/techniques";
 import { classifyPlayerAction } from "../ai/classify-action";
-import { narrateDuel } from "../ai/narrate";
+import { narrateDuel, refereeExchange } from "../ai/narrate";
 import { prepareFighter, combatProgressData, characterCapabilityText } from "./combat-prep";
 import { toCombatant } from "./derive";
 import { postNews } from "./death-resolution";
@@ -217,6 +218,9 @@ async function resolveDuelRoundFor(duelId: string) {
   let aHp = duel.challengerHp;
   let bHp = duel.opponentHp;
   let rounds: { attacker: string; defender: string; damage: number; outcome: "critical_fail" | "fail" | "success" | "critical_success" }[] = [];
+  let aStaminaLoss = 0;
+  let bStaminaLoss = 0;
+  let aiNarration: string | null = null;
   let aTech: TechniqueId = "none";
   let bTech: TechniqueId = "none";
 
@@ -254,19 +258,45 @@ async function resolveDuelRoundFor(duelId: string) {
   } else {
     aTech = aPrep.effect.used;
     bTech = bPrep.effect.used;
-    const r = resolveDuelRound(rng, duel.round, aPrep.combatant, aHp, bPrep.combatant, bHp);
-    aHp = r.aHpAfter;
-    bHp = r.bHpAfter;
-    rounds = r.log;
-    finished = r.finished;
-    winner = r.winner;
+    const verdict = await refereeExchange(
+      {
+        mode: "duel",
+        round: duel.round,
+        lethal: duel.lethal,
+        actors: [
+          { name: a.name, side: "player", level: a.level, hp: aHp, maxHp: duel.challengerMaxHp, stamina: aPrep.staminaAfter, fatigue: aPrep.fatigue !== "fresh" ? FATIGUE_LABELS[aPrep.fatigue] : undefined, kit: characterCapabilityText(a), sheet: `ataque ${aPrep.combatant.atk}, defensa ${aPrep.combatant.def}, velocidad ${aPrep.combatant.spd}` },
+          { name: b.name, side: "player", level: b.level, hp: bHp, maxHp: duel.opponentMaxHp, stamina: bPrep.staminaAfter, fatigue: bPrep.fatigue !== "fresh" ? FATIGUE_LABELS[bPrep.fatigue] : undefined, kit: characterCapabilityText(b), sheet: `ataque ${bPrep.combatant.atk}, defensa ${bPrep.combatant.def}, velocidad ${bPrep.combatant.spd}` },
+        ],
+        actions: [
+          { name: a.name, text: aTactic === FLEE_FAILED_TACTIC ? "intenta huir del duelo pero no lo consigue" : duel.challengerAction ?? "", technique: aTech !== "none" ? TECHNIQUE_LABELS[aTech] : undefined },
+          { name: b.name, text: bTactic === FLEE_FAILED_TACTIC ? "intenta huir del duelo pero no lo consigue" : duel.opponentAction ?? "", technique: bTech !== "none" ? TECHNIQUE_LABELS[bTech] : undefined },
+        ],
+      },
+      { context: "duel" }
+    );
+    if (!verdict) {
+      // Nothing was judged: give both moves back so the round can be resubmitted untouched.
+      await prisma.duel.update({ where: { id: duelId }, data: { challengerAction: duel.challengerAction, opponentAction: duel.opponentAction } });
+      return { log: [NO_VERDICT_TEXT], waiting: true };
+    }
+    const [ra, rb] = applyVerdict(verdict, [
+      { name: a.name, hp: aHp, maxHp: duel.challengerMaxHp, stamina: aPrep.staminaAfter },
+      { name: b.name, hp: bHp, maxHp: duel.opponentMaxHp, stamina: bPrep.staminaAfter },
+    ]);
+    aHp = ra.hpAfter;
+    bHp = rb.hpAfter;
+    aStaminaLoss = ra.staminaLoss;
+    bStaminaLoss = rb.staminaLoss;
+    aiNarration = verdict.narration;
+    finished = aHp <= 0 || bHp <= 0;
+    if (finished) winner = aHp > 0 ? "a" : bHp > 0 ? "b" : ra.hpLoss / duel.challengerMaxHp <= rb.hpLoss / duel.opponentMaxHp ? "a" : "b";
   }
 
   const winnerChar = winner === "a" ? a : winner === "b" ? b : null;
   const loserChar = winner === "a" ? b : winner === "b" ? a : null;
   const escapedChar = escaped === "a" ? a : escaped === "b" ? b : null;
 
-  const narration = await narrateDuel(
+  const narration = aiNarration ?? await narrateDuel(
     {
       round: duel.round,
       aName: a.name,
@@ -309,8 +339,8 @@ async function resolveDuelRoundFor(duelId: string) {
   });
 
   // Stamina and mastery are real costs/gains even in a friendly duel.
-  if (!aYield) await prisma.character.update({ where: { id: a.id }, data: combatProgressData(a, aPrep, rng) });
-  if (!bYield) await prisma.character.update({ where: { id: b.id }, data: combatProgressData(b, bPrep, rng) });
+  if (!aYield) await prisma.character.update({ where: { id: a.id }, data: combatProgressData(a, aPrep, rng, 0, aStaminaLoss) });
+  if (!bYield) await prisma.character.update({ where: { id: b.id }, data: combatProgressData(b, bPrep, rng, 0, bStaminaLoss) });
 
   const log = [narration];
 

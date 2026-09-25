@@ -1,3 +1,4 @@
+process.env.REFEREE_STUB = "1"; // combat is judged by the AI; scripted checks use the deterministic stand-in
 // Final raid end to end (2026-09-24): Laugh Tale reveal, gating, allies by standing,
 // four phases as joint fights, the Pirate King vote and the new era.
 // Direct calls against the dev DB; moves are classified by the real AI.

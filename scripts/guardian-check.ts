@@ -1,3 +1,4 @@
+process.env.REFEREE_STUB = "1"; // combat is judged by the AI; scripted checks use the deterministic stand-in
 // Poneglyph guardians + stealth (2026-09-24). Direct function calls against the
 // dev DB (real AI narration is used where the game calls it).
 // Usage: npx tsx scripts/guardian-check.ts

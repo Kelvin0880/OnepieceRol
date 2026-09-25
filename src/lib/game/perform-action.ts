@@ -8,13 +8,14 @@ import { isOnErrand } from "../engine/empire";
 import { resolveEnemyKit } from "./enemy-kit";
 import { estimateLevel, applyFatigueToCombatant, npcStaminaAfterExchange, npcBaseEffort } from "../engine/resilience";
 import type { EffortLevel } from "../engine/stamina";
-import { resolveExchange, Combatant } from "../engine/combat";
+import { Combatant } from "../engine/combat";
+import { applyVerdict, NO_VERDICT_TEXT } from "../engine/referee";
 import { trainHaki, rollConquerorsHakiAwakening } from "../engine/haki";
 import { trainFruitMastery, canAwaken, FRUIT_PHASE_LABELS, fruitPhase } from "../engine/fruit-mastery";
 import { TechniqueId, TECHNIQUE_LABELS } from "../engine/techniques";
 import { buildSceneEnemy, tierXp, EnemyTier } from "../engine/scene-enemy";
 import { FATIGUE_LABELS, fatigueLevel, restStamina, spendStamina } from "../engine/stamina";
-import { prepareFighter, combatProgressData, currentStamina } from "./combat-prep";
+import { prepareFighter, combatProgressData, currentStamina, characterCapabilityText } from "./combat-prep";
 import { bountyReward, berryReward, xpToNextLevel } from "../engine/economy";
 import { assessThreat, attemptFlee, ThreatAssessment } from "../engine/encounter";
 import { detectStyleLesson, getStyle } from "../engine/styles";
@@ -38,7 +39,7 @@ import { isActorHome, stealthDifficulty, stealthModifier, attemptStealthRead, ST
 import { getOpenJointFightFor, submitJointAction, startJointFight, freePartyMemberIds } from "./joint-fight";
 import { DEVIL_FRUIT_CATALOG } from "./devil-fruit-catalog";
 import { applyBountyOrNotoriety } from "./reputation";
-import { narrateExplore, narrateEncounterIntro, narrateCombat, narrateScene, narratePartyScene, getRecentScene, updateCharacterMemory } from "../ai/narrate";
+import { narrateExplore, narrateEncounterIntro, narrateCombat, refereeExchange, narrateScene, narratePartyScene, getRecentScene, updateCharacterMemory } from "../ai/narrate";
 import { classifyPlayerAction, ActionId } from "../ai/classify-action";
 import { beginPartyTurn, advancePartyTurn, releasePartyTurnLock, writePartyMessage, echoToParty, confirmLeaveParty as partyConfirmLeaveParty, rejoinParty as partyRejoinParty } from "./party";
 import { CharacterStatus } from "@prisma/client";
@@ -597,15 +598,6 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
   };
 }
 
-/** Companions who are alive and reasonably fresh may lend a hand in a boss fight. */
-function rollCompanionAssist(character: LoadedCharacter, rng: () => number): string | null {
-  const ready = character.companions.filter((c) => c.status === "ALIVE" && c.hp / c.maxHp > 0.5 && !isOnErrand(c.profileJson, Date.now()));
-  if (ready.length === 0) return null;
-  const candidate = ready[Math.floor(rng() * ready.length)];
-  const chance = 0.25 + candidate.loyalty * 0.005;
-  return rng() < chance ? candidate.name : null;
-}
-
 /**
  * Combat plays out one exchange (engine/combat.ts's resolveExchange) per
  * call, driven by the player's free text each time — "poco a poco ir
@@ -649,95 +641,78 @@ export async function engageCharacter(
   // Technique (haki/fruit), tactic and fatigue are folded into one Combatant
   // by the engine layer — the classifier only proposed them, code decided.
   const prepared = prepareFighter(character, opts.technique ?? "none", tacticModifier, character.hp, opts.effort, intentText ?? "");
-  let playerCombatant = prepared.combatant;
-  const assistName = pending.phase === "threat" && enemy.isBoss ? rollCompanionAssist(character, rng) : null;
-  if (assistName) {
-    playerCombatant = {
-      ...playerCombatant,
-      atk: Math.round(playerCombatant.atk * 1.15),
-    };
-    log.push(`${assistName} se lanza a tu lado para ayudarte contra ${enemy.name}.`);
-  }
-
   const enemyLevel = enemy.level ?? estimateLevel(enemy.atk, enemy.def);
   const enemyStaminaBefore = pending.enemyStamina;
-  // A tired enemy hits, defends and moves worse — and a fresh one can punish an exhausted player.
-  const enemyCombatant: Combatant = applyFatigueToCombatant(
-    {
-      name: enemy.name,
-      hp: enemy.hp,
-      maxHp: enemy.hp,
-      atk: enemy.atk,
-      def: enemy.def,
-      spd: enemy.spd,
-      level: enemyLevel,
-    },
-    enemyStaminaBefore
-  );
   const enemyHpBefore = pending.enemyHp ?? enemy.hp;
   const roundNumber = pending.roundNumber + 1;
-
-  const { aHpAfter: exchangeHpAfter, bHpAfter: enemyHpAfter, log: roundLog } = resolveExchange(rng, roundNumber, { ...playerCombatant, hp: character.hp, maxHp: character.maxHp }, character.hp, enemyCombatant, enemyHpBefore);
-
-  // Straining on an empty tank tears something — never lethal by itself, and only if the exchange left the player standing.
-  const playerHpAfter = exchangeHpAfter > 0 ? Math.max(1, exchangeHpAfter - prepared.strainHp) : exchangeHpAfter;
-  const damageTaken = Math.max(0, character.hp - exchangeHpAfter);
-  const enemyStaminaAfter = npcStaminaAfterExchange({
-    stamina: enemyStaminaBefore,
-    level: enemyLevel,
-    effort: npcBaseEffort(enemy.isBoss),
-    damageTaken: Math.max(0, enemyHpBefore - enemyHpAfter),
-    maxHp: enemy.hp,
-  });
-  if (prepared.strainHp > 0 && exchangeHpAfter > 0) log.push("Forzar el cuerpo sin aliento te pasa factura: sientes un tirón que te hace daño.");
-  const concluded = playerHpAfter <= 0 || enemyHpAfter <= 0;
-  // Same tie-break runCombat always used when rounds ran out with both still standing.
-  const victor: "player" | "enemy" | undefined = !concluded ? undefined : enemyHpAfter <= 0 && playerHpAfter > 0 ? "player" : playerHpAfter <= 0 && enemyHpAfter > 0 ? "enemy" : enemyHpAfter < playerHpAfter ? "player" : "enemy"; // draw or ran out of rounds evenly: same "healthier side wins" rule runCombat used, loss-leaning on an exact tie
+  const enemyFatigue = fatigueLevel(enemyStaminaBefore, 100);
 
   const enemyKitText = (await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId })).text;
   const scene = await getRecentScene(character.id, 10);
   const grudgeContext = enemy.worldActorId ? await getGrudgeContextForNarration(enemy.worldActorId, character.id) : null;
-  const narrated = await narrateCombat(
+  // The rival's last announced attack is still in the air: this message is how the player receives it.
+  const lastNarration = [...scene].reverse().find((l) => !l.startsWith("[Jugador]"));
+  const pc = prepared.combatant;
+  const verdict = await refereeExchange(
     {
-      characterName: character.name,
-      enemyName: enemy.name,
-      enemyPersonality: enemy.personality,
+      mode: "solo",
+      round: roundNumber,
       isBoss: enemy.isBoss,
-      rounds: roundLog,
-      concluded,
-      victor,
-      endedByExhaustion: concluded && playerHpAfter > 0 && enemyHpAfter > 0,
-      playerHpLeft: Math.max(0, playerHpAfter),
-      playerMaxHp: character.maxHp,
-      enemyHpLeft: Math.max(0, enemyHpAfter),
-      enemyMaxHp: enemy.hp,
-      intentText,
-      recentMemory: scene,
-      memorySummary: character.memorySummary ?? undefined,
       openingStrike: opts.openingStrike,
-      technique:
-        opts.technique && opts.technique !== "none"
-          ? {
-              label: TECHNIQUE_LABELS[opts.technique],
-              downgradedReason: prepared.effect.downgraded ? prepared.effect.downgradeReason : undefined,
-            }
-          : undefined,
-      fatigue: prepared.fatigue !== "fresh" ? FATIGUE_LABELS[prepared.fatigue] : undefined,
-      enemyFatigue: fatigueLevel(enemyStaminaBefore, 100) !== "fresh" ? FATIGUE_LABELS[fatigueLevel(enemyStaminaBefore, 100)] : undefined,
-      playerLevel: character.level,
-      enemyLevel,
-      enemyKit: enemyKitText,
-      grudgeContext: grudgeContext
-        ? `${enemy.name} ya se enfrentó a este personaje antes y no lo olvida: ${grudgeContext.text}.` + (grudgeContext.critical ? " La situación se ha vuelto crítica para ellos — podrían amenazar con pedir refuerzos." : "")
-        : undefined,
+      pendingThreat: opts.openingStrike ? undefined : lastNarration,
+      stakes: grudgeContext ? `${enemy.name} ya se enfrentó a este personaje antes y no lo olvida: ${grudgeContext.text}.` + (grudgeContext.critical ? " La situación es crítica para ellos: podrían amenazar con pedir refuerzos." : "") : undefined,
+      recentScene: scene,
+      memorySummary: character.memorySummary ?? undefined,
+      actors: [
+        {
+          name: character.name,
+          side: "player",
+          level: character.level,
+          hp: character.hp,
+          maxHp: character.maxHp,
+          stamina: prepared.staminaAfter,
+          fatigue: prepared.fatigue !== "fresh" ? FATIGUE_LABELS[prepared.fatigue] : undefined,
+          kit: characterCapabilityText(character),
+          sheet: `ataque ${pc.atk}, defensa ${pc.def}, velocidad ${pc.spd}`,
+        },
+        {
+          name: enemy.name,
+          side: "enemy",
+          level: enemyLevel,
+          hp: enemyHpBefore,
+          maxHp: enemy.hp,
+          stamina: enemyStaminaBefore,
+          fatigue: enemyFatigue !== "fresh" ? FATIGUE_LABELS[enemyFatigue] : undefined,
+          kit: enemyKitText,
+          personality: enemy.personality,
+          sheet: `ataque ${enemy.atk}, defensa ${enemy.def}, velocidad ${enemy.spd}`,
+        },
+      ],
+      actions: [{ name: character.name, text: intentText?.trim() || "ataca", technique: opts.technique && opts.technique !== "none" ? TECHNIQUE_LABELS[opts.technique] : undefined }],
     },
-    { characterId: character.id }
+    { characterId: character.id, context: "solo" }
   );
-  log.push(...narrated);
+  if (!verdict) return emptyResult([NO_VERDICT_TEXT], character.level);
+
+  const [me, foe] = applyVerdict(verdict, [
+    { name: character.name, hp: character.hp, maxHp: character.maxHp, stamina: prepared.staminaAfter, protectedThisExchange: !!opts.openingStrike },
+    { name: enemy.name, hp: enemyHpBefore, maxHp: enemy.hp, stamina: enemyStaminaBefore },
+  ]);
+  const exchangeHpAfter = me.hpAfter;
+  const enemyHpAfter = foe.hpAfter;
+
+  // Straining on an empty tank tears something — never lethal by itself, and only if the exchange left the player standing.
+  const playerHpAfter = exchangeHpAfter > 0 ? Math.max(1, exchangeHpAfter - prepared.strainHp) : exchangeHpAfter;
+  const damageTaken = me.hpLoss;
+  const enemyStaminaAfter = foe.staminaAfter ?? enemyStaminaBefore;
+  if (prepared.strainHp > 0 && exchangeHpAfter > 0) log.push("Forzar el cuerpo sin aliento te pasa factura: sientes un tirón que te hace daño.");
+  const concluded = playerHpAfter <= 0 || enemyHpAfter <= 0;
+  const victor: "player" | "enemy" | undefined = !concluded ? undefined : enemyHpAfter <= 0 && playerHpAfter > 0 ? "player" : "enemy";
+  log.push(verdict.narration);
 
   if (concluded && victor === "player") {
     log.push(`¡${enemy.name} queda derrotado y a tu merced!`);
-    const progress = combatProgressData(character, prepared, rng, damageTaken);
+    const progress = combatProgressData(character, prepared, rng, damageTaken, me.staminaLoss);
     const growth: Record<string, unknown> = {};
     const mastery = progress.fruitMastery ?? character.fruitMastery;
     if (progress.fruitMastery !== undefined && fruitPhase(character.fruitMastery, false) !== fruitPhase(mastery, false)) {
@@ -805,7 +780,7 @@ export async function engageCharacter(
         where: { id: character.id },
         data: {
           hp: deathCheck.finalHp,
-          ...combatProgressData(character, prepared, rng, damageTaken),
+          ...combatProgressData(character, prepared, rng, damageTaken, me.staminaLoss),
         },
       });
     }
@@ -835,7 +810,7 @@ export async function engageCharacter(
     where: { id: character.id },
     data: {
       hp: Math.max(0, playerHpAfter),
-      ...combatProgressData(character, prepared, rng, damageTaken),
+      ...combatProgressData(character, prepared, rng, damageTaken, me.staminaLoss),
     },
   });
   await prisma.pendingEncounter.update({

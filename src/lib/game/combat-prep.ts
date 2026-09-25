@@ -83,9 +83,9 @@ export function prepareFighter(character: CharacterWithGear, technique: Techniqu
 }
 
 /** Everything a fight should persist about the fighter beyond HP: stamina, and any mastery/haki earned by actually using it. */
-export function combatProgressData(character: Character, prepared: PreparedFighter, rng: Rng, damageTaken = 0) {
+export function combatProgressData(character: Character, prepared: PreparedFighter, rng: Rng, damageTaken = 0, staminaLoss?: number) {
   const data: { stamina: number; staminaUpdatedAt: Date; fruitMastery?: number; armamentHaki?: number; observationHaki?: number } = {
-    stamina: spendStamina(prepared.staminaAfter, staminaCostAtLevel(staminaLossFromDamage(damageTaken, character.maxHp), character.level)),
+    stamina: spendStamina(prepared.staminaAfter, staminaLoss !== undefined ? staminaLoss : staminaCostAtLevel(staminaLossFromDamage(damageTaken, character.maxHp), character.level)),
     staminaUpdatedAt: new Date(),
   };
   const used = prepared.effect.used;

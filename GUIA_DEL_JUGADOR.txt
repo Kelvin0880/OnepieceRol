@@ -482,6 +482,19 @@ puerto y su fuerza crece con la distancia. Las islas cerradas por nivel, por
 marea o por los Poneglifos de Ruta aparecen bloqueadas con el motivo. Los
 Yonko salen en las Noticias cada vez que zarpan o desembarcan.
 
+COMBATE SIN DADOS
+- Ya no hay dados en los combates: un árbitro (la IA) decide cuánto daño hace cada
+  golpe según lo fuerte que sea cada uno, su cansancio, sus habilidades y lo bien
+  pensado que esté tu movimiento.
+- El rival siempre responde: te cuenta cómo queda (en pie, herido, tambaleante,
+  caído) y lanza su siguiente ataque, que se queda ANUNCIADO. En tu siguiente
+  mensaje tú decides cómo lo recibes: bloqueas, esquivas, desvías o aguantas.
+- Solo se hiere lo que se ataca de verdad: clavar tu espada en el suelo o presumir
+  no le quita vida a nadie.
+- Nadie pierde más de la mitad de su vida máxima en un solo intercambio.
+- Si la IA no responde a tiempo, ese intercambio no cuenta y no pierdes nada.
+- Siguen con azar: intentar huir y la tirada de supervivencia cuando llegas a 0.
+
 OTRAS NOVEDADES
 - Botón "Imperio": ves tus islas (guarnición, soldados, tributos) y mandas a tus
   nakamas y comandantes de misión: patrullar un dominio, cobrar tributos o

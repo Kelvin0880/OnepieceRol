@@ -1,3 +1,4 @@
+process.env.REFEREE_STUB = "1"; // combat is judged by the AI; scripted checks use the deterministic stand-in
 // Escape from inside Impel Down + the Buster Call siege (2026-09-24). Direct
 // calls against the dev DB; free-text plans/moves use the real AI classifier.
 // Usage: npx tsx scripts/escape-buster-check.ts
