@@ -1,5 +1,6 @@
 "use client";
 
+import Modal from "@/components/ui/Modal";
 import { useCallback, useEffect, useState } from "react";
 
 interface State {
@@ -78,8 +79,7 @@ export default function ColiseumPanel({ characterId, onClose, onChanged }: { cha
   const prizeColor = t?.prize.kind === "fruit" ? "#c9a7f5" : undefined;
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "rgba(0,0,0,0.65)" }} onClick={onClose} data-testid="coliseum-panel">
-      <div className="panel p-4 w-full max-w-2xl max-h-[92vh] overflow-y-auto flex flex-col gap-3 [&>*]:shrink-0" onClick={(e) => e.stopPropagation()}>
+    <Modal onClose={onClose} testId="coliseum-panel" size="lg" label="Coliseo" className="p-4 gap-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-display text-xl text-gold-bright">Coliseo de Dressrosa</h3>
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={onClose}>
@@ -183,7 +183,6 @@ export default function ColiseumPanel({ characterId, onClose, onChanged }: { cha
             )}
           </>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }

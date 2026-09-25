@@ -1,5 +1,6 @@
 "use client";
 
+import Modal from "@/components/ui/Modal";
 import { useCallback, useEffect, useState } from "react";
 
 interface Known {
@@ -69,8 +70,7 @@ export default function StylesPanel({ characterId, onClose, onChanged }: { chara
   }
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "rgba(0,0,0,0.65)" }} onClick={onClose} data-testid="styles-panel">
-      <div className="panel p-4 w-full max-w-2xl max-h-[92vh] overflow-y-auto flex flex-col gap-3 [&>*]:shrink-0" onClick={(e) => e.stopPropagation()}>
+    <Modal onClose={onClose} testId="styles-panel" size="lg" label="Estilos de combate" className="p-4 gap-3">
         <div className="flex items-center justify-between gap-2">
           <h3 className="font-display text-xl text-gold-bright">Estilos de combate</h3>
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={onClose}>
@@ -209,7 +209,6 @@ export default function StylesPanel({ characterId, onClose, onChanged }: { chara
             ))}
           </div>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }

@@ -1398,6 +1398,9 @@ async function travelCharacterInner(characterId: string, userId: string, targetI
     });
     await postNews(`${character.name} llega a Laugh Tale`, truthNewsBody(character.name), "Gobierno Mundial", character.id, "major");
   }
+  const from = character.currentIsland.name;
+  const { reportFigure } = await import("./sovereignty");
+  await reportFigure(character.id, (who) => `${who} llega a ${target.name}`, (who) => `${who} ha zarpado de ${from} y acaba de desembarcar en ${target.name}. Allí donde pisa alguien así, el ambiente cambia.`);
 
   return {
     log: revealed ? [line, `— ${ONE_PIECE_TRUTH_TITLE} —`, ONE_PIECE_TRUTH] : [line],

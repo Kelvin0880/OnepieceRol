@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 
 export type BadgeKey = "news" | "denden" | "events" | "inventory";
+export type BadgeCounts = Record<BadgeKey, number>;
 
 interface Server {
   now: number;

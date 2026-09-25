@@ -1,5 +1,6 @@
 "use client";
 
+import Modal from "@/components/ui/Modal";
 import { useCallback, useEffect, useRef, useState } from "react";
 
 interface Overview {
@@ -205,8 +206,7 @@ export default function OocPanel({
   );
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3" style={{ background: "rgba(0,0,0,0.65)" }} onClick={onClose} data-testid="ooc-panel">
-      <div className="panel p-4 w-full max-w-2xl max-h-[92vh] overflow-y-auto flex flex-col gap-3 [&>*]:shrink-0" onClick={(e) => e.stopPropagation()}>
+    <Modal onClose={onClose} testId="ooc-panel" size="lg" label="Fuera de rol" className="p-4 gap-3">
         <div className="flex items-start justify-between gap-2">
           <div>
             <h3 className="font-display text-xl text-gold-bright">Fuera de rol</h3>
@@ -443,7 +443,6 @@ export default function OocPanel({
             </div>
           </div>
         )}
-      </div>
-    </div>
+    </Modal>
   );
 }

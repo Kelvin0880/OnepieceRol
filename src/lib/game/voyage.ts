@@ -57,9 +57,9 @@ export async function settleVoyage(characterId: string): Promise<{ landedAt: str
   }
   for (const text of log) await prisma.gameLogEntry.create({ data: { characterId: c.id, kind: "travel", text } });
   if (c.voyageAmbushJson) await springAmbush(c.id, target.dangerLevel, c.voyageAmbushJson, log);
-  if (isYonkoClass(c.title, c.bounty)) {
-    await postNews(`${c.name} desembarca en ${target.name}`, `${c.title ?? "El Emperador"} ${c.name} ha llegado a ${target.name}. Allí donde pone el pie un Yonko, el mundo contiene el aliento.`, "Guerra", c.id, "major", { locationName: target.name, islandId: target.id });
-  }
+  // The papers follow the powerful: an emperor's landing is always news, any other world figure's when the throttle allows.
+  const { reportFigure } = await import("./sovereignty");
+  await reportFigure(c.id, (who) => `${who} desembarca en ${target.name}`, (who) => `${who} ha llegado a ${target.name} tras una larga travesía. Allí donde pone el pie, el mundo contiene el aliento.`, { severity: isYonkoClass(c.title, c.bounty) ? "major" : "normal", force: isYonkoClass(c.title, c.bounty) });
   return { landedAt: target.name, log };
 }
 

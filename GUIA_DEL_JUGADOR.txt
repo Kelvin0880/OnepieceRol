@@ -699,3 +699,35 @@ más. Quienes intervienen salen en las noticias.
 NUEVAS ISLAS
 Orange Town y Villa Syrup (East Blue, nivel 1), Ohara (14), Marineford (26),
 Dressrosa (28), Zou (30) e Isla Egghead (36). Verlas en el mapa web.
+
+PODER: YONKO, SHICHIBUKAI Y GUERRAS (botón "Poder")
+- YONKO: pirata, nivel 35, recompensa de 1.000 millones, al menos una isla
+  dominada y una fuerza de 3 (tripulantes + nakamas). Si los tronos están
+  ocupados, hay que desafiar a un Yonko EN PERSONA, en la isla donde esté de
+  verdad (míralo en Poder o en el Códice). Si cae, ocupas su trono y te
+  quedas sus islas. Antes de desafiar eliges qué pides para él: perdonarle,
+  capturarle o matarle. Capturar o matar a un personaje canon solo ocurre si
+  el dueño del juego lo aprueba. Al coronarte, los otros Emperadores y los
+  almirantes te guardan rencor y la Marina manda un Buster Call.
+- SHICHIBUKAI: solo piratas, nivel 20, recompensa de 100 millones, 7
+  asientos. Con la patente, la Marina y el CP-0 no pueden cazarte sin tu
+  permiso ni arrestarte, y tu recompensa se congela. Pagas cada semana el 1%
+  de tu recompensa (hay 24 h de gracia). Pierdes la patente si no pagas, si
+  matas a un agente del Gobierno o si renuncias, y tu recompensa sube un 20%.
+- GUERRAS: solo un Yonko declara la guerra. Contra la Marina asaltas sus
+  bases (a veces con un almirante dentro) y los marines contraatacan tus
+  islas. Contra otro Yonko jugador, cada isla suya que tomas pasa a tu
+  bandera. Gana quien sume 3 golpes decisivos en 7 días.
+- FIGURAS DEL MUNDO: los Yonko, los Shichibukai y los rangos más altos de
+  cada facción salen en las noticias cuando desembarcan en algún sitio.
+
+NUEVAS ISLAS (47 en total)
+Tequila Wolf (East Blue, nivel 1: aquí empiezan los reclutas del CP-0),
+G-8 Navarone (10), Reino Kamabakka (12), Isla Banaro (14), Isla Rusukaina
+(18), Nuevo Marineford (30, cuartel general de la Marina) y Hachinosu (32,
+el refugio de Barbanegra). Más de 30 personajes canon nuevos, cada uno en su
+isla.
+
+VOLVER A TU PERSONAJE
+En Noticias, Códice y Administración hay un botón dorado "Volver a <tu
+personaje>" que te devuelve a la partida.

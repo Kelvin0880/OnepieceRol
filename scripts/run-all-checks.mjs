@@ -19,7 +19,10 @@ const run = (cmd, args, timeoutMs) => {
   return { code: r.status, out: (r.stdout ?? "") + (r.stderr ?? ""), timedOut: r.error?.code === "ETIMEDOUT" };
 };
 
-const killDev = () => run("powershell", ["-Command", '"Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }"'], 20000);
+const killDev = () =>
+  process.platform === "win32"
+    ? run("powershell", ["-Command", '"Get-NetTCPConnection -LocalPort 3000 -State Listen -ErrorAction SilentlyContinue | ForEach-Object { Stop-Process -Id $_.OwningProcess -Force }"'], 20000)
+    : run("sh", ["-c", "'pkill -f \"[n]ext dev\" ; pkill -f \"[n]ext-server\" ; true'"], 20000);
 async function startDev() {
   spawn("npm", ["run", "dev"], { cwd: process.cwd(), shell: true, detached: true, stdio: "ignore" }).unref();
   for (let i = 0; i < 60; i++) {
@@ -51,9 +54,9 @@ log("== unit tests + types");
 record("vitest", run("npx", ["vitest", "run"], 300000));
 record("tsc", run("npx", ["tsc", "--noEmit"], 300000));
 
-const dbChecks = ["ooc-rollback", "world-arcs", "joint-fight", "guardian", "territory", "escape-buster", "consequence", "black-market", "missions", "grudge", "hunt", "impel", "compaction-travel", "prison-logic", "delete-character", "world-news", "raid", "attributes-inventory", "styles", "coliseum", "voyage", "empire", "duel-resolution", "denden", "battle", "close-fight", "happenings", "player-events"];
-const browserFirst = ["battle-smoke", "crew-smoke", "ooc-crew-ui-check", "world-ui-check", "polish-ui-check", "features-ui-check", "voyage-ui-check", "empire-ui-check", "duel-ui-check", "events-ui-check", "admin-tools-ui-check"]; // need a clean DB each
-const browserRest = quick ? [] : ["ai-e2e-smoke", "combat-rounds-check", "roleplay-attack-check", "duel-smoke", "party-multiplayer-smoke", "joint-fight-ui-check", "grudge-ui-check", "missions-ui-check", "realtime-check", "prison-ui-check", "raid-ui-check", "world-panels-ui-check", "check-news-page", "delete-character-ui-check", "close-fight-ui-check", "crew-chat-ui-check", "codex-players-ui-check", "nakama-ui-check"];
+const dbChecks = ["ooc-rollback", "world-arcs", "joint-fight", "guardian", "territory", "escape-buster", "consequence", "black-market", "missions", "grudge", "hunt", "impel", "compaction-travel", "prison-logic", "delete-character", "world-news", "raid", "attributes-inventory", "styles", "coliseum", "voyage", "empire", "duel-resolution", "denden", "battle", "close-fight", "happenings", "player-events", "sovereignty"];
+const browserFirst = ["battle-smoke", "crew-smoke", "ooc-crew-ui-check", "world-ui-check", "polish-ui-check", "features-ui-check", "voyage-ui-check", "empire-ui-check", "duel-ui-check", "events-ui-check", "admin-tools-ui-check", "sovereignty-ui-check", "design-tour"]; // need a clean DB each
+const browserRest = quick ? [] : ["ai-e2e-smoke", "combat-rounds-check", "roleplay-attack-check", "duel-smoke", "party-multiplayer-smoke", "joint-fight-ui-check", "grudge-ui-check", "missions-ui-check", "realtime-check", "prison-ui-check", "raid-ui-check", "world-panels-ui-check", "check-news-page", "delete-character-ui-check", "close-fight-ui-check", "crew-chat-ui-check", "codex-players-ui-check", "nakama-ui-check", "scene-spacing-check"];
 
 log("== DB checks");
 await freshWorld();

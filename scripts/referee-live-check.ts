@@ -83,6 +83,23 @@ async function main() {
     check("it does not repeat the previous fire blast wording", !/ráfaga de fuego hacia ti/i.test(said));
   }
 
+  // Report (Sebastián vs Duran): the player never wrote that the pending kick reached him, yet the narration said it did.
+  const sebas = { name: "Sebastián", side: "player" as const, level: 12, hp: 100, maxHp: 100, stamina: 90, kit: "Katana; Haki de Observación débil.", sheet: "ataque 40, defensa 30, velocidad 45" };
+  const duran = { name: "Duran", side: "enemy" as const, level: 14, hp: 60, maxHp: 100, stamina: 50, personality: "furioso, profesional", kit: "Cuchillo; combate cuerpo a cuerpo.", sheet: "ataque 40, defensa 30, velocidad 35" };
+  const r5 = await scene("Patada pendiente que el jugador no confirmó", {
+    mode: "solo",
+    round: 6,
+    actors: [sebas, duran],
+    pendingThreat: "Duran intenta lanzar una patada baja hacia la rodilla y la pantorrilla de Sebastián, con la intención de romperle la postura; si llega a conectar, lo desequilibraría.",
+    actions: [{ name: "Sebastián", text: "Sebastián nunca toma la decisión de bloquear el ataque, pues su intención era otra. Da un salto corto hacia la izquierda y con su mano derecha intenta desenvainar la katana para un corte ascendente buscando el tríceps de Duran." }],
+  });
+  if (r5) {
+    const lost = r5.applied.find((a) => a.name === "Sebastián")?.hpLoss ?? 999;
+    check("the unconfirmed kick does not hurt the player", lost === 0);
+    check("the narration never says the kick reached him", !/(te alcanz|le alcanz|impact[óo] en (su|tu)|alcanzó (su|tu) (gemelo|pierna|rodilla))/i.test(r5.v.narration));
+    check("the rival's next attack stays an intention (no landed hit)", !/(conecta con éxito|le da de lleno|impacta de lleno)/i.test(r5.v.rivalIntent ?? "") && /(intenta|busca|si llega a conectar)/i.test(r5.v.rivalIntent ?? ""));
+  }
+
   console.log(failures === 0 ? "\nALL PASS" : `\n${failures} FAILED`);
   process.exit(failures === 0 ? 0 : 1);
 }

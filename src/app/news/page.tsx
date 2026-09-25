@@ -1,8 +1,8 @@
 "use client";
 
 import { useEffect, useState, useCallback } from "react";
-import { useRouter } from "next/navigation";
 import Link from "next/link";
+import BackToCharacter from "@/components/ui/BackToCharacter";
 
 interface NewsItem {
   id: string;
@@ -34,12 +34,13 @@ const CATEGORY_COLOR: Record<string, string> = {
   "Gobierno Mundial": "text-ink-dim",
   "Eventos mundiales": "text-orange-300",
   "Sucesos del mundo": "text-teal-300",
+  "Figuras del mundo": "text-amber-300",
   Eventos: "text-lime-300",
   Anuncios: "text-yellow-300",
   Coliseo: "text-amber-300",
 };
 
-const CATEGORIES = ["Coliseo", "Eventos mundiales", "Sucesos del mundo", "Eventos", "Anuncios", "Recompensas", "Frutas", "Poneglifos", "Tripulaciones", "Guerra", "Muertes", "Gobierno Mundial"];
+const CATEGORIES = ["Coliseo", "Eventos mundiales", "Sucesos del mundo", "Eventos", "Anuncios", "Figuras del mundo", "Recompensas", "Frutas", "Poneglifos", "Tripulaciones", "Guerra", "Muertes", "Gobierno Mundial"];
 
 function dayLabel(dateStr: string): string {
   const date = new Date(dateStr);
@@ -158,7 +159,6 @@ function WorldEventCard({ event }: { event: WorldEvent }) {
 }
 
 export default function NewsPage() {
-  const router = useRouter();
   const [news, setNews] = useState<NewsItem[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadingMore, setLoadingMore] = useState(false);
@@ -223,9 +223,7 @@ export default function NewsPage() {
               Administración
             </Link>
           )}
-          <button onClick={() => router.back()} className="btn-ghost px-3 py-1.5 text-sm">
-            Volver
-          </button>
+          <BackToCharacter />
         </div>
       </div>
       <p className="text-ink-dim text-sm mb-4">

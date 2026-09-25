@@ -13,6 +13,7 @@ import { settleGroupBattleIfDone } from "./battle-settle";
 import { CharacterStatus } from "@prisma/client";
 import { DuelError, postDuelReport } from "./duel-resolution";
 import { verdictOptions } from "../engine/duel-outcome";
+import { governmentSparesWarlord } from "../engine/sovereignty";
 
 /**
  * 1-vs-1 duels between two real players. Both submit a move each round (free
@@ -72,7 +73,7 @@ export async function challengeDuel(challengerId: string, userId: string, oppone
   const pending = await prisma.pendingEncounter.findFirst({ where: { characterId: { in: [challengerId, opponentId] } } });
   if (pending) throw new DuelError("Alguno de los dos está en pleno enfrentamiento; primero hay que resolverlo.");
 
-  const hostile = lethal && areHostile(challenger.faction as PlayerFaction, opponent.faction as PlayerFaction);
+  const hostile = lethal && areHostile(challenger.faction as PlayerFaction, opponent.faction as PlayerFaction) && !governmentSparesWarlord(challenger.faction as PlayerFaction, !!opponent.warlordSince);
   if (hostile) {
     const lastHunt = await prisma.duel.findFirst({
       where: { challengerId, opponentId, lethal: true, hostile: true, status: { in: ["FINISHED", "CANCELLED"] }, updatedAt: { gt: new Date(Date.now() - HUNT_REPEAT_COOLDOWN_MS) } },
@@ -340,7 +341,7 @@ export async function getDuelStateForCharacter(characterId: string) {
 
   const meIsChallenger = duel.challengerId === characterId;
   const opponentId = meIsChallenger ? duel.opponentId : duel.challengerId;
-  const opponent = await prisma.character.findUnique({ where: { id: opponentId }, select: { name: true, faction: true } });
+  const opponent = await prisma.character.findUnique({ where: { id: opponentId }, select: { name: true, faction: true, warlordSince: true } });
   const mine = await prisma.character.findUnique({ where: { id: characterId }, select: { faction: true } });
   const messages = await prisma.duelMessage.findMany({ where: { duelId: duel.id }, orderBy: { createdAt: "asc" }, take: 40 });
   return {
@@ -357,7 +358,7 @@ export async function getDuelStateForCharacter(characterId: string) {
     resolution: duel.resolution,
     pleaByMe: duel.pleaById === characterId,
     pleaText: duel.pleaText,
-    verdict: duel.resolution === "VERDICT" && duel.winnerId === characterId && mine && opponent ? verdictOptions(mine.faction, opponent.faction) : null,
+    verdict: duel.resolution === "VERDICT" && duel.winnerId === characterId && mine && opponent ? verdictOptions(mine.faction, opponent.faction, !!opponent.warlordSince) : null,
     messages: messages.map((m) => ({ id: m.id, authorName: m.authorName, isNarrator: m.authorCharacterId === null, mine: m.authorCharacterId === characterId, text: m.text })),
   };
 }

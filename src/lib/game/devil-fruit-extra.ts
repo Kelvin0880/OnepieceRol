@@ -31,6 +31,7 @@ export const EXTRA_FRUITS: DevilFruitCatalogEntry[] = [
 /** Older catalog entries that turned out to be a canon character's signature fruit: locked to that holder from now on. */
 export const SINGLETON_OVERRIDES = new Set([
   "Hie Hie no Mi",
+  "Doku Doku no Mi",
   "Tori Tori no Mi: Modelo Fénix",
   "Bari Bari no Mi",
   "Supa Supa no Mi",

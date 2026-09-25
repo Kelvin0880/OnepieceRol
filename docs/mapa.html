@@ -139,7 +139,7 @@
 
 <header>
   <h1><i class="fas fa-map-marked-alt"></i> GRAND LINE RPG — MAPA DE RUTA</h1>
-  <p>Las 40 islas jugables de hoy, sus conexiones, y qué te espera en cada una.</p>
+  <p>Las 47 islas jugables de hoy, sus conexiones, y qué te espera en cada una.</p>
   <a class="back" href="index.html"><i class="fas fa-arrow-left"></i> Volver</a>
 </header>
 
@@ -309,6 +309,27 @@ const ISLANDS = [
   { key: "elbaf", name: "Elbaf", sea: "New World", danger: 10, minLevel: 34, faction: "Guerreros de Elbaf (gigantes)", poneglyph: false, x: 400, y: 735,
     desc: "La tierra de los gigantes: bosques colosales, árboles como montañas y guerreros que llevan generaciones peleando por un honor que ya casi nadie sabe explicar. Los humanos aquí son los que caben en una mano.",
     hook: "Dos gigantes legendarios llevan décadas luchando por una promesa que ninguno recuerda. Alguien ha prometido a los forasteros una respuesta si logran reconciliarlos." },
+  { key: "tequilaWolf", name: "Tequila Wolf", sea: "East Blue", danger: 1, minLevel: 1, faction: "Gobierno Mundial (CP)", poneglyph: false, x: 470, y: 150,
+    desc: "Un puente interminable que el Gobierno Mundial lleva setecientos años construyendo sobre el mar del East Blue. Entre andamios, grúas y barracones grises, Cipher Pol entrena en silencio a sus reclutas: aquí se aprende a obedecer, a mirar sin ser visto y a no hacer preguntas.",
+    hook: "Un instructor enmascarado ha dejado caer que alguien de la obra filtra planos del puente a los revolucionarios. Encontrarlo sería tu primera prueba de verdad." },
+  { key: "navarone", name: "G-8 Navarone", sea: "Paradise", danger: 6, minLevel: 10, faction: "Marina", poneglyph: false, x: 1290, y: 150,
+    desc: "Una fortaleza de la Marina encajada en un anillo de acantilados, con un solo acceso por mar y una cocina que alimenta a miles de marines. Se dice que ningún pirata ha salido de aquí por su propio pie.",
+    hook: "El comandante Jonathan ha doblado las guardias: un barco sin bandera fue visto rondando la bahía anoche y nadie sabe de quién es." },
+  { key: "banaro", name: "Isla Banaro", sea: "Paradise", danger: 7, minLevel: 14, faction: null, poneglyph: false, x: 1500, y: 300,
+    desc: "Una isla desierta cuyo único pueblo quedó reducido a cenizas en el duelo entre el fuego y la oscuridad. Aún hay marcas de quemaduras en las piedras y un silencio que no parece natural.",
+    hook: "Alguien ha vuelto a encender hogueras entre las ruinas. Los pocos que pasan por aquí dicen haber visto un caballo flaco y un jinete que tose." },
+  { key: "rusukaina", name: "Isla Rusukaina", sea: "Paradise", danger: 8, minLevel: 18, faction: null, poneglyph: false, x: 1660, y: 600,
+    desc: "Una isla del Calm Belt donde las estaciones cambian cada diez días y las bestias son tan fuertes que el invierno las vuelve aún más fieras. Un lugar para quien quiere entrenar hasta romperse.",
+    hook: "Dicen que en la cima vive una bestia que nadie ha logrado derribar. Quien lo haga volverá de aquí siendo otra persona." },
+  { key: "kamabakka", name: "Reino Kamabakka", sea: "Paradise", danger: 6, minLevel: 12, faction: "Ejército Revolucionario", poneglyph: false, x: 1560, y: 500,
+    desc: "El reino de los okama, un paraíso rosa donde Emporio Ivankov entrena a sus soldados y esconde a revolucionarios fugitivos. Sus 'artes de combate' son tan extravagantes como letales.",
+    hook: "Ivankov prepara algo grande para el Ejército Revolucionario y busca voluntarios. Nadie sabe qué es, pero todos quieren estar." },
+  { key: "hachinosu", name: "Hachinosu", sea: "New World", danger: 10, minLevel: 32, faction: "Piratas de Barbanegra", poneglyph: false, x: 1600, y: 250,
+    desc: "La Isla Colmena: el refugio pirata donde Barbanegra ha levantado su nuevo imperio. Una calavera de piedra domina el puerto y la ley es simple: aquí manda quien no ha caído todavía.",
+    hook: "Se rumorea que un antiguo almirante de la Marina ahora duerme en Hachinosu. Nadie sabe si vino a traicionar a Barbanegra o a servirle." },
+  { key: "nuevoMarineford", name: "Nuevo Marineford", sea: "New World", danger: 10, minLevel: 30, faction: "Marina", poneglyph: false, x: 1640, y: 780,
+    desc: "El antiguo G-1, convertido en el cuartel general de la Marina tras la guerra de Marineford. Desde aquí el Almirante de Flota dirige la justicia absoluta sobre el Nuevo Mundo, a un paso de la Tierra Sagrada.",
+    hook: "El Almirante de Flota ha convocado a SWORD a puerta cerrada. Lo que se decida esta noche marcará a más de un Emperador." },
 ];
 
 const EDGES = [
@@ -324,6 +345,7 @@ const EDGES = [
   ["fishMan","punkHazard"], ["punkHazard","wholeCake"], ["punkHazard","egghead"], ["wholeCake","wano"], ["wholeCake","dressrosa"],
   ["dressrosa","zou"], ["dressrosa","egghead"], ["wano","zou"], ["wano","laughTale"],
   ["graveyardIsland","abyss"], ["eniesLobby","impelDown"], ["eniesLobby","maryGeoise"],
+  ["tequilaWolf","marineG5"], ["tequilaWolf","loguetown"], ["tequilaWolf","gecko"], ["navarone","jaya"], ["navarone","skypiea"], ["banaro","jaya"], ["banaro","alabasta"], ["rusukaina","amazonLily"], ["rusukaina","kamabakka"], ["kamabakka","rusukaina"], ["kamabakka","sabaody"], ["hachinosu","graveyardIsland"], ["hachinosu","elbaf"], ["nuevoMarineford","maryGeoise"], ["nuevoMarineford","punkHazard"],
 ];
 
 function dangerColor(d) {

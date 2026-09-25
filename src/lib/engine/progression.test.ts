@@ -56,7 +56,8 @@ describe("marineRankTitle / revolutionaryTitle / bountyHunterTitle", () => {
 
   it("climb with merit points", () => {
     expect(marineRankTitle(12_000)).toBe("Almirante");
-    expect(marineRankTitle(20_000)).toBe("Almirante"); // caps at top tier, doesn't error past it
+    expect(marineRankTitle(20_000)).toBe("Almirante de Flota");
+    expect(marineRankTitle(90_000)).toBe("Almirante de Flota"); // caps at top tier, doesn't error past it
   });
 });
 

@@ -2,6 +2,7 @@
 
 import { useCallback, useEffect, useState } from "react";
 import Link from "next/link";
+import BackToCharacter from "@/components/ui/BackToCharacter";
 import AdminTools from "./AdminTools";
 
 interface AdminArc {
@@ -68,9 +69,12 @@ export default function AdminPage() {
     <main className="flex-1 max-w-3xl w-full mx-auto p-6 flex flex-col gap-5">
       <div className="flex items-center justify-between">
         <h1 className="font-display text-2xl text-gold-bright">Administración del mundo</h1>
-        <Link href="/news" className="btn-ghost px-3 py-1.5 text-sm">
-          Volver a noticias
-        </Link>
+        <div className="flex flex-wrap gap-2">
+          <Link href="/news" className="btn-ghost px-3 py-1.5 text-sm">
+            Volver a noticias
+          </Link>
+          <BackToCharacter />
+        </div>
       </div>
       <p className="text-sm text-ink-dim">
         Aquí decides el destino de los personajes canon. La IA construye la historia poco a poco, pero <strong>nunca mata ni captura a nadie por su cuenta</strong>:

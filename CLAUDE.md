@@ -159,33 +159,13 @@ UI for it yet.
 
 ## World content so far
 
-13 islands: the original 9-island East Blue set (Pueblo Foosha/pirate
-start, Cuartel Marine G-5/marine start, Isla Baltigo/revolutionary start,
-Isla Gecko/bounty-hunter start, Villa Shimotsuki, Restaurante Baratie,
-Isla Conomi/Arlong, Loguetown, Reverse Mountain as the Grand Line
-gateway), plus a 4-island Paradise/New World chain hanging off Reverse
-Mountain: Whisky Peak (danger 6, `minLevelToEnter` 8, Baroque Works
-ambush flavor) → Little Garden (7, 10) → Alabasta (8, 12) → **Isla
-Cementerio** (10, **30** — genuine end-game, Marshall D. Teach's own
-stronghold). `Island.minLevelToEnter` (checked in `travelCharacter`,
-`src/lib/engine/travel.ts`'s `canEnterIsland`) refuses travel outright
-below the requirement — the Grand Line doesn't ease you in.
-
-14 islands: the original 9-island East Blue set (Pueblo Foosha/pirate
-start, Cuartel Marine G-5/marine start, Isla Baltigo/revolutionary start,
-Isla Gecko/bounty-hunter start, Villa Shimotsuki, Restaurante Baratie,
-Isla Conomi/Arlong, Loguetown, Reverse Mountain as the Grand Line
-gateway), plus a 5-island Paradise/New World spread hanging off Reverse
-Mountain: Whisky Peak (danger 6, `minLevelToEnter` 8, Baroque Works
-ambush flavor) → Little Garden (7, 10) → Alabasta (8, 12), which branches
-into **two separate level-30+ endgame destinations** — Isla Cementerio
-(10, **30**, Marshall D. Teach's stronghold) and **Enies Lobby** (10,
-**35**, the World Government's own judicial fortress, `factionControl`
-"Gobierno Mundial (CP-0)") — deliberately two different major powers, not
-a single linear gate. `Island.minLevelToEnter` (checked in
-`travelCharacter`, `src/lib/engine/travel.ts`'s `canEnterIsland`) refuses
-travel outright below the requirement — the Grand Line doesn't ease you
-in.
+**47 islands** today (single source of truth: `prisma/seed.ts` plus the wave files it imports, e.g.
+`src/lib/game/islands-wave4.ts`). The original East Blue starts (Pueblo Foosha/pirate, Cuartel Marine
+G-5/marine, Isla Baltigo/revolutionary, Isla Gecko/bounty hunter, **Tequila Wolf/CP-0** since 2026-09-25),
+the Paradise chain from Reverse Mountain, and the New World up to Laugh Tale. `Island.minLevelToEnter`
+(checked in `travelCharacter` via `engine/travel.ts`'s `canEnterIsland`) refuses travel below the
+requirement. Later waves only ADD islands and routes (the seed links each new island both ways); keep
+`docs/mapa.html` in sync (its ISLANDS/EDGES data block).
 
 **Full canon character roster + devil fruit catalog now live in
 `WORLD_LORE.md`** (2026-09-23) — read it before touching `WorldActor`,
@@ -1460,6 +1440,14 @@ Then: the "Imperio" panel + nakama errands (`engine/empire.ts`, `game/empire.ts`
 **World happenings (2026-09-25)**: `Sucesos del mundo` = one AI-invented, self-contained event every 24 h (`engine/world-happenings.ts`, `ai/world-happening.ts`, `game/world-happenings.ts`; `tickWorldHappenings` is fire-and-forget from the world tick, the newest news item of that category is the clock so no schema). Colour only: never kills/captures canon actors and never hands out items. The narrator sees the last 3 days of happenings of the current island (`worldPresenceFor`). Death/capture arcs (Eventos mundiales) keep the owner's verdict; their cooldown dropped 72 h -> 24 h. Check: `scripts/happenings-check.ts`.
 
 **Crew chat (2026-09-25)**: the Den Den Mushi panel has a "Tripulación" tab (only for characters with a crew). Same `DenDenMessage` table, channel key `CREW:<crewId>` (`crewChannelKey`); the channel always derives from the character's own crew/faction, never the request (`?scope=crew` / `{scope}`). Checks: `denden-check.ts`, `crew-chat-ui-check.mjs`.
+
+**Design pass, sovereign powers, world figures, wave 4 (2026-09-25)** — full description in `APLICACION_COMPLETA.md` (last section) and `GUIA_DEL_JUGADOR.txt` ("PODER"). What to remember:
+- UI kit lives in `src/components/ui/` (Modal, StatBar, ChatFeed, Toasts, WantedPoster, BackToCharacter, SeaBackground) with pure helpers in `src/lib/ui/format.ts` (tested). New panels go through `Modal` (bottom sheet on phones). The play page is split into components under `play/[id]/` (types in `types.ts`, labels in `labels.ts`). Tailwind v4 gotcha: `border-[--line]` is v3 syntax and silently does nothing; use the `line` color token (`border-line`). `devIndicators: false` in `next.config.ts`, because the dev "N" badge covered bottom sheets and broke browser checks.
+- Sovereignty: `engine/sovereignty.ts` (rules + tests) and `game/sovereignty.ts` (Yonko challenge = joint fight kind `sovereign`, settled by `handleSovereignFightSettled`; the dethroned canon gets role NOTABLE_PIRATE + "Ex-Yonko"; kill/capture only via a `WorldArc` in AWAITING_CONSENT for `/admin`). `isEmperor` also accepts a title containing "Yonko" (the owner's `make-yonko.ts` characters). Warlords: frozen bounty (`reputation.ts`), no Government hunts (`duel.ts` + `governmentSparesWarlord`), no Government arrest (`verdictOptions(..., loserIsWarlord)`), revoked on killing a Marine/CP-0 player.
+- World figures: `reportFigure` (throttled via `Character.lastFigureNewsAt`) runs on hop travel and voyage arrival; category "Figuras del mundo".
+- Checks: `sovereignty-check.ts`, `sovereignty-ui-check.mjs`, `design-tour.mjs` (both widths). In an environment without `OPENROUTER_API_KEY` the AI-dependent browser checks fail by design (ai-e2e, duel-smoke narration, party, joint-fight UI, polish, ooc how-to, compaction, happenings); everything else passes.
+- Schema (additive): six `Character` sovereignty columns + `War`. Production needs the documented Neon push plus a reseed (new islands, actors, stories, territories; idempotent).
+- Playwright in cloud sessions: the preinstalled browser is 1194 while the npm package wants 1243; point `PLAYWRIGHT_BROWSERS_PATH` at a folder that symlinks `chromium_headless_shell-1243/chrome-headless-shell-linux64/chrome-headless-shell` to the 1194 `headless_shell`. On Linux, stop the dev server with `pkill -f "[n]ext dev"` (the brackets stop pkill from matching its own shell).
 
 **Beginner events, badges, admin tools, players codex (2026-09-25)**:
 - `PlayerEvent` / `PlayerEventEntry` (additive): AI-invented trials for low levels (`engine/player-events.ts`, `ai/player-event.ts`, `game/player-events.ts`, `EventsPanel.tsx`, route `characters/[id]/events`). Announced in the news (category `Eventos`); registration window >= 6 h, NO time limit to finish; when every human entrant has submitted (or withdrawn) the AI judge scores everyone (`judgeTrial`, stub with `JUDGE_STUB=1`), CODE picks the winner (`pickWinner`), prize = system-fixed berries/xp (+ a unique fruit), consolation for the rest, result posted with the full ranking. 12 original 1-of-1 fruits live in `game/devil-fruit-events.ts` (isSingleton: never dropped, never in shops); an event reserves one; a full bag pays berries instead. `tickPlayerEvents` runs from the world tick (max 3 open, one new per 24 h). Admin can cancel/force-close.

@@ -1,6 +1,7 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Cinzel, Crimson_Pro } from "next/font/google";
 import "./globals.css";
+import SeaBackground from "@/components/ui/SeaBackground";
 
 const cinzel = Cinzel({
   variable: "--font-display",
@@ -18,10 +19,19 @@ export const metadata: Metadata = {
   description: "Crea tu personaje, zarpa hacia el Grand Line y escribe tu propia leyenda.",
 };
 
+export const viewport: Viewport = {
+  themeColor: "#0b1520",
+  width: "device-width",
+  initialScale: 1,
+};
+
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="es" className={`${cinzel.variable} ${crimson.variable} h-full antialiased`}>
-      <body className="min-h-full flex flex-col">{children}</body>
+      <body className="min-h-full flex flex-col">
+        <SeaBackground />
+        <div className="relative z-10 flex-1 flex flex-col">{children}</div>
+      </body>
     </html>
   );
 }

@@ -1,5 +1,5 @@
 // Ad-hoc verification for the "Volver" news-page navigation bug fix
-// (was Link href="/", now router.back()). Requires npm run dev running.
+// (now a real link back to the last character played, see components/ui/BackToCharacter.tsx). Requires npm run dev running.
 import { chromium } from "playwright";
 
 const BASE = "http://localhost:3000";
@@ -30,7 +30,7 @@ async function main() {
   await page.waitForSelector("text=El Heraldo del Mundo");
   console.log("On news page:", page.url());
 
-  await page.click('button:has-text("Volver")');
+  await page.click('[data-testid="back-to-character"]');
   await page.waitForTimeout(500);
   const backUrl = page.url();
   console.log("After Volver:", backUrl);

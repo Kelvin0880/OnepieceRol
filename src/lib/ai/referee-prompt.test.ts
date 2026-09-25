@@ -65,7 +65,18 @@ describe("buildRefereePrompt", () => {
     const { system } = buildRefereePrompt(base);
     expect(system).toContain("activo mi Haki de observación");
     expect(system).toContain("NO esquiva");
-    expect(system).toContain("SIN atribuirle movimientos");
+    expect(system).toContain("sin atribuirle movimientos");
+  });
+  it("never lands a rival attack on the player unless the player confirmed it", () => {
+    const { system } = buildRefereePrompt(base);
+    expect(system).toContain("IMPACTO SOBRE EL JUGADOR");
+    expect(system).toContain("NUNCA se da por conectado sobre el jugador");
+    expect(system).toContain("NO conecta");
+    expect(system).not.toContain("normalmente llega");
+  });
+  it("keeps the rival's announced sequence tentative, never a landed hit", () => {
+    const { system } = buildRefereePrompt(base);
+    expect(system).toContain("NUNCA des por logrado ningún golpe tuyo");
   });
   it("leaves room for three beats", () => {
     expect(buildRefereePrompt(base).maxTokens).toBeGreaterThan(600);

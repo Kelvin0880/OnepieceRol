@@ -41,7 +41,7 @@ const STARTING_ISLAND_BY_FACTION: Record<Faction, string> = {
   MARINE: "Cuartel Marine G-5",
   REVOLUTIONARY: "Isla Baltigo",
   BOUNTY_HUNTER: "Isla Gecko",
-  CP0: "Loguetown",
+  CP0: "Tequila Wolf",
 };
 
 export class CharacterCreationError extends Error {}
@@ -56,7 +56,8 @@ export async function createCharacter(userId: string, name: string, faction: Fac
   if (!archetype) throw new CharacterCreationError("Arquetipo desconocido.");
 
   const islandName = STARTING_ISLAND_BY_FACTION[faction];
-  const island = await prisma.island.findUnique({ where: { name: islandName } });
+  // A world seeded before Tequila Wolf existed still lets CP-0 recruits start (in Loguetown, as they used to).
+  const island = (await prisma.island.findUnique({ where: { name: islandName } })) ?? (faction === "CP0" ? await prisma.island.findUnique({ where: { name: "Loguetown" } }) : null);
   if (!island) throw new CharacterCreationError("El mundo aún no está sembrado — falta ejecutar el seed.");
 
   const starterWeaponSpec = findCommonWeapon(archetype.starterWeaponName);
