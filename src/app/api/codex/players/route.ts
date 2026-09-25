@@ -20,6 +20,7 @@ export async function GET() {
       createdAt: true,
       diedAt: true,
       deathCause: true,
+      portraitUpdatedAt: true,
       voyageToIslandId: true,
       voyageArrivesAt: true,
       currentIsland: { select: { name: true } },
@@ -49,6 +50,7 @@ export async function GET() {
         joinedAt: c.createdAt,
         diedAt: c.diedAt,
         deathCause: c.status === "DEAD" ? c.deathCause : null,
+        portraitUrl: c.portraitUpdatedAt ? `/api/characters/${c.id}/portrait?v=${c.portraitUpdatedAt.getTime()}` : null,
       };
     }),
   });

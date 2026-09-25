@@ -4,6 +4,7 @@ import { Anchor, Apple, Flame, Sword, Users } from "lucide-react";
 import StatBar from "@/components/ui/StatBar";
 import WantedPoster from "@/components/ui/WantedPoster";
 import AttributesCard from "./AttributesCard";
+import PortraitEditor from "./PortraitEditor";
 import { characterCondition, conditionLabel } from "@/lib/engine/condition";
 import { xpToNextLevel } from "@/lib/engine/economy";
 import { rankProgress, type FactionKey } from "@/lib/engine/progression";
@@ -104,11 +105,19 @@ export default function CharacterSheet({
         )}
       </section>
 
-      {character.faction === "PIRATE" && (
-        <div className="flex justify-center">
-          <WantedPoster name={character.name} bounty={character.bounty} deceased={character.status === "DEAD"} />
-        </div>
-      )}
+      {(() => {
+        const photoUrl = character.portraitUpdatedAt ? `/api/characters/${character.id}/portrait?v=${new Date(character.portraitUpdatedAt).getTime()}` : null;
+        return (
+          <div className="flex flex-col items-center gap-2">
+            {character.faction === "PIRATE" ? (
+              <WantedPoster name={character.name} bounty={character.bounty} deceased={character.status === "DEAD"} photoUrl={photoUrl} />
+            ) : (
+              photoUrl && <img src={photoUrl} alt={character.name} className="w-28 h-28 rounded-full object-cover border-2 border-gold/50" data-testid="poster-photo" />
+            )}
+            {character.status !== "DEAD" && <PortraitEditor characterId={character.id} hasPhoto={!!photoUrl} onChanged={onChanged} />}
+          </div>
+        );
+      })()}
 
       <section className="panel p-4">
         <h3 className="font-display text-sm text-ink-dim mb-2">Atributos</h3>

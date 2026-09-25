@@ -17,6 +17,7 @@ interface MeCharacter {
   level: number;
   status: string;
   bounty: number;
+  portraitUpdatedAt?: string | null;
   notoriety: number;
   currentIsland: { name: string };
 }
@@ -255,7 +256,7 @@ export default function HomePage() {
               <div key={c.id} className={`panel p-4 flex flex-col gap-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-gold ${dead ? "opacity-60 grayscale" : ""}`} style={{ borderTop: `3px solid ${look.color}` }}>
                 <Link href={`/play/${c.id}`} className="flex gap-3 min-w-0">
                   {c.faction === "PIRATE" ? (
-                    <WantedPoster name={c.name} bounty={c.bounty} size="sm" deceased={dead} />
+                    <WantedPoster name={c.name} bounty={c.bounty} size="sm" deceased={dead} photoUrl={c.portraitUpdatedAt ? `/api/characters/${c.id}/portrait?v=${new Date(c.portraitUpdatedAt).getTime()}` : null} />
                   ) : (
                     <span className="w-16 h-16 shrink-0 rounded-full grid place-items-center border-2" style={{ borderColor: look.color, color: look.color, background: "rgba(0,0,0,0.25)" }}>
                       <look.icon className="w-7 h-7" />

@@ -64,6 +64,7 @@ export async function deleteCharacter(characterId: string, userId: string): Prom
     // value once its character is gone — it only exists to bias that
     // character's own future encounters.
     await tx.grudge.deleteMany({ where: { characterId } });
+    await tx.characterPortrait.deleteMany({ where: { characterId } });
     await tx.duel.deleteMany({ where: { OR: [{ challengerId: characterId }, { opponentId: characterId }] } });
 
     await tx.character.delete({ where: { id: characterId } });

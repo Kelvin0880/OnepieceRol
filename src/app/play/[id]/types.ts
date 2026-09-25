@@ -210,6 +210,7 @@ export interface BattleSummary {
 }
 
 export interface Character {
+  portraitUpdatedAt?: string | null;
   id: string;
   name: string;
   faction: string;

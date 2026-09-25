@@ -157,6 +157,7 @@ interface PlayerRow {
   joinedAt: string;
   diedAt: string | null;
   deathCause: string | null;
+  portraitUrl: string | null;
 }
 
 const PLAYER_STATUS: Record<string, string> = { ALIVE: "Vivo", DEAD: "Muerto", IMPRISONED: "Preso" };
@@ -181,7 +182,8 @@ function PlayersSection({ query }: { query: string }) {
         {shown.map((p) => (
           <div key={p.id} className={`panel p-3 flex flex-col gap-1 ${p.status === "DEAD" ? "opacity-70" : ""}`} data-testid="codex-player">
             <div className="flex items-start justify-between gap-2">
-              <strong className="text-gold-bright">{p.name}</strong>
+              {p.portraitUrl && <img src={p.portraitUrl} alt={p.name} className={`w-12 h-12 rounded border border-gold/40 object-cover shrink-0 ${p.status === "DEAD" ? "grayscale" : ""}`} data-testid="codex-player-photo" />}
+              <strong className="text-gold-bright flex-1">{p.name}</strong>
               <span className={`text-xs ${p.status === "DEAD" ? "text-blood" : p.status === "IMPRISONED" ? "text-orange-300" : "text-emerald-300"}`}>{PLAYER_STATUS[p.status] ?? p.status}</span>
             </div>
             <p className="text-xs text-gold">

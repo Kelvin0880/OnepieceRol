@@ -140,6 +140,8 @@ model Character {
   sceneCompactedUntil DateTime?
   /** "Limpiar escena": messages before this stay stored (memory keeps the story) but leave the screen and the narrator's short-term window. */
   sceneClearedAt      DateTime?
+  // Portrait for the wanted poster: bytes live in CharacterPortrait, this is only the cache-busting version.
+  portraitUpdatedAt   DateTime?
   /** Unspent attribute points, and the level up to which points were already granted (lazy grant, see game/attributes.ts). */
   attributePoints     Int       @default(0)
   attrLevelGranted    Int       @default(1)
@@ -1178,4 +1180,12 @@ model PlayerEventEntry {
 
   @@index([eventId])
   @@index([characterId])
+}
+
+// One picture per character (engine/crew-emblem.ts validates it). Separate table so the bytes never ride the 10 s state poll.
+model CharacterPortrait {
+  characterId String   @id
+  image       Bytes
+  mimeType    String
+  updatedAt   DateTime @default(now())
 }
