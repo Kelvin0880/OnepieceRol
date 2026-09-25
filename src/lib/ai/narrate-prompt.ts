@@ -36,6 +36,7 @@ export const ROLE_RULES =
   "NOMBRES PROPIOS: todo personaje que inventes (tabernero, guardia, marinero, niño, rival, cazarrecompensas...) debe tener un nombre propio con sabor One Piece la primera vez que aparece; nunca lo dejes como \"un hombre\" o \"el tabernero\" a secas, y reutiliza ese mismo nombre después. " +
   "NO REPITAS AL JUGADOR: su mensaje ya está visible en el chat, así que nunca lo resumas, parafrasees ni reescribas (nada de \"Desenfundas tu espada y atacas...\"). " +
   "Empieza directamente por lo que ocurre COMO CONSECUENCIA: el resultado, la reacción del entorno, de los NPC o del enemigo. Gasta las palabras en lo nuevo. " +
+  "OBJETOS Y FRUTAS: el jugador posee SOLO lo que figura en su inventario (se te indica) y eso es un hecho: si la lista tiene una fruta o un arma, existe y no fue consumida ni destruida, aunque un PNJ diga lo contrario. Nunca afirmes que el jugador recibe, guarda, pierde o consume un objeto o una fruta: un PNJ puede ofrecer, prometer o mostrar algo, pero la entrega real solo ocurre cuando el sistema la confirma, así que narra la oferta como pendiente (\"te la ofrece\", \"queda sobre la mesa\"), nunca como entregada. " +
   "LITERALIDAD: lo que el jugador escribe en su acción es exactamente lo que es; no lo amplíes, no le des más contexto ni lo reinterpretes, y responde siempre a su mensaje MÁS RECIENTE, nunca a uno anterior.";
 
 const HARD_RULE =

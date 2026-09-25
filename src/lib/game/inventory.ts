@@ -255,7 +255,11 @@ export async function buyInventoryItem(characterId: string, userId: string, item
 
 export async function inventoryLineForNarrator(characterId: string): Promise<string> {
   try {
-    return describeInventory(await loadStacks(characterId));
+    const base = describeInventory(await loadStacks(characterId));
+    // Bagged fruits are separate rows; without them the narrator "forgets" a fruit the player is carrying (real report, Buki Buki no Mi).
+    const fruits = await prisma.inventoryItem.findMany({ where: { characterId, kind: "Fruta del Diablo" }, select: { name: true } });
+    const fruitLine = fruits.length ? `Frutas del Diablo en la mochila (sin comer, siguen existiendo): ${fruits.map((f) => f.name).join(", ")}.` : "";
+    return [base, fruitLine].filter(Boolean).join(" ");
   } catch {
     return "";
   }
