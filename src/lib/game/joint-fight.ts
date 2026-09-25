@@ -572,6 +572,7 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
         const got = await grantPoneglyphRead(c, rewards.poneglyphId, lines, newsLog);
         if (got) closing.push(`${c.name} descifra el ${got}.`);
       }
+      closing.push(`${c.name} gana ฿ ${berries.toLocaleString("es-ES")} y ${xpGain} XP.`);
       if (lvl.leveledUp) closing.push(`${c.name} sube a nivel ${lvl.level}.`);
     }
     await postNews(

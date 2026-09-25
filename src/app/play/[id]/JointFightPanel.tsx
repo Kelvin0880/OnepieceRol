@@ -30,16 +30,23 @@ export default function JointFightPanel({ jointFight, onOoc, busy, doAction }: {
           )}
         </h3>
         <span className="text-xs text-ink-dim flex items-center gap-2">
-          {active ? `Ronda ${jointFight.round}` : jointFight.status === "WON" ? "Victoria" : "Derrota"}
+          {active ? `Ronda ${jointFight.round}` : jointFight.status === "WON" ? "Victoria" : jointFight.status === "LOST" ? "Derrota" : "Terminada"}
           <button className="btn-ghost px-2 py-0.5 text-[11px]" onClick={() => onOoc("Sobre esta pelea en grupo (fuera de rol): ")}>
             Fuera de rol
           </button>
         </span>
       </div>
       {jointFight.stakes && <p className="text-xs text-ink-dim mb-2">{jointFight.stakes}</p>}
-      <p className="text-sm mb-3">
-        Te enfrentas a <span className="text-gold-bright">{jointFight.enemy.name}</span>. Cómo va la pelea lo cuenta el árbitro en la escena.
-      </p>
+      {active ? (
+        <p className="text-sm mb-3">
+          Te enfrentas a <span className="text-gold-bright">{jointFight.enemy.name}</span>. Cómo va la pelea lo cuenta el árbitro en la escena. Si se atasca o ya terminó, abajo tienes «Finalizarla» (y «Reintentar ronda» si el árbitro falla).
+        </p>
+      ) : (
+        <p className="text-sm mb-3" data-testid="joint-result">
+          {jointFight.status === "WON" ? "Victoria: " : jointFight.status === "LOST" ? "Derrota: " : "Pelea terminada: "}
+          <span className="text-gold-bright">{jointFight.enemy.name}</span>. Las recompensas y lo que pasó al final están en el último mensaje del narrador.
+        </p>
+      )}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 mb-3">
         {jointFight.participants.map((p) => (
           <div key={p.name} className="rounded border border-line/60 bg-black/15 px-2.5 py-2" data-testid="joint-participant">
