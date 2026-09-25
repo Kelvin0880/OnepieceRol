@@ -27,7 +27,7 @@ export interface CallOpenRouterOptions {
 }
 
 /** Quality beats speed: the first (paid) model normally answers alone, the free ones only join when it is slow or failing. */
-const DEFAULT_HEDGE_DELAY_MS = 7000;
+const DEFAULT_HEDGE_DELAY_MS = 40_000; // long fight answers take 15-30 s: the backup must only join when the main model is truly stuck
 
 /** Accepts a caller-supplied AbortController (instead of always making its own) so a race between two calls can cancel the loser. */
 async function callOnce(

@@ -4,7 +4,7 @@
 
 ## Decisiones del dueño (reglas fijas)
 - [x] Nada de dados en ninguna parte: juez/árbitro IA decide; el código solo limita y aplica.
-- [x] Solo IA de pago en OpenRouter (DeepSeek V3.2 primero, Claude Haiku 4.5 de respaldo). Nunca modelos gratis.
+- [x] Solo IA de pago en OpenRouter (DeepSeek V3.2 primero, gpt-4o-mini de respaldo (solo si DeepSeek falla o se atasca 40 s)). Nunca modelos gratis.
 - [x] La vida de los NPC/rivales NO se muestra ni se escribe en cifras: la decide y cuenta el árbitro. Solo se ve la vida y la fatiga de los usuarios.
 - [x] Tiempos de respuesta generosos: 24 h (rondas del Coliseo esperan a quien pelea, duelos/peleas conjuntas abandonadas, respuesta a una caza).
 - [x] Barbanegra tiene DOS frutas (Yami Yami + Gura Gura) en su ficha.
