@@ -1,6 +1,6 @@
 # Pendientes y mejoras (lista viva — actualizar en cada sesión)
 
-Última actualización: 2026-09-25. Marca con [x] lo hecho.
+Última actualización: 2026-09-25 (noche). Marca con [x] lo hecho.
 
 ## Decisiones del dueño (reglas fijas)
 - [x] Nada de dados en ninguna parte: juez/árbitro IA decide; el código solo limita y aplica.
@@ -12,7 +12,21 @@
 - [x] El rival pelea como estratega: secuencias variadas, continuidad, se adapta.
 - [x] El árbitro recuerda todo el combate (registro completo de rondas) para no olvidar heridas ni trucos.
 
+## Hecho el 2026-09-25 (noche)
+- [x] Chat de tripulación (pestaña en el Den Den Mushi).
+- [x] Sucesos del mundo: uno nuevo cada 24 h inventado por la IA; el dueño puede proponer ideas.
+- [x] Eventos para principiantes (12 frutas únicas inventadas, juez IA, sin límite para terminar, ventana de inscripción de 6 h, todo en las noticias).
+- [x] Insignias de "nuevo" en Noticias, Den Den Mushi, Eventos e Inventario.
+- [x] Panel de administración ampliado (reportes, anuncios, eventos, proponer sucesos, iniciar eventos mundiales, errores).
+- [x] Códice: pestaña Jugadores.
+- [x] Nakamas: elegir quién te acompaña y darles misiones desde el panel de tripulación.
+- [x] IA fuera de rol actualizada con las novedades.
+- [x] Narrador: ve las frutas guardadas en la mochila y no da objetos por narración.
+
 ## Verificación pendiente
+- [ ] Regresión completa con todo lo nuevo (`node scripts/run-all-checks.mjs`); solo se corrió cada comprobación nueva por separado.
+- [ ] Registro/auditoría de acciones importantes (más allá de noticias y del Códice de jugadores).
+- [ ] Coliseo: revisar el primer evento real tras los cambios de esperas.
 - [ ] Regresión completa (`node scripts/run-all-checks.mjs`) con la base limpia tras los últimos cambios.
 - [ ] Probar en vivo un combate largo (10+ rondas) y ver que el rival cambia de táctica y recuerda heridas.
 - [ ] Probar en vivo el Coliseo aplazando una ronda con un jugador en pelea.
