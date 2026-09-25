@@ -1,5 +1,6 @@
 "use client";
 
+import Modal from "@/components/ui/Modal";
 import { useCallback, useEffect, useState } from "react";
 
 interface Option {
@@ -73,9 +74,8 @@ export default function VoyagePanel({ characterId, onClose, onChanged }: { chara
   const options = (state?.options ?? []).filter((o) => o.name.toLowerCase().includes(q.trim().toLowerCase()));
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-end sm:items-center justify-center p-0 sm:p-4" data-testid="voyage-panel">
-      <div className="panel w-full sm:max-w-2xl max-h-[92vh] flex flex-col [&>*]:shrink-0 overflow-y-auto">
-        <div className="flex items-start justify-between gap-3 p-4 border-b border-[--line]">
+    <Modal onClose={onClose} testId="voyage-panel" size="lg" label="Rumbo">
+        <div className="flex items-start justify-between gap-3 p-4 border-b border-line">
           <div className="min-w-0">
             <h2 className="font-display text-xl text-gold">Trazar rumbo</h2>
             <p className="text-xs text-ink-dim">
@@ -100,12 +100,12 @@ export default function VoyagePanel({ characterId, onClose, onChanged }: { chara
           {state?.canSailAnywhere && (
             <>
               <p className="text-xs text-ink-dim">Cada isla de por medio suma 5 minutos y más riesgo de emboscada en el mar (patrullas, rivales, bestias). Ve preparado: si te alcanzan, tendrás que pelear al llegar a puerto.</p>
-              <input className="w-full text-sm bg-transparent border border-[--line] rounded px-3 py-2" placeholder="Buscar isla…" value={q} onChange={(e) => setQ(e.target.value)} data-testid="voyage-search" />
+              <input className="w-full text-sm bg-transparent border border-line rounded px-3 py-2" placeholder="Buscar isla…" value={q} onChange={(e) => setQ(e.target.value)} data-testid="voyage-search" />
               <ul className="flex flex-col gap-2" data-testid="voyage-list">
                 {options.map((o) => {
                   const risk = riskLabel(o.risk);
                   return (
-                    <li key={o.islandId} className={`rounded border border-[--line] p-3 ${o.blocked ? "opacity-60" : ""}`} data-testid="voyage-option">
+                    <li key={o.islandId} className={`rounded border border-line p-3 ${o.blocked ? "opacity-60" : ""}`} data-testid="voyage-option">
                       <div className="flex flex-wrap items-center justify-between gap-2">
                         <div className="min-w-0">
                           <p className="font-display text-sm">{o.name}</p>
@@ -151,7 +151,6 @@ export default function VoyagePanel({ characterId, onClose, onChanged }: { chara
             </p>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

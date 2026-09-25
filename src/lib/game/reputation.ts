@@ -21,6 +21,11 @@ export interface ReputationCharacter {
 export async function applyBountyOrNotoriety(character: ReputationCharacter, delta: number, newsLog: string[], reason = "Hazaña reciente") {
   if (delta === 0) return;
   if (character.faction === "PIRATE") {
+    if (delta > 0) {
+      // A Shichibukai's bounty is frozen by the licence: deeds make the news, not the poster.
+      const licence = await prisma.character.findUnique({ where: { id: character.id }, select: { warlordSince: true } });
+      if (licence?.warlordSince) return;
+    }
     const before = character.bounty;
     const after = Math.min(MAX_PLAYER_BOUNTY, Math.max(0, before + delta));
     await prisma.character.update({ where: { id: character.id }, data: { bounty: after } });

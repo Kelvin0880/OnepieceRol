@@ -144,7 +144,7 @@ async function tickBountyDigestIfDueInner(): Promise<void> {
   await prisma.worldClock.update({ where: { id: 1 }, data: { lastDigestAt: now } });
 
   const candidates = await prisma.worldActor.findMany({
-    where: { factionType: "PIRATE", canonBounty: { not: null } },
+    where: { factionType: "PIRATE", canonBounty: { not: null }, status: { not: "DECEASED" } },
   });
   if (candidates.length === 0) return;
 

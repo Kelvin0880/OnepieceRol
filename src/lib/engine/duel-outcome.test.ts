@@ -24,6 +24,10 @@ describe("verdictOptions", () => {
       }
     }
   });
+  it("a Shichibukai cannot be arrested by the Government, but a bounty hunter can still sell them", () => {
+    for (const w of ["MARINE", "CP0"]) expect(verdictOptions(w, "PIRATE", true).canCapture).toBe(false);
+    expect(verdictOptions("BOUNTY_HUNTER", "PIRATE", true)).toMatchObject({ canCapture: true, captureMode: "sell" });
+  });
 });
 
 describe("captureReward", () => {

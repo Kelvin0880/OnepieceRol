@@ -17,9 +17,13 @@ export interface VerdictOptions {
   captureLabel: string | null;
 }
 
-/** The Government does not buy its own people and pirates do not lock up Marines: only wanted outsiders can be captured. */
-export function verdictOptions(winnerFaction: string, loserFaction: string): VerdictOptions {
+/**
+ * The Government does not buy its own people and pirates do not lock up Marines: only wanted outsiders can be
+ * captured. A Shichibukai's licence also means the Government's own forces may not arrest them.
+ */
+export function verdictOptions(winnerFaction: string, loserFaction: string, loserIsWarlord = false): VerdictOptions {
   if (GOVERNMENT.includes(loserFaction)) return { kill: true, spare: true, canCapture: false, captureMode: null, captureLabel: null };
+  if (loserIsWarlord && GOVERNMENT.includes(winnerFaction)) return { kill: true, spare: true, canCapture: false, captureMode: null, captureLabel: null };
   if (GOVERNMENT.includes(winnerFaction)) {
     return { kill: true, spare: true, canCapture: true, captureMode: "impel", captureLabel: "Capturar y encarcelar (Impel Down según su recompensa)" };
   }

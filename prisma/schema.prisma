@@ -127,6 +127,14 @@ model Character {
   // people who are actually online (engine/hostility.ts).
   lastSeenAt DateTime?
 
+  // Sovereign powers (engine/sovereignty.ts, game/sovereignty.ts). All null = an ordinary character.
+  emperorSince           DateTime? // one of the Yonko (took a throne or was proclaimed)
+  lastEmperorChallengeAt DateTime?
+  warlordSince           DateTime? // holds a Shichibukai licence from the World Government
+  warlordTributeDueAt    DateTime?
+  warlordRevokedAt       DateTime?
+  lastFigureNewsAt       DateTime? // throttle for "the papers follow world figures everywhere"
+
   // Silent context compaction (game/scene-compaction.ts): scene messages up to
   // this instant have already been folded into memorySummary.
   sceneCompactedUntil DateTime?
@@ -1101,3 +1109,29 @@ model TournamentEntry {
   @@index([tournamentId])
   @@index([characterId])
 }
+
+
+// ---------- Declared wars (engine/sovereignty.ts, game/sovereignty.ts) ----------
+
+/** An emperor's open war: against the Marines (base assaults) or against another player emperor (territories). */
+model War {
+  id            String    @id @default(cuid())
+  kind          String // MARINE | EMPEROR
+  attackerId    String // Character (plain string, like Crew.captainId)
+  attackerName  String
+  defenderId    String? // Character for EMPEROR wars, null for the Marines
+  defenderName  String
+  status        String    @default("ACTIVE") // ACTIVE | ENDED
+  attackerScore Int       @default(0)
+  defenderScore Int       @default(0)
+  outcome       String? // attacker | defender | stalemate
+  logJson       String    @default("[]")
+  startedAt     DateTime  @default(now())
+  endedAt       DateTime?
+  updatedAt     DateTime  @updatedAt
+
+  @@index([status])
+  @@index([attackerId])
+  @@index([defenderId])
+}
+

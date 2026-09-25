@@ -137,7 +137,7 @@ export async function decideVerdict(characterId: string, userId: string, duelId:
   const place = { name: a.currentIsland.name, islandId: a.currentIslandId };
   const winnerHp = Math.max(1, seat(duel, me.id) === "a" ? duel.challengerHp : duel.opponentHp);
   const loserHp = Math.max(1, seat(duel, loser.id) === "a" ? duel.challengerHp : duel.opponentHp);
-  const options = verdictOptions(me.faction, loser.faction);
+  const options = verdictOptions(me.faction, loser.faction, !!loser.warlordSince);
   await prisma.character.update({ where: { id: me.id }, data: { hp: winnerHp } });
   const log: string[] = [];
 
@@ -146,8 +146,13 @@ export async function decideVerdict(characterId: string, userId: string, duelId:
     await closeDuel(duelId, me.id, `${me.name} da muerte a ${loser.name}.`);
     await postDuelReport(duelId, me.name, loser.name, "kill", place, true, me.id);
     log.push(`${loser.name} ha muerto por tu mano.`);
+    if (me.warlordSince && (loser.faction === "MARINE" || loser.faction === "CP0")) {
+      const { warlordBetrayal } = await import("./sovereignty");
+      await warlordBetrayal(me.id, loser.name);
+      log.push("Has matado a un agente del Gobierno: tu patente de Shichibukai queda revocada.");
+    }
   } else if (choice === "capture") {
-    if (!options.canCapture || !options.captureMode) throw new DuelError("No puedes capturar a alguien de la Marina o del CP-0.");
+    if (!options.canCapture || !options.captureMode) throw new DuelError(loser.warlordSince ? "Un Shichibukai tiene patente del Gobierno: no puedes arrestarlo." : "No puedes capturar a alguien de la Marina o del CP-0.");
     const newsLog: string[] = [];
     await captureCharacter(
       { id: loser.id, name: loser.name, maxHp: loser.maxHp, currentIslandId: loser.currentIslandId, currentIsland: loser.currentIsland, level: loser.level, devilFruitId: loser.devilFruitId, faction: loser.faction, bounty: loser.bounty, notoriety: loser.notoriety },

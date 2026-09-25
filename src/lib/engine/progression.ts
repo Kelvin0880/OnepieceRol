@@ -37,6 +37,7 @@ const MARINE_RANK_TIERS: Tier[] = [
   { threshold: 4_200, title: "Contraalmirante" },
   { threshold: 7_000, title: "Vicealmirante" },
   { threshold: 12_000, title: "Almirante" },
+  { threshold: 20_000, title: "Almirante de Flota" },
 ];
 
 const REVOLUTIONARY_TIERS: Tier[] = [

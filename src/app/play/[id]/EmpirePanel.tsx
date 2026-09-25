@@ -1,5 +1,6 @@
 "use client";
 
+import Modal from "@/components/ui/Modal";
 import { useCallback, useEffect, useState } from "react";
 
 interface Domain {
@@ -84,9 +85,8 @@ export default function EmpirePanel({ characterId, onClose, onChanged }: { chara
   const patrollable = (state?.domains ?? []).filter((d) => d.isOwner && d.garrison < 100);
 
   return (
-    <div className="fixed inset-0 z-50 bg-black/70 flex items-end sm:items-center justify-center p-0 sm:p-4" data-testid="empire-panel">
-      <div className="panel w-full sm:max-w-2xl max-h-[92vh] flex flex-col [&>*]:shrink-0 overflow-y-auto">
-        <div className="flex items-start justify-between gap-3 p-4 border-b border-[--line]">
+    <Modal onClose={onClose} testId="empire-panel" size="lg" label="Imperio">
+        <div className="flex items-start justify-between gap-3 p-4 border-b border-line">
           <div className="min-w-0">
             <h2 className="font-display text-xl text-gold">Tu imperio</h2>
             <p className="text-xs text-ink-dim">Dominios, ejército y misiones de tus comandantes{state?.crewName ? ` · ${state.crewName}` : ""}.</p>
@@ -104,7 +104,7 @@ export default function EmpirePanel({ characterId, onClose, onChanged }: { chara
             {state && state.domains.length === 0 && <p className="text-sm text-ink-dim">Aún no sostienes ninguna isla. Conquista una desde su panel de dominio.</p>}
             <ul className="flex flex-col gap-2">
               {(state?.domains ?? []).map((d) => (
-                <li key={d.islandId} className="rounded border border-[--line] p-3" data-testid="empire-domain">
+                <li key={d.islandId} className="rounded border border-line p-3" data-testid="empire-domain">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <strong className="text-ink">{d.islandName}</strong>
                     <span className={`text-xs ${d.garrison < 30 ? "text-blood" : d.garrison < 60 ? "text-orange-300" : "text-emerald-300"}`}>{d.garrisonLabel}</span>
@@ -128,7 +128,7 @@ export default function EmpirePanel({ characterId, onClose, onChanged }: { chara
             {state && state.commanders.length === 0 && <p className="text-sm text-ink-dim">No tienes nakamas NPC. Recluta a alguien en una escena para poder darle misiones.</p>}
             <ul className="flex flex-col gap-2">
               {(state?.commanders ?? []).map((c) => (
-                <li key={c.id} className="rounded border border-[--line] p-3" data-testid="empire-commander">
+                <li key={c.id} className="rounded border border-line p-3" data-testid="empire-commander">
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <div className="min-w-0">
                       <strong className="text-ink">{c.name}</strong> <span className="text-xs text-ink-dim">{c.role}{c.epithet ? ` · «${c.epithet}»` : ""}</span>
@@ -186,7 +186,6 @@ export default function EmpirePanel({ characterId, onClose, onChanged }: { chara
             </section>
           )}
         </div>
-      </div>
-    </div>
+    </Modal>
   );
 }

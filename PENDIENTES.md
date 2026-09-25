@@ -26,9 +26,18 @@
 
 ## Diseño / contenido para más adelante
 - [ ] Poneglifos: el poseedor real pelea según dónde esté (hoy siempre un subordinado).
-- [ ] Conquista de territorios de un Yonko y reparto entre varios jugadores.
+- [x] Conquista de territorios de un Yonko y reparto entre varios jugadores.
+- [x] Ruta de Yonko por mérito, desafío en persona a un Yonko canon (veredicto del dueño para su muerte o captura), Shichibukai para piratas, guerras contra la Marina y entre Yonko, reacción del mundo y figuras mundiales en las noticias (2026-09-25).
+- [x] CP-0 empieza en Tequila Wolf (isla de nivel 1). 7 islas y 33 personajes canon nuevos.
 - [ ] Raid final contra el gobernante oculto y respuesta a "qué es el One Piece".
-- [ ] Diseño visual pendiente (el dueño lo pedirá después).
+- [x] Diseño visual: kit reutilizable, animaciones, móvil primero (2026-09-25).
 
 ## Seguridad
 - [ ] Rotar la contraseña de Neon y el token de Render (se pegaron varias veces en el chat).
+
+## Próximos pasos (2026-09-25)
+- [ ] Desplegar: push del esquema a Neon (6 columnas en Character + tabla War) y resembrado; luego merge de `cloud/claude-nube` a `main`.
+- [ ] Pasar la regresión completa con la clave de OpenRouter (en la nube faltaba, así que las comprobaciones que usan la IA no se pudieron ejecutar).
+- [ ] Guerras: que los Shichibukai puedan ser llamados por el Gobierno a defender una base (hoy solo actúan marines y CP-0).
+- [ ] El Coliseo como duelo en vivo, y Barbanegra con dos frutas como dato real (siguen pendientes).
+
