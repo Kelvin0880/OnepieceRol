@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
+import { checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
 
 const NARR = "El rival bloquea con el antebrazo y responde con una patada baja que se acerca a tu rodilla.";
 const good = (extra = "") => JSON.stringify({ narracion: NARR, cambios: [{ nombre: "Kirito", vida: 10, aguante: 5 }, { nombre: "Bandido", vida: 20, aguante: 8 }], ...(extra ? { x: extra } : {}) });
@@ -123,6 +123,17 @@ describe("mano negra guard (sanitizeVerdict)", () => {
     expect(verdict.rivalIntent).toContain("Rocco se prepara para atacar de nuevo");
     expect(verdict.narration.endsWith(verdict.rivalIntent!)).toBe(true);
   });
+  it("catches accented past tenses too (te golpeó, conectó)", () => {
+    const v = mk("El corte de Kirito se pierde en el aire sin tocarlo.", "El puñetazo de Rocco te golpeó en el costado. Rocco intenta una patada que, si conecta, te derribaría.");
+    const { verdict } = sanitizeVerdict(v, "Ataco con mi espada", "Rocco");
+    expect(verdict.rivalIntent).not.toContain("te golpeó");
+    expect(verdict.rivalIntent).toContain("intenta una patada");
+  });
+  it("does not flag a noun 'impacto' inside an intention", () => {
+    const v = mk("El corte de Kirito se pierde en el aire sin tocarlo.", "Rocco intenta un puñetazo que, si conecta, te dejaría aturdido por el impacto.");
+    const { verdict } = sanitizeVerdict(v, "Ataco con mi espada", "Rocco");
+    expect(verdict.rivalIntent).toContain("aturdido por el impacto");
+  });
   it("does not let the narration attack for the player", () => {
     const v = mk("Te lanzas contra él y cortas su hombro. El aire se rompe.", "Rocco intenta una patada que, si conecta, te haría retroceder.");
     const { verdict } = sanitizeVerdict(v, "-Lo miraría con desdén-", "Rocco");
@@ -142,5 +153,54 @@ describe("mano negra guard (sanitizeVerdict)", () => {
   });
   it("splits sentences without losing text", () => {
     expect(splitSentences("Uno. Dos! ¿Tres?").join(" ")).toBe("Uno. Dos! ¿Tres?");
+  });
+});
+
+describe("power cap (a weak attacker cannot take a big bite out of a tough target)", () => {
+  it("grows with attack over defence and never passes the flat cap", () => {
+    expect(powerCapFraction(150, 440)).toBeLessThan(0.15);
+    expect(powerCapFraction(100, 100)).toBeCloseTo(0.24, 2);
+    expect(powerCapFraction(1000, 100)).toBe(MAX_HP_LOSS_FRACTION);
+    expect(powerCapFraction(0, 100)).toBe(0.06);
+  });
+  it("the reported case: a level-28 brute cannot cost a level-45 Yonko most of his life in one exchange", () => {
+    const v = { narration: NARR, changes: [{ name: "Kirito", hp: 200, stamina: 10 }] };
+    const [k] = applyVerdict(v, [{ name: "Kirito", hp: 471, maxHp: 526, stamina: 300, incomingAtk: 150, defense: 440 }]);
+    expect(k.hpLoss).toBeLessThan(80);
+  });
+  it("does not limit a strong attacker on a weak target", () => {
+    const v = { narration: NARR, changes: [{ name: "Debil", hp: 200, stamina: 0 }] };
+    const [d] = applyVerdict(v, [{ name: "Debil", hp: 400, maxHp: 400, incomingAtk: 500, defense: 50 }]);
+    expect(d.hpLoss).toBe(200);
+  });
+});
+
+describe("defeated + coherence", () => {
+  it("a fighter declared out at half life or less drops to zero", () => {
+    const v = { narration: NARR, changes: [{ name: "Rocco", hp: 10, stamina: 0 }], defeated: ["Rocco"] };
+    const [r] = applyVerdict(v, [{ name: "Rocco", hp: 100, maxHp: 480 }]);
+    expect(r).toMatchObject({ hpLoss: 100, hpAfter: 0 });
+  });
+  it("is refused above half life, and flagged as inconsistent", () => {
+    const v = { narration: NARR, changes: [], defeated: ["Rocco"] };
+    const [r] = applyVerdict(v, [{ name: "Rocco", hp: 400, maxHp: 480 }]);
+    expect(r.hpAfter).toBeGreaterThan(0);
+    expect(checkConsistency(v, [{ name: "Rocco", hp: 400, maxHp: 480 }]).length).toBe(1);
+  });
+  it("flags a narrated fall that is not listed, and the sanitizer drops it", () => {
+    const v = { narration: "Su cuerpo cae inerte al suelo. La multitud calla.", changes: [] };
+    expect(checkConsistency(v, [{ name: "Rocco", hp: 100, maxHp: 480 }]).length).toBe(1);
+    const { verdict } = sanitizeVerdict({ ...v, narration: "El golpe le alcanza el pecho con fuerza y su cuerpo cae inerte al suelo. Rocco jadea de rodillas." }, "Ataco", "Rocco");
+    expect(verdict.narration).not.toContain("cae inerte");
+  });
+  it("accepts a listed fall", () => {
+    const v = { narration: "Rocco cae inconsciente, sin poder continuar.", changes: [], defeated: ["Rocco"] };
+    expect(checkConsistency(v, [{ name: "Rocco", hp: 100, maxHp: 480 }])).toEqual([]);
+  });
+  it("parses derrotados, huida and huyen", () => {
+    const v = parseRefereeVerdict(JSON.stringify({ resultado: NARR, derrotados: ["Rocco", 5], huida: true, huyen: ["Ana"], cambios: [] }))!;
+    expect(v.defeated).toEqual(["Rocco"]);
+    expect(v.escaped).toBe(true);
+    expect(v.fled).toEqual(["Ana"]);
   });
 });

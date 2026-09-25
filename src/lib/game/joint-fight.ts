@@ -359,8 +359,8 @@ async function resolveJointRoundFor(fightId: string) {
   }
   const applied = verdict
     ? applyVerdict(verdict, [
-        ...fighters.map((f) => ({ name: f.combatant.name, hp: f.hp, maxHp: f.combatant.maxHp, stamina: prepared.get(f.id)?.staminaAfter ?? fighting.find((p) => p.characterId === f.id)?.stamina })),
-        { name: enemy.name, hp: fight.enemyHp, maxHp: fight.enemyMaxHp, stamina: fight.enemyStamina },
+        ...fighters.map((f) => ({ name: f.combatant.name, hp: f.hp, maxHp: f.combatant.maxHp, stamina: prepared.get(f.id)?.staminaAfter ?? fighting.find((p) => p.characterId === f.id)?.stamina, incomingAtk: enemy.atk, defense: f.combatant.def })),
+        { name: enemy.name, hp: fight.enemyHp, maxHp: fight.enemyMaxHp, stamina: fight.enemyStamina, incomingAtk: Math.round(fighters.reduce((n, f) => n + f.combatant.atk, 0) / Math.max(1, fighters.length)) * Math.min(3, Math.max(1, fighters.length)), defense: enemy.def },
       ])
     : [];
   const foe = applied[applied.length - 1];

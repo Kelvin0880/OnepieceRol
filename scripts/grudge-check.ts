@@ -4,6 +4,7 @@ process.env.REFEREE_STUB = "1"; // combat is judged by the AI; scripted checks u
 // against the real dev DB, not mocked).
 // Usage: npx tsx scripts/grudge-check.ts
 import { prisma } from "../src/lib/db";
+import { deleteCharacter } from "../src/lib/game/delete-character";
 import { fleeCharacter, resolveMercyChoice, exploreCharacter } from "../src/lib/game/perform-action";
 
 function assert(cond: boolean, label: string) {
@@ -52,8 +53,9 @@ async function main() {
 
   let fled = false;
   for (let i = 0; i < 20 && !fled; i++) {
-    const result = await fleeCharacter(character.id, user.id);
-    if (result.log[0]?.startsWith("Logras escabullirte")) {
+    const result = await fleeCharacter(character.id, user.id, "Salgo corriendo hacia el muelle.");
+    const stillFighting = await prisma.pendingEncounter.findUnique({ where: { characterId: character.id } });
+    if (!stillFighting) {
       fled = true;
       assert(result.newsPosted.length > 0, "successful escape posts real news, not a coin flip");
       assert((result.bountyDelta ?? 0) > 0, "successful escape bumps bounty");
@@ -103,9 +105,7 @@ async function main() {
   // Cleanup
   await prisma.grudge.deleteMany({ where: { characterId: character.id } });
   await prisma.pendingEncounter.deleteMany({ where: { characterId: character.id } });
-  await prisma.bountyLogEntry.deleteMany({ where: { characterId: character.id } });
-  await prisma.gameLogEntry.deleteMany({ where: { characterId: character.id } });
-  await prisma.character.delete({ where: { id: character.id } });
+  await deleteCharacter(character.id, user.id);
   await prisma.user.delete({ where: { id: user.id } });
 
   console.log("\nAll checks passed.");

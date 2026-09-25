@@ -695,8 +695,8 @@ export async function engageCharacter(
   if (!verdict) return emptyResult([NO_VERDICT_TEXT], character.level);
 
   const [me, foe] = applyVerdict(verdict, [
-    { name: character.name, hp: character.hp, maxHp: character.maxHp, stamina: prepared.staminaAfter, protectedThisExchange: !!opts.openingStrike },
-    { name: enemy.name, hp: enemyHpBefore, maxHp: enemy.hp, stamina: enemyStaminaBefore },
+    { name: character.name, hp: character.hp, maxHp: character.maxHp, stamina: prepared.staminaAfter, protectedThisExchange: !!opts.openingStrike, incomingAtk: enemy.atk, defense: pc.def },
+    { name: enemy.name, hp: enemyHpBefore, maxHp: enemy.hp, stamina: enemyStaminaBefore, incomingAtk: pc.atk, defense: enemy.def },
   ]);
   const exchangeHpAfter = me.hpAfter;
   const enemyHpAfter = foe.hpAfter;
@@ -928,32 +928,54 @@ export async function attackCharacter(
   return engageCharacter(characterId, userId, freeText, opts.tacticModifier ?? 0, { technique: opts.technique, openingStrike: true, effort: opts.effort });
 }
 
-export async function fleeCharacter(characterId: string, userId: string): Promise<ActionResult> {
+export async function fleeCharacter(characterId: string, userId: string, intentText?: string): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
   const pending = character.pendingEncounter;
   if (!pending) throw new GameActionError("No tienes ningún enfrentamiento pendiente.");
   if (pending.phase !== "threat" && pending.phase !== "fighting") {
     throw new GameActionError("Ya derrotaste a tu enemigo; ahora decide su destino, no puedes huir.");
   }
-  const rng = liveRng();
 
   const enemy = JSON.parse(pending.enemyJson) as StoredEnemy;
-  const playerCombatant = toCombatant(character);
-  const enemyCombatant: Combatant = {
-    name: enemy.name,
-    hp: enemy.hp,
-    maxHp: enemy.hp,
-    atk: enemy.atk,
-    def: enemy.def,
-    spd: enemy.spd,
-  };
-  const flee = attemptFlee(rng, playerCombatant, enemyCombatant);
+  const enemyLevel = enemy.level ?? estimateLevel(enemy.atk, enemy.def);
+  const enemyHpBefore = pending.enemyHp ?? enemy.hp;
+  const enemyFatigue = fatigueLevel(pending.enemyStamina, 100);
+  const stamina = currentStamina(character);
+  const playerFatigue = fatigueLevel(stamina, character.maxStamina);
+  const pc = toCombatant(character);
+  const scene = await getRecentScene(character.id, 10);
+  const lastNarration = [...scene].reverse().find((l) => !l.startsWith("[Jugador]"));
+  const kit = (await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId })).text;
+  // Escaping is judged, not rolled: the referee weighs speed, level, terrain and what the player wrote.
+  const verdict = await refereeExchange(
+    {
+      mode: "solo",
+      fleeAttempt: true,
+      isBoss: enemy.isBoss,
+      round: pending.roundNumber + 1,
+      pendingThreat: lastNarration,
+      recentScene: scene,
+      memorySummary: character.memorySummary ?? undefined,
+      actors: [
+        { name: character.name, side: "player", level: character.level, hp: character.hp, maxHp: character.maxHp, stamina, fatigue: playerFatigue !== "fresh" ? FATIGUE_LABELS[playerFatigue] : undefined, kit: characterCapabilityText(character), sheet: `ataque ${pc.atk}, defensa ${pc.def}, velocidad ${pc.spd}` },
+        { name: enemy.name, side: "enemy", level: enemyLevel, hp: enemyHpBefore, maxHp: enemy.hp, stamina: pending.enemyStamina, fatigue: enemyFatigue !== "fresh" ? FATIGUE_LABELS[enemyFatigue] : undefined, kit, personality: enemy.personality, sheet: `ataque ${enemy.atk}, defensa ${enemy.def}, velocidad ${enemy.spd}` },
+      ],
+      actions: [{ name: character.name, text: intentText?.trim() || "intenta huir del combate" }],
+    },
+    { characterId: character.id, context: "flee" }
+  );
+  if (!verdict) return emptyResult([NO_VERDICT_TEXT], character.level);
+  const [me] = applyVerdict(verdict, [
+    { name: character.name, hp: character.hp, maxHp: character.maxHp, stamina, incomingAtk: enemy.atk, defense: pc.def },
+    { name: enemy.name, hp: enemyHpBefore, maxHp: enemy.hp, incomingAtk: pc.atk, defense: enemy.def },
+  ]);
+  const flee = { success: verdict.escaped === true, hpLoss: verdict.escaped === true ? 0 : me.hpLoss };
 
   if (flee.success) {
     await prisma.pendingEncounter.delete({
       where: { characterId: character.id },
     });
-    const log = [`Logras escabullirte de ${enemy.name} sin que te alcance.`];
+    const log = [verdict.narration];
     const newsLog: string[] = [];
     let bountyDelta = 0;
 
@@ -986,10 +1008,10 @@ export async function fleeCharacter(characterId: string, userId: string): Promis
     };
   }
 
-  const log = [`No logras escapar de ${enemy.name}, que te alcanza mientras huyes. No queda más remedio que luchar.`];
+  const log = [verdict.narration];
   await prisma.character.update({
     where: { id: character.id },
-    data: { hp: Math.max(0, character.hp - flee.hpLoss) },
+    data: { hp: Math.max(0, character.hp - flee.hpLoss), stamina: Math.max(0, stamina - me.staminaLoss), staminaUpdatedAt: new Date() },
   });
 
   if (character.hp - flee.hpLoss <= 0) {
@@ -1957,7 +1979,7 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
       break;
     }
     case "flee":
-      result = await fleeCharacter(characterId, userId);
+      result = await fleeCharacter(characterId, userId, freeText);
       break;
     case "mercy_spare":
       result = await resolveMercyChoice(characterId, userId, true);

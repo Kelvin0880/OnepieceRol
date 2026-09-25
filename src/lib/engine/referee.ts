@@ -23,6 +23,12 @@ export interface RefereeVerdict {
   changes: RefereeChange[];
   /** Group fights only: the ally who lands the decisive blow when the rival falls. */
   finalBlow?: string;
+  /** Fighters who cannot go on after this exchange (unconscious, dead, unable). Only accepted from half life or less. */
+  defeated?: string[];
+  /** Solo flight attempts: the rival let them go (true) or caught them (false). */
+  escaped?: boolean;
+  /** Group fights: allies whose flight attempt succeeded. */
+  fled?: string[];
 }
 
 const norm = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().trim();
@@ -71,7 +77,10 @@ export function parseRefereeVerdict(raw: string): RefereeVerdict | null {
       changes.push({ name: name.trim(), hp: num(rec.vida ?? rec.hp), stamina: num(rec.aguante ?? rec.stamina) });
     }
     const fb = typeof obj.golpe_final === "string" && obj.golpe_final.trim() ? obj.golpe_final.trim() : undefined;
-    return { narration, ...(intent ? { rivalIntent: intent } : {}), changes, ...(fb ? { finalBlow: fb } : {}) };
+    const defeated = Array.isArray(obj.derrotados) ? obj.derrotados.filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((x) => x.trim()) : [];
+    const fled = Array.isArray(obj.huyen) ? obj.huyen.filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((x) => x.trim()) : [];
+    const escaped = typeof obj.huida === "boolean" ? obj.huida : undefined;
+    return { narration, ...(intent ? { rivalIntent: intent } : {}), changes, ...(fb ? { finalBlow: fb } : {}), ...(defeated.length ? { defeated } : {}), ...(escaped !== undefined ? { escaped } : {}), ...(fled.length ? { fled } : {}) };
   } catch {
     return null;
   }
@@ -84,6 +93,15 @@ export interface RefereeBound {
   stamina?: number;
   /** Nothing has been thrown at this fighter yet (e.g. they started the fight): the verdict cannot hurt them. */
   protectedThisExchange?: boolean;
+  /** Attack of whoever is hitting this fighter and this fighter's own defence: a much weaker attacker cannot take a big bite out of a much tougher target. */
+  incomingAtk?: number;
+  defense?: number;
+}
+
+/** Largest share of max life one exchange can take, by how the attacker's attack compares with the target's defence (never above the flat cap). */
+export function powerCapFraction(incomingAtk: number, defense: number): number {
+  const ratio = incomingAtk / Math.max(1, defense);
+  return Math.max(0.06, Math.min(MAX_HP_LOSS_FRACTION, 0.06 + 0.18 * ratio));
 }
 
 export interface AppliedChange {
@@ -100,7 +118,10 @@ export function applyVerdict(verdict: RefereeVerdict, bounds: RefereeBound[]): A
     const mine = verdict.changes.filter((c) => norm(c.name) === norm(b.name));
     const asked = mine.reduce((acc, c) => ({ hp: acc.hp + c.hp, stamina: acc.stamina + c.stamina }), { hp: 0, stamina: 0 });
     const hpCap = Math.max(1, Math.floor(b.maxHp * MAX_HP_LOSS_FRACTION));
-    const hpLoss = b.protectedThisExchange ? 0 : Math.min(asked.hp, hpCap, Math.max(0, b.hp));
+    const powerCap = b.incomingAtk !== undefined && b.defense !== undefined ? Math.max(1, Math.floor(b.maxHp * powerCapFraction(b.incomingAtk, b.defense))) : hpCap;
+    // "Defeated" is explicit and final: a fighter already at half life or less who is declared unable to go on drops to zero.
+    const declaredDown = (verdict.defeated ?? []).some((n) => norm(n) === norm(b.name)) && b.hp <= hpCap;
+    const hpLoss = b.protectedThisExchange ? 0 : declaredDown ? Math.max(0, b.hp) : Math.min(asked.hp, hpCap, powerCap, Math.max(0, b.hp));
     const staminaLoss = b.protectedThisExchange ? 0 : Math.min(asked.stamina, MAX_STAMINA_LOSS, Math.max(0, b.stamina ?? MAX_STAMINA_LOSS));
     return {
       name: b.name,
@@ -131,13 +152,23 @@ const sheetPower = (sheet?: string): number => {
  * A deterministic stand-in for the AI referee, used only by the scripted checks (REFEREE_STUB=1): the side with
  * more combined attack + defence wins the exchange by a margin. Never used in the running game.
  */
-export function stubVerdict(actors: StubActor[]): RefereeVerdict {
+export function stubVerdict(actors: StubActor[], fleeAttempt = false): RefereeVerdict {
   const enemies = actors.filter((a) => a.side === "enemy");
   const friends = actors.filter((a) => a.side !== "enemy");
   const [g1, g2] = enemies.length > 0 ? [friends, enemies] : [actors.slice(0, 1), actors.slice(1, 2)];
   const p1 = g1.reduce((n, a) => n + sheetPower(a.sheet), 0);
   const p2 = g2.reduce((n, a) => n + sheetPower(a.sheet), 0);
   const share = p1 / Math.max(1, p1 + p2);
+  if (fleeAttempt) {
+    // A flight succeeds when the fugitive is at least as fast as the pursuer.
+    const speed = (a?: StubActor) => Number(/velocidad (\d+)/.exec(a?.sheet ?? "")?.[1] ?? 0);
+    const escaped = speed(g1[0]) >= speed(g2[0]);
+    return {
+      narration: escaped ? "El árbitro de pruebas deja escapar al fugitivo por ser más rápido que su perseguidor." : "El árbitro de pruebas alcanza al fugitivo: su perseguidor es más rápido.",
+      escaped,
+      changes: escaped ? [] : [{ name: g1[0]?.name ?? "", hp: Math.max(1, Math.round((g1[0]?.maxHp ?? 10) * 0.1)), stamina: 5 }],
+    };
+  }
   const lose = (a: StubActor, winShare: number) => Math.max(1, Math.round(a.maxHp * (0.05 + 0.45 * winShare)));
   return {
     narration: "El árbitro de pruebas resuelve este intercambio según la fuerza relativa de cada bando.",
@@ -152,7 +183,7 @@ export function stubVerdict(actors: StubActor[]): RefereeVerdict {
 // ---------------------------------------------------------------------------------------------
 
 /** A hit written as already landed on the player ("te golpea", "el puño conecta", "sientes el golpe"). */
-const LANDED_ON_PLAYER = /\b(te\s+(golpea|golpe[oó]|alcanza|alcanz[oó]|da|dio|hiere|hiri[oó]|impacta|impact[oó]|roza|derriba|atraviesa|corta|cort[oó]|lanza|lanz[oó])|conecta|conect[oó]|impacta|impact[oó]|sientes|sentiste|acierta|acert[oó])\b/i;
+const LANDED_ON_PLAYER = /\b(te\s+(golpea|golpeó|alcanza|alcanzó|da|dio|hiere|hirió|impacta|impactó|roza|derriba|atraviesa|corta|cortó|lanza|lanzó)|conecta|conectó|impacta|impactó|sientes|sentiste|acierta|acertó)(?=[\s.,;:!?…"”»]|$)/i;
 
 /** "si conecta", "si llega a impactar", "en caso de que acierte": a hit that is only a possibility is exactly what an intention should say. */
 const CONDITIONAL_HIT = /\b(si|cuando|de|en\s+caso\s+de\s+que|por\s+si)\s+(el\s+(golpe|impacto|ataque|puñetazo|corte)\s+)?(llega(ra)?\s+a\s+)?(conect|impact|acert|alcanz|dar|golpe)\w*/gi;
@@ -188,7 +219,13 @@ export function sanitizeVerdict(verdict: RefereeVerdict, playerText: string, riv
   const wroteDefence = WROTE_DEFENCE.test(playerText);
   const wroteOffence = WROTE_OFFENCE.test(playerText);
   const thirdPerson = playerName ? new RegExp("^[\"'«“—\\-\\s]*" + playerName.replace(/[.*+?^${}()|[\]\\]/g, "\\$&") + "\\b", "i") : null;
+  const defeatAllowed = (verdict.defeated ?? []).length > 0;
   const keepSentence = (sentence: string, isIntent: boolean): boolean => {
+    // An announced fall that the numbers do not back up would leave the fight open on a finished-sounding scene.
+    if (!defeatAllowed && DEFEAT_PHRASES.test(sentence)) {
+      removed.push(sentence);
+      return false;
+    }
     // The player is always "tú": a sentence that opens with their name is the narrator acting for them.
     if (thirdPerson && thirdPerson.test(sentence)) {
       removed.push(sentence);
@@ -214,5 +251,28 @@ export function sanitizeVerdict(verdict: RefereeVerdict, playerText: string, riv
     .filter((par) => par.length > 0)
     .join("\n\n");
   const narration = [headClean, intentFinal].filter(Boolean).join("\n\n");
-  return { verdict: { ...verdict, narration: narration.length >= 30 ? narration : verdict.narration, ...(verdict.rivalIntent ? { rivalIntent: intentFinal } : {}) }, report: { removed } };
+  return { verdict: { ...verdict, narration: narration.length >= 12 ? narration : verdict.narration, ...(verdict.rivalIntent ? { rivalIntent: intentFinal } : {}) }, report: { removed } };
+}
+
+// ---------------------------------------------------------------------------------------------
+// Coherence: what the text says must match what the numbers do. A scene that announces a fallen rival
+// while the fight stays open (reported 2026-09-25) is the failure this guards against.
+// ---------------------------------------------------------------------------------------------
+
+/** Sentences that say someone can no longer fight. */
+export const DEFEAT_PHRASES = /\b(cae\s+(inerte|muert[oa]|inconsciente|desplomad[oa]|de\s+espaldas|sin\s+vida)|queda(n)?\s+(inconsciente|fuera\s+de\s+combate|inerte|sin\s+vida)|(ha\s+)?muert[oa]\b|\bmuere\b|sin\s+vida|no\s+puede\s+(continuar|seguir)|sin\s+poder\s+(continuar|seguir)|ha\s+llegado\s+a\s+su\s+fin|cuerpo\s+cae|pierde\s+el\s+conocimiento|queda\s+derrotad[oa]|victoria\s+es\s+tuya)/i;
+
+export function checkConsistency(verdict: RefereeVerdict, bounds: RefereeBound[]): string[] {
+  const issues: string[] = [];
+  const declared = (verdict.defeated ?? []).map(norm);
+  for (const name of verdict.defeated ?? []) {
+    const b = bounds.find((x) => norm(x.name) === norm(name));
+    if (b && b.hp > Math.floor(b.maxHp * MAX_HP_LOSS_FRACTION)) {
+      issues.push(`Declaras derrotado a ${b.name}, pero le queda ${b.hp}/${b.maxHp} de vida (más de la mitad): en este intercambio no puede caer. Déjalo herido, tambaleante o de rodillas, pero en pie o consciente.`);
+    }
+  }
+  if (declared.length === 0 && DEFEAT_PHRASES.test(verdict.narration)) {
+    issues.push('Narras que alguien cae, muere, queda inconsciente o no puede seguir, pero no lo pusiste en "derrotados". O lo listas en "derrotados" (solo si su vida está por debajo de la mitad) o reescribes sin darlo por caído.');
+  }
+  return issues;
 }

@@ -33,7 +33,7 @@ import {
 } from "./narrate-prompt";
 import { callOpenRouter } from "./openrouter-client";
 import { buildRefereePrompt, type RefereeInput } from "./referee-prompt";
-import { parseRefereeVerdict, sanitizeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
+import { checkConsistency, parseRefereeVerdict, sanitizeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
 import { OPENROUTER_MODELS } from "./models";
 import { parseCompanionProfile } from "../engine/companions";
 import { describeCapabilities } from "../engine/capabilities";
@@ -410,25 +410,38 @@ export async function narrateColiseumRound(input: ColiseumNarrationInput, meta: 
  * valid verdict: callers then leave the fight untouched instead of inventing numbers.
  */
 export async function refereeExchange(input: RefereeInput, meta: { characterId?: string; context: string }): Promise<RefereeVerdict | null> {
-  if (process.env.REFEREE_STUB === "1") return stubVerdict(input.actors);
+  if (process.env.REFEREE_STUB === "1") return stubVerdict(input.actors, input.fleeAttempt);
+  const logMeta = meta.characterId ? { characterId: meta.characterId } : undefined;
   try {
     const { system: base, user, maxTokens } = buildRefereePrompt(input);
     const directives = input.directives ?? (meta.characterId ? await loadDirectives(meta.characterId) : "");
-    const raw = await callOpenRouter(base + directives, user, {
-      models: OPENROUTER_MODELS,
-      timeoutMs: NARRATION_TIMEOUT_MS,
-      maxTokens,
-      temperature: 0.8,
-      validate: (t) => parseRefereeVerdict(t) !== null,
-    });
-    const parsed = parseRefereeVerdict(raw);
+    const ask = async (extra: string) => {
+      const raw = await callOpenRouter(base + directives, user + extra, {
+        models: OPENROUTER_MODELS,
+        timeoutMs: NARRATION_TIMEOUT_MS,
+        maxTokens,
+        temperature: 0.8,
+        validate: (t) => parseRefereeVerdict(t) !== null,
+      });
+      return parseRefereeVerdict(raw);
+    };
+    const bounds = input.actors.map((a) => ({ name: a.name, hp: a.hp, maxHp: a.maxHp }));
+    let parsed = await ask("");
     if (!parsed) return null;
+    // What the text says must match what the numbers do: one corrective retry, then the sanitizer drops what is still unsupported.
+    const issues = checkConsistency(parsed, bounds);
+    if (issues.length > 0) {
+      const again = await ask(`\n\nCORRECCIÓN OBLIGATORIA de tu respuesta anterior:\n- ${issues.join("\n- ")}\nVuelve a escribir el JSON completo corrigiendo eso.`).catch(() => null);
+      if (again) parsed = again;
+    }
     const rival = input.actors.find((a) => a.side === "enemy")?.name ?? "El rival";
     const { verdict, report } = sanitizeVerdict(parsed, input.actions.map((a) => a.text).join("\n"), rival, input.mode === "solo" ? input.actors.find((a) => a.side === "player")?.name : undefined);
-    if (report.removed.length > 0) await logError(`ai/referee-${meta.context}-guard`, new Error(`removed ${report.removed.length} sentence(s): ${report.removed.join(" | ").slice(0, 600)}`), meta.characterId ? { characterId: meta.characterId } : undefined);
+    if (issues.length > 0 || report.removed.length > 0) {
+      await logError(`ai/referee-${meta.context}-guard`, new Error(`issues: ${issues.join(" | ").slice(0, 300)} removed ${report.removed.length}: ${report.removed.join(" | ").slice(0, 400)}`), logMeta);
+    }
     return verdict;
   } catch (err) {
-    await logError(`ai/referee-${meta.context}`, err, meta.characterId ? { characterId: meta.characterId } : undefined);
+    await logError(`ai/referee-${meta.context}`, err, logMeta);
     return null;
   }
 }

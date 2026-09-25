@@ -923,10 +923,24 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                     <button className="btn-gold px-4 py-2 text-sm" disabled={busy} onClick={() => doDuelOp({ op: "respond", duelId: duel.id, accept: true })}>
                       {duel.hostile ? "Plantar cara" : duel.lethal ? "Aceptar duelo a muerte" : "Aceptar duelo"}
                     </button>
-                    <button className="btn-ghost px-4 py-2 text-sm" disabled={busy} onClick={() => doDuelOp({ op: "respond", duelId: duel.id, accept: false })}>
-                      {duel.hostile ? "Intentar huir" : "Rechazar"}
-                    </button>
+                    {duel.hostile ? (
+                      <button className="btn-ghost px-4 py-2 text-sm" disabled={busy} onClick={() => setFleeOpen((v) => !v)} data-testid="hunt-flee">
+                        Intentar huir
+                      </button>
+                    ) : (
+                      <button className="btn-ghost px-4 py-2 text-sm" disabled={busy} onClick={() => doDuelOp({ op: "respond", duelId: duel.id, accept: false })}>
+                        Rechazar
+                      </button>
+                    )}
                   </div>
+                </div>
+              )}
+              {duel.status === "PROPOSED" && !duel.isChallenger && duel.hostile && fleeOpen && !duel.resolution && (
+                <div className="mt-2 flex flex-col gap-2" data-testid="duel-flee-box">
+                  <textarea className="w-full text-sm bg-transparent border border-[--line] rounded px-3 py-2 min-h-20" placeholder="Describe cómo intentas escapar de la caza…" value={fleeText} onChange={(e) => setFleeText(e.target.value)} data-testid="duel-flee-text" />
+                  <button className="btn-gold px-3 py-1.5 text-xs self-start" disabled={busy || fleeText.trim().length < 5} onClick={async () => { await doDuelOp({ op: "flee", duelId: duel.id, text: fleeText.trim() }); setFleeText(""); setFleeOpen(false); }} data-testid="duel-flee-send">
+                    Enviar intento de huida
+                  </button>
                 </div>
               )}
               {duel.status === "PROPOSED" && duel.isChallenger && (
@@ -971,7 +985,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                   {duel.lethal && <p className="text-[11px] text-ink-dim mt-2">Es a muerte: si te rindes, tu vencedor decide tu destino; si intentas huir, tu rival decide si te deja. Lo pactado entre vosotros fuera del juego es lo que manda.</p>}
                 </div>
               )}
-              {duel.status === "ACTIVE" && duel.resolution === "FLEE_PLEA" && (
+              {(duel.status === "ACTIVE" || duel.status === "PROPOSED") && duel.resolution === "FLEE_PLEA" && (
                 <div className="rounded border border-gold/50 p-3" data-testid="duel-flee-plea">
                   {duel.pleaByMe ? (
                     <p className="text-sm">Has intentado huir. Esperando a que {duel.opponentName} decida si te deja escapar…</p>

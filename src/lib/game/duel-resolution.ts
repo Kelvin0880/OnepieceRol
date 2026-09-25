@@ -78,7 +78,8 @@ export async function pleaToFlee(characterId: string, userId: string, duelId: st
   const { duel, a, b } = await loadPair(duelId);
   const me = characterId === a.id ? a : characterId === b.id ? b : null;
   if (!me || me.userId !== userId) throw new DuelError("Ese duelo no es tuyo.");
-  if (duel.status !== "ACTIVE" || !duel.lethal) throw new DuelError("Solo puedes intentar huir en un duelo a muerte en marcha.");
+  const huntedBeforeFight = duel.status === "PROPOSED" && duel.hostile && me.id === duel.opponentId;
+  if (!huntedBeforeFight && (duel.status !== "ACTIVE" || !duel.lethal)) throw new DuelError("Solo puedes intentar huir en un duelo a muerte en marcha, o de una caza que te han lanzado.");
   if (duel.resolution) throw new DuelError("Ya hay una decisión pendiente en este duelo.");
   const clean = text.trim();
   if (clean.length < 5) throw new DuelError("Describe cómo intentas escapar.");
@@ -96,6 +97,20 @@ export async function decideFlee(characterId: string, userId: string, duelId: st
   if (duel.resolution !== "FLEE_PLEA" || !duel.pleaById) throw new DuelError("Nadie está intentando huir ahora.");
   if (duel.pleaById === me.id) throw new DuelError("Eso lo decide tu rival.");
   const fugitive = me.id === a.id ? b : a;
+
+  if (duel.status === "PROPOSED") {
+    // The hunt has not started: allowing the escape ends it, refusing it means the fight begins now.
+    if (allow) {
+      await closeDuel(duelId, null, `${me.name} deja que ${fugitive.name} escape de la caza.`);
+      await postDuelReport(duelId, me.name, fugitive.name, "escaped", { name: a.currentIsland.name, islandId: a.currentIslandId }, true, fugitive.id);
+      await notifyPair(duel.challengerId, duel.opponentId);
+      return { log: [`Dejas escapar a ${fugitive.name}.`], finished: true };
+    }
+    await prisma.duel.update({ where: { id: duelId }, data: { status: "ACTIVE", round: 1, resolution: null, pleaById: null, pleaText: null } });
+    await prisma.duelMessage.create({ data: { duelId, authorCharacterId: null, authorName: "Árbitro", text: `${me.name} corta el paso a ${fugitive.name}: no hay más remedio que pelear. Cada uno escribe su intención.` } });
+    await notifyPair(duel.challengerId, duel.opponentId);
+    return { log: [`Cierras el paso a ${fugitive.name}. Empieza el duelo.`], finished: false };
+  }
 
   if (allow) {
     // Wounds are real in a fight to the death, whoever walks away.

@@ -50,6 +50,8 @@ export interface RefereeInput {
   directives?: string;
   /** Round number, only to reason about a long fight. */
   round?: number;
+  /** The player's message is an attempt to flee the fight (solo). */
+  fleeAttempt?: boolean;
 }
 
 const ROLE_LAW =
@@ -80,6 +82,7 @@ const CORE_RULES =
   "COHERENCIA OBLIGATORIA: la vida y el aguante de \"cambios\" deben corresponder EXACTAMENTE a lo que narras. Si un golpe alcanza con fuerza a alguien, no puede costar 0; si nadie recibe daño, todo va a 0; si narras una herida profunda, usa la escala de arriba. " +
   "NO repitas ni resumas lo que el jugador escribió (ya está en pantalla): empieza directamente por el resultado. " +
   "SOLO SE HIERE LO QUE SE ATACA DE VERDAD: si el jugador golpea el suelo, clava su arma en un muelle, provoca, habla o presume, el rival NO pierde vida por eso. " +
+  "PODER RELATIVO: el daño que alguien puede causar depende de SU poder frente a la resistencia del otro (nivel, ficha, Haki). Un rival mucho más débil (diferencia de 10 o más niveles) no puede infligir golpes sólidos ni muy fuertes a alguien mucho más fuerte: como mucho roces, y solo si el más fuerte se lo permite; y al revés, un ataque bien descrito de alguien muy superior hace daño real. " +
   "El rival siempre tiene NOMBRE propio (si no lo tenía, ponle uno con sabor One Piece y úsalo siempre). " +
   PLAY_TO_WIN_RULE +
   " No reveles que eres una IA. " +
@@ -93,7 +96,11 @@ const SOLO_FORMAT =
   "NO lo resuelvas ni hagas que dañe a nadie: el jugador decidirá en su siguiente mensaje cómo lo recibe. Si el rival cayó o no puede seguir, déjalo vacío y di en \"reaccion_rival\" que no puede continuar. ";
 
 const JSON_TAIL =
-  "\"cambios\": [{\"nombre\":\"Nombre exacto\",\"vida\":0,\"aguante\":0}] con CADA combatiente y lo que PIERDE en este veredicto (enteros >= 0, 0 si nada). Responde ÚNICAMENTE con ese objeto JSON válido, sin markdown ni texto fuera de él.";
+  "\"cambios\": [{\"nombre\":\"Nombre exacto\",\"vida\":0,\"aguante\":0}] con CADA combatiente y lo que PIERDE en este veredicto (enteros >= 0, 0 si nada). " +
+  "\"derrotados\": [\"Nombre exacto\"] solo con quien, tras este intercambio, YA NO PUEDE SEGUIR luchando (inconsciente, muerto o incapaz); lista vacía [] si todos siguen. " +
+  "Solo puedes listar a alguien cuya vida actual esté por DEBAJO de la mitad de su vida máxima, y su pérdida de vida en \"cambios\" debe ser igual a su vida actual. " +
+  "Si NO lo listas, no narres que cae, muere, queda inconsciente ni que el combate termina: queda en pie, tambaleante o de rodillas. Si sí lo listas, la narración debe dejar claro que ya no puede continuar. " +
+  "Responde ÚNICAMENTE con ese objeto JSON válido, sin markdown ni texto fuera de él.";
 
 /** Concrete HP figures for the damage scale, so the model does not have to do percentages in its head. */
 export function damageScale(maxHp: number): string {
@@ -133,11 +140,14 @@ export function buildRefereePrompt(input: RefereeInput): PromptOut {
         "Quien queda con vida 0 está fuera de combate, pero no lo narres como muerto: el destino lo decide el juego después. Si el rival cae, añade al JSON \"golpe_final\" con el nombre exacto del aliado que le da el golpe decisivo. " +
         SOLO_FORMAT
       : "MODO COMBATE SOLO CONTRA UN RIVAL. " + SOLO_FORMAT;
+  const fleeRule = input.fleeAttempt
+    ? "EL JUGADOR INTENTA HUIR de este combate (lo que escribió es su intención, no un hecho). Decide con lógica si el rival lo permite o lo alcanza (velocidad, nivel, entorno, lo bien pensado que esté lo que escribió, el estado de cada uno) y añade al JSON \"huida\": true si escapa o false si lo alcanzan. Si escapa, nadie pierde vida y \"intencion_rival\" queda vacía. Si lo alcanzan, resuelve el alcance del rival como un intercambio normal (con la escala de vida) y deja su siguiente intención anunciada. "
+    : "";
   const openingRule = input.openingStrike
     ? "El jugador ACABA de iniciar la agresión: el rival todavía no ha atacado, así que no hay ataque pendiente que resolver y el jugador NO pierde vida ni aguante en este veredicto; el rival reacciona y deja su respuesta anunciada como intención."
     : "";
 
-  const system = `${CORE_RULES} ${modeRules} ${openingRule} ${JSON_TAIL} ` +
+  const system = `${CORE_RULES} ${modeRules} ${openingRule} ${fleeRule}${JSON_TAIL} ` +
     `Extensión total de los textos: unas ${maxWords} palabras como máximo, frases claras; es un combate ${input.isBoss ? "importante contra un enemigo formidable" : "menor"}.` +
     (input.directives ?? "");
 

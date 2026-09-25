@@ -2,7 +2,6 @@ import { prisma } from "../db";
 import { liveRng } from "../engine/rng";
 import { applyVerdict, NO_VERDICT_TEXT } from "../engine/referee";
 import { FATIGUE_LABELS } from "../engine/stamina";
-import { attemptFlee } from "../engine/encounter";
 import { areHostile, huntBlockReason, HUNT_RESPONSE_WINDOW_MS, HUNT_REPEAT_COOLDOWN_MS, PlayerFaction } from "../engine/hostility";
 import { TECHNIQUE_LABELS, TechniqueId } from "../engine/techniques";
 import { classifyPlayerAction } from "../ai/classify-action";
@@ -136,20 +135,8 @@ export async function respondToDuel(characterId: string, userId: string, duelId:
     return { log: [`Rechazas el duelo de ${challenger.name}.`] };
   }
 
-  // Being hunted: not answering "yes" means trying to get away, decided by the
-  // same speed contest as fleeing any fight — no free pass, no free kill.
-  const flee = attemptFlee(liveRng(), toCombatant(me), toCombatant(challenger));
-  if (flee.success) {
-    await prisma.duel.update({ where: { id: duelId }, data: { status: "CANCELLED" } });
-    await prisma.duelMessage.create({ data: { duelId, authorCharacterId: null, authorName: "Narrador", text: `${me.name} logra escabullirse de la caza de ${challenger.name}.` } });
-    await postNews(`${me.name} escapa de ${challenger.name}`, `${challenger.name} le dio caza en ${me.currentIsland.name}, pero ${me.name} consiguió desaparecer entre la multitud.`, "Tripulaciones", me.id);
-    return { log: [`Logras escabullirte de ${challenger.name}. Esta vez.`] };
-  }
-  await prisma.duel.update({ where: { id: duelId }, data: { status: "ACTIVE", round: 1 } });
-  await prisma.duelMessage.create({
-    data: { duelId, authorCharacterId: null, authorName: "Narrador", text: `${me.name} intenta huir, pero ${challenger.name} le corta el paso. No queda más remedio que pelear.` },
-  });
-  return { log: [`No logras huir: ${challenger.name} te alcanza. Toca pelear.`] };
+  // Being hunted: slipping away is written and judged by the hunter (game/duel-resolution.ts pleaToFlee), never rolled.
+  throw new DuelError("Si te dan caza, describe cómo intentas escapar con «Intentar huir»: tu perseguidor decide si te deja.");
 }
 
 export async function cancelDuel(characterId: string, userId: string, duelId: string) {
@@ -227,29 +214,6 @@ async function resolveDuelRoundFor(duelId: string) {
   let aTech: TechniqueId = "none";
   let bTech: TechniqueId = "none";
 
-  // In a fight to the death "yielding" isn't surrender — it is trying to get
-  // away, decided by a speed contest. A failed attempt just wastes the round.
-  if (duel.lethal) {
-    const aBase = toCombatant(a);
-    const bBase = toCombatant(b);
-    if (aYield) {
-      if (attemptFlee(rng, aBase, bBase).success) escaped = "a";
-      else {
-        failedFlight.push(a.name);
-        aYield = false;
-        aTactic = FLEE_FAILED_TACTIC;
-      }
-    }
-    if (bYield && !escaped) {
-      if (attemptFlee(rng, bBase, aBase).success) escaped = "b";
-      else {
-        failedFlight.push(b.name);
-        bYield = false;
-        bTactic = FLEE_FAILED_TACTIC;
-      }
-    }
-  }
-
   const aPrep = prepareFighter(a, duel.challengerTechnique as TechniqueId, aTactic, aHp, undefined, duel.challengerAction ?? "");
   const bPrep = prepareFighter(b, duel.opponentTechnique as TechniqueId, bTactic, bHp, undefined, duel.opponentAction ?? "");
 
@@ -283,8 +247,8 @@ async function resolveDuelRoundFor(duelId: string) {
       return { log: [NO_VERDICT_TEXT], waiting: true };
     }
     const [ra, rb] = applyVerdict(verdict, [
-      { name: a.name, hp: aHp, maxHp: duel.challengerMaxHp, stamina: aPrep.staminaAfter },
-      { name: b.name, hp: bHp, maxHp: duel.opponentMaxHp, stamina: bPrep.staminaAfter },
+      { name: a.name, hp: aHp, maxHp: duel.challengerMaxHp, stamina: aPrep.staminaAfter, incomingAtk: bPrep.combatant.atk, defense: aPrep.combatant.def },
+      { name: b.name, hp: bHp, maxHp: duel.opponentMaxHp, stamina: bPrep.staminaAfter, incomingAtk: aPrep.combatant.atk, defense: bPrep.combatant.def },
     ]);
     aHp = ra.hpAfter;
     bHp = rb.hpAfter;

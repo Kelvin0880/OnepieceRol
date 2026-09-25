@@ -143,6 +143,20 @@ async function main() {
     const friendlyFlee = await startDuel(track(await mk("Amigo2", "PIRATE")), track(await mk("Amigo3", "PIRATE")), false);
     const fa = made[made.length - 2];
     assert(await rejects(() => pleaToFlee(fa.c.id, fa.u.id, friendlyFlee, "intento huir de un duelo amistoso"), "a muerte"), "fleeing exists only in fights to the death");
+
+    // ---- a hunt: the hunted describes an escape BEFORE the fight, and the hunter decides
+    const h1 = track(await mk("Sabueso", "MARINE"));
+    const h2 = track(await mk("Huido", "PIRATE"));
+    const huntA = (await challengeDuel(h1.c.id, h1.u.id, h2.c.id, true)).duelId;
+    assert(await rejects(() => respondToDuel(h2.c.id, h2.u.id, huntA, false), "Intentar huir"), "declining a hunt with a roll no longer exists: the escape must be written");
+    await pleaToFlee(h2.c.id, h2.u.id, huntA, "Me mezclo con la multitud del mercado y salto a un barco que zarpa.");
+    const huntView = await getDuelStateForCharacter(h1.c.id);
+    assert(huntView?.status === "PROPOSED" && huntView.resolution === "FLEE_PLEA", "the hunter sees the plea while the hunt is still a proposal");
+    await decideFlee(h1.c.id, h1.u.id, huntA, false);
+    assert((await prisma.duel.findUniqueOrThrow({ where: { id: huntA } })).status === "ACTIVE", "if the hunter refuses, the fight starts");
+    await pleaToFlee(h2.c.id, h2.u.id, huntA, "Vuelvo a intentarlo por los tejados mientras suelto humo.");
+    await decideFlee(h1.c.id, h1.u.id, huntA, true);
+    assert((await prisma.duel.findUniqueOrThrow({ where: { id: huntA } })).status === "FINISHED", "if the hunter allows it, the hunt ends with no winner");
   } finally {
     for (const x of made) {
       await prisma.imprisonment.deleteMany({ where: { characterId: x.c.id } });
