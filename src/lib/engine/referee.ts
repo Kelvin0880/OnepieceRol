@@ -54,13 +54,47 @@ function firstJsonObject(raw: string): string | null {
   return null;
 }
 
+/** Long multi-paragraph answers often carry raw line breaks inside the strings, which strict JSON rejects: escape them and try again. */
+function parseLenient(json: string): Record<string, unknown> {
+  try {
+    return JSON.parse(json) as Record<string, unknown>;
+  } catch {
+    let out = "";
+    let inString = false;
+    let escaped = false;
+    const NL = String.fromCharCode(10);
+    const CR = String.fromCharCode(13);
+    const TAB = String.fromCharCode(9);
+    const BACKSLASH = String.fromCharCode(92);
+    for (const ch of json) {
+      if (inString && !escaped && ch === NL) out += BACKSLASH + "n";
+      else if (inString && !escaped && ch === CR) out += "";
+      else if (inString && !escaped && ch === TAB) out += BACKSLASH + "t";
+      else out += ch;
+      if (inString && escaped) escaped = false;
+      else if (inString && ch === BACKSLASH) escaped = true;
+      else if (ch === '"') inString = !inString;
+    }
+    return JSON.parse(out) as Record<string, unknown>;
+  }
+}
+
+/** A model sometimes answers a text field as an object or list (one entry per fighter): read it as the text it is. */
+function textOf(v: unknown): string {
+  const join = (parts: string[]) => parts.filter(Boolean).join(String.fromCharCode(10, 10));
+  if (typeof v === "string") return v.trim();
+  if (Array.isArray(v)) return join(v.map(textOf));
+  if (v && typeof v === "object") return join(Object.values(v as Record<string, unknown>).map(textOf));
+  return "";
+}
+
 /** Models wrap JSON in fences or chatter: take the first balanced object and validate it. Anything malformed is null. */
 export function parseRefereeVerdict(raw: string): RefereeVerdict | null {
   const json = firstJsonObject(raw);
   if (!json) return null;
   try {
-    const obj = JSON.parse(json) as Record<string, unknown>;
-    const str = (v: unknown) => (typeof v === "string" ? v.trim() : "");
+    const obj = parseLenient(json);
+    const str = textOf;
     const result = str(obj.resultado) || str(obj.narracion) || str(obj.narration);
     const reaction = str(obj.reaccion_rival);
     const intent = str(obj.intencion_rival);

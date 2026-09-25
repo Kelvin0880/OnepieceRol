@@ -198,7 +198,12 @@ export async function submitJointAction(characterId: string, userId: string, fre
   if (!part) throw new JointFightError("No estás en esta pelea.");
   if (part.status === "DOWN") throw new JointFightError("Estás caído: tus aliados deciden ahora el desenlace.");
   if (part.status === "FLED") throw new JointFightError("Ya huiste de esta pelea.");
-  if (part.action) throw new JointFightError("Ya enviaste tu movimiento de esta ronda; espera a tus aliados.");
+  if (part.action) {
+    // Everyone already answered but the round was never judged (the referee failed): sending again retries it.
+    const stalled = await prisma.jointFightParticipant.count({ where: { fightId: fight.id, isNpc: false, status: "FIGHTING", action: null } });
+    if (stalled === 0) return advanceIfReady(fight.id);
+    throw new JointFightError("Ya enviaste tu movimiento de esta ronda; espera a tus aliados.");
+  }
 
   const last = await prisma.jointFightMessage.findFirst({ where: { fightId: fight.id, authorCharacterId: null }, orderBy: { createdAt: "desc" } });
   const classified = await classifyPlayerAction(freeText, ["engage", "flee"], { sceneContext: last?.text.slice(-500) });
@@ -354,6 +359,8 @@ async function resolveJointRoundFor(fightId: string) {
     if (!verdict) {
       // Nothing was judged: hand the round back so the same moves can be resubmitted.
       await prisma.jointFight.updateMany({ where: { id: fightId, round: round + 1 }, data: { round } });
+      await prisma.jointFightMessage.create({ data: { fightId, authorCharacterId: null, authorName: "Narrador", text: "(El árbitro no pudo juzgar esta ronda a tiempo. Nada cambió: cualquiera de los dos puede pulsar Actuar otra vez para reintentarla.)" } });
+      await notifyFightParticipants(fightId);
       return { log: [NO_VERDICT_TEXT], waiting: true };
     }
   }
