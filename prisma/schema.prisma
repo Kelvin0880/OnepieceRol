@@ -1101,3 +1101,49 @@ model TournamentEntry {
   @@index([tournamentId])
   @@index([characterId])
 }
+
+
+/// A player-participation event (beginner events): announced in the news, joined on the island, resolved by the AI judge once every human entrant has finished. No time limit.
+model PlayerEvent {
+  id                String    @id @default(cuid())
+  kind              String    @default("beginner")
+  title             String
+  description       String
+  islandId          String
+  islandName        String
+  minLevel          Int       @default(1)
+  maxLevel          Int       @default(10)
+  status            String    @default("OPEN") // OPEN | RESOLVING | RESOLVED | CANCELLED
+  rewardFruitName   String?
+  rewardFruitId     String?
+  rewardBerries     Int       @default(0)
+  rewardXp          Int       @default(0)
+  rewardText        String
+  winnerName        String?
+  winnerCharacterId String?
+  resultText        String?
+  createdBy         String    @default("ai")
+  createdAt         DateTime  @default(now())
+  resolvedAt        DateTime?
+
+  @@index([status, createdAt])
+}
+
+model PlayerEventEntry {
+  id             String    @id @default(cuid())
+  eventId        String
+  characterId    String? // null = an NPC rival
+  name           String
+  isNpc          Boolean   @default(false)
+  level          Int       @default(1)
+  concept        String? // NPC rivals: who they are and how they would tackle the trial
+  status         String    @default("REGISTERED") // REGISTERED | SUBMITTED | WITHDRAWN
+  submissionText String?
+  score          Int?
+  verdict        String?
+  createdAt      DateTime  @default(now())
+  submittedAt    DateTime?
+
+  @@index([eventId])
+  @@index([characterId])
+}

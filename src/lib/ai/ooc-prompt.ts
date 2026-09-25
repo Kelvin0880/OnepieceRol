@@ -69,7 +69,11 @@ export const GAME_HELP =
   "Haki (Armadura/Observación/Rey) y Fruta: solo usas lo que tu personaje realmente tiene; describirlos en combate los activa y los hace crecer. " +
   "Viajar cuesta aguante y tiene cooldown según el peligro; algunas islas piden nivel mínimo. Tripulaciones: invitar/unirse desde el panel de Tripulación; los nakamas NPC suben de nivel contigo. " +
   "Multijugador: misma isla y tripulación = escena compartida por turnos; duelos, cazas a muerte, peleas en grupo, conquista de territorios, Buster Call, raid final. " +
-  "Fuera de rol (este panel): tono del narrador, indicaciones, pactos de escena (versus 4 vs 4...), puntos de restauración (rollback), renombrar, reparar y reportar fallos. ";
+  "Vida de los NPC: nunca se muestra; solo ves la tuya y tu aguante, y el narrador cuenta cómo está el rival con palabras. Si una pelea contra un NPC se atasca o ya terminó, el enlace \"Finalizar pelea\" del panel de pelea hace que un juez lea toda la pelea y decida (ganaste, perdiste o sin ganador; solo cuenta una victoria o derrota si el perdedor ya estaba a media vida o menos). " +
+  "Objetos: las frutas del Diablo se guardan en la mochila (Inventario) sin comerse; un PNJ que te ofrece algo en el relato no te lo entrega hasta que el sistema lo confirma. Puntos de atributo por nivel, estilos de combate y armas en mano se gestionan en la ficha e Inventario. " +
+  "Nakamas NPC: reclutas hablando en la escena (máx. 3), suben contigo, y desde el panel Imperio les das misiones (patrullar un dominio que sostienes, tributos, explorar); un nakama en misión no combate contigo. Patrullar solo se puede si sostienes un dominio con guarnición por debajo de 100. " +
+  "Chats: el Den Den Mushi tiene canal de tu facción y otro privado de tu tripulación. Noticias: además de los eventos mundiales largos (el dueño decide si un canon muere o cae), cada 24 h aparece un suceso nuevo en alguna isla; hay eventos para principiantes con premios únicos y el Coliseo de Dressrosa (una ronda cada hora, esperando hasta 24 h a quien esté peleando). Los plazos de respuesta (duelos, cazas, peleas conjuntas) son de 24 h. " +
+  "Viajes largos: desde nivel 20 cualquier isla es alcanzable por una travesía con tiempo y riesgo de emboscada. Fuera de rol (este panel): tono del narrador, indicaciones, pactos de escena (versus 4 vs 4...), puntos de restauración (rollback), renombrar, reparar y reportar fallos. ";
 
 const OOC_SYSTEM =
   GAME_HELP +
