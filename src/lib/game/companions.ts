@@ -1,4 +1,5 @@
 import { belongingsFor } from "../engine/inventory";
+import { focusPlan, isOnErrand, readErrand, readStay, writeStay, ERRAND_INFO } from "../engine/empire";
 import { prisma } from "../db";
 import { CharacterStatus } from "@prisma/client";
 import { judgeOutcome } from "../ai/judge";
@@ -29,6 +30,10 @@ export interface CompanionView {
   styleId: string | null;
   /** What this nakama carries (engine/inventory.ts belongingsFor): shown on the card and told to the narrator. */
   belongings: string[];
+  /** Stays on the ship instead of coming along. */
+  stay: boolean;
+  /** Away on an errand (the Imperio/nakama missions): label and time left. */
+  errand: { label: string; msLeft: number } | null;
 }
 
 const ABILITY_LEVELS = [1, 5, 12];
@@ -70,6 +75,11 @@ export async function getCompanionViews(characterId: string, ownerLevel: number)
       epithet: sheet.epithet ?? null,
       styleId: sheet.styleId ?? null,
       belongings: belongingsFor(c.role),
+      stay: readStay(c.profileJson),
+      errand: (() => {
+        const e = readErrand(c.profileJson);
+        return e && isOnErrand(c.profileJson, Date.now()) ? { label: ERRAND_INFO[e.kind].label, msLeft: Math.max(0, e.endsAt - Date.now()) } : null;
+      })(),
     };
   });
 }
@@ -145,4 +155,32 @@ export async function dismissCompanion(characterId: string, userId: string, comp
   if (!n) throw new CompanionError("Ese nakama no existe.");
   await prisma.nPCCompanion.delete({ where: { id: n.id } });
   return `${n.name} se despide de tu tripulación y sigue su propio camino.`;
+}
+
+async function ownedAliveCompanions(characterId: string, userId: string) {
+  const c = await prisma.character.findUnique({ where: { id: characterId }, select: { userId: true } });
+  if (!c || c.userId !== userId) throw new CompanionError("Personaje no encontrado.");
+  return prisma.nPCCompanion.findMany({ where: { characterId, status: CharacterStatus.ALIVE }, orderBy: { joinedAt: "asc" } });
+}
+
+/** One nakama comes along or stays on the ship. */
+export async function setCompanionStay(characterId: string, userId: string, companionId: string, stay: boolean): Promise<string> {
+  const all = await ownedAliveCompanions(characterId, userId);
+  const n = all.find((x) => x.id === companionId);
+  if (!n) throw new CompanionError("Ese nakama no existe.");
+  await prisma.nPCCompanion.update({ where: { id: n.id }, data: { profileJson: writeStay(n.profileJson, stay) } });
+  return stay ? `${n.name} se queda en el barco.` : `${n.name} te acompañará.`;
+}
+
+/** "Que solo me acompañe este": everyone else stays. */
+export async function setCompanionFocus(characterId: string, userId: string, companionId: string | null): Promise<string> {
+  const all = await ownedAliveCompanions(characterId, userId);
+  if (companionId && !all.some((x) => x.id === companionId)) throw new CompanionError("Ese nakama no existe.");
+  const plan = focusPlan(all.map((x) => x.id), companionId);
+  for (const n of all) {
+    if (readStay(n.profileJson) === plan[n.id]) continue;
+    await prisma.nPCCompanion.update({ where: { id: n.id }, data: { profileJson: writeStay(n.profileJson, plan[n.id]) } });
+  }
+  const chosen = all.find((x) => x.id === companionId);
+  return chosen ? `Solo ${chosen.name} te acompañará; los demás se quedan en el barco.` : "Todos tus nakamas te acompañan.";
 }

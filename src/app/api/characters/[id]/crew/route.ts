@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUserId, UnauthorizedError } from "@/lib/require-user";
 import { createCrew, joinCrew, leaveCrew, inviteToCrew, respondToCrewInvite, cancelCrewInvite, kickCrewMember, setCrewEmblem, findCrewCandidates, listCrewInvites, CrewError } from "@/lib/game/crew";
-import { dismissCompanion, CompanionError } from "@/lib/game/companions";
+import { dismissCompanion, setCompanionStay, setCompanionFocus, CompanionError } from "@/lib/game/companions";
 import { logError } from "@/lib/log-error";
 
 const schema = z.discriminatedUnion("op", [
@@ -14,6 +14,8 @@ const schema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("cancel_invite"), inviteId: z.string() }),
   z.object({ op: z.literal("kick"), targetId: z.string() }),
   z.object({ op: z.literal("dismiss_companion"), companionId: z.string() }),
+  z.object({ op: z.literal("set_companion_stay"), companionId: z.string(), stay: z.boolean() }),
+  z.object({ op: z.literal("set_companion_focus"), companionId: z.string().nullable() }),
   z.object({ op: z.literal("set_emblem"), dataUrl: z.string().max(400_000).nullable() }),
 ]);
 
@@ -55,6 +57,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return NextResponse.json(await kickCrewMember(id, userId, parsed.data.targetId));
       case "set_emblem":
         return NextResponse.json(await setCrewEmblem(id, userId, parsed.data.dataUrl));
+      case "set_companion_stay":
+        return NextResponse.json({ message: await setCompanionStay(id, userId, parsed.data.companionId, parsed.data.stay) });
+      case "set_companion_focus":
+        return NextResponse.json({ message: await setCompanionFocus(id, userId, parsed.data.companionId) });
       case "dismiss_companion":
         return NextResponse.json({ message: await dismissCompanion(id, userId, parsed.data.companionId) });
     }

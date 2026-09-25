@@ -104,6 +104,41 @@ export function isOnErrand(profileJson: string | null | undefined, nowMs: number
   return !!e && e.endsAt > nowMs;
 }
 
+/** "Se queda en el barco": the nakama does not come along (no fights, not in the scene). Stored next to the errand, never replacing the sheet. */
+export function readStay(profileJson: string | null | undefined): boolean {
+  if (!profileJson) return false;
+  try {
+    return (JSON.parse(profileJson) as Record<string, unknown>)?.stay === true;
+  } catch {
+    return false;
+  }
+}
+
+export function writeStay(profileJson: string | null | undefined, stay: boolean): string | null {
+  let base: Record<string, unknown> = {};
+  try {
+    const parsed = profileJson ? JSON.parse(profileJson) : {};
+    if (parsed && typeof parsed === "object") base = parsed as Record<string, unknown>;
+  } catch {
+    base = {};
+  }
+  if (stay) base.stay = true;
+  else delete base.stay;
+  return Object.keys(base).length ? JSON.stringify(base) : null;
+}
+
+/** A nakama fights and appears beside the player only when they are neither away on an errand nor staying behind. */
+export function isWithPlayer(profileJson: string | null | undefined, nowMs: number): boolean {
+  return !isOnErrand(profileJson, nowMs) && !readStay(profileJson);
+}
+
+/** Picks who comes along: exactly one companion goes, everyone else stays; null = everyone comes. */
+export function focusPlan(ids: string[], chosenId: string | null): Record<string, boolean> {
+  const plan: Record<string, boolean> = {};
+  for (const id of ids) plan[id] = chosenId !== null && id !== chosenId;
+  return plan;
+}
+
 export function errandDone(e: Errand, nowMs: number): boolean {
   return e.endsAt <= nowMs;
 }

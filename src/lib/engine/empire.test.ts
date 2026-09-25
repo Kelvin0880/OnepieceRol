@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { ERRAND_INFO, PATROL_GARRISON_GAIN, errandDone, errandDifficulty, errandRewards, garrisonLabel, isOnErrand, msUntilFall, readErrand, troopCount, writeErrand } from "./empire";
+import { focusPlan, isWithPlayer, readStay, writeStay, ERRAND_INFO, PATROL_GARRISON_GAIN, errandDone, errandDifficulty, errandRewards, garrisonLabel, isOnErrand, msUntilFall, readErrand, troopCount, writeErrand } from "./empire";
 import { GARRISON_PERIOD_MS } from "./territory";
 
 describe("garrison as an army", () => {
@@ -74,5 +74,27 @@ describe("errands", () => {
   });
   it("has info for every kind", () => {
     for (const k of ["patrol", "tribute", "scout"] as const) expect(ERRAND_INFO[k].durationMs).toBeGreaterThan(0);
+  });
+});
+
+describe("companions staying behind", () => {
+  it("round-trips the flag without touching the rest of the profile", () => {
+    const base = JSON.stringify({ epithet: "El Rápido", errand: { kind: "scout", startedAt: 1, endsAt: 2 } });
+    const stayed = writeStay(base, true);
+    expect(readStay(stayed)).toBe(true);
+    expect(JSON.parse(stayed!).epithet).toBe("El Rápido");
+    expect(readStay(writeStay(stayed, false))).toBe(false);
+    expect(writeStay(null, false)).toBeNull();
+    expect(readStay("no json")).toBe(false);
+  });
+  it("a nakama is with the player only when not away and not staying", () => {
+    expect(isWithPlayer(null, 1000)).toBe(true);
+    expect(isWithPlayer(writeStay(null, true), 1000)).toBe(false);
+    expect(isWithPlayer(JSON.stringify({ errand: { kind: "patrol", startedAt: 0, endsAt: 5000 } }), 1000)).toBe(false);
+    expect(isWithPlayer(JSON.stringify({ errand: { kind: "patrol", startedAt: 0, endsAt: 500 } }), 1000)).toBe(true);
+  });
+  it("choosing one companion sends the others to stay; choosing none brings everyone", () => {
+    expect(focusPlan(["a", "b", "c"], "b")).toEqual({ a: true, b: false, c: true });
+    expect(focusPlan(["a", "b"], null)).toEqual({ a: false, b: false });
   });
 });

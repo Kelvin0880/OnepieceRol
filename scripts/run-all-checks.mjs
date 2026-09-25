@@ -53,7 +53,7 @@ record("tsc", run("npx", ["tsc", "--noEmit"], 300000));
 
 const dbChecks = ["ooc-rollback", "world-arcs", "joint-fight", "guardian", "territory", "escape-buster", "consequence", "black-market", "missions", "grudge", "hunt", "impel", "compaction-travel", "prison-logic", "delete-character", "world-news", "raid", "attributes-inventory", "styles", "coliseum", "voyage", "empire", "duel-resolution", "denden", "battle", "close-fight", "happenings", "player-events"];
 const browserFirst = ["battle-smoke", "crew-smoke", "ooc-crew-ui-check", "world-ui-check", "polish-ui-check", "features-ui-check", "voyage-ui-check", "empire-ui-check", "duel-ui-check", "events-ui-check", "admin-tools-ui-check"]; // need a clean DB each
-const browserRest = quick ? [] : ["ai-e2e-smoke", "combat-rounds-check", "roleplay-attack-check", "duel-smoke", "party-multiplayer-smoke", "joint-fight-ui-check", "grudge-ui-check", "missions-ui-check", "realtime-check", "prison-ui-check", "raid-ui-check", "world-panels-ui-check", "check-news-page", "delete-character-ui-check", "close-fight-ui-check", "crew-chat-ui-check", "codex-players-ui-check"];
+const browserRest = quick ? [] : ["ai-e2e-smoke", "combat-rounds-check", "roleplay-attack-check", "duel-smoke", "party-multiplayer-smoke", "joint-fight-ui-check", "grudge-ui-check", "missions-ui-check", "realtime-check", "prison-ui-check", "raid-ui-check", "world-panels-ui-check", "check-news-page", "delete-character-ui-check", "close-fight-ui-check", "crew-chat-ui-check", "codex-players-ui-check", "nakama-ui-check"];
 
 log("== DB checks");
 await freshWorld();

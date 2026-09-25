@@ -36,6 +36,7 @@ import { buildRefereePrompt, type RefereeInput } from "./referee-prompt";
 import { checkConsistency, parseRefereeVerdict, sanitizeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
 import { OPENROUTER_MODELS } from "./models";
 import { parseCompanionProfile } from "../engine/companions";
+import { isWithPlayer } from "../engine/empire";
 import { describeCapabilities } from "../engine/capabilities";
 import { describeAttributes } from "../engine/attributes";
 import { describeStyles } from "../engine/styles";
@@ -81,7 +82,7 @@ export async function loadDirectives(characterId: string): Promise<string> {
     const caps = describeCapabilities({
       name: c.name, level: c.level, armamentHaki: c.armamentHaki, observationHaki: c.observationHaki, conquerorsHaki: c.conquerorsHaki,
       fruitName: c.devilFruit?.name, fruitMastery: c.fruitMastery, fruitAwakened: c.fruitAwakened, weaponName: c.equippedWeapon?.name,
-      stamina: currentStamina(c), maxStamina: c.maxStamina, hp: c.hp, maxHp: c.maxHp, companions: c.companions.map((n) => {
+      stamina: currentStamina(c), maxStamina: c.maxStamina, hp: c.hp, maxHp: c.maxHp, companions: c.companions.filter((n) => isWithPlayer(n.profileJson, Date.now())).map((n) => {
         const p = parseCompanionProfile(n.profileJson);
         return p ? `${n.name} (${[p.epithet, n.role, p.styleId ? `estilo ${p.styleId}` : null].filter(Boolean).join(", ")})` : n.name;
       }),

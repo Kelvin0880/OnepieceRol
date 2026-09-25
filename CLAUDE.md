@@ -1468,3 +1468,5 @@ Then: the "Imperio" panel + nakama errands (`engine/empire.ts`, `game/empire.ts`
 - Public players registry: Códice -> "Jugadores" (`api/codex/players`), no account names.
 - Narrator now always sees bagged devil fruits (`inventoryLineForNarrator`) and may never narrate an item handover as done.
 - Checks: `player-events-check.ts`, `events-ui-check.mjs`, `admin-tools-ui-check.mjs`, `codex-players-ui-check.mjs`. Prod needed `prisma db push` (two new tables) + reseed for the fruits; done.
+
+**Nakama controls (2026-09-25)**: the crew panel's "Nakamas NPC" tab now lets you choose who comes along ("Que se quede en el barco", "Solo este me acompaña": `stay` flag stored in `NPCCompanion.profileJson`, `engine/empire.ts` `readStay/writeStay/isWithPlayer/focusPlan`) and send any nakama on a mission (patrol/tribute/scout via the empire errand API). Staying/away nakamas do not appear in joint fights nor in the narrator's "a su lado" list. The Imperio panel now explains why patrol is unavailable. Check: `nakama-ui-check.mjs`.

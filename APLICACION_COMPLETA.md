@@ -347,3 +347,6 @@ Cada 24 horas la IA inventa un suceso nuevo en una isla real (fiestas, tormentas
 - **Chat de tripulación**: pestaña "Tripulación" dentro del Den Den Mushi.
 - **Administración**: resumen del mundo, reportes de jugadores, anuncios oficiales, proponer un suceso a la IA, crear/cancelar/cerrar eventos e iniciar un evento mundial entre dos personajes canon.
 - **Códice**: pestaña "Jugadores" con todos los jugadores registrados (vivos, presos y muertos).
+
+## Nakamas: quién te acompaña y misiones (2026-09-25)
+En el panel de tripulación, pestaña "Nakamas NPC": cada nakama puede quedarse en el barco o acompañarte, puedes elegir que solo uno te acompañe, y puedes encargarle misiones (patrullar un dominio, cobrar tributos, explorar el mar) sin pasar por el Imperio. Un nakama que se queda o está de misión no pelea contigo ni sale en la escena.
