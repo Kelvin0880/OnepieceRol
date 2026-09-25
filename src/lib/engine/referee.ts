@@ -86,6 +86,19 @@ export function parseRefereeVerdict(raw: string): RefereeVerdict | null {
   }
 }
 
+/**
+ * The rival of the list stands for its whole side: when the story shows henchmen and the model books their wounds under
+ * their own invented names, the loss would silently vanish. Any change whose name matches nobody in the fight goes to the rival.
+ */
+export function foldUnknownChanges(verdict: RefereeVerdict, knownNames: string[], rivalName: string): RefereeVerdict {
+  const known = new Set(knownNames.map(norm));
+  if (!known.has(norm(rivalName))) return verdict;
+  const changes = verdict.changes.map((c) => (known.has(norm(c.name)) ? c : { ...c, name: rivalName }));
+  // A fallen henchman is not the whole side falling: only real combatants can be declared defeated.
+  const defeated = verdict.defeated?.filter((n) => known.has(norm(n)));
+  return { ...verdict, changes, ...(defeated ? { defeated } : {}) };
+}
+
 export interface RefereeBound {
   name: string;
   hp: number;

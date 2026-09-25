@@ -4,7 +4,7 @@ import { berryReward, bountyReward } from "../engine/economy";
 import { scaleEnemyForGroup, JointFighter } from "../engine/joint-fight";
 import { TECHNIQUE_LABELS, TechniqueId } from "../engine/techniques";
 import { classifyPlayerAction } from "../ai/classify-action";
-import { refereeExchange, getRecentScene } from "../ai/narrate";
+import { refereeExchange } from "../ai/narrate";
 import { applyVerdict, NO_VERDICT_TEXT } from "../engine/referee";
 import { FATIGUE_LABELS, fatigueLevel } from "../engine/stamina";
 import { isWithPlayer } from "../engine/empire";
@@ -292,7 +292,14 @@ async function resolveJointRoundFor(fightId: string) {
   }
 
   const enemyKitText = (await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId })).text;
-  const recent = await getRecentScene(fight.participants.find((p) => !p.isNpc)?.characterId ?? "", 4).catch(() => [] as string[]);
+  // The whole fight so far (the shared transcript), minus the moves of THIS round, which the referee gets as the current actions.
+  const clip = (text: string, max: number) => (text.length > max ? `${text.slice(0, max)}…` : text);
+  const currentMoves = new Set(fighting.map((p) => p.action).filter((a): a is string => !!a));
+  const transcript = await prisma.jointFightMessage.findMany({ where: { fightId }, orderBy: { createdAt: "asc" } });
+  const fightLog = transcript
+    .filter((m) => !(m.authorCharacterId && currentMoves.has(m.text)))
+    .slice(-24)
+    .map((m) => (m.authorCharacterId ? `[${m.authorName}]: ${clip(m.text, 500)}` : `[Árbitro]: ${clip(m.text, 650)}`));
   const lastNarrator = await prisma.jointFightMessage.findFirst({ where: { fightId, authorName: "Narrador" }, orderBy: { createdAt: "desc" } });
   const kitOf = (id: string): string | undefined => {
     const human = chars.get(id);
@@ -312,7 +319,7 @@ async function resolveJointRoundFor(fightId: string) {
         isBoss: enemy.isBoss,
         stakes: fight.stakes ?? undefined,
         pendingThreat: lastNarrator?.text,
-        recentScene: recent,
+        fightLog,
         actors: [
           ...fighters.map((f) => {
             const part = fighting.find((p) => p.characterId === f.id);

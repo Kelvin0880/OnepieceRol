@@ -100,3 +100,33 @@ describe("buildRefereePrompt", () => {
     expect(system).toContain("continuidad");
   });
 });
+
+describe("group referee prompt", () => {
+  const joint: RefereeInput = {
+    mode: "joint",
+    actors: [
+      { name: "Barbosa", side: "ally", hp: 100, maxHp: 100 },
+      { name: "Sebastian", side: "ally", hp: 89, maxHp: 100 },
+      { name: "Bandido de poca monta", side: "enemy", hp: 88, maxHp: 88 },
+    ],
+    actions: [
+      { name: "Barbosa", text: "Acepto el impacto en el hombro y contraataco." },
+      { name: "Sebastian", text: "Corto hacia la garganta del segundo matón." },
+    ],
+  };
+  it("puts EVERY ally's action in the current-turn block, not just the first", () => {
+    const { user } = buildRefereePrompt(joint);
+    expect(user).toContain("ACCIONES DE ESTE TURNO");
+    expect(user).toContain("Sebastian escribe");
+    expect(user).toContain("Corto hacia la garganta del segundo matón.");
+  });
+  it("asks for third person with names and for the side's wounds under the rival's exact name", () => {
+    const { system } = buildRefereePrompt(joint);
+    expect(system).toContain("TERCERA persona");
+    expect(system).toContain("NINGUNA acción de ningún aliado se ignora");
+    expect(system).toContain("nombre EXACTO del rival");
+  });
+  it("says a confirmed impact must cost life", () => {
+    expect(buildRefereePrompt(joint).system).toContain("SÍ confirmó");
+  });
+});

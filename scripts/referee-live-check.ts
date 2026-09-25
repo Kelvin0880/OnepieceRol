@@ -100,6 +100,28 @@ async function main() {
     check("the rival's next attack stays an intention (no landed hit)", !/(conecta con éxito|le da de lleno|impacta de lleno)/i.test(r5.v.rivalIntent ?? "") && /(intenta|busca|si llega a conectar)/i.test(r5.v.rivalIntent ?? ""));
   }
 
+  // Report (Barbosa + Sebastian vs a gang): the referee only resolved the first ally, an impact the player confirmed cost no life,
+  // and wounds to invented henchmen (Marco, Leo) never reached the rival's life.
+  const barbosa = { name: "Barbosa", side: "ally" as const, level: 2, hp: 100, maxHp: 100, stamina: 95, kit: "Pistola de chispa; combate cuerpo a cuerpo.", sheet: "ataque 20, defensa 18, velocidad 22" };
+  const sebastian = { name: "Sebastian", side: "ally" as const, level: 3, hp: 89, maxHp: 100, stamina: 90, kit: "Katana; Haki de Observación débil.", sheet: "ataque 24, defensa 20, velocidad 24" };
+  const gang = { name: "Bandido de poca monta", side: "enemy" as const, level: 3, hp: 88, maxHp: 88, stamina: 80, personality: "matones rencorosos", kit: "Garrotes y cuchillos; sin Haki.", sheet: "ataque 20, defensa 14, velocidad 16" };
+  const r6 = await scene("Dúo contra una banda: se resuelven las dos acciones", {
+    mode: "joint",
+    round: 4,
+    actors: [barbosa, sebastian, gang],
+    pendingThreat: "Marco se lanza contra Barbosa con un garrotazo horizontal a la altura de su cabeza, buscando impactar con fuerza; si llega a conectar, seguiría con un rodillazo al abdomen.",
+    actions: [
+      { name: "Barbosa", text: "Tenso el cuerpo y meto el hombro izquierdo: acepto el dolor del impacto del garrote en el hombro para cerrarle el espacio, atrapo su brazo bajo mi axila y le estampo la culata de la pistola en la nariz." },
+      { name: "Sebastian", text: "Avanzo hacia Leo, que sigue en el suelo, y clavo mi katana en su gemelo para interrogarlo sobre el Gavilán." },
+    ],
+  });
+  if (r6) {
+    check("both allies' actions are resolved (each name appears)", /Sebastian/.test(r6.v.narration) && /Barbosa/.test(r6.v.narration));
+    check("the impact Barbosa confirmed costs him life", (r6.applied.find((a) => a.name === "Barbosa")?.hpLoss ?? 0) > 0);
+    check("the gang's life goes down for what the allies did to its members", (r6.applied.find((a) => a.name === "Bandido de poca monta")?.hpLoss ?? 0) > 0);
+    check("the story does not speak to one reader in second person", !/\b(tu|tus|te)\s+(hombro|garrote|katana|pistola|alcanza|golpea)/i.test(r6.v.narration));
+  }
+
   console.log(failures === 0 ? "\nALL PASS" : `\n${failures} FAILED`);
   process.exit(failures === 0 ? 0 : 1);
 }

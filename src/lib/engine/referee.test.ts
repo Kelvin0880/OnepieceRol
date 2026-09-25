@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
+import { foldUnknownChanges, checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
 
 const NARR = "El rival bloquea con el antebrazo y responde con una patada baja que se acerca a tu rodilla.";
 const good = (extra = "") => JSON.stringify({ narracion: NARR, cambios: [{ nombre: "Kirito", vida: 10, aguante: 5 }, { nombre: "Bandido", vida: 20, aguante: 8 }], ...(extra ? { x: extra } : {}) });
@@ -221,5 +221,28 @@ describe("rival sequences", () => {
     const issues = checkConsistency({ narration: "x", rivalIntent: "Rocco intenta golpearte.", changes: [] }, []);
     expect(issues.some((i) => i.includes("demasiado corta"))).toBe(true);
     expect(checkConsistency({ narration: "x", rivalIntent: long, changes: [] }, [])).toEqual([]);
+  });
+});
+
+describe("foldUnknownChanges", () => {
+  const known = ["Barbosa", "Sebastian", "Bandido de poca monta"];
+  it("books the wounds of an invented henchman on the rival of the list", () => {
+    const v = { narration: "x", changes: [{ name: "Leo", hp: 30, stamina: 5 }, { name: "Barbosa", hp: 4, stamina: 0 }] };
+    const out = foldUnknownChanges(v, known, "Bandido de poca monta");
+    expect(out.changes).toEqual([{ name: "Bandido de poca monta", hp: 30, stamina: 5 }, { name: "Barbosa", hp: 4, stamina: 0 }]);
+    const applied = applyVerdict(out, [{ name: "Bandido de poca monta", hp: 88, maxHp: 88 }]);
+    expect(applied[0].hpLoss).toBeGreaterThan(0);
+  });
+  it("matches real names regardless of accents and case", () => {
+    const v = { narration: "x", changes: [{ name: "SEBASTIÁN", hp: 6, stamina: 0 }] };
+    expect(foldUnknownChanges(v, known, "Bandido de poca monta").changes[0].name).toBe("SEBASTIÁN");
+  });
+  it("does not declare the whole side fallen because an invented member fell", () => {
+    const v = { narration: "x", changes: [], defeated: ["Bruno", "Barbosa"] };
+    expect(foldUnknownChanges(v, known, "Bandido de poca monta").defeated).toEqual(["Barbosa"]);
+  });
+  it("leaves the verdict alone when the rival is not in the list", () => {
+    const v = { narration: "x", changes: [{ name: "Leo", hp: 9, stamina: 0 }] };
+    expect(foldUnknownChanges(v, ["Barbosa"], "Otro")).toBe(v);
   });
 });

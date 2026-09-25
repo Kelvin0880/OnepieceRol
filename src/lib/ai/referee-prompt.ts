@@ -81,6 +81,7 @@ const CORE_RULES =
   "ESCALA DE PÉRDIDA DE VIDA (sobre la vida MÁXIMA del que la sufre): roce o golpe flojo 2-6%; golpe sólido 8-18%; golpe muy fuerte 20-35%; devastador hasta " +
   `${Math.round(MAX_HP_LOSS_FRACTION * 100)}%. Nadie pierde más de la mitad de su vida máxima en un intercambio, así que solo se puede rematar a quien ya está por debajo de la mitad; ` +
   `si el golpe lo deja sin vida, su pérdida de vida debe ser igual a su vida actual. Aguante: esfuerzo, impactos y técnicas costosas pesan (0 a ${MAX_STAMINA_LOSS} por intercambio). ` +
+  "Si un jugador SÍ confirmó en su mensaje que recibe el golpe (\"acepto el impacto\", \"me golpea en el hombro\"), ese golpe cuesta vida según la escala, como mínimo un roce: narrar un impacto confirmado sin restarle vida es un error grave. " +
   "COHERENCIA OBLIGATORIA: la vida y el aguante de \"cambios\" deben corresponder EXACTAMENTE a lo que narras. Si un golpe alcanza con fuerza a alguien, no puede costar 0; si nadie recibe daño, todo va a 0; si narras una herida profunda, usa la escala de arriba. " +
   "NUNCA escribas cifras de vida ni de aguante en la narración (ni \"434 de vida\" ni porcentajes): el estado de cada uno se cuenta con el cuerpo, la respiración, las heridas y la postura; solo el JSON lleva números. " +
   "MEMORIA: recuerda TODO lo ocurrido en este combate (heridas acumuladas, técnicas y trucos ya usados, lo que el rival ya vio); un rival ya castigado no vuelve a estar fresco, y uno que ya vio un truco no cae dos veces igual. " +
@@ -111,6 +112,15 @@ const SOLO_FORMAT =
   RIVAL_CRAFT +
   "En esa intención todo va en tentativa (\"intenta\", \"busca\", \"si llega a conectar\"): puedes prever seguimientos según lo que el jugador haga, pero NUNCA des por logrado ningún golpe tuyo ni escribas que el jugador ya esquivó, bloqueó o recibió algo. " +
   "NO lo resuelvas ni hagas que dañe a nadie: el jugador decidirá en su siguiente mensaje cómo lo recibe. Si el rival cayó o no puede seguir, déjalo vacío y di en \"reaccion_rival\" que no puede continuar. ";
+
+const JOINT_FORMAT =
+  "TRES TEXTOS EN EL JSON. Hay VARIOS jugadores leyendo la misma escena, así que escribe en TERCERA persona y siempre con el NOMBRE de cada aliado (\"el garrote alcanza el hombro de Barbosa\", \"Sebastian intenta...\"); nunca uses \"tú\" ni \"tu\". " +
+  "\"resultado\": qué pasó con el ataque pendiente del rival y con CADA acción escrita por CADA aliado, una por una y en el orden en que aparecen: NINGUNA acción de ningún aliado se ignora ni se deja para después, aunque un aliado escriba menos que otro o el rival esté centrado en uno solo; cada aliado debe tener su resultado. " +
+  "\"reaccion_rival\": cómo queda el rival (con su nombre: en pie, herido, tambaleante, de rodillas, caído) y cómo responde; NUNCA vacío mientras siga en el combate. " +
+  "\"intencion_rival\": el SIGUIENTE ataque del rival contra un aliado concreto (por su nombre) escrito como INTENCIÓN con verbos de tentativa (\"Marco intenta ... con la intención de ...; si llega a conectar, ...\"). " +
+  RIVAL_CRAFT +
+  "En esa intención todo va en tentativa: NUNCA des por logrado ningún golpe del rival ni escribas que un aliado ya lo esquivó, bloqueó o recibió. NO lo resuelvas: cada jugador decidirá en su siguiente mensaje cómo lo recibe. Si el rival cayó o no puede seguir, déjalo vacío. " +
+  "EL BANDO RIVAL: el rival de la lista de combatientes es UN solo combatiente que representa a TODO su bando. Si la escena muestra a varios (secuaces, matones, soldados) su vida es la del bando entero: lo que sufra cualquiera de sus miembros se apunta en \"cambios\" con el nombre EXACTO del rival de la lista (nunca con el nombre de un secuaz), y el bando solo cae del todo cuando su vida llega a 0. No des por caído a todo el bando por caer un solo miembro. ";
 
 const JSON_TAIL =
   "\"cambios\": [{\"nombre\":\"Nombre exacto\",\"vida\":0,\"aguante\":0}] con CADA combatiente y lo que PIERDE en este veredicto (enteros >= 0, 0 si nada). " +
@@ -160,7 +170,7 @@ export function buildRefereePrompt(input: RefereeInput): PromptOut {
         "Los aliados NPC (sin texto propio) actúan según su ficha y su papel, siempre en grado de tentativa. Si había un ataque pendiente del rival, resuélvelo contra quien corresponda según cómo cada jugador dijo recibirlo. " +
         "Quien queda con vida 0 está fuera de combate, pero no lo narres como muerto: el destino lo decide el juego después. Si el rival cae, añade al JSON \"golpe_final\" con el nombre exacto del aliado que le da el golpe decisivo. " +
         "Si algún aliado INTENTA HUIR, decide con lógica quién escapa y pon sus nombres exactos en \"huyen\" (lista, vacía si nadie); quien huye con éxito no pierde vida y quien no lo logra sigue en el combate. " +
-        SOLO_FORMAT
+        JOINT_FORMAT
       : "MODO COMBATE SOLO CONTRA UN RIVAL. " + SOLO_FORMAT;
   const fleeRule = input.fleeAttempt
     ? "EL JUGADOR INTENTA HUIR de este combate (lo que escribió es su intención, no un hecho). Decide con lógica si el rival lo permite o lo alcanza (velocidad, nivel, entorno, lo bien pensado que esté lo que escribió, el estado de cada uno) y añade al JSON \"huida\": true si escapa o false si lo alcanzan. Si escapa, nadie pierde vida y \"intencion_rival\" queda vacía. Si lo alcanzan, resuelve el alcance del rival como un intercambio normal (con la escala de vida) y deja su siguiente intención anunciada. "
@@ -189,7 +199,9 @@ export function buildRefereePrompt(input: RefereeInput): PromptOut {
     (input.fightLog && input.fightLog.length > 0
       ? `REGISTRO COMPLETO DE ESTE COMBATE, en orden (RECUÉRDALO TODO: heridas y estado del rival, técnicas y trucos ya usados por ambos, lo que cada uno ya vio, frases y promesas; sé coherente con ello y no lo contradigas):\n${input.fightLog.join("\n")}\n`
       : input.recentScene && input.recentScene.length > 0 ? `Escena reciente:\n${input.recentScene.join("\n")}\n` : "") +
-    (input.actions[0] && input.mode !== "duel" ? currentActionBlock(input.actions[0].text) : "") +
+    (input.mode === "joint" && input.actions.length > 0
+      ? `\n\nACCIONES DE ESTE TURNO (responde a TODAS ahora; ninguna se ignora):\n${input.actions.map((a) => `- ${a.name} escribe:\n"""\n${a.text.trim()}\n"""`).join("\n")}\nTómalas literalmente: es exactamente lo que hace y dice cada personaje, sin añadir nada que no escribieron.`
+      : input.actions[0] && input.mode !== "duel" ? currentActionBlock(input.actions[0].text) : "") +
     "\n\nResponde solo con el JSON.";
   return { system, user, maxTokens: Math.round(maxWords * 2.6) + 600 };
 }

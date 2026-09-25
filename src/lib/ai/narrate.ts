@@ -33,7 +33,7 @@ import {
 } from "./narrate-prompt";
 import { callOpenRouter } from "./openrouter-client";
 import { buildRefereePrompt, type RefereeInput } from "./referee-prompt";
-import { checkConsistency, parseRefereeVerdict, sanitizeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
+import { checkConsistency, foldUnknownChanges, parseRefereeVerdict, sanitizeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
 import { OPENROUTER_MODELS } from "./models";
 import { parseCompanionProfile } from "../engine/companions";
 import { isWithPlayer } from "../engine/empire";
@@ -455,6 +455,7 @@ export async function refereeExchange(input: RefereeInput, meta: { characterId?:
       if (again) parsed = again;
     }
     const rival = input.actors.find((a) => a.side === "enemy")?.name ?? "El rival";
+    if (input.mode !== "duel") parsed = foldUnknownChanges(parsed, input.actors.map((a) => a.name), rival);
     const { verdict, report } = sanitizeVerdict(parsed, input.actions.map((a) => a.text).join("\n"), rival, input.mode === "solo" ? input.actors.find((a) => a.side === "player")?.name : undefined);
     if (issues.length > 0 || report.removed.length > 0) {
       await logError(`ai/referee-${meta.context}-guard`, new Error(`issues: ${issues.join(" | ").slice(0, 300)} removed ${report.removed.length}: ${report.removed.join(" | ").slice(0, 400)}`), logMeta);
