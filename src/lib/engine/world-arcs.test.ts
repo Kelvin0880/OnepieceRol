@@ -77,6 +77,16 @@ describe("casting", () => {
       if (c.target.factionType === "MARINE") expect(c.kind).toBe("death");
     }
   });
+  it("features the kept-alive Emperors far more often than chance would", () => {
+    const withStars = [...cast, actor({ id: "k", name: "Kaido", factionType: "PIRATE", powerLevel: 99 }), actor({ id: "m", name: "Marina X", factionType: "MARINE", powerLevel: 95 })];
+    let plain = 0;
+    let boosted = 0;
+    for (let seed = 1; seed <= 400; seed++) {
+      if (pickArcCast(mulberry32(seed), withStars)?.target.name === "Kaido") plain++;
+      if (pickArcCast(mulberry32(seed), withStars, ["Kaido"])?.target.name === "Kaido") boosted++;
+    }
+    expect(boosted).toBeGreaterThan(plain * 2);
+  });
   it("returns null when there is nobody to fight", () => {
     expect(pickArcCast(mulberry32(1), [actor({ id: "1", name: "Solo" })])).toBeNull();
     expect(pickArcCast(mulberry32(1), [actor({ id: "1", name: "A", factionType: "MARINE" }), actor({ id: "2", name: "B", factionType: "MARINE" })])).toBeNull();

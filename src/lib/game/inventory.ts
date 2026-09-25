@@ -10,6 +10,7 @@ import {
   getItemDef,
   removeOne,
   rollLoot,
+  specialtyIdsFor,
   sellValue,
   useItem,
   type Stack,
@@ -19,6 +20,11 @@ export class InventoryError extends Error {}
 
 /** Items sold in any port. Dangerous islands charge more; a fair profit for whoever hauls them. */
 export const SHOP_ITEM_IDS = ["vendaje", "racion", "sake", "botiquin", "logpose", "denden", "elixir"];
+
+/** The common stock plus whatever the island is known for. */
+export function shopIdsFor(islandName: string): string[] {
+  return [...SHOP_ITEM_IDS, ...specialtyIdsFor(islandName)];
+}
 
 export function shopPrice(basePrice: number, danger: number): number {
   return Math.round(basePrice * (1 + Math.max(0, danger - 1) * 0.06));
@@ -154,9 +160,9 @@ export async function getInventoryView(characterId: string, userId: string) {
     weapons: c.ownedWeapons.map((w) => ({ id: w.id, name: w.name, kind: w.kind, atkBonus: w.atkBonus, description: w.description, equipped: w.id === c.equippedWeaponId })),
     devilFruit: c.devilFruit ? { name: c.devilFruit.name, description: c.devilFruit.description } : null,
     poneglyphsRead: c.poneglyphsRead,
-    shop: SHOP_ITEM_IDS.map((id) => {
+    shop: shopIdsFor(c.currentIsland.name).map((id) => {
       const d = getItemDef(id)!;
-      return { id, name: d.name, kind: d.kind, description: d.description, price: shopPrice(d.price, c.currentIsland.dangerLevel) };
+      return { id, name: d.name, kind: d.kind, description: d.description, price: shopPrice(d.price, c.currentIsland.dangerLevel), special: !SHOP_ITEM_IDS.includes(id) };
     }),
   };
 }
@@ -235,7 +241,7 @@ export async function grantWeapon(characterId: string, spec: { name: string; kin
 export async function buyInventoryItem(characterId: string, userId: string, itemId: string) {
   const c = await ownedCharacter(characterId, userId);
   if (c.status !== "ALIVE") throw new InventoryError("No puedes comerciar en tu estado actual.");
-  if (!SHOP_ITEM_IDS.includes(itemId)) throw new InventoryError("Ese mercader no vende eso.");
+  if (!shopIdsFor(c.currentIsland.name).includes(itemId)) throw new InventoryError("Ese mercader no vende eso.");
   const def = getItemDef(itemId)!;
   const price = shopPrice(def.price, c.currentIsland.dangerLevel);
   if (c.berries < price) throw new InventoryError(`Cuesta ฿ ${price.toLocaleString("es-ES")} y no los tienes.`);

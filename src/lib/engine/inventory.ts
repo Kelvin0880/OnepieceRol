@@ -19,8 +19,10 @@ export interface ItemDef {
   price: number;
   effect?: ItemEffect;
   maxStack: number;
-  /** Lowest island danger where it turns up as loot. */
+  /** Lowest island danger where it turns up as loot (99 = never dropped). */
   minDanger: number;
+  /** Island specialty: sold only by the merchant of these islands. */
+  soldAt?: string[];
 }
 
 export const ITEM_CATALOG: ItemDef[] = [
@@ -34,12 +36,24 @@ export const ITEM_CATALOG: ItemDef[] = [
   { id: "denden", name: "Den Den Mushi portátil", kind: "Herramienta", description: "Un caracol de comunicaciones. Útil para recibir rumores.", price: 3500, maxStack: 1, minDanger: 3 },
   { id: "mapa", name: "Mapa del tesoro", kind: "Tesoro", description: "Un mapa viejo con una X. Al usarlo, encuentras un pequeño botín.", price: 2000, effect: { berries: 1500 }, maxStack: 3, minDanger: 2 },
   { id: "reliquia", name: "Reliquia antigua", kind: "Tesoro", description: "Cerámica de una era olvidada. Los coleccionistas pagan bien.", price: 8000, maxStack: 5, minDanger: 4 },
+  { id: "oasis", name: "Agua de oasis", kind: "Consumible", description: "Agua fría de los manantiales de Alabasta. Recupera 60 de aguante.", price: 900, effect: { stamina: 60 }, maxStack: 6, minDanger: 99, soldAt: ["Alabasta"] },
+  { id: "banquete", name: "Banquete del Baratie", kind: "Consumible", description: "Un plato de los cocineros del Baratie. Recupera 50 de vida y 50 de aguante.", price: 2500, effect: { hp: 50, stamina: 50 }, maxStack: 4, minDanger: 99, soldAt: ["Restaurante Baratie"] },
+  { id: "unguento", name: "Ungüento Kuja", kind: "Consumible", description: "Hierbas de Amazon Lily. Recupera 80 de vida.", price: 3000, effect: { hp: 80 }, maxStack: 4, minDanger: 99, soldAt: ["Amazon Lily"] },
+  { id: "infusion", name: "Infusión mink", kind: "Consumible", description: "Un brebaje de la selva de Zou. Recupera 70 de aguante y 20 de vida.", price: 2200, effect: { stamina: 70, hp: 20 }, maxStack: 4, minDanger: 99, soldAt: ["Zou"] },
+  { id: "sakewano", name: "Sake de Wano", kind: "Consumible", description: "Sake de arroz de la tierra de los samuráis. Recupera 45 de aguante y 30 de vida.", price: 1800, effect: { stamina: 45, hp: 30 }, maxStack: 4, minDanger: 99, soldAt: ["País de Wano"] },
+  { id: "perlasirena", name: "Perla de sirena", kind: "Tesoro", description: "Una perla de la Isla Gyojin, tan pura que las sirenas la regalan a quien protege su hogar.", price: 12000, maxStack: 5, minDanger: 99, soldAt: ["Isla Gyojin"] },
+  { id: "estrella", name: "Estrella del Toro Negro", kind: "Consumible", description: "Una ración de guerra de los Black Bulls. Recupera 100 de vida y 60 de aguante.", price: 9000, effect: { hp: 100, stamina: 60 }, maxStack: 2, minDanger: 99, soldAt: ["Isla del Toro Negro"] },
   { id: "perla", name: "Perla del mar profundo", kind: "Tesoro", description: "Una perla enorme, de las que se pagan a precio de barco.", price: 20000, maxStack: 5, minDanger: 7 },
 ];
 
 const BY_ID = new Map(ITEM_CATALOG.map((i) => [i.id, i]));
 export function getItemDef(id: string): ItemDef | undefined {
   return BY_ID.get(id);
+}
+
+/** What this island's merchant sells on top of the common stock. */
+export function specialtyIdsFor(islandName: string): string[] {
+  return ITEM_CATALOG.filter((i) => i.soldAt?.includes(islandName)).map((i) => i.id);
 }
 
 export const SELL_FRACTION = 0.4;

@@ -288,6 +288,13 @@ async function awardPrize(characterId: string, prize: PrizeSpec): Promise<void> 
   if (prize.kind === "weapon" && prize.weapon) {
     const name = await grantWeapon(characterId, { ...prize.weapon, basePrice: 20_000 });
     text = `¡Campeón del Coliseo! Te llevas ${name} (+${prize.weapon.atkBonus} ATQ): ya está en tu Inventario, listo para equipar.`;
+  } else if (prize.kind === "style" && prize.styleId) {
+    const have = await prisma.characterStyle.findUnique({ where: { characterId_styleId: { characterId, styleId: prize.styleId } } });
+    const mastery = Math.min(100, (have?.mastery ?? 0) + 25);
+    await prisma.characterStyle.upsert({ where: { characterId_styleId: { characterId, styleId: prize.styleId } }, update: { mastery }, create: { characterId, styleId: prize.styleId, mastery: Math.max(30, mastery) } });
+    text = have
+      ? `¡Campeón del Coliseo! Te llevas ${prize.label}: tu maestría sube a ${mastery}.`
+      : `¡Campeón del Coliseo! Te llevas ${prize.label}: ya conoces el estilo, sin escuela ni matrícula. Míralo en Estilos.`;
   } else if (prize.kind === "fruit" && prize.fruitName) {
     const name = await grantCatalogFruit(characterId, prize.fruitName);
     if (name) {

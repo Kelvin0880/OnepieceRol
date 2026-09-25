@@ -83,6 +83,12 @@ try {
   check("the character is now in Wano", (await page.textContent("body")).includes("Wano"));
   await fits("play screen after the ambush");
   await page.screenshot({ path: path.join(shots, "voyage-06-ambush.png"), fullPage: true });
+  await page.click('[data-testid="inventory-open"]');
+  await page.waitForSelector('[data-testid="inventory-panel"]');
+  await page.click('[data-testid="inv-tab-shop"]');
+  check("the Wano merchant sells its local sake", (await page.textContent('[data-testid="inv-shop"]')).includes("Sake de Wano") && (await page.textContent('[data-testid="inv-shop"]')).includes("especialidad local"));
+  await fits("specialty shop");
+  await page.screenshot({ path: path.join(shots, "voyage-07-specialty-shop.png"), fullPage: true });
   check("no page errors", errors.length === 0, errors.join(" | "));
 } catch (e) {
   console.log("ERROR:", e.message);

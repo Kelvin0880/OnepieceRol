@@ -111,10 +111,14 @@ describe("prizes", () => {
     expect(choosePrize(mulberry32(2), "gold", 40, []).berries!).toBeGreaterThan(choosePrize(mulberry32(2), "gold", 5, []).berries!);
   });
   it("falls back to gold when there is no fruit to give, and every kind is reachable", () => {
+    const st = choosePrize(mulberry32(2), "styles", 20, []);
+    expect(st.kind).toBe("style");
+    expect(st.styleId).toBeTruthy();
+    expect(st.label).toContain("manual");
     expect(choosePrize(mulberry32(2), "fruit", 20, []).kind).toBe("berries");
     const kinds = new Set<string>();
     for (let s = 1; s <= 60; s++) kinds.add(pickKind(mulberry32(s)));
-    expect(kinds.size).toBe(3);
+    expect(kinds.size).toBe(4);
   });
 });
 

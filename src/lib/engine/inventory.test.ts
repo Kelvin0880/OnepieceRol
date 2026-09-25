@@ -101,3 +101,20 @@ describe("belongingsFor / describeInventory", () => {
     expect(describeInventory([])).toContain("vacía");
   });
 });
+
+import { specialtyIdsFor, ITEM_CATALOG as CAT } from "./inventory";
+
+describe("island specialties", () => {
+  it("each island sells its own goods", () => {
+    expect(specialtyIdsFor("Alabasta")).toEqual(["oasis"]);
+    expect(specialtyIdsFor("Zou")).toEqual(["infusion"]);
+    expect(specialtyIdsFor("Loguetown")).toEqual([]);
+  });
+  it("specialties never drop as random loot and always have a price and an island", () => {
+    for (const i of CAT.filter((x) => x.soldAt)) {
+      expect(i.minDanger).toBe(99);
+      expect(i.price).toBeGreaterThan(0);
+      expect(i.soldAt!.length).toBeGreaterThan(0);
+    }
+  });
+});

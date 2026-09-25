@@ -16,6 +16,8 @@ import { FATIGUE_LABELS, fatigueLevel, restStamina, spendStamina } from "../engi
 import { prepareFighter, combatProgressData, currentStamina } from "./combat-prep";
 import { bountyReward, berryReward, xpToNextLevel } from "../engine/economy";
 import { assessThreat, attemptFlee, ThreatAssessment } from "../engine/encounter";
+import { detectStyleLesson, getStyle } from "../engine/styles";
+import { ACTOR_STYLES } from "../engine/actor-styles";
 import { settleVoyage, assertNotAtSea, startVoyage } from "./voyage";
 import { canSailAnywhere, hopsBetween, voyageDurationMs, rollSeaAmbush, pickSeaAmbush, seaAmbushPower } from "../engine/voyage";
 import { canEnterIsland, travelWaitMs, TRAVEL_STAMINA_COST, tideStatus, knowsTheRoad } from "../engine/travel";
@@ -1865,6 +1867,25 @@ function exchangeRows(characterId: string, playerText: string, narratorText: str
   ];
 }
 
+/** "Maestro, quiero aprender X": enrolment through the scene, with a canon master named when one is on the island. */
+async function requestStyleLesson(character: LoadedCharacter, freeText: string): Promise<string[] | null> {
+  const styleId = detectStyleLesson(freeText);
+  if (!styleId) return null;
+  const def = getStyle(styleId)!;
+  const { learnStyle, StyleError } = await import("./styles"); // dynamic: styles.ts imports back into this layer
+  const masters = (
+    await prisma.worldActor.findMany({ where: { currentIslandId: character.currentIslandId, status: "ACTIVE", locationHidden: false }, select: { name: true } })
+  ).filter((a) => (ACTOR_STYLES[a.name] ?? []).includes(styleId));
+  const teacher = masters[0]?.name;
+  try {
+    const r = await learnStyle(character.id, character.userId, styleId);
+    return [teacher ? `${teacher} acepta darte clase de ${def.name}.` : `El maestro de la escuela de ${def.name} te acepta como alumno.`, r.message];
+  } catch (err) {
+    if (err instanceof StyleError) return [teacher ? `${teacher} te escucha, pero no puede enseñarte ${def.name} todavía: ${err.message}` : `Pides clases de ${def.name}, pero no puede ser todavía: ${err.message}`];
+    throw err;
+  }
+}
+
 export async function resolveFreeTextAction(characterId: string, userId: string, freeText: string): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
   void maybeAutoCheckpoint(character.id, userId, "antes de actuar");
@@ -1880,6 +1901,11 @@ export async function resolveFreeTextAction(characterId: string, userId: string,
   if (await getOpenJointFightFor(character.id)) {
     const outcome = await submitJointAction(character.id, userId, freeText);
     return { ...emptyResult(outcome.log, character.level), jointFight: true };
+  }
+
+  if (!character.pendingEncounter) {
+    const lesson = await requestStyleLesson(character, freeText);
+    if (lesson) return emptyResult(lesson, character.level);
   }
 
   if (character.partyId && !character.isSeparatedFromParty && !character.pendingEncounter) {

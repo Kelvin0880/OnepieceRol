@@ -285,6 +285,23 @@ export function styleForText(known: KnownStyle[], text: string, wielded: number,
   return activeStyle(known, wielded, focusId);
 }
 
+const LESSON_VERB = /\b(aprender|aprenda|estudiar|estudio|ensen\w*|matricul\w*|quiero entrenar (con|el|la|en)|entrename|instruy\w*)\b/;
+
+/**
+ * "Maestro, quiero aprender Santoryu": a request for lessons that names a learnable style.
+ * Deterministic on purpose: it only fires on an explicit lesson verb plus a style name, never on plain talk about a style.
+ */
+export function detectStyleLesson(text: string): string | null {
+  const lower = norm(text);
+  if (!LESSON_VERB.test(lower)) return null;
+  for (const def of STYLES) {
+    if (!def.learn) continue;
+    const short = norm(def.name).replace(/\(.*\)/, "").trim();
+    if (short.length > 3 && lower.includes(short)) return def.id;
+  }
+  return null;
+}
+
 /** Weapons in the off hands: without the matching style the extra blades are clumsy; with it they approach full value. */
 export function wieldedAttackBonus(bonuses: number[], slotsSkilled: number, mastery: number): number {
   const sorted = [...bonuses].sort((a, b) => b - a).slice(0, 3);

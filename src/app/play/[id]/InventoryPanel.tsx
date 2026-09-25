@@ -12,7 +12,7 @@ interface View {
   weapons: { id: string; name: string; kind: string; atkBonus: number; description: string; equipped: boolean }[];
   devilFruit: { name: string; description: string } | null;
   poneglyphsRead: string;
-  shop: { id: string; name: string; kind: string; description: string; price: number }[];
+  shop: { id: string; name: string; kind: string; description: string; price: number; special?: boolean }[];
 }
 
 type Tab = "bag" | "gear" | "shop";
@@ -196,7 +196,7 @@ export default function InventoryPanel({ characterId, onClose, onChanged }: { ch
             {view.shop.map((s) => (
               <div key={s.id} className="rounded border border-white/10 p-2 flex items-center justify-between gap-2">
                 <div className="min-w-0">
-                  <p className="text-sm text-gold-bright">{s.name}</p>
+                  <p className="text-sm text-gold-bright">{s.name}{s.special && <span className="ml-2 text-[10px] uppercase text-emerald-300">especialidad local</span>}</p>
                   <p className="text-xs text-ink-dim">{s.description}</p>
                 </div>
                 <button className="btn-ghost px-3 py-1 text-xs shrink-0" disabled={busy} onClick={() => act("inventory", { op: "buy", itemId: s.id })} data-testid={`inv-buy-${s.id}`}>

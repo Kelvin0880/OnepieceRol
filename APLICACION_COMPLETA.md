@@ -275,6 +275,10 @@ Fase 3: Orange Town y Villa Syrup (East Blue, nivel 1), Ohara (Paradise, 14), Ma
 - **Comandantes con perfil**: `NPCCompanion.profileJson` (`epithet`, `abilities`, `styleId`, `attrs`) sobreescribe las habilidades del rol y suma atributos (`companionSheet(..., profile)`); el narrador y las peleas conjuntas los conocen.
 - **Isla del Toro Negro** (Nuevo Mundo, peligro 8, nivel 30, conectada a Elbaf y Dressrosa) y `scripts/make-yonko.ts "<personaje>"`: herramienta del dueño, idempotente, que deja a un pirata como Yonko (atributos al tope de su nivel, 3 Hakis, copia despertada de la Ope Ope no Mi, Nitoryu al máximo con dos espadas, recompensa 2.000 M, isla propia como `Territory` con guarnición completa y tres comandantes con nombre). La Ope Ope de Law sigue siendo suya: es una copia (fila distinta; la semilla elige siempre la más antigua).
 - **Coliseo**: un torneo cada ~48 h (antes 24).
+- **Tiendas por isla**: `ItemDef.soldAt` (`engine/inventory.ts`, `specialtyIdsFor`): 7 especialidades locales (Alabasta, Baratie, Amazon Lily, Zou, Wano, Isla Gyojin, Toro Negro) que el Mercader vende solo allí, marcadas "especialidad local"; nunca caen como botín (`minDanger` 99).
+- **Torneo de estilos** en el Coliseo (`kind: "styles"`, premio `style`): el campeón aprende el estilo sin escuela ni matrícula (maestría mínima 30) o sube +25 si ya lo conocía.
+- **Clases en la escena**: escribir "Maestro, quiero aprender Santoryu" (`detectStyleLesson`, determinista: verbo de clase + nombre de estilo) matricula al personaje por la vía normal (`learnStyle`, mismos requisitos) nombrando a un maestro canon presente si lo hay; si no cumple los requisitos se le dice por qué y no se cobra nada.
+- **Saga de los Emperadores**: Kaido y Big Mom son protagonistas preferentes (50 %) de los eventos mundiales (`FEATURED_ACTOR_NAMES`); siguen sin morir ni ser capturados sin el veredicto del dueño en `/admin`.
 - Verificado con `scripts/voyage-check.ts` (DB) y `scripts/voyage-ui-check.mjs` (navegador a 390 px).
 
 ## 6. Modelo de datos (Prisma)

@@ -13,6 +13,7 @@ import {
   nextBeatTime,
   outcomeActorStatus,
   pickArcCast,
+  FEATURED_ACTOR_NAMES,
   shouldStartArc,
   verdictOutcome,
 } from "../engine/world-arcs";
@@ -213,7 +214,7 @@ export async function tickWorldArcs(now = new Date()): Promise<void> {
     ]);
     const rng = liveRng();
     if (!shouldStartArc(rng, { hasOpenArc: false, lastResolvedAt: lastResolved?.updatedAt ?? null, heat: clock?.heat ?? 0, now })) return;
-    const cast = pickArcCast(rng, actors);
+    const cast = pickArcCast(rng, actors, FEATURED_ACTOR_NAMES);
     if (!cast) return;
     await prisma.worldArc.create({
       data: {

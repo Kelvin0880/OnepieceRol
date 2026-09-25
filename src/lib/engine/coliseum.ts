@@ -1,7 +1,8 @@
 import { resolveExchange, type Combatant } from "./combat";
 import type { Rng } from "./rng";
+import { STYLES } from "./styles";
 
-export type CompetitionKind = "weapons" | "fruit" | "gold";
+export type CompetitionKind = "weapons" | "fruit" | "gold" | "styles";
 
 export const COLISEUM_ISLAND_NAME = "Dressrosa";
 /** Rare on purpose: a special event, not a daily grind. */
@@ -13,11 +14,12 @@ export const ROUND_INTERVAL_MS = 15 * 60 * 1000;
 export const MAX_BOUT_ROUNDS = 40;
 
 export interface PrizeSpec {
-  kind: "weapon" | "fruit" | "berries";
+  kind: "weapon" | "fruit" | "berries" | "style";
   label: string;
   weapon?: { name: string; kind: string; atkBonus: number; description: string };
   fruitName?: string;
   berries?: number;
+  styleId?: string;
 }
 
 export type TournamentStatus = "ANNOUNCED" | "RUNNING" | "FINISHED" | "CANCELLED";
@@ -26,6 +28,7 @@ export const KIND_LABELS: Record<CompetitionKind, string> = {
   weapons: "Torneo de armas",
   fruit: "Torneo de la Fruta del Diablo",
   gold: "Gran torneo del oro",
+  styles: "Torneo de estilos",
 };
 
 const WEAPON_PRIZES = [
@@ -43,6 +46,11 @@ export function choosePrize(rng: Rng, kind: CompetitionKind, avgLevel: number, f
     const atkBonus = w.base + Math.floor(level / 6);
     return { kind: "weapon", label: `${w.name} (+${atkBonus} ATQ)`, weapon: { name: w.name, kind: w.kind, atkBonus, description: w.description } };
   }
+  if (kind === "styles") {
+    const learnable = STYLES.filter((s) => s.learn);
+    const s = learnable[Math.floor(rng() * learnable.length)];
+    return { kind: "style", label: `el manual del ${s.name}`, styleId: s.id };
+  }
   if (kind === "fruit" && fruitNames.length > 0) {
     const name = fruitNames[Math.floor(rng() * fruitNames.length)];
     return { kind: "fruit", label: `la ${name}`, fruitName: name };
@@ -53,7 +61,7 @@ export function choosePrize(rng: Rng, kind: CompetitionKind, avgLevel: number, f
 
 export function pickKind(rng: Rng): CompetitionKind {
   const r = rng();
-  return r < 0.4 ? "weapons" : r < 0.7 ? "fruit" : "gold";
+  return r < 0.3 ? "weapons" : r < 0.55 ? "fruit" : r < 0.75 ? "gold" : "styles";
 }
 
 export function bracketSize(entrants: number): 4 | 8 | 16 {

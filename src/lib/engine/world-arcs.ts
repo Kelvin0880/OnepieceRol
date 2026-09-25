@@ -98,12 +98,17 @@ export interface ArcCast {
   kind: ArcKind;
 }
 
+/** Kept alive on purpose for the story: when a world event starts they are far more likely to star in it. */
+export const FEATURED_ACTOR_NAMES = ["Kaido", "Charlotte Linlin (Big Mom)"];
+export const FEATURED_CHANCE = 0.5;
+
 /** Picks a credible clash: a target and a rival of comparable weight. Null when the world has no such pair. */
-export function pickArcCast(rng: Rng, actors: ArcActor[]): ArcCast | null {
+export function pickArcCast(rng: Rng, actors: ArcActor[], featured: string[] = []): ArcCast | null {
   const pool = actors.filter(arcEligible);
   if (pool.length < 2) return null;
+  const stars = pool.filter((a) => featured.includes(a.name));
   for (let attempt = 0; attempt < 12; attempt++) {
-    const target = pool[Math.floor(rng() * pool.length)];
+    const target = stars.length > 0 && rng() < FEATURED_CHANCE ? stars[Math.floor(rng() * stars.length)] : pool[Math.floor(rng() * pool.length)];
     const { factions, kind } = rivalsOf(target, rng);
     const rivals = pool.filter((a) => a.id !== target.id && factions.includes(a.factionType) && a.powerLevel >= target.powerLevel - 20);
     if (rivals.length === 0) continue;

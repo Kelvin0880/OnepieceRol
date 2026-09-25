@@ -134,6 +134,24 @@ async function main() {
   const r3 = JSON.parse(t3.bracketJson) as { walkover?: boolean }[][];
   assert(r3[0].some((m) => m.walkover), "the forfeit is recorded as a walkover");
 
+  // ---- a tournament of styles: the champion learns the style for free
+  await prisma.tournamentEntry.deleteMany({});
+  await prisma.tournament.deleteMany({});
+  const fourth = await announceTournament(Date.now() - 4 * 24 * 3_600_000, { kind: "styles" });
+  const sp = JSON.parse(fourth!.prizeJson) as { kind: string; styleId: string; label: string };
+  assert(sp.kind === "style" && sp.label.includes("manual"), "a style tournament announces a style manual as the prize");
+  await prisma.character.update({ where: { id: hero.c.id }, data: { currentIslandId: dress.id } });
+  await registerForTournament(hero.c.id, hero.u.id);
+  await prisma.tournament.update({ where: { id: fourth!.id }, data: { startsAt: new Date(Date.now() - 1000) } });
+  await startTournament(fourth!.id);
+  for (let g = 0; g < 4; g++) {
+    const cur = await prisma.tournament.findUniqueOrThrow({ where: { id: fourth!.id } });
+    if (cur.status !== "RUNNING") break;
+    await resolveRound(fourth!.id);
+  }
+  const learned = await prisma.characterStyle.findUnique({ where: { characterId_styleId: { characterId: hero.c.id, styleId: sp.styleId } } });
+  assert(!!learned && learned.mastery >= 30, "the champion of the style tournament now knows that style");
+
   console.log("ALL COLISEUM CHECKS PASSED");
 }
 main().finally(() => prisma.$disconnect());

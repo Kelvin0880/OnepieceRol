@@ -482,6 +482,16 @@ puerto y su fuerza crece con la distancia. Las islas cerradas por nivel, por
 marea o por los Poneglifos de Ruta aparecen bloqueadas con el motivo. Los
 Yonko salen en las Noticias cada vez que zarpan o desembarcan.
 
+OTRAS NOVEDADES
+- Cada puerto vende algo propio (agua de oasis en Alabasta, banquete en el
+  Baratie, sake en Wano...): sale marcado "especialidad local" en el Mercader.
+- El Coliseo también convoca torneos de estilos: el campeón aprende un estilo
+  de combate gratis. Hay un torneo cada dos días aproximadamente.
+- Para aprender un estilo en una escuela puedes escribir en la escena
+  "Maestro, quiero aprender Santoryu": si cumples los requisitos, te matriculas.
+- Kaido y Big Mom siguen vivos y son protagonistas frecuentes de los eventos
+  mundiales.
+
 LONGITUD DE LAS RESPUESTAS
 El narrador ajusta el largo a lo que escribes: una pregunta o una acción simple
 recibe una respuesta corta y directa; solo se extiende con giros importantes,

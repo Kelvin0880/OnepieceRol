@@ -5,6 +5,7 @@ import { prisma } from "../src/lib/db";
 import { getStylesView, learnStyle, trainStyle, setStyleFocus, setWielded, StyleError } from "../src/lib/game/styles";
 import { toCombatant } from "../src/lib/game/derive";
 import { prepareFighter } from "../src/lib/game/combat-prep";
+import { resolveFreeTextAction } from "../src/lib/game/perform-action";
 
 function assert(cond: boolean, label: string) {
   if (!cond) throw new Error(`FAIL: ${label}`);
@@ -118,6 +119,16 @@ async function main() {
   assert(sanji.abilitiesJson!.includes("Pierna Negra"), "Sanji's kit names Pierna Negra");
   const withStyles = await prisma.worldActor.count({ where: { abilitiesJson: { contains: "Estilo:" } } });
   assert(withStyles >= 45, `at least 45 canon characters have a combat style (${withStyles})`);
+
+  // ---- asking a master for lessons in the scene
+  const pupil = await prisma.character.create({
+    data: { name: `Alumno${Date.now() % 10000}`, faction: "PIRATE", userId: u.id, currentIslandId: dojo.id, level: 12, hp: 100, maxHp: 100, berries: 200_000 },
+  });
+  const lesson = await resolveFreeTextAction(pupil.id, u.id, "Maestro, quiero aprender Ittoryu");
+  assert(lesson.log.join(" ").includes("Ittoryu"), "asking for lessons in the scene enrols the character");
+  assert(!!(await prisma.characterStyle.findUnique({ where: { characterId_styleId: { characterId: pupil.id, styleId: "ittoryu" } } })), "the style is learned and the fee charged");
+  const refused = await resolveFreeTextAction(pupil.id, u.id, "Enséñame el Santoryu");
+  assert(refused.log.join(" ").includes("todavía") && !(await prisma.characterStyle.findFirst({ where: { characterId: pupil.id, styleId: "santoryu" } })), "a lesson you do not qualify for is refused with the reason, nothing charged");
 
   console.log("ALL STYLE CHECKS PASSED");
 }

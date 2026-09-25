@@ -129,6 +129,17 @@ async function main() {
   await prisma.inventoryItem.create({ data: { characterId: c.id, name: "Roto", kind: "x", quantity: 1, effectJson: "{not json" } });
   assert((await getInventoryView(c.id, u.id)).items.every((i) => i.name !== "Roto"), "a corrupt row does not break the inventory");
 
+  // island specialties
+  const alabasta = await prisma.island.findFirstOrThrow({ where: { name: "Alabasta" } });
+  await prisma.character.update({ where: { id: c.id }, data: { currentIslandId: alabasta.id, berries: 100_000 } });
+  await prisma.inventoryItem.deleteMany({ where: { characterId: c.id } });
+  const shop = (await getInventoryView(c.id, u.id)).shop;
+  assert(shop.some((x) => x.id === "oasis" && x.special) && shop.some((x) => x.id === "vendaje" && !x.special), "Alabasta sells its water on top of the common stock");
+  await buyInventoryItem(c.id, u.id, "oasis");
+  assert((await getInventoryView(c.id, u.id)).items.some((i) => i.name === "Agua de oasis"), "the local specialty can be bought");
+  await prisma.character.update({ where: { id: c.id }, data: { currentIslandId: (await prisma.island.findFirstOrThrow({ where: { name: "Zou" } })).id } });
+  assert(await rejects(() => buyInventoryItem(c.id, u.id, "oasis"), InventoryError), "the oasis water is not sold on other islands");
+
   console.log("ALL ATTRIBUTE + INVENTORY CHECKS PASSED");
 }
 main().finally(() => prisma.$disconnect());

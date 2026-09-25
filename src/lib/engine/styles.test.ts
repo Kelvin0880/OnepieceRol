@@ -161,3 +161,19 @@ describe("describeStyles (what the narrator reads)", () => {
     expect(describeStyles([], 0, [])).toContain("sin estilo");
   });
 });
+
+import { detectStyleLesson } from "./styles";
+
+describe("detectStyleLesson", () => {
+  it("recognises a request for lessons that names a learnable style", () => {
+    expect(detectStyleLesson("Maestro, quiero aprender Santoryu")).toBe("santoryu");
+    expect(detectStyleLesson("Enséñame el Estilo Pierna Negra, por favor")).toBe("black_leg");
+    expect(detectStyleLesson("Me gustaría estudiar Rokushiki aquí")).toBe("rokushiki");
+    expect(detectStyleLesson("Quiero que me enseñes Karate Hombre-Pez")).toBe("gyojin_karate");
+  });
+  it("ignores plain talk about a style and lessons with no style", () => {
+    expect(detectStyleLesson("Uso Santoryu contra el bandido")).toBeNull();
+    expect(detectStyleLesson("Cuéntame algo sobre el Rokushiki")).toBeNull();
+    expect(detectStyleLesson("Quiero aprender a cocinar")).toBeNull();
+  });
+});
