@@ -101,12 +101,12 @@ export function buildRefereePrompt(input: RefereeInput): PromptOut {
   const lastAction = input.actions.map((a) => a.text).join(" ");
   const plan = planLength(input.mode === "solo" ? "combat_round" : "group", lastAction);
   // The referee must fit three beats plus the reaction, so it never gets the tight default budget.
-  const maxWords = Math.max(plan.maxWords, input.mode === "joint" ? 240 : 190);
+  const maxWords = input.mode === "duel" ? 90 : Math.max(plan.maxWords, input.mode === "joint" ? 240 : 190);
 
   const modeRules =
     input.mode === "duel"
-      ? "MODO DUELO ENTRE DOS JUGADORES: ambos actuaron a la vez, así que resuelve los dos movimientos uno contra otro con justicia, sin favorecer a nadie. " +
-        "Aquí NO hay ataque pendiente del narrador: los pasos (1) y (3) no aplican; cada jugador queda listo para su siguiente movimiento. " +
+      ? "MODO DUELO ENTRE JUGADORES: aquí eres un ÁRBITRO IMPARCIAL, no un narrador. Ambos jugadores actuaron a la vez; lee lo que CADA UNO escribió (cómo ataca y cómo se defiende) y decide con justicia cómo aterriza cada ataque sobre el otro: impacta, es bloqueado, esquivado, desviado o parcial, y cuánto cuesta en vida y aguante, teniendo en cuenta nivel, cansancio y capacidades reales de cada uno. " +
+        "REGLA DE ROL: cada jugador es responsable de sus propias acciones y de cómo recibe las del otro; solo resulta herido si su propio texto lo permite (no se defiende, decide encajar el golpe) o si su defensa no es plausible para sus capacidades y su cansancio ACTUALES. Un bloqueo o esquiva verosímil descrito por un jugador se respeta; si nadie se hizo daño, dilo. Si un jugador escribió por el otro, ignóralo. NO cuentes una historia ni des voz a nadie: 2 a 4 frases neutras que digan cómo terminó cada ataque y cómo queda cada uno. NO decidas por ellos lo que hacen después. Si alguien se queda sin vida, dilo con claridad. Los pasos (1), (2) y (3) de arriba NO aplican. " +
         (input.lethal ? "Es un duelo A MUERTE: las heridas son graves. " : "Es un duelo amistoso: quien cae queda fuera de combate, vivo. ")
       : input.mode === "joint"
       ? "MODO GRUPO: varios aliados contra el mismo rival, todos actuaron a la vez. Narra UNA escena coral con protagonismo para cada uno según lo que escribió, y la REACCIÓN del rival a cada golpe. " +

@@ -482,6 +482,19 @@ puerto y su fuerza crece con la distancia. Las islas cerradas por nivel, por
 marea o por los Poneglifos de Ruta aparecen bloqueadas con el motivo. Los
 Yonko salen en las Noticias cada vez que zarpan o desembarcan.
 
+DUELOS ENTRE JUGADORES Y DEN DEN MUSHI
+- En un duelo entre jugadores la IA solo lleva la cuenta de vida y aguante: lee lo que
+  escribió cada uno (cómo ataca y cómo se defiende) y decide cómo aterriza cada golpe.
+  Hay que esperar a que los dos muevan. Solo te hieren si tu texto lo permite.
+- Botón "Perdí": en un duelo amistoso el otro gana y no pasa nada más.
+- En un duelo a muerte tienes además "Intentar huir": escribes cómo escapas y tu rival
+  decide si te deja (lo pactado fuera del juego manda). Si caes o te rindes, el vencedor
+  decide: matarte, capturarte o perdonarte. Si es de la Marina o del CP-0, te encarcela
+  (Impel Down según tu recompensa); si no, te entrega a la Marina y cobra la recompensa.
+- Al terminar, el duelo sale en las noticias con el lugar donde ocurrió.
+- Botón "Den Den Mushi": chat de tu facción (los piratas solo hablan con piratas, la
+  Marina con la Marina...).
+
 COMBATE SIN DADOS
 - Ya no hay dados en los combates: un árbitro (la IA) decide cuánto daño hace cada
   golpe según lo fuerte que sea cada uno, su cansancio, sus habilidades y lo bien

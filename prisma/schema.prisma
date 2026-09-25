@@ -368,6 +368,11 @@ model Duel {
   // may try to escape instead of accepting.
   lethal              Boolean       @default(false)
   hostile             Boolean       @default(false)
+  // Something is waiting on a person, not on the next round: "VERDICT" (the loser is down or gave up, the winner
+  // decides kill / capture / spare) or "FLEE_PLEA" (the other side accepts or refuses the escape described in pleaText).
+  resolution          String?
+  pleaById            String?
+  pleaText            String?
   createdAt           DateTime      @default(now())
   updatedAt           DateTime      @updatedAt
   messages            DuelMessage[]
@@ -381,6 +386,18 @@ model DuelMessage {
   authorName        String
   text              String
   createdAt         DateTime @default(now())
+}
+
+// Den Den Mushi: the faction-wide chat. Pirates only reach pirates, Marines only Marines, and so on.
+model DenDenMessage {
+  id                String   @id @default(cuid())
+  faction           String
+  authorCharacterId String
+  authorName        String
+  text              String
+  createdAt         DateTime @default(now())
+
+  @@index([faction, createdAt])
 }
 
 // ---------- Joint fights: N allies (players + NPC companions) against one enemy ----------

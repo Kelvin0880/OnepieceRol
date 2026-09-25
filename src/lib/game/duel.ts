@@ -13,6 +13,8 @@ import { postNews } from "./death-resolution";
 import { notifyPair } from "./notify";
 import { resolveDuelLoss, grantVictorSpoils } from "./group-battle";
 import { CharacterStatus } from "@prisma/client";
+import { DuelError, postDuelReport } from "./duel-resolution";
+import { verdictOptions } from "../engine/duel-outcome";
 
 /**
  * 1-vs-1 duels between two real players. Both submit a move each round (free
@@ -32,7 +34,7 @@ import { CharacterStatus } from "@prisma/client";
  *    as every other lost fight (resolveDuelLoss), so nothing about permadeath
  *    is special-cased here.
  */
-export class DuelError extends Error {}
+export { DuelError };
 
 const STALE_DUEL_MS = 30 * 60 * 1000;
 const RECENT_FINISHED_MS = 15 * 60 * 1000;
@@ -167,6 +169,7 @@ export async function cancelDuel(characterId: string, userId: string, duelId: st
 export async function submitDuelAction(characterId: string, userId: string, freeText: string) {
   const duel = await getOpenDuelFor(characterId);
   if (!duel || duel.status !== "ACTIVE") throw new DuelError("No estás en ningún duelo en marcha.");
+  if (duel.resolution) throw new DuelError("Hay una decisión pendiente en el duelo: primero hay que resolverla.");
   const meIsChallenger = duel.challengerId === characterId;
   const alreadySubmitted = meIsChallenger ? duel.challengerAction : duel.opponentAction;
   if (alreadySubmitted) throw new DuelError("Ya enviaste tu movimiento de esta ronda; espera al de tu rival.");
@@ -175,7 +178,7 @@ export async function submitDuelAction(characterId: string, userId: string, free
   if (!me || me.userId !== userId) throw new DuelError("Personaje no encontrado.");
 
   const lastNarration = await prisma.duelMessage.findFirst({ where: { duelId: duel.id, authorCharacterId: null }, orderBy: { createdAt: "desc" } });
-  const classified = await classifyPlayerAction(freeText, ["engage", "flee"], { sceneContext: lastNarration?.text.slice(-500) });
+  const classified = await classifyPlayerAction(freeText, ["engage"], { sceneContext: lastNarration?.text.slice(-500) });
   const yielded = classified.action === "flee";
   const technique: TechniqueId = classified.technique ?? "none";
 
@@ -329,8 +332,9 @@ async function resolveDuelRoundFor(duelId: string) {
       challengerHp: aHp,
       opponentHp: bHp,
       round: finished ? duel.round : duel.round + 1,
-      status: finished ? "FINISHED" : "ACTIVE",
+      status: finished && !duel.lethal ? "FINISHED" : "ACTIVE",
       winnerId: winnerChar?.id ?? null,
+      ...(finished && duel.lethal && winnerChar && loserChar ? { resolution: "VERDICT", pleaById: loserChar.id } : {}),
       challengerTactic: 0,
       opponentTactic: 0,
       challengerTechnique: "none",
@@ -345,50 +349,12 @@ async function resolveDuelRoundFor(duelId: string) {
   const log = [narration];
 
   if (duel.lethal) {
-    // Wounds are real in a fight to the death, whoever walks away.
-    if (!finished || escapedChar) {
-      await prisma.character.update({ where: { id: a.id }, data: { hp: Math.max(1, aHp) } });
-      await prisma.character.update({ where: { id: b.id }, data: { hp: Math.max(1, bHp) } });
-    }
-    if (finished && winnerChar && loserChar) {
-      const newsLog: string[] = [];
-      const winnerPrep = winnerChar.id === a.id ? aPrep : bPrep;
-      const winnerHp = winnerChar.id === a.id ? aHp : bHp;
-      await prisma.character.update({ where: { id: winnerChar.id }, data: { hp: Math.max(1, winnerHp) } });
-      const outcome = await resolveDuelLoss(
-        loserChar,
-        { faction: winnerChar.faction, combatant: winnerPrep.combatant },
-        `Cayó en un duelo a muerte contra ${winnerChar.name} en ${loserChar.currentIsland.name}.`,
-        newsLog
-      );
-      if (!outcome.died && !outcome.captured) await prisma.character.update({ where: { id: loserChar.id }, data: { hp: outcome.finalHp } });
-      const fresh = await prisma.character.findUniqueOrThrow({ where: { id: winnerChar.id } });
-      await grantVictorSpoils(fresh, winnerChar.currentIsland.dangerLevel, newsLog);
-      // Bringing in a wanted pirate is what the Government and hunters get paid for.
-      if ((outcome.died || outcome.captured) && loserChar.faction === "PIRATE" && ["MARINE", "CP0", "BOUNTY_HUNTER"].includes(winnerChar.faction)) {
-        const reward = Math.min(500_000, Math.round(loserChar.bounty * 0.1));
-        if (reward > 0) {
-          await prisma.character.update({ where: { id: winnerChar.id }, data: { berries: { increment: reward } } });
-          log.push(`Cobras ฿ ${reward.toLocaleString("es-ES")} por la captura de ${loserChar.name}.`);
-        }
-      }
-      const fate = outcome.died ? "cae muerto" : outcome.captured ? "es capturado" : "queda malherido, pero con vida";
-      await postNews(
-        `${winnerChar.name} vence a ${loserChar.name} en un duelo a muerte`,
-        `${loserChar.name} ${fate} tras un combate sin cuartel en ${loserChar.currentIsland.name}.`,
-        "Guerra",
-        winnerChar.id,
-        "major"
-      );
-      log.push(outcome.died ? `${loserChar.name} ha muerto.` : outcome.captured ? `${loserChar.name} es apresado.` : `${loserChar.name} sobrevive, malherido.`);
-    }
+    // Wounds are real in a fight to the death; a fallen fighter's fate is then the winner's call (game/duel-resolution.ts).
+    await prisma.character.update({ where: { id: a.id }, data: { hp: Math.max(1, aHp) } });
+    await prisma.character.update({ where: { id: b.id }, data: { hp: Math.max(1, bHp) } });
+    if (finished && winnerChar && loserChar) log.push(`${loserChar.name} ha caído. ${winnerChar.name} decide su destino.`);
   } else if (finished && winnerChar && loserChar) {
-    await postNews(
-      `${winnerChar.name} vence a ${loserChar.name} en un duelo`,
-      `Un duelo entre ${a.name} y ${b.name} en ${a.currentIsland.name} terminó con la victoria de ${winnerChar.name}.`,
-      "Tripulaciones",
-      winnerChar.id
-    );
+    await postDuelReport(duel.id, winnerChar.name, loserChar.name, "knockout", { name: a.currentIsland.name, islandId: a.currentIslandId }, false, winnerChar.id);
   }
 
   return { log, waiting: false, finished, winnerName: winnerChar?.name };
@@ -411,7 +377,8 @@ export async function getDuelStateForCharacter(characterId: string) {
 
   const meIsChallenger = duel.challengerId === characterId;
   const opponentId = meIsChallenger ? duel.opponentId : duel.challengerId;
-  const opponent = await prisma.character.findUnique({ where: { id: opponentId }, select: { name: true } });
+  const opponent = await prisma.character.findUnique({ where: { id: opponentId }, select: { name: true, faction: true } });
+  const mine = await prisma.character.findUnique({ where: { id: characterId }, select: { faction: true } });
   const messages = await prisma.duelMessage.findMany({ where: { duelId: duel.id }, orderBy: { createdAt: "asc" }, take: 40 });
   return {
     id: duel.id,
@@ -424,6 +391,10 @@ export async function getDuelStateForCharacter(characterId: string) {
     me: { hp: meIsChallenger ? duel.challengerHp : duel.opponentHp, maxHp: meIsChallenger ? duel.challengerMaxHp : duel.opponentMaxHp, submitted: !!(meIsChallenger ? duel.challengerAction : duel.opponentAction) },
     opponent: { hp: meIsChallenger ? duel.opponentHp : duel.challengerHp, maxHp: meIsChallenger ? duel.opponentMaxHp : duel.challengerMaxHp, submitted: !!(meIsChallenger ? duel.opponentAction : duel.challengerAction) },
     winnerId: duel.winnerId,
+    resolution: duel.resolution,
+    pleaByMe: duel.pleaById === characterId,
+    pleaText: duel.pleaText,
+    verdict: duel.resolution === "VERDICT" && duel.winnerId === characterId && mine && opponent ? verdictOptions(mine.faction, opponent.faction) : null,
     messages: messages.map((m) => ({ id: m.id, authorName: m.authorName, isNarrator: m.authorCharacterId === null, mine: m.authorCharacterId === characterId, text: m.text })),
   };
 }

@@ -8,6 +8,7 @@ import StylesPanel from "./StylesPanel";
 import ColiseumPanel from "./ColiseumPanel";
 import VoyagePanel from "./VoyagePanel";
 import EmpirePanel from "./EmpirePanel";
+import DenDenPanel from "./DenDenPanel";
 import OocPanel from "./OocPanel";
 import CrewPanel, { type PanelCompanion, type PanelCrew } from "./CrewPanel";
 import { characterCondition, conditionLabel } from "@/lib/engine/condition";
@@ -306,6 +307,10 @@ interface DuelState {
   me: { hp: number; maxHp: number; submitted: boolean };
   opponent: { hp: number; maxHp: number; submitted: boolean };
   winnerId: string | null;
+  resolution: "VERDICT" | "FLEE_PLEA" | null;
+  pleaByMe: boolean;
+  pleaText: string | null;
+  verdict: { canCapture: boolean; captureLabel: string | null } | null;
   messages: { id: string; authorName: string; isNarrator: boolean; mine: boolean; text: string }[];
 }
 
@@ -409,6 +414,10 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [showColiseum, setShowColiseum] = useState(false);
   const [showVoyage, setShowVoyage] = useState(false);
   const [showEmpire, setShowEmpire] = useState(false);
+  const [showDenDen, setShowDenDen] = useState(false);
+  const [fleeOpen, setFleeOpen] = useState(false);
+  const [fleeText, setFleeText] = useState("");
+  const [confirmYield, setConfirmYield] = useState(false);
   const sceneEndRef = useRef<HTMLDivElement>(null);
   const duelBoxRef = useRef<HTMLDivElement>(null);
   const jointBoxRef = useRef<HTMLDivElement>(null);
@@ -682,6 +691,11 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               Imperio
             </button>
           )}
+          {!isDead && !isImprisoned && (
+            <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowDenDen(true)} data-testid="denden-open">
+              Den Den Mushi
+            </button>
+          )}
           <button className="btn-ghost px-3 py-1.5 text-sm" onClick={() => setShowVoyage(true)} data-testid="voyage-open">
             Rumbo
           </button>
@@ -716,6 +730,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
         </div>
       </div>
 
+      {showDenDen && <DenDenPanel characterId={character.id} onClose={() => setShowDenDen(false)} />}
       {showEmpire && <EmpirePanel characterId={character.id} onClose={() => setShowEmpire(false)} onChanged={() => load()} />}
       {showVoyage && <VoyagePanel characterId={character.id} onClose={() => setShowVoyage(false)} onChanged={() => load()} />}
       {showColiseum && <ColiseumPanel characterId={character.id} onClose={() => setShowColiseum(false)} onChanged={() => load()} />}
@@ -918,13 +933,90 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
                   Cancelar reto
                 </button>
               )}
-              {duel.status === "ACTIVE" && (
-                <p className="text-xs text-ink-dim">
-                  Describe tu movimiento abajo (lo que intentas, no lo que consigues). Cuando ambos hayáis movido, el motor lo resuelve a la vez. {duel.lethal ? "Es a muerte: rendirte no existe, solo intentar huir (se decide por velocidad; si fallas pierdes la ronda). Si caes, tirada de muerte real — o te capturan si tu rival es de la Marina/CP-0." : "Para rendirte, escríbelo. El duelo no es a muerte."}
-                </p>
+              {duel.status === "ACTIVE" && !duel.resolution && (
+                <div data-testid="duel-controls">
+                  <p className="text-xs text-ink-dim">
+                    Describe tu movimiento abajo: cómo atacas y cómo te defiendes (lo que intentas, no lo que consigues). Cuando ambos hayáis movido, el árbitro lee las dos acciones a la vez y decide cuánta vida y aguante pierde cada uno. Solo te hieren si tu propio texto lo permite.
+                  </p>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {!confirmYield ? (
+                      <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => setConfirmYield(true)} data-testid="duel-yield">
+                        Perdí
+                      </button>
+                    ) : (
+                      <>
+                        <button className="btn-gold px-3 py-1.5 text-xs" disabled={busy} onClick={() => { setConfirmYield(false); doDuelOp({ op: "yield", duelId: duel.id }); }} data-testid="duel-yield-confirm">
+                          Sí, me doy por vencido
+                        </button>
+                        <button className="btn-ghost px-3 py-1.5 text-xs" onClick={() => setConfirmYield(false)}>
+                          Seguir peleando
+                        </button>
+                      </>
+                    )}
+                    {duel.lethal && (
+                      <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => setFleeOpen((v) => !v)} data-testid="duel-flee">
+                        Intentar huir
+                      </button>
+                    )}
+                  </div>
+                  {duel.lethal && fleeOpen && (
+                    <div className="mt-2 flex flex-col gap-2" data-testid="duel-flee-box">
+                      <textarea className="w-full text-sm bg-transparent border border-[--line] rounded px-3 py-2 min-h-20" placeholder="Describe cómo intentas escapar…" value={fleeText} onChange={(e) => setFleeText(e.target.value)} data-testid="duel-flee-text" />
+                      <button className="btn-gold px-3 py-1.5 text-xs self-start" disabled={busy || fleeText.trim().length < 5} onClick={async () => { await doDuelOp({ op: "flee", duelId: duel.id, text: fleeText.trim() }); setFleeText(""); setFleeOpen(false); }} data-testid="duel-flee-send">
+                        Enviar intento de huida
+                      </button>
+                    </div>
+                  )}
+                  {duel.lethal && <p className="text-[11px] text-ink-dim mt-2">Es a muerte: si te rindes, tu vencedor decide tu destino; si intentas huir, tu rival decide si te deja. Lo pactado entre vosotros fuera del juego es lo que manda.</p>}
+                </div>
+              )}
+              {duel.status === "ACTIVE" && duel.resolution === "FLEE_PLEA" && (
+                <div className="rounded border border-gold/50 p-3" data-testid="duel-flee-plea">
+                  {duel.pleaByMe ? (
+                    <p className="text-sm">Has intentado huir. Esperando a que {duel.opponentName} decida si te deja escapar…</p>
+                  ) : (
+                    <>
+                      <p className="text-sm mb-2">
+                        <strong>{duel.opponentName}</strong> intenta huir: <em>{duel.pleaText}</em>
+                      </p>
+                      <div className="flex flex-wrap gap-2">
+                        <button className="btn-gold px-3 py-1.5 text-xs" disabled={busy} onClick={() => doDuelOp({ op: "flee_decide", duelId: duel.id, allow: true })} data-testid="duel-flee-allow">
+                          Permitir la huida
+                        </button>
+                        <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doDuelOp({ op: "flee_decide", duelId: duel.id, allow: false })} data-testid="duel-flee-deny">
+                          Impedirla (el duelo sigue)
+                        </button>
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+              {duel.status === "ACTIVE" && duel.resolution === "VERDICT" && (
+                <div className="rounded border border-blood/60 p-3" data-testid="duel-verdict">
+                  {duel.verdict ? (
+                    <>
+                      <p className="text-sm mb-2">{duel.opponentName} ha caído o se ha rendido. Tú decides su destino (lo acordado fuera del juego manda):</p>
+                      <div className="flex flex-wrap gap-2">
+                        <button className="btn-gold px-3 py-1.5 text-xs" disabled={busy} onClick={() => doDuelOp({ op: "verdict", duelId: duel.id, choice: "kill" })} data-testid="duel-kill">
+                          Matar
+                        </button>
+                        {duel.verdict.canCapture && (
+                          <button className="btn-gold px-3 py-1.5 text-xs" disabled={busy} onClick={() => doDuelOp({ op: "verdict", duelId: duel.id, choice: "capture" })} data-testid="duel-capture">
+                            {duel.verdict.captureLabel}
+                          </button>
+                        )}
+                        <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => doDuelOp({ op: "verdict", duelId: duel.id, choice: "spare" })} data-testid="duel-spare">
+                          Perdonar la vida
+                        </button>
+                      </div>
+                    </>
+                  ) : (
+                    <p className="text-sm">Estás a merced de {duel.opponentName}. Esperando su decisión…</p>
+                  )}
+                </div>
               )}
               {duel.status === "FINISHED" && (
-                <p className="text-sm text-gold-bright">{duel.winnerId === character.id ? "¡Has ganado el duelo!" : "Has perdido el duelo — sales vivo, con el orgullo herido."}</p>
+                <p className="text-sm text-gold-bright">{duel.winnerId === character.id ? "¡Has ganado el duelo!" : duel.winnerId ? "Has perdido el duelo." : "El duelo terminó sin vencedor: la huida fue permitida."}</p>
               )}
             </div>
           )}

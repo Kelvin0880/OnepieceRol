@@ -6,6 +6,7 @@ import "dotenv/config";
 import { prisma } from "../src/lib/db";
 import { createCharacter } from "../src/lib/game/create-character";
 import { challengeDuel, respondToDuel, submitDuelAction, DuelError } from "../src/lib/game/duel";
+import { decideVerdict } from "../src/lib/game/duel-resolution";
 
 function assert(cond: boolean, label: string) {
   if (!cond) throw new Error(`FAIL: ${label}`);
@@ -63,16 +64,17 @@ async function main() {
   }
   assert(finished, "the hunt ended with a decisive result");
 
+  // The winner now decides the loser's fate (game/duel-resolution.ts); here they spare them so the cooldown can be checked.
+  const decided = await prisma.duel.findUniqueOrThrow({ where: { id: hunt.duelId } });
+  assert(decided.resolution === "VERDICT" && !!decided.winnerId, "the fallen fighter waits for the winner's verdict");
+  const winner = decided.winnerId === marine.id ? { id: marine.id, userId: uA.id } : { id: pirate.id, userId: uB.id };
+  await decideVerdict(winner.id, winner.userId, hunt.duelId, "spare");
   const prey = await prisma.character.findUniqueOrThrow({ where: { id: pirate.id } });
   const hunter = await prisma.character.findUniqueOrThrow({ where: { id: marine.id } });
   console.log("Prey status:", prey.status, "hp", prey.hp, "| hunter hp", hunter.hp, "notoriety", hunter.notoriety);
-  const winnerIsHunter = (await prisma.duel.findUniqueOrThrow({ where: { id: hunt.duelId } })).winnerId === marine.id;
-  if (winnerIsHunter) {
-    assert(["DEAD", "IMPRISONED", "ALIVE"].includes(prey.status), "the loser went through the real death/capture path");
-    if (prey.status === "ALIVE") assert(prey.hp > 0, "a surviving loser keeps a little HP");
-  }
+  assert(prey.status === "ALIVE" && prey.hp > 0, "sparing leaves the loser alive with a little HP");
   const news = await prisma.newsItem.findFirst({ where: { headline: { contains: "duelo a muerte" } }, orderBy: { createdAt: "desc" } });
-  assert(!!news && news.severity === "major", "a fight to the death makes major news");
+  assert(!!news && !!news.locationName, "a fight to the death makes news with its place");
 
   // Repeat-hunt cooldown.
   if (prey.status === "ALIVE") {

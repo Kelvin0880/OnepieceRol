@@ -427,3 +427,39 @@ export async function refereeExchange(input: RefereeInput, meta: { characterId?:
     return null;
   }
 }
+
+export interface DuelReportInput {
+  winnerName: string | null;
+  loserName: string;
+  outcome: "yield" | "knockout" | "kill" | "captured" | "spared" | "escaped";
+  placeName: string;
+  lethal: boolean;
+  transcript: string[];
+}
+
+const OUTCOME_FACTS: Record<DuelReportInput["outcome"], string> = {
+  yield: "el perdedor se rindió (duelo amistoso, nadie salió dañado de verdad)",
+  knockout: "el perdedor cayó sin fuerzas",
+  kill: "el vencedor dio muerte al perdedor",
+  captured: "el vencedor capturó al perdedor y lo entregó a la justicia",
+  spared: "el vencedor perdonó la vida al perdedor",
+  escaped: "el perdedor logró escapar porque el otro lo permitió",
+};
+
+/** The news item written when a duel between players ends: what happened, where, told as the newspaper would. Never throws. */
+export async function narrateDuelReport(input: DuelReportInput, meta: { duelId: string }): Promise<string> {
+  const w = input.winnerName ?? "su rival";
+  const fallback = `En ${input.placeName}, ${w} y ${input.loserName} se enfrentaron en un duelo${input.lethal ? " a muerte" : ""}: ${OUTCOME_FACTS[input.outcome]}.`;
+  try {
+    const system =
+      "Eres el redactor del periódico de un mundo de piratas de One Piece. Escribe una crónica breve (2 o 3 frases, en español, sin listas ni markdown) de un duelo entre dos jugadores, " +
+      "basada SOLO en el resultado y el extracto que se te da. Nombra el lugar. No inventes muertes, capturas ni heridas que no consten en el resultado. Responde solo con el texto de la crónica.";
+    const excerpt = input.transcript.join(String.fromCharCode(10)).slice(-1800);
+    const user = ["Lugar: " + input.placeName + ".", "Tipo: " + (input.lethal ? "duelo a muerte" : "duelo amistoso") + ".", "Vencedor: " + (input.winnerName ?? "nadie") + ". Perdedor: " + input.loserName + ".", "Resultado: " + OUTCOME_FACTS[input.outcome] + ".", "Extracto del duelo:", excerpt].join(String.fromCharCode(10));
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 300, validate: isValidNarration });
+    return text.trim();
+  } catch (err) {
+    await logError("ai/duel-report", err, meta);
+    return fallback;
+  }
+}
