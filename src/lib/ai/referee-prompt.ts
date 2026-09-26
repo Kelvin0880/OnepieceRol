@@ -105,7 +105,15 @@ const RIVAL_CRAFT =
   +
   "Y mientras esté herido o cansado, su estilo lo muestra (más desesperado, más peligroso o más cauto), sin dejar de intentar ganar. ";
 
+// Reported 2026-09-26: a fight that moved from one guard into a five-man warehouse was reset to the dead guard and the player was lectured.
+const SCENE_CONTINUITY =
+  "CONTINUIDAD DE LA ESCENA (obligatoria): el ÚLTIMO MENSAJE DEL NARRADOR y el REGISTRO son la verdad del escenario (dónde está cada uno, quién sigue en pie, quién ya murió, cuántos enemigos hay). Jamás retrocedas, reinicies ni cambies ese escenario, ni resucites o cambies el nombre de alguien ya narrado. " +
+  "Si la escena muestra varios enemigos (secuaces, guardias, soldados), el rival de la lista representa a TODO ese bando: lo que sufra cualquiera se apunta en \"cambios\" con el nombre EXACTO del rival de la lista, y solo lo listas en \"derrotados\" cuando NINGUNO de ellos puede seguir; que un miembro (incluido uno ya caído antes) caiga no acaba el combate. " +
+  "Cuando el jugador escribe como ya ocurrido el resultado de sus propios ataques (\"las dagas impactaron en sus cuellos\", \"el rayo alcanzó a dos\"), es solo su INTENCIÓN: decide tú qué ocurre de verdad (Mano Negra), sin reprocharle, sin decirle que \"asume\" o \"describió\" nada y sin corregirlo en voz alta; simplemente narra el resultado real. " +
+  "PROHIBIDO hablar con el jugador de la mecánica o de lo que escribió (\"la secuencia que describiste\", \"tu intención\", \"en el estado actual del combate\"): solo cuenta lo que ocurre en la historia. ";
+
 const SOLO_FORMAT =
+  SCENE_CONTINUITY +
   "TRES TEXTOS EN EL JSON (en segunda persona hacia el jugador: \"tu espada\", \"te alcanza\"; nunca su nombre en tercera persona): " +
   "\"resultado\": qué pasó con el ataque pendiente y con el ataque que escribió el jugador, en pasado y neutral, sin atribuirle nada que no escribió. " +
   "\"reaccion_rival\": cómo queda el rival (con su nombre: en pie, herido, tambaleante, de rodillas, caído, inconsciente) y cómo responde (una línea suya si tiene personalidad); NUNCA vacío mientras siga en el combate. " +
