@@ -3,6 +3,7 @@ import { arcEligible, arcTitle, ARC_TOTAL_STAGES, RECLAIM_ASPIRANTS, type ArcKin
 import { adminListEvents, cancelPlayerEvent, createPlayerEvent, forceResolvePlayerEvent, PlayerEventError } from "./player-events";
 import { tickWorldHappenings } from "./world-happenings";
 import { postNews } from "./death-resolution";
+import { startDispatch, DispatchError } from "./admiral-dispatch";
 
 export class AdminToolError extends Error {}
 
@@ -92,4 +93,18 @@ export async function startArcManual(targetName: string, aggressorName: string, 
   await prisma.worldArc.create({
     data: { kind, title: arcTitle(kind, target.name, aggressor.name), targetActorId: target.id, targetName: target.name, aggressorId: aggressor.id, aggressorName: aggressor.name, totalStages: ARC_TOTAL_STAGES, nextBeatAt: new Date() },
   });
+}
+
+/** The owner launches an admiral dispatch now: pick the admiral and the island from the lists; protections still apply. */
+export async function adminStartDispatch(admiralName: string | null, islandName: string | null, minutes: number | null) {
+  const island = islandName ? await prisma.island.findUnique({ where: { name: islandName }, select: { id: true } }) : null;
+  if (islandName && !island) throw new AdminToolError("Esa isla no existe.");
+  try {
+    const d = await startDispatch({ admiralName: admiralName || undefined, islandId: island?.id, minutes: minutes ?? undefined, manual: true });
+    if (!d) throw new AdminToolError("No se pudo enviar al almirante.");
+    return d;
+  } catch (e) {
+    if (e instanceof DispatchError) throw new AdminToolError(e.message);
+    throw e;
+  }
 }

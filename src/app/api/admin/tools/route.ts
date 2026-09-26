@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireAdminUserId, UnauthorizedError, ForbiddenError } from "@/lib/require-user";
-import { AdminToolError, adminCreateEvent, adminEventOp, dismissReport, getAdminOverview, proposeHappening, publishAnnouncement, startArcManual } from "@/lib/game/admin-tools";
+import { AdminToolError, adminStartDispatch, adminCreateEvent, adminEventOp, dismissReport, getAdminOverview, proposeHappening, publishAnnouncement, startArcManual } from "@/lib/game/admin-tools";
 import { logError } from "@/lib/log-error";
 
 const island = z.string().max(80).optional().nullable();
@@ -12,6 +12,7 @@ const schema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("create_event"), idea: z.string().max(800).optional().nullable(), island, maxLevel: z.number().int().min(1).max(60).optional(), withFruit: z.boolean().optional().nullable() }),
   z.object({ op: z.literal("cancel_event"), eventId: z.string() }),
   z.object({ op: z.literal("force_event"), eventId: z.string() }),
+  z.object({ op: z.literal("start_dispatch"), admiral: z.string().max(80).optional().nullable(), island, minutes: z.number().min(1).max(240).optional().nullable() }),
   z.object({ op: z.literal("start_arc"), target: z.string().max(80), aggressor: z.string().max(80), kind: z.enum(["death", "capture", "reclaim"]) }),
 ]);
 
@@ -50,6 +51,10 @@ export async function POST(req: NextRequest) {
       case "force_event":
         await adminEventOp("force", b.eventId);
         return NextResponse.json({ ok: true });
+      case "start_dispatch": {
+        const d = await adminStartDispatch(b.admiral ?? null, b.island || null, b.minutes ?? null);
+        return NextResponse.json({ ok: true, title: `${d.admiralName} → ${d.targetIslandName}` });
+      }
       case "start_arc":
         await startArcManual(b.target, b.aggressor, b.kind);
         return NextResponse.json({ ok: true });

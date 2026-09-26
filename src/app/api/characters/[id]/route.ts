@@ -17,6 +17,7 @@ import { getDuelStateForCharacter } from "@/lib/game/duel";
 import { getJointFightStateForCharacter } from "@/lib/game/joint-fight";
 import { getTerritoryState } from "@/lib/game/territory";
 import { getBusterCallState } from "@/lib/game/buster-call";
+import { getDispatchAlertFor, joinAdmiralFightIfNeeded } from "@/lib/game/admiral-dispatch";
 import { getRaidState } from "@/lib/game/raid";
 import { getBlackMarketState } from "@/lib/game/black-market";
 import { ensureIslandMissions, getMissionState } from "@/lib/game/missions";
@@ -74,6 +75,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     }
     const party = await getPartyStateForCharacter(id);
     const duel = await getDuelStateForCharacter(id);
+    const admiralAlert = await getDispatchAlertFor(id);
+    await joinAdmiralFightIfNeeded(id).catch(() => undefined);
     const jointFight = await getJointFightStateForCharacter(id);
     const territory = await getTerritoryState(id);
     const busterCall = await getBusterCallState(id);
@@ -194,6 +197,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       jointFight,
       territory,
       busterCall,
+      admiralAlert,
       raid,
       blackMarket,
       coliseum,

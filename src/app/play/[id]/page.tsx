@@ -19,7 +19,7 @@ import JointFightPanel from "./JointFightPanel";
 import ScenePanel from "./ScenePanel";
 import IslandCard from "./IslandCard";
 import CharacterSheet from "./CharacterSheet";
-import { BlackMarketPanel, BusterCallPanel, MissionsPanel, PrisonCard, RaidPanel, TerritoryPanel, WorldEventPanel } from "./WorldPanels";
+import { AdmiralAlertPanel, BlackMarketPanel, BusterCallPanel, MissionsPanel, PrisonCard, RaidPanel, TerritoryPanel, WorldEventPanel } from "./WorldPanels";
 import { CrewBattlesPanel, CrewChallengePanel, OthersHerePanel, PrisonersHerePanel } from "./PeoplePanels";
 import Modal from "@/components/ui/Modal";
 import { rememberCharacter } from "@/components/ui/BackToCharacter";
@@ -328,6 +328,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
       <div className="grid grid-cols-1 lg:grid-cols-[minmax(0,2fr)_minmax(0,1fr)] gap-4">
         <div className="flex flex-col gap-4 min-w-0">
           {duel && <DuelPanel duel={duel} characterId={character.id} busy={busy} doDuelOp={doDuelOp} onOoc={openOoc} />}
+          {data.admiralAlert && !isDead && <AdmiralAlertPanel alert={data.admiralAlert} />}
           {busterCall && !isDead && <BusterCallPanel busterCall={busterCall} islandName={character.currentIsland.name} jointActive={!!jointActive} {...actions} />}
           {data.worldEvent && <WorldEventPanel worldEvent={data.worldEvent} jointActive={!!jointActive} onIntervene={doWorldEvent} busy={battleBusy} error={battleError} />}
           {jointFight && <JointFightPanel jointFight={jointFight} onOoc={openOoc} busy={busy} doAction={doAction} />}

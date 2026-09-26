@@ -178,6 +178,17 @@ export interface BlackMarketState {
   deals: number;
 }
 
+export interface AdmiralAlertState {
+  id: string;
+  admiralName: string;
+  islandName: string;
+  status: "EN_ROUTE" | "ARRIVED";
+  arrivesAt: string;
+  msLeft: number;
+  hunted: boolean;
+  fightActive: boolean;
+}
+
 export interface BusterCallState {
   id: string;
   reason: string;
@@ -326,6 +337,7 @@ export interface StateResponse {
   jointFight: JointFightState | null;
   territory: TerritoryState | null;
   busterCall: BusterCallState | null;
+  admiralAlert: AdmiralAlertState | null;
   raid: RaidState | null;
   blackMarket: BlackMarketState | null;
   coliseum: { status: string; kindLabel: string; prize: string; startsAt: string; onDressrosa: boolean; registered: boolean; round: string | null } | null;

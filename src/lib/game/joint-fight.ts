@@ -48,7 +48,7 @@ export interface JointRewards {
   poneglyphId?: string;
 }
 
-export type JointFightKind = "party" | "poneglyph" | "conquest" | "raid" | "arc" | "sovereign";
+export type JointFightKind = "party" | "poneglyph" | "conquest" | "raid" | "arc" | "sovereign" | "admiral";
 
 const STALE_FIGHT_MS = 24 * 60 * 60 * 1000;
 const RECENT_FINISHED_MS = 15 * 60 * 1000;
@@ -207,7 +207,7 @@ export async function submitJointAction(characterId: string, userId: string, fre
   }
 
   const last = await prisma.jointFightMessage.findFirst({ where: { fightId: fight.id, authorCharacterId: null }, orderBy: { createdAt: "desc" } });
-  const classified = await classifyPlayerAction(freeText, ["engage", "flee"], { sceneContext: last?.text.slice(-500) });
+  const classified = await classifyPlayerAction(freeText, fight.kind === "admiral" ? ["engage"] : ["engage", "flee"], { sceneContext: last?.text.slice(-500) });
   const fleeing = classified.action === "flee";
 
   await prisma.jointFightMessage.create({ data: { fightId: fight.id, authorCharacterId: characterId, authorName: me.name, text: freeText } });
@@ -591,7 +591,11 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
     for (const p of humans) {
       const c = await loadFull(p.characterId);
       if (!c || c.status !== CharacterStatus.ALIVE) continue;
-      if (p.status === "DOWN") {
+      if (p.status === "DOWN" && fight.kind === "admiral") {
+        // The Government takes prisoners: no death roll, they are shipped off (Impel Down by bounty).
+        await (await import("./prison")).captureCharacter({ ...c, faction: c.faction, bounty: c.bounty, notoriety: c.notoriety }, Math.round(enemy.atk / 1.6), `Capturado por el almirante ${enemy.name} en ${c.currentIsland.name}.`, newsLog);
+        closing.push(`${c.name} es capturado.`);
+      } else if (p.status === "DOWN") {
         // Real stakes: a fallen ally who wasn't rescued by a win faces the ordinary death roll.
         const death = await handleDeathCheck({ ...c, faction: c.faction, currentIslandId: c.currentIslandId }, 0, `Cayó en grupo contra ${enemy.name}.`, newsLog, { name: enemy.name, personality: enemy.personality, isBoss: enemy.isBoss });
         if (death.died) closing.push(`${c.name} ha muerto.`);
@@ -625,6 +629,11 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
     const { handleArcFightSettled } = await import("./world-arcs");
     const fresh = await prisma.jointFight.findUniqueOrThrow({ where: { id: fightId }, include: { participants: true } });
     closing.push(...(await handleArcFightSettled({ contextJson: fresh.contextJson, outcome, humans: fresh.participants.filter((p) => !p.isNpc).map((p) => ({ characterId: p.characterId, status: p.status, name: p.name })) })));
+  }
+  if (fight.kind === "admiral") {
+    const { handleAdmiralFightSettled } = await import("./admiral-dispatch");
+    const fresh = await prisma.jointFight.findUniqueOrThrow({ where: { id: fightId }, include: { participants: true } });
+    closing.push(...(await handleAdmiralFightSettled({ contextJson: fresh.contextJson, outcome, enemyName: enemy.name, humans: fresh.participants.filter((p) => !p.isNpc).map((p) => ({ characterId: p.characterId, status: p.status, name: p.name })) })));
   }
   if (fight.kind === "sovereign") {
     const { handleSovereignFightSettled } = await import("./sovereignty");

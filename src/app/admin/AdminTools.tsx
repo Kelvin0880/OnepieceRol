@@ -43,7 +43,7 @@ export default function AdminTools() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [f, setF] = useState({ annHead: "", annBody: "", idea: "", island: "", evIdea: "", evIsland: "", evMax: "10", evFruit: "auto", arcT: "", arcA: "", arcKind: "capture" });
+  const [f, setF] = useState({ annHead: "", annBody: "", idea: "", island: "", evIdea: "", evIsland: "", evMax: "10", evFruit: "auto", arcT: "", arcA: "", arcKind: "capture", dispAdm: "", dispIsland: "", dispMin: "" });
   const set = (k: keyof typeof f, v: string) => setF((x) => ({ ...x, [k]: v }));
 
   const load = useCallback(async () => {
@@ -173,6 +173,19 @@ export default function AdminTools() {
         <button className="btn-gold px-3 py-2 text-sm self-start" disabled={busy} data-testid="admin-announce-go" onClick={() => run({ op: "announce", headline: f.annHead, body: f.annBody }, "Anuncio publicado")}>
           Publicar anuncio
         </button>
+      </section>
+
+      <section className="panel p-4 flex flex-col gap-2" data-testid="admin-dispatch">
+        <h2 className="font-display text-lg text-gold-bright">Enviar a un almirante</h2>
+        <p className="text-xs text-ink-dim">La Marina manda a un almirante contra los piratas (nivel 2+) de una isla. Llega tras el tiempo indicado (por defecto 20–60 min según la distancia); quien se quede lo enfrenta sin escape y los derrotados son capturados. Nunca ataca islas de inicio, revolucionarias ni piratas. Deja los campos vacíos para que lo elija el sistema.</p>
+        <div className="flex flex-wrap gap-2">
+          <ActorSelect label="Almirante: cualquiera libre" value={f.dispAdm} onChange={(v) => set("dispAdm", v)} actors={o.actors.filter((a) => a.status === "ACTIVE" && a.role === "ADMIRAL")} />
+          <IslandSelect value={f.dispIsland} onChange={(v) => set("dispIsland", v)} islands={o.islands} />
+          <input className={`${field} w-32`} type="number" min={1} max={240} placeholder="Minutos" value={f.dispMin} onChange={(e) => set("dispMin", e.target.value)} />
+          <button className="btn-gold px-3 py-2 text-sm" disabled={busy} data-testid="admin-dispatch-go" onClick={() => run({ op: "start_dispatch", admiral: f.dispAdm || null, island: f.dispIsland || null, minutes: f.dispMin ? Number(f.dispMin) : null }, "Almirante en camino")}>
+            Enviar
+          </button>
+        </div>
       </section>
 
       <section className="panel p-4 flex flex-col gap-2" data-testid="admin-start-arc">

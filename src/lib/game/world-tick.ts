@@ -5,6 +5,7 @@ import { narrateNews, narrateBountyDigest } from "../ai/narrate";
 import { tickWorldArcs, moveActorsTick, actorLocation } from "./world-arcs";
 import { logError } from "../log-error";
 import { tickColiseum } from "./coliseum";
+import { tickAdmiralDispatch } from "./admiral-dispatch";
 import { tickWorldHappenings } from "./world-happenings";
 import { tickPlayerEvents } from "./player-events";
 
@@ -35,6 +36,8 @@ async function tickWorldIfDueInner(): Promise<void> {
   void tickWorldArcs().catch((err) => logError("world-arcs/tick", err));
   // The Dressrosa Coliseum runs its own calendar (announcement, rounds hours/minutes apart), also fire-and-forget.
   void tickColiseum();
+  // Rarely the Government sends an admiral against the pirate players of an island; also settles arrival/return.
+  void tickAdmiralDispatch();
   // One AI-invented happening per 24 h, also fire-and-forget.
   void tickWorldHappenings();
   // Player events (beginner trials): retries pending verdicts and announces a new one every 24 h.

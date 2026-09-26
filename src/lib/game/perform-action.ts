@@ -1289,6 +1289,7 @@ async function travelCharacterInner(characterId: string, userId: string, targetI
   const character = await loadCharacterOrThrow(characterId, userId);
   if (character.pendingEncounter) throw new GameActionError("No puedes zarpar con un enfrentamiento sin resolver.");
   if (await getOpenDuelFor(character.id)) throw new GameActionError("No puedes zarpar en mitad de un duelo.");
+  if (await getOpenJointFightFor(character.id)) throw new GameActionError("No puedes zarpar en mitad de una pelea: no hay escapatoria hasta que termine.");
   assertNotAtSea(character);
   if (targetIslandId === character.currentIslandId) throw new GameActionError("Ya estás en esa isla.");
   const connections = JSON.parse(character.currentIsland.connections) as string[];

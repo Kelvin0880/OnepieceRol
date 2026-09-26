@@ -4,7 +4,8 @@ import { Anchor, Check, Coins, Crown, Flag, Lock, ScrollText, Siren, Skull, Targ
 import StatBar from "@/components/ui/StatBar";
 import { CELL_LABELS } from "@/lib/engine/impel-down";
 import { formatBerries, formatMinutes } from "@/lib/ui/format";
-import type { BlackMarketState, BusterCallState, Character, MissionsState, RaidState, TerritoryState, WorldEventHere } from "./types";
+import { useEffect, useState } from "react";
+import type { AdmiralAlertState, BlackMarketState, BusterCallState, Character, MissionsState, RaidState, TerritoryState, WorldEventHere } from "./types";
 
 type Act = (body: Record<string, unknown>, path?: string) => Promise<void>;
 
@@ -77,6 +78,46 @@ export function PrisonCard({ character, act, busy, error, escapePlan, setEscapeP
           {imp.escapeCooldownMs > 0 ? `Espera ${Math.ceil(imp.escapeCooldownMs / 60000)} min` : "Intentar la fuga"}
         </button>
       </div>
+    </section>
+  );
+}
+
+function useCountdown(arrivesAt: string): number {
+  const [now, setNow] = useState(() => Date.now());
+  useEffect(() => {
+    const t = setInterval(() => setNow(Date.now()), 1000);
+    return () => clearInterval(t);
+  }, []);
+  return Math.max(0, new Date(arrivesAt).getTime() - now);
+}
+
+/** The Government sends an admiral: a loud alert with a live countdown, and the two honest options. */
+export function AdmiralAlertPanel({ alert }: { alert: AdmiralAlertState }) {
+  const left = useCountdown(alert.arrivesAt);
+  const mm = String(Math.floor(left / 60000)).padStart(2, "0");
+  const ss = String(Math.floor((left % 60000) / 1000)).padStart(2, "0");
+  const arrived = alert.status === "ARRIVED" || left === 0;
+  return (
+    <section className="panel panel-danger p-4 animate-rise animate-danger sticky top-2 z-30" data-testid="admiral-alert" role="alert">
+      <Title icon={Siren} tone="text-[#f0907a]">
+        {arrived ? `¡El almirante ${alert.admiralName} está atacando ${alert.islandName}!` : `¡ALERTA! El almirante ${alert.admiralName} viene a ${alert.islandName}`}
+      </Title>
+      {!arrived && (
+        <p className="font-display text-3xl text-gold-bright mt-2" data-testid="admiral-countdown">
+          {mm}:{ss}
+        </p>
+      )}
+      {alert.hunted ? (
+        arrived ? (
+          <p className="text-sm text-ink-dim mt-1">Ya no hay escapatoria: el combate contra el almirante es inevitable. Los que caigan serán capturados y el evento termina cuando todos hayan sido derrotados.</p>
+        ) : (
+          <p className="text-sm text-ink-dim mt-1">
+            El Gobierno Mundial lo ha enviado a erradicar a los piratas de esta isla. Tienes dos opciones: <b className="text-gold">zarpar antes de que llegue</b> o <b className="text-gold">quedarte y enfrentarte a él</b> en cuanto desembarque, sin posibilidad de huir. Es un almirante: ataca sin piedad a todos y responde a cada acción.
+          </p>
+        )
+      ) : (
+        <p className="text-sm text-ink-dim mt-1">Un almirante de la Marina ha sido enviado contra los piratas de esta isla. A ti no te busca.</p>
+      )}
     </section>
   );
 }
