@@ -19,6 +19,7 @@ import JointFightPanel from "./JointFightPanel";
 import ScenePanel from "./ScenePanel";
 import IslandCard from "./IslandCard";
 import CharacterSheet from "./CharacterSheet";
+import { IslandPeoplePanel } from "./IslandPeople";
 import { RescueRaidPanel, CaptivesPanel, AdmiralAlertPanel, BlackMarketPanel, BusterCallPanel, MissionsPanel, PrisonCard, RaidPanel, TerritoryPanel, WorldEventPanel } from "./WorldPanels";
 import { CrewBattlesPanel, CrewChallengePanel, OthersHerePanel, PrisonersHerePanel } from "./PeoplePanels";
 import Modal from "@/components/ui/Modal";
@@ -336,6 +337,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           {jointFight && <JointFightPanel jointFight={jointFight} onOoc={openOoc} busy={busy} doAction={doAction} />}
 
           <IslandCard character={character} connectedIslands={connectedIslands} voyage={voyage} busy={busy} onTravel={(islandId) => doAction({ action: "travel", targetIslandId: islandId })} />
+          {!isDead && !isImprisoned && <IslandPeoplePanel canon={data.canonHere} cast={data.islandCast ?? []} islandName={character.currentIsland.name} act={doPrisonAction} busy={battleBusy} error={battleError} jointActive={!!jointActive} />}
 
           {!isDead && (
             <ScenePanel

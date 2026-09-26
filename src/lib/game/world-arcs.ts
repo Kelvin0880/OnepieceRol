@@ -212,7 +212,7 @@ export async function tickWorldArcs(now = new Date()): Promise<void> {
   if (inFlight.has("tick")) return;
   inFlight.add("tick");
   try {
-    const open = await prisma.worldArc.findFirst({ where: { status: { in: OPEN_STATUSES } }, orderBy: { createdAt: "desc" } });
+    const open = await prisma.worldArc.findFirst({ where: { status: { in: OPEN_STATUSES }, kind: { not: "player_verdict" } }, orderBy: { createdAt: "desc" } });
     if (open) {
       if (arcDue(open, now)) await runArcBeat(open.id);
       return;
@@ -251,8 +251,18 @@ export async function decideArc(arcId: string, approve: boolean, decidedBy: stri
   if (arc.status !== "AWAITING_CONSENT" || arc.consent !== "PENDING") throw new WorldArcError("Este evento no está esperando una decisión.");
   const claimed = await prisma.worldArc.updateMany({ where: { id: arc.id, status: "AWAITING_CONSENT", consent: "PENDING" }, data: { consent: approve ? "APPROVED" : "DENIED" } });
   if (claimed.count === 0) throw new WorldArcError("Otra decisión se te adelantó.");
-  const outcome = arc.kind === "reclaim_lost" && choice ? choice : verdictOutcome(arc.kind as ArcKind, approve);
-  return finalizeArc(arc.id, outcome, decidedBy);
+  const outcome =
+    (arc.kind === "reclaim_lost" || arc.kind === "player_verdict") && choice
+      ? choice
+      : arc.kind === "player_verdict"
+      ? approve ? (arc.requestedChoice === "death" ? "death" : "capture") : "survived"
+      : verdictOutcome(arc.kind as ArcKind, approve);
+  const done = await finalizeArc(arc.id, outcome, decidedBy);
+  if (arc.kind === "player_verdict" && (outcome === "death" || outcome === "capture" || outcome === "survived")) {
+    const { onPlayerVerdictDecided } = await import("./canon-encounter");
+    await onPlayerVerdictDecided(arc.id, outcome);
+  }
+  return done;
 }
 
 /** Publishes the ending and applies it. Shared by the owner's verdict and by adventurers saving the target on their own. */
@@ -397,7 +407,7 @@ export interface CharacterWorldEvent {
 export async function getWorldEventForCharacter(characterId: string): Promise<CharacterWorldEvent | null> {
   const [ch, arc] = await Promise.all([
     prisma.character.findUnique({ where: { id: characterId }, select: { level: true, currentIslandId: true, status: true } }),
-    prisma.worldArc.findFirst({ where: { status: { in: OPEN_STATUSES } }, orderBy: { createdAt: "desc" } }),
+    prisma.worldArc.findFirst({ where: { status: { in: OPEN_STATUSES }, kind: { not: "player_verdict" } }, orderBy: { createdAt: "desc" } }),
   ]);
   if (!ch || !arc) return null;
   const where = await currentArcLocation(arc.id);
@@ -524,7 +534,7 @@ export async function getArcsForAdmin() {
     nextBeatAt: a.nextBeatAt.toISOString(),
     story: JSON.parse(a.contextJson) as string[],
     interventions: JSON.parse(a.contributionsJson) as Contribution[],
-    proposal: a.kind === "reclaim_lost" ? `${a.targetName} fracasó en su intento de recuperar el trono de Yonko${a.aggressorName ? ` ante ${a.aggressorName}` : ""} y está a merced de sus vencedores. ¿Qué decides: CAPTURA, MUERTE o que sobreviva?` : a.kind === "death" ? `¿Permites que ${a.targetName} MUERA${a.aggressorName ? ` a manos de ${a.aggressorName}` : ""}?` : `¿Permites que ${a.targetName} sea CAPTURADO${a.aggressorName ? ` por ${a.aggressorName}` : ""}?`,
+    proposal: a.kind === "player_verdict" ? `${a.requestedByName ?? "Un aventurero"} derrotó en persona a ${a.targetName} y pide ${a.requestedChoice === "death" ? "MATARLO" : "CAPTURARLO"}. ¿Lo confirmas, eliges otro destino o no lo permites?` : a.kind === "reclaim_lost" ? `${a.targetName} fracasó en su intento de recuperar el trono de Yonko${a.aggressorName ? ` ante ${a.aggressorName}` : ""} y está a merced de sus vencedores. ¿Qué decides: CAPTURA, MUERTE o que sobreviva?` : a.kind === "death" ? `¿Permites que ${a.targetName} MUERA${a.aggressorName ? ` a manos de ${a.aggressorName}` : ""}?` : `¿Permites que ${a.targetName} sea CAPTURADO${a.aggressorName ? ` por ${a.aggressorName}` : ""}?`,
   }));
 }
 

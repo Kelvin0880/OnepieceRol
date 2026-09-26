@@ -1059,6 +1059,10 @@ model WorldArc {
   decidedAt     DateTime?
   contextJson   String    @default("[]") // one line per published chapter, fed back to the narrator as memory
   contributionsJson String @default("[]") // player interventions: who stepped in, on which side, at which chapter
+  // player_verdict arcs: a player beat this canon character and asks for this fate; the owner confirms or denies.
+  requestedChoice String? // capture | death
+  requestedById   String?
+  requestedByName String?
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
@@ -1247,4 +1251,22 @@ model IslandNpc {
   createdAt   DateTime  @default(now())
 
   @@index([islandId, status])
+}
+
+// A player going against a canon character who is on their island: the vanguard first, then the character in person,
+// then the winner asks for a fate (capture / kill / spare) that the owner must confirm (WorldArc kind player_verdict).
+model CanonChallenge {
+  id          String   @id @default(cuid())
+  characterId String
+  actorId     String
+  actorName   String
+  islandId    String
+  stage       String   @default("VANGUARD") // VANGUARD | READY | DUEL | WON | AWAITING_OWNER | DONE | LOST | EXPIRED
+  verdictArcId String?
+  note        String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([characterId, stage])
+  @@index([actorId, stage])
 }

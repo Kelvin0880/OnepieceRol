@@ -7,6 +7,7 @@ import { logError } from "../log-error";
 import { tickColiseum } from "./coliseum";
 import { tickAdmiralDispatch } from "./admiral-dispatch";
 import { tickIslandNpcs } from "./island-npcs";
+import { tickCanonChallenges } from "./canon-encounter";
 import { tickWorldHappenings } from "./world-happenings";
 import { tickPlayerEvents } from "./player-events";
 
@@ -41,6 +42,7 @@ async function tickWorldIfDueInner(): Promise<void> {
   void tickAdmiralDispatch();
   // A dead resident's job gets a new named successor after a while.
   void tickIslandNpcs();
+  void tickCanonChallenges();
   // One AI-invented happening per 24 h, also fire-and-forget.
   void tickWorldHappenings();
   // Player events (beginner trials): retries pending verdicts and announces a new one every 24 h.

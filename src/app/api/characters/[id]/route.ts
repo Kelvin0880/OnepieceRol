@@ -18,6 +18,8 @@ import { getJointFightStateForCharacter } from "@/lib/game/joint-fight";
 import { getTerritoryState } from "@/lib/game/territory";
 import { getBusterCallState } from "@/lib/game/buster-call";
 import { getCaptivesView, settleCustodyFor } from "@/lib/game/custody";
+import { getCanonHere } from "@/lib/game/canon-encounter";
+import { getIslandCast } from "@/lib/game/island-npcs";
 import { getRescueRaidState } from "@/lib/game/rescue-raid";
 import { getDispatchAlertFor, joinAdmiralFightIfNeeded } from "@/lib/game/admiral-dispatch";
 import { getRaidState } from "@/lib/game/raid";
@@ -80,6 +82,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     await settleCustodyFor(id).catch(() => undefined);
     const captivesView = await getCaptivesView(id);
     const rescueRaid = await getRescueRaidState(id);
+    const canonHere = await getCanonHere(id).catch(() => null);
+    const islandCast = await getIslandCast(character.currentIslandId, id).catch(() => []);
     const admiralAlert = await getDispatchAlertFor(id);
     await joinAdmiralFightIfNeeded(id).catch(() => undefined);
     const jointFight = await getJointFightStateForCharacter(id);
@@ -205,6 +209,8 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       admiralAlert,
       captives: captivesView,
       rescueRaid,
+      canonHere,
+      islandCast,
       raid,
       blackMarket,
       coliseum,

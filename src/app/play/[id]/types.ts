@@ -178,6 +178,40 @@ export interface BlackMarketState {
   deals: number;
 }
 
+export interface CanonActorHere {
+  id: string;
+  name: string;
+  rank: string;
+  factionName: string;
+  power: number;
+  personality: string | null;
+  isYonko: boolean;
+  minLevel: number;
+  withBlock: string | null;
+  againstBlock: string | null;
+  openMission: string | null;
+}
+
+export interface CanonHereState {
+  actors: CanonActorHere[];
+  challenge: { id: string; actorId: string; actorName: string; stage: string; msLeft: number | null; note: string | null } | null;
+}
+
+export interface IslandCastEntry {
+  id: string;
+  name: string;
+  title: string;
+  category: string;
+  level: number;
+  fighter: boolean;
+  state: string;
+  usable: boolean;
+  dead: boolean;
+  personality: string;
+  memory: string[];
+  diedNote: string | null;
+}
+
 export interface RescueRaidState {
   groupSize: number;
   prisoners: { actorId: string; name: string; factionName: string; cell: number; place: string; minLevel: number; minPeople: number; blockReason: string | null }[];
@@ -352,6 +386,8 @@ export interface StateResponse {
   admiralAlert: AdmiralAlertState | null;
   captives: CaptivesState | null;
   rescueRaid: RescueRaidState | null;
+  canonHere: CanonHereState | null;
+  islandCast: IslandCastEntry[];
   raid: RaidState | null;
   blackMarket: BlackMarketState | null;
   coliseum: { status: string; kindLabel: string; prize: string; startsAt: string; onDressrosa: boolean; registered: boolean; round: string | null } | null;

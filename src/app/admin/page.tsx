@@ -130,7 +130,7 @@ export default function AdminPage() {
                   </button>
                 </div>
               ) : (
-                a.kind === "reclaim_lost" ? (
+                a.kind === "reclaim_lost" || a.kind === "player_verdict" ? (
                 <div className="flex gap-2 flex-wrap">
                   <button className="btn-ghost px-3 py-1.5 text-xs" onClick={() => setConfirm({ id: a.id, approve: true, choice: "capture" })} data-testid="admin-choose-capture">Capturarlo</button>
                   <button className="btn-ghost px-3 py-1.5 text-xs" onClick={() => setConfirm({ id: a.id, approve: true, choice: "death" })} data-testid="admin-choose-death">Que muera</button>

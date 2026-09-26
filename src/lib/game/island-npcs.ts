@@ -274,3 +274,17 @@ export async function seedIslandRoster(entries: SeedRosterEntry[], db: PrismaCli
   }
   return n;
 }
+
+/** The residents of the island the character stands on, with their live state, for the play screen ("Gente de esta isla"). */
+export async function getIslandCast(islandId: string, characterId: string) {
+  const roster = await loadRoster(islandId);
+  const engaged = await engagedNpcIds(characterId);
+  const now = new Date();
+  return roster
+    .filter((n) => n.status !== "DEAD" || (n.diedNote && true))
+    .map((n) => {
+      const st = npcState(n, now, engaged);
+      return { id: n.id, name: n.name, title: n.title, category: n.category, level: n.level, fighter: isFighter(n.category), state: st.label, usable: st.usable, dead: n.status === "DEAD", personality: n.personality, memory: (n.memoryJson ? (JSON.parse(n.memoryJson) as string[]) : []).slice(-2), diedNote: n.diedNote };
+    })
+    .sort((a, b) => Number(a.dead) - Number(b.dead) || Number(b.usable) - Number(a.usable) || a.name.localeCompare(b.name));
+}

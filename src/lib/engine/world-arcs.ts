@@ -16,7 +16,8 @@ export const ARC_START_CHANCE_PER_TICK = 0.02;
 export const ARC_CONTEXT_LINES = 8;
 
 /** reclaim = a defeated former Yonko goes for a sitting Yonko's throne; reclaim_lost = it failed and the owner decides the aspirant's fate. */
-export type ArcKind = "death" | "capture" | "reclaim" | "reclaim_lost";
+/** player_verdict = a player beat a canon character and asks for capture/death; the owner confirms. */
+export type ArcKind = "death" | "capture" | "reclaim" | "reclaim_lost" | "player_verdict";
 export type ArcOutcome = "death" | "capture" | "survived" | "reclaimed";
 
 /** The kind the narrator prompts understand. */
@@ -171,7 +172,7 @@ export function outcomeActorStatus(outcome: ArcOutcome, current = "ACTIVE"): "DE
 
 export function verdictOutcome(kind: ArcKind, approved: boolean): ArcOutcome {
   if (!approved) return "survived";
-  return kind === "reclaim" || kind === "reclaim_lost" ? "capture" : kind;
+  return kind === "reclaim" || kind === "reclaim_lost" || kind === "player_verdict" ? "capture" : kind;
 }
 
 /**
