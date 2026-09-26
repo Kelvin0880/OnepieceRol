@@ -47,6 +47,7 @@ import { beginPartyTurn, advancePartyTurn, releasePartyTurnLock, writePartyMessa
 import { CharacterStatus } from "@prisma/client";
 import { addStanding } from "./alliance";
 import { recordMissionEvent, judgeAndRecordMissions } from "./missions";
+import { hasCaptives, moveCaptivesWith } from "./custody";
 import { recordConsequence, rollConsequenceForExplore } from "./consequences";
 import { ONE_PIECE_TRUTH, ONE_PIECE_TRUTH_TITLE, truthNewsBody } from "./endgame-lore";
 
@@ -1360,6 +1361,7 @@ async function travelCharacterInner(characterId: string, userId: string, targetI
   if (staminaNow < TRAVEL_STAMINA_COST) throw new GameActionError("Estás demasiado exhausto para gobernar el barco. Descansa antes de zarpar.");
 
   if (hops > 1) {
+    if (await hasCaptives(character.id)) throw new GameActionError("No puedes emprender una travesía larga con un prisionero a bordo: llévalo isla a isla hasta una del Gobierno.");
     // The sea is a place with weather, patrols and rivals: the judge decides whether this crossing turns dangerous, knowing how risky the route is and how famous the traveller.
     const risk = Math.round(seaAmbushChance(hops) * 100);
     const turn = await judgeChoice(
@@ -1375,6 +1377,7 @@ async function travelCharacterInner(characterId: string, userId: string, targetI
 
   const visited = JSON.parse(character.islandsVisited) as string[];
   const firstVisit = !visited.includes(target.id);
+  await moveCaptivesWith(character.id, target.id);
 
   await prisma.character.update({
     where: { id: character.id },

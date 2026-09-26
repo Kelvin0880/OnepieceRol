@@ -39,11 +39,14 @@ export function missionTier(level: number, minLevel: number): 1 | 2 | 3 {
   return band < 5 ? 1 : band < 12 ? 2 : 3;
 }
 
+/** Island goals are the main way to level early: they pay two and a half times the base experience. */
+export const MISSION_XP_BOOST = 2.5;
+
 export function missionRewards(tier: number, danger: number, kind: MissionKind) {
   const kindMult = kind === "win_fights" ? 1.4 : kind === "travel" ? 0.8 : 1;
   return {
     berries: Math.round((120 + 60 * danger) * tier * kindMult),
-    xp: Math.round((25 * (1 + tier) + 6 * danger) * kindMult),
+    xp: Math.round((25 * (1 + tier) + 6 * danger) * kindMult * MISSION_XP_BOOST),
   };
 }
 

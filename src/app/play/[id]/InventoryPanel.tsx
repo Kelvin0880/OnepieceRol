@@ -13,7 +13,9 @@ interface View {
   weapons: { id: string; name: string; kind: string; atkBonus: number; description: string; equipped: boolean }[];
   devilFruit: { name: string; description: string } | null;
   poneglyphsRead: string;
+  merchantTitle?: string;
   shop: { id: string; name: string; kind: string; description: string; price: number; special?: boolean }[];
+  weaponShop?: { name: string; kind: string; description: string; atkBonus: number; price: number }[];
 }
 
 type Tab = "bag" | "gear" | "shop";
@@ -192,7 +194,8 @@ export default function InventoryPanel({ characterId, onClose, onChanged }: { ch
 
         {view && tab === "shop" && (
           <div className="flex flex-col gap-2" data-testid="inv-shop">
-            <p className="text-xs text-ink-dim">Un mercader de puerto. Los precios suben en islas peligrosas.</p>
+            <p className="text-xs text-ink-dim">{view.merchantTitle ?? "Un mercader de puerto"}. Cada isla vende lo suyo, y los precios suben en las peligrosas.</p>
+            {view.shop.length === 0 && (view.weaponShop ?? []).length === 0 && <p className="text-sm text-ink-dim">Aquí no hay nadie que venda nada.</p>}
             {view.shop.map((s) => (
               <div key={s.id} className="rounded border border-white/10 p-2 flex items-center justify-between gap-2">
                 <div className="min-w-0">
@@ -201,6 +204,18 @@ export default function InventoryPanel({ characterId, onClose, onChanged }: { ch
                 </div>
                 <button className="btn-ghost px-3 py-1 text-xs shrink-0" disabled={busy} onClick={() => act("inventory", { op: "buy", itemId: s.id })} data-testid={`inv-buy-${s.id}`}>
                   ฿ {s.price.toLocaleString("es-ES")}
+                </button>
+              </div>
+            ))}
+            {(view.weaponShop ?? []).length > 0 && <p className="text-xs uppercase tracking-wide text-ink-dim mt-2">Armería</p>}
+            {(view.weaponShop ?? []).map((w) => (
+              <div key={w.name} className="rounded border border-white/10 p-2 flex items-center justify-between gap-2">
+                <div className="min-w-0">
+                  <p className="text-sm text-gold-bright">{w.name} <span className="text-xs text-ink-dim">({w.kind}, +{w.atkBonus} ataque)</span></p>
+                  <p className="text-xs text-ink-dim">{w.description}</p>
+                </div>
+                <button className="btn-ghost px-3 py-1 text-xs shrink-0" disabled={busy} onClick={() => act("inventory", { op: "buy_weapon", name: w.name })} data-testid={`inv-buyweapon-${w.name}`}>
+                  ฿ {w.price.toLocaleString("es-ES")}
                 </button>
               </div>
             ))}

@@ -76,7 +76,7 @@ try {
   await page.click('[data-testid="inv-tab-gear"]');
   check("the prize weapon is listed in Equipo", (await page.textContent('[data-testid="inv-gear"]')).includes("Espada de premio"));
   await page.click('[data-testid="inv-tab-shop"]');
-  check("the merchant sells things", (await page.locator('[data-testid^="inv-buy-"]').count()) >= 3);
+  check("the merchant sells things", (await page.locator('[data-testid^="inv-buy-"]').count()) >= 2);
   await page.screenshot({ path: path.join(shots, "features-03-shop.png"), fullPage: true });
   await page.click('[data-testid="inv-tab-bag"]');
   await page.click('[data-testid="inv-eat"]');

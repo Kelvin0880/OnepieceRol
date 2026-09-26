@@ -2,6 +2,8 @@ import { prisma } from "../db";
 import { DEVIL_FRUIT_CATALOG } from "./devil-fruit-catalog";
 import { fruitBlackMarketPrice } from "../engine/economy";
 import { INVENTORY_SLOTS } from "../engine/inventory";
+import { merchantStock } from "../engine/merchant";
+import { COMMON_WEAPONS } from "./common-gear";
 import {
   ITEM_CATALOG,
   addToInventory,
@@ -9,7 +11,6 @@ import {
   getItemDef,
   removeOne,
   lootFor,
-  specialtyIdsFor,
   sellValue,
   useItem,
   type Stack,
@@ -17,12 +18,9 @@ import {
 
 export class InventoryError extends Error {}
 
-/** Items sold in any port. Dangerous islands charge more; a fair profit for whoever hauls them. */
-export const SHOP_ITEM_IDS = ["vendaje", "racion", "sake", "botiquin", "logpose", "denden", "elixir"];
-
-/** The common stock plus whatever the island is known for. */
-export function shopIdsFor(islandName: string): string[] {
-  return [...SHOP_ITEM_IDS, ...specialtyIdsFor(islandName)];
+/** What this island's merchant really sells (engine/merchant.ts): each place has its own stock, dangerous ones charge more. */
+export function shopIdsFor(island: { name: string; dangerLevel: number }): string[] {
+  return merchantStock(island.name, island.dangerLevel).items;
 }
 
 export function shopPrice(basePrice: number, danger: number): number {
@@ -159,9 +157,14 @@ export async function getInventoryView(characterId: string, userId: string) {
     weapons: c.ownedWeapons.map((w) => ({ id: w.id, name: w.name, kind: w.kind, atkBonus: w.atkBonus, description: w.description, equipped: w.id === c.equippedWeaponId })),
     devilFruit: c.devilFruit ? { name: c.devilFruit.name, description: c.devilFruit.description } : null,
     poneglyphsRead: c.poneglyphsRead,
-    shop: shopIdsFor(c.currentIsland.name).map((id) => {
+    merchantTitle: merchantStock(c.currentIsland.name, c.currentIsland.dangerLevel).title,
+    shop: shopIdsFor(c.currentIsland).map((id) => {
       const d = getItemDef(id)!;
-      return { id, name: d.name, kind: d.kind, description: d.description, price: shopPrice(d.price, c.currentIsland.dangerLevel), special: !SHOP_ITEM_IDS.includes(id) };
+      return { id, name: d.name, kind: d.kind, description: d.description, price: shopPrice(d.price, c.currentIsland.dangerLevel), special: !!d.soldAt };
+    }),
+    weaponShop: merchantStock(c.currentIsland.name, c.currentIsland.dangerLevel).weapons.flatMap((name) => {
+      const w = COMMON_WEAPONS.find((x) => x.name === name);
+      return w ? [{ name: w.name, kind: w.kind, description: w.description, atkBonus: w.atkBonus, price: shopPrice(w.basePrice, c.currentIsland.dangerLevel) }] : [];
     }),
   };
 }
@@ -240,7 +243,7 @@ export async function grantWeapon(characterId: string, spec: { name: string; kin
 export async function buyInventoryItem(characterId: string, userId: string, itemId: string) {
   const c = await ownedCharacter(characterId, userId);
   if (c.status !== "ALIVE") throw new InventoryError("No puedes comerciar en tu estado actual.");
-  if (!shopIdsFor(c.currentIsland.name).includes(itemId)) throw new InventoryError("Ese mercader no vende eso.");
+  if (!shopIdsFor(c.currentIsland).includes(itemId)) throw new InventoryError("Ese mercader no vende eso.");
   const def = getItemDef(itemId)!;
   const price = shopPrice(def.price, c.currentIsland.dangerLevel);
   if (c.berries < price) throw new InventoryError(`Cuesta ฿ ${price.toLocaleString("es-ES")} y no los tienes.`);
@@ -251,6 +254,22 @@ export async function buyInventoryItem(characterId: string, userId: string, item
   await prisma.character.update({ where: { id: characterId }, data: { berries: c.berries - price } });
   await saveStacks(characterId, add.stacks);
   return { message: `Compras ${def.name} por ฿ ${price.toLocaleString("es-ES")}.` };
+}
+
+/** An ordinary weapon from this island's armourer. It goes to the gear bag; equipping is the player's choice. */
+export async function buyMerchantWeapon(characterId: string, userId: string, weaponName: string) {
+  const c = await ownedCharacter(characterId, userId);
+  if (c.status !== "ALIVE") throw new InventoryError("No puedes comerciar en tu estado actual.");
+  const stock = merchantStock(c.currentIsland.name, c.currentIsland.dangerLevel);
+  const spec = COMMON_WEAPONS.find((w) => w.name === weaponName);
+  if (!spec || !stock.weapons.includes(spec.name)) throw new InventoryError("Ese mercader no vende esa arma.");
+  const price = shopPrice(spec.basePrice, c.currentIsland.dangerLevel);
+  if (c.berries < price) throw new InventoryError(`Cuesta ฿ ${price.toLocaleString("es-ES")} y no los tienes.`);
+  await prisma.$transaction([
+    prisma.weapon.create({ data: { name: spec.name, kind: spec.kind, grade: "NONE", description: spec.description, atkBonus: spec.atkBonus, basePrice: spec.basePrice, ownerId: characterId } }),
+    prisma.character.update({ where: { id: characterId }, data: { berries: c.berries - price } }),
+  ]);
+  return { message: `Compras ${spec.name} por ฿ ${price.toLocaleString("es-ES")}. La encuentras en tu equipo.` };
 }
 
 export async function inventoryLineForNarrator(characterId: string): Promise<string> {

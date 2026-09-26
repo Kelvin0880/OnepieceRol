@@ -5,7 +5,7 @@ import StatBar from "@/components/ui/StatBar";
 import { CELL_LABELS } from "@/lib/engine/impel-down";
 import { formatBerries, formatMinutes } from "@/lib/ui/format";
 import { useEffect, useState } from "react";
-import type { AdmiralAlertState, BlackMarketState, BusterCallState, Character, MissionsState, RaidState, TerritoryState, WorldEventHere } from "./types";
+import type { RescueRaidState, CaptivesState, AdmiralAlertState, BlackMarketState, BusterCallState, Character, MissionsState, RaidState, TerritoryState, WorldEventHere } from "./types";
 
 type Act = (body: Record<string, unknown>, path?: string) => Promise<void>;
 
@@ -78,6 +78,61 @@ export function PrisonCard({ character, act, busy, error, escapePlan, setEscapeP
           {imp.escapeCooldownMs > 0 ? `Espera ${Math.ceil(imp.escapeCooldownMs / 60000)} min` : "Intentar la fuga"}
         </button>
       </div>
+    </section>
+  );
+}
+
+/** Impel Down's canon prisoners and the raid that can free them. */
+export function RescueRaidPanel({ rescue, act, busy, error }: Common & { rescue: RescueRaidState }) {
+  return (
+    <section className="panel p-4 animate-rise" data-testid="rescue-raid">
+      <Title icon={Lock}>Presos de Impel Down</Title>
+      <p className="text-sm text-ink-dim mt-1">Un asalto libera al preso si vencéis a la guardia de su nivel. Cuanto más hondo, más nivel y más gente hacen falta. Vuestro grupo aquí: {rescue.groupSize}.</p>
+      {rescue.prisoners.length === 0 && <p className="text-sm text-ink-dim mt-2">Ningún personaje conocido está preso ahora mismo.</p>}
+      <ul className="flex flex-col gap-2 mt-3">
+        {rescue.prisoners.map((p) => (
+          <li key={p.actorId} className="rounded border border-white/10 p-2 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-sm text-gold-bright">{p.name} <span className="text-xs text-ink-dim">({p.factionName})</span></p>
+              <p className="text-xs text-ink-dim">{p.place} · pide nivel {p.minLevel}+ y {p.minPeople} persona{p.minPeople > 1 ? "s" : ""}</p>
+              {p.blockReason && <p className="text-xs text-blood">{p.blockReason}</p>}
+            </div>
+            <button className="btn-gold px-3 py-1.5 text-xs" disabled={busy || !!p.blockReason} onClick={() => act({ actorId: p.actorId }, "rescue")} data-testid="rescue-start">
+              Iniciar el rescate
+            </button>
+          </li>
+        ))}
+      </ul>
+      <ErrorLine error={error} />
+    </section>
+  );
+}
+
+/** Prisoners the player carries: very visible, with the one thing to do (take them to a Government island and hand them over). */
+export function CaptivesPanel({ captives, act, busy, error }: Common & { captives: CaptivesState }) {
+  return (
+    <section className="panel p-4 border-2 border-gold animate-rise" data-testid="captives-panel">
+      <Title icon={Lock}>Prisioneros a tu cargo</Title>
+      <p className="text-sm text-ink-dim mt-1">{captives.hint}</p>
+      <ul className="flex flex-col gap-2 mt-3">
+        {captives.captives.map((c) => (
+          <li key={c.id} className="rounded border border-white/10 p-2 flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <p className="text-sm text-gold-bright">{c.name} <span className="text-xs text-ink-dim">nivel {c.level}</span></p>
+              <p className="text-xs text-ink-dim">Recompensa al entregarlo: ฿ {c.reward.toLocaleString("es-ES")} · se escapa en {Math.ceil(c.msLeft / 3600000)} h si no llegas</p>
+            </div>
+            <div className="flex gap-2">
+              <button className="btn-gold px-3 py-1.5 text-xs" disabled={busy || !captives.governmentHere} title={captives.governmentHere ? "" : "Solo en una isla del Gobierno"} onClick={() => act({ op: "deliver", captiveId: c.id }, "custody")} data-testid="captive-deliver">
+                Entregar a la Marina
+              </button>
+              <button className="btn-ghost px-3 py-1.5 text-xs" disabled={busy} onClick={() => act({ op: "release", captiveId: c.id }, "custody")}>
+                Soltarlo
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
+      <ErrorLine error={error} />
     </section>
   );
 }

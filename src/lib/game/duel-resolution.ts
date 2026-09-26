@@ -5,6 +5,7 @@ import { verdictOptions, captureReward, type VerdictChoice } from "../engine/due
 import { narrateDuelReport } from "../ai/narrate";
 import { toCombatant } from "./derive";
 import { captureCharacter } from "./prison";
+import { takeCaptive } from "./custody";
 import { postNews } from "./death-resolution";
 import { notifyPair } from "./notify";
 import { settleGroupBattleIfDone } from "./battle-settle";
@@ -153,21 +154,22 @@ export async function decideVerdict(characterId: string, userId: string, duelId:
     }
   } else if (choice === "capture") {
     if (!options.canCapture || !options.captureMode) throw new DuelError(loser.warlordSince ? "Un Shichibukai tiene patente del Gobierno: no puedes arrestarlo." : "No puedes capturar a alguien de la Marina o del CP-0.");
-    const newsLog: string[] = [];
-    await captureCharacter(
-      { id: loser.id, name: loser.name, maxHp: loser.maxHp, currentIslandId: loser.currentIslandId, currentIsland: loser.currentIsland, level: loser.level, devilFruitId: loser.devilFruitId, faction: loser.faction, bounty: loser.bounty, notoriety: loser.notoriety },
-      combatPower(toCombatant(me)),
-      options.captureMode === "impel" ? `${me.name} lo capturó en un duelo a muerte en ${place.name}.` : `${me.name} lo entregó a la Marina tras un duelo a muerte en ${place.name}.`,
-      newsLog
-    );
-    const reward = captureReward(loser.faction, loser.bounty, loser.notoriety);
-    if (reward > 0) {
-      await prisma.character.update({ where: { id: me.id }, data: { berries: { increment: reward } } });
-      log.push(`Cobras ฿ ${reward.toLocaleString("es-ES")} por la captura de ${loser.name}.`);
+    if (options.captureMode === "impel") {
+      const newsLog: string[] = [];
+      await captureCharacter(
+        { id: loser.id, name: loser.name, maxHp: loser.maxHp, currentIslandId: loser.currentIslandId, currentIsland: loser.currentIsland, level: loser.level, devilFruitId: loser.devilFruitId, faction: loser.faction, bounty: loser.bounty, notoriety: loser.notoriety },
+        combatPower(toCombatant(me)),
+        `${me.name} lo capturó en un duelo a muerte en ${place.name}.`,
+        newsLog
+      );
+      log.push(`${loser.name} queda apresado.`);
+    } else {
+      // A player who is not the Government must carry the captive to a Government island to hand them over and get paid.
+      await takeCaptive({ id: me.id, name: me.name }, { id: loser.id, name: loser.name, maxHp: loser.maxHp, currentIslandId: loser.currentIslandId }, combatPower(toCombatant(me)), place.name);
+      log.push(`${loser.name} queda como tu prisionero. Llévalo a una isla del Gobierno para entregarlo y cobrar la recompensa; viaja contigo.`);
     }
-    await closeDuel(duelId, me.id, `${me.name} captura a ${loser.name}${options.captureMode === "sell" ? " y lo entrega a la Marina" : ""}.`);
+    await closeDuel(duelId, me.id, `${me.name} captura a ${loser.name}${options.captureMode === "sell" ? " y lo llevará a la Marina" : ""}.`);
     await postDuelReport(duelId, me.name, loser.name, "captured", place, true, me.id);
-    log.push(`${loser.name} queda apresado.`);
   } else {
     await prisma.character.update({ where: { id: loser.id }, data: { hp: loserHp } });
     await closeDuel(duelId, me.id, `${me.name} perdona la vida a ${loser.name}.`);

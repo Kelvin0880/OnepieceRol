@@ -39,6 +39,10 @@ import { parseCompanionProfile } from "../engine/companions";
 import { isWithPlayer } from "../engine/empire";
 import { describeCapabilities } from "../engine/capabilities";
 import { worldStateBlock } from "../game/world-state";
+import { merchantStock } from "../engine/merchant";
+import { getItemDef } from "../engine/inventory";
+import { shopPrice } from "../game/inventory";
+import { COMMON_WEAPONS } from "../game/common-gear";
 import { realPlayersBlock, voicesRealPlayer, inventsSystemResult, type RealPlayer } from "../engine/real-players";
 import { describeAttributes } from "../engine/attributes";
 import { describeStyles } from "../engine/styles";
@@ -120,8 +124,18 @@ export async function loadDirectives(characterId: string): Promise<string> {
     const presence = await import("../game/world-arcs").then((m) => m.worldPresenceFor(c.currentIslandId)).catch(() => "");
     const players = realPlayersBlock(await loadRealPlayers(characterId));
     const worldState = await worldStateBlock();
+    const isle = await prisma.island.findUnique({ where: { id: c.currentIslandId }, select: { name: true, dangerLevel: true } });
+    const stock = isle ? merchantStock(isle.name, isle.dangerLevel) : null;
+    const merchant = stock
+      ? stock.items.length + stock.weapons.length === 0
+        ? " MERCADER LOCAL: aquí nadie vende nada."
+        : ` MERCADER LOCAL (lo único que se vende aquí y a estos precios; si piden otra cosa, no hay; la compra real se hace en Inventario > Mercader): ${[
+            ...stock.items.flatMap((id) => { const d = getItemDef(id); return d ? [`${d.name} ฿${shopPrice(d.price, isle!.dangerLevel)}`] : []; }),
+            ...stock.weapons.flatMap((n) => { const w = COMMON_WEAPONS.find((x) => x.name === n); return w ? [`${w.name} ฿${shopPrice(w.basePrice, isle!.dangerLevel)}`] : []; }),
+          ].join(", ")}.`
+      : "";
     const missions = await prisma.mission.findMany({ where: { characterId, status: "ACTIVE", islandId: c.currentIslandId }, select: { title: true, progress: true, target: true } }).catch(() => []);
-    const situation = `LUGAR ACTUAL: ${(await prisma.island.findUnique({ where: { id: c.currentIslandId }, select: { name: true } }))?.name ?? "desconocido"} (la escena ocurre AQUÍ; no la traslades ni inventes locales de otra isla).` +
+    const situation = `LUGAR ACTUAL: ${(await prisma.island.findUnique({ where: { id: c.currentIslandId }, select: { name: true } }))?.name ?? "desconocido"} (la escena ocurre AQUÍ; no la traslades ni inventes locales de otra isla).` + merchant +
       (missions.length ? ` MISIONES ACTIVAS aquí (solo el sistema las avanza, completa y paga; NUNCA anuncies una misión completada, recompensa, reputación ni subida de nivel): ${missions.map((m) => `${m.title} ${m.progress}/${m.target}`).join("; ")}.` : "");
     return `
 

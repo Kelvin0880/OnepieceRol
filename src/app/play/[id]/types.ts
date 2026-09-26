@@ -178,6 +178,18 @@ export interface BlackMarketState {
   deals: number;
 }
 
+export interface RescueRaidState {
+  groupSize: number;
+  prisoners: { actorId: string; name: string; factionName: string; cell: number; place: string; minLevel: number; minPeople: number; blockReason: string | null }[];
+}
+
+export interface CaptivesState {
+  islandName: string;
+  governmentHere: boolean;
+  hint: string;
+  captives: { id: string; name: string; level: number; reward: number; msLeft: number }[];
+}
+
 export interface AdmiralAlertState {
   id: string;
   admiralName: string;
@@ -338,6 +350,8 @@ export interface StateResponse {
   territory: TerritoryState | null;
   busterCall: BusterCallState | null;
   admiralAlert: AdmiralAlertState | null;
+  captives: CaptivesState | null;
+  rescueRaid: RescueRaidState | null;
   raid: RaidState | null;
   blackMarket: BlackMarketState | null;
   coliseum: { status: string; kindLabel: string; prize: string; startsAt: string; onDressrosa: boolean; registered: boolean; round: string | null } | null;

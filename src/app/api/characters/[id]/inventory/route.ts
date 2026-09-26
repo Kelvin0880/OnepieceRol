@@ -1,13 +1,14 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUserId, UnauthorizedError } from "@/lib/require-user";
-import { getInventoryView, useInventoryItem, sellInventoryItem, buyInventoryItem, eatFruit, sellFruit, InventoryError } from "@/lib/game/inventory";
+import { getInventoryView, useInventoryItem, sellInventoryItem, buyInventoryItem, buyMerchantWeapon, eatFruit, sellFruit, InventoryError } from "@/lib/game/inventory";
 import { logError } from "@/lib/log-error";
 
 const schema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("use"), itemId: z.string().max(40) }),
   z.object({ op: z.literal("sell"), itemId: z.string().max(40), quantity: z.number().int().min(1).max(99).optional() }),
   z.object({ op: z.literal("buy"), itemId: z.string().max(40) }),
+  z.object({ op: z.literal("buy_weapon"), name: z.string().max(60) }),
   z.object({ op: z.literal("eat"), inventoryItemId: z.string().max(60) }),
   z.object({ op: z.literal("sellFruit"), inventoryItemId: z.string().max(60) }),
 ]);
@@ -40,6 +41,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       : b.op === "sell" ? await sellInventoryItem(id, userId, b.itemId, b.quantity ?? 1)
       : b.op === "eat" ? await eatFruit(id, userId, b.inventoryItemId)
       : b.op === "sellFruit" ? await sellFruit(id, userId, b.inventoryItemId)
+      : b.op === "buy_weapon" ? await buyMerchantWeapon(id, userId, b.name)
       : await buyInventoryItem(id, userId, b.itemId);
     return NextResponse.json(out);
   } catch (err) {
