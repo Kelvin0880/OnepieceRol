@@ -60,3 +60,5 @@ next-env.d.ts
 # local secrets, never commit
 env.txt
 *.env.txt
+/prisma/schema.deploy.prisma
+/.prod-client
