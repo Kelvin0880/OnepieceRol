@@ -1,6 +1,19 @@
 # Pendientes y mejoras (lista viva — actualizar en cada sesión)
 
-Última actualización: 2026-09-25 (noche). Marca con [x] lo hecho.
+Última actualización: 2026-09-26. Marca con [x] lo hecho.
+
+## Hecho el 2026-09-26
+- [x] Guerras del mundo declaradas por el propio canon (Revolución, Justicia, Emperadores, Marina contra un Yonko), cada ~4 días, sin que un jugador tenga que ocupar un puesto primero. Los jugadores asaltan o se alistan desde Poder → Guerra.
+- [x] Lore de los Poneglifos evolucionado: lengua antigua estudiada en Ohara, calcos si no sabes leer (descifrables después o entregables a un compañero), 6 Poneglifos de Historia nuevos con capítulos de lore reales.
+- [x] Contratos de facción: cada isla también da un encargo de tu propia bandera, que paga en tu moneda propia.
+- [x] "Mi camino": panel que dice, según tu estado real, qué hacer a continuación.
+- [x] Panel de administración: guerras (forzar una, correr un frente, forzar el final), puestos de mando (forzar un desafío, resolver un duelo), y una caja de herramientas del jugador (ajustar estadísticas, teletransportar, curar, liberar, control de isla, dar objeto/fruta).
+- [x] **Arreglo urgente en vivo**: el narrador inventaba guardias, tramas y misiones enteras por falta de contexto de cada isla — ahora cada una de las 47 islas tiene una guía fija (lugares, historia, costumbres) que la IA debe respetar. Desplegado solo, antes que el resto.
+- [x] Arreglado: en la escena compartida, cuando alguien exploraba, al resto de la tripulación solo le llegaba un resumen de una línea (se perdía la escena real).
+- [x] Arreglado: el orden de turnos en la escena compartida no se respetaba de verdad (solo "narrar" pasaba por la ronda). Ahora toda acción respeta el turno, en bucle.
+- [x] Nuevo: se puede cancelar una pelea que aún no empezó (fase de amenaza), no solo una ya en curso.
+- [x] GitHub Pages (`docs/guia.html`) actualizada: escaleras de rango corregidas (Almirante/Comandante/Gorosei ya no son mérito automático) y sección nueva de puestos de mando, guerras del mundo, lengua antigua y contratos de facción.
+- [x] Desplegado a producción (esquema + resembrado de las 6 piedras de Historia + código), confirmado `live`.
 
 ## Decisiones del dueño (reglas fijas)
 - [x] Nada de dados en ninguna parte: juez/árbitro IA decide; el código solo limita y aplica.
@@ -39,19 +52,21 @@
 - [ ] Ajustar prompts según los próximos reportes de jugadores (`/admin` → reportes).
 
 ## Diseño / contenido para más adelante
-- [ ] Poneglifos: el poseedor real pelea según dónde esté (hoy siempre un subordinado).
+- [ ] Poneglifos: el poseedor real de un Poneglifo de Ruta pelea según dónde esté (hoy siempre un subordinado) — sigue sin construirse; lo nuevo del 26 fue la lengua antigua, los calcos y los 6 Poneglifos de Historia, no esto.
 - [x] Conquista de territorios de un Yonko y reparto entre varios jugadores.
 - [x] Ruta de Yonko por mérito, desafío en persona a un Yonko canon (veredicto del dueño para su muerte o captura), Shichibukai para piratas, guerras contra la Marina y entre Yonko, reacción del mundo y figuras mundiales en las noticias (2026-09-25).
 - [x] CP-0 empieza en Tequila Wolf (isla de nivel 1). 7 islas y 33 personajes canon nuevos.
+- [x] Puestos de mando (Almirantes, mando revolucionario, Gorosei) ganados por desafío, no por mérito (2026-09-26, sesión anterior).
+- [x] Guerras que el propio canon declara solo (Revolución, Justicia, Emperadores, Marina), sin que un jugador tenga que ocupar un puesto primero (2026-09-26).
 - [ ] Raid final contra el gobernante oculto y respuesta a "qué es el One Piece".
 - [x] Diseño visual: kit reutilizable, animaciones, móvil primero (2026-09-25).
 
 ## Seguridad
-- [ ] Rotar la contraseña de Neon y el token de Render (se pegaron varias veces en el chat).
+- [ ] Rotar la contraseña de Neon y el token de Render (se han pegado varias veces en el chat, otra vez el 2026-09-26).
 
-## Próximos pasos (2026-09-25)
-- [ ] Desplegar: push del esquema a Neon (6 columnas en Character + tabla War) y resembrado; luego merge de `cloud/claude-nube` a `main`.
-- [ ] Pasar la regresión completa con la clave de OpenRouter (en la nube faltaba, así que las comprobaciones que usan la IA no se pudieron ejecutar).
+## Próximos pasos (2026-09-25, la mayoría hecha el 26)
+- [x] Desplegar: push del esquema a Neon (6 columnas en Character + tabla War) y resembrado; luego merge de `cloud/claude-nube` a `main`.
+- [ ] Pasar la regresión completa con la clave de OpenRouter (en la nube faltaba, así que las comprobaciones que usan la IA no se pudieron ejecutar). El 2026-09-26 se lanzó `node scripts/run-all-checks.mjs --quick` completo tras el despliegue; revisar `shots/regression.log` cuando termine (tardó más de lo normal).
 - [ ] Guerras: que los Shichibukai puedan ser llamados por el Gobierno a defender una base (hoy solo actúan marines y CP-0).
 - [ ] El Coliseo como duelo en vivo, y Barbanegra con dos frutas como dato real (siguen pendientes).
 
