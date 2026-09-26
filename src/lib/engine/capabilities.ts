@@ -16,6 +16,8 @@ export interface CapabilitySheet {
   hp: number;
   maxHp: number;
   companions: string[];
+  /** The character's whole purse: the narrator may never price or charge beyond it. */
+  berries?: number;
   /** "Título · te faltan N para X" — the standing the world sees. */
   rank?: string;
   /** describeAttributes(): the five attributes in words. */
@@ -53,6 +55,7 @@ export function describeCapabilities(c: CapabilitySheet): string {
   parts.push(`arma: ${c.weaponName ?? "ninguna (desarmado)"}`);
   const fatigue = fatigueLevel(c.stamina, c.maxStamina);
   parts.push(`estado: ${FATIGUE_LABELS[fatigue]} (aguante ${c.stamina}/${c.maxStamina}, vida ${c.hp}/${c.maxHp})`);
+  if (c.berries !== undefined) parts.push(`dinero: ${c.berries.toLocaleString("es-ES")} berries (es TODO lo que tiene)`);
   if (c.rank) parts.push(`rango: ${c.rank}`);
   if (c.attributes) parts.push(`atributos: ${c.attributes}`);
   if (c.inventory) parts.push(c.inventory);

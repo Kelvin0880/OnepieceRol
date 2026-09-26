@@ -38,6 +38,7 @@ import { OPENROUTER_MODELS } from "./models";
 import { parseCompanionProfile } from "../engine/companions";
 import { isWithPlayer } from "../engine/empire";
 import { describeCapabilities } from "../engine/capabilities";
+import { realPlayersBlock, voicesRealPlayer, type RealPlayer } from "../engine/real-players";
 import { describeAttributes } from "../engine/attributes";
 import { describeStyles } from "../engine/styles";
 import { inventoryLineForNarrator } from "../game/inventory";
@@ -71,6 +72,23 @@ export function isValidNarration(text: string): boolean {
  * Used as short-term context by scene narration and by combat/explore
  * prompts once a scene has some history.
  */
+/** Other people's characters (alive, another account): the narrator must never voice or move them. */
+export async function loadRealPlayers(characterId: string): Promise<RealPlayer[]> {
+  const me = await prisma.character.findUnique({ where: { id: characterId }, select: { userId: true, crewId: true, currentIslandId: true } });
+  if (!me) return [];
+  const others = await prisma.character.findMany({ where: { status: "ALIVE", userId: { not: me.userId } }, select: { name: true, crewId: true, currentIslandId: true }, orderBy: { lastSeenAt: "desc" }, take: 80 });
+  return others.map((o) => ({
+    name: o.name,
+    relation: [me.crewId && o.crewId === me.crewId ? "de su tripulación" : null, o.currentIslandId === me.currentIslandId ? "en esta isla" : "en otra isla"].filter(Boolean).join(", "),
+  }));
+}
+
+/** Rejects a narration where an invented voice or action is put in another player's character (the model then tries the next one). */
+export async function narrationValidatorFor(characterId: string): Promise<(text: string) => boolean> {
+  const names = (await loadRealPlayers(characterId).catch(() => [])).map((p) => p.name);
+  return (text) => isValidNarration(text) && voicesRealPlayer(text, names) === null;
+}
+
 /** Tone + standing out-of-role notes + the sheet of what the character can really do; never throws (defaults if the row is missing). */
 export async function loadDirectives(characterId: string): Promise<string> {
   try {
@@ -88,6 +106,7 @@ export async function loadDirectives(characterId: string): Promise<string> {
       }),
       styles: describeStyles(c.styles.map((s) => ({ id: s.styleId, mastery: s.mastery })), (c.equippedWeapon ? 1 : 0) + c.ownedWeapons.filter((w) => w.id !== c.equippedWeaponId).length, [...(c.equippedWeapon ? [c.equippedWeapon.name] : []), ...c.ownedWeapons.filter((w) => w.id !== c.equippedWeaponId).map((w) => w.name)]),
       attributes: describeAttributes({ strength: c.strength, agility: c.agility, durability: c.durability, willpower: c.willpower, intellect: c.intellect }),
+      berries: c.berries,
       inventory: await inventoryLineForNarrator(c.id),
       rank: (() => {
         const r = rankProgress((c.faction === "CP0" ? "CP0" : c.faction) as FactionKey, c.bounty, c.notoriety);
@@ -98,9 +117,12 @@ export async function loadDirectives(characterId: string): Promise<string> {
     });
     // Dynamic import: game/world-arcs imports this module for its own narration.
     const presence = await import("../game/world-arcs").then((m) => m.worldPresenceFor(c.currentIslandId)).catch(() => "");
+    const players = realPlayersBlock(await loadRealPlayers(characterId));
     return `
 
-${caps}${presence ? `
+${caps}${players ? `
+
+${players}` : ""}${presence ? `
 
 ${presence}` : ""}${directivesBlock(c.narratorTone, c.oocNotes)}`;
   } catch {
@@ -147,7 +169,7 @@ export async function narrateExplore(input: ExploreNarrationInput, meta: { chara
   try {
     const { system: baseSystem, user, maxTokens } = buildExploreNarrationPrompt(input);
     const system = baseSystem + (await loadDirectives(meta.characterId));
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: await narrationValidatorFor(meta.characterId) });
     return [text.trim()];
   } catch (err) {
     await logError("ai/narrate-explore", err, meta);
@@ -163,7 +185,7 @@ export async function narrateCombat(input: CombatNarrationInput, meta: { charact
   try {
     const { system: baseSystem, user, maxTokens } = buildCombatNarrationPrompt(input);
     const system = baseSystem + (await loadDirectives(meta.characterId));
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: await narrationValidatorFor(meta.characterId) });
     return [text.trim()];
   } catch (err) {
     await logError("ai/narrate-combat", err, meta);
@@ -176,7 +198,7 @@ export async function narrateEncounterIntro(input: EncounterIntroInput, fallback
   try {
     const { system: baseSystem, user, maxTokens } = buildEncounterIntroPrompt(input);
     const system = baseSystem + (await loadDirectives(meta.characterId));
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: await narrationValidatorFor(meta.characterId) });
     return [text.trim()];
   } catch (err) {
     await logError("ai/narrate-encounter-intro", err, meta);
@@ -223,7 +245,7 @@ export async function narrateScene(input: SceneNarrationInput, meta: { character
   try {
     const { system: baseSystem, user, maxTokens } = buildSceneNarrationPrompt(input);
     const system = baseSystem + (await loadDirectives(meta.characterId));
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: await narrationValidatorFor(meta.characterId) });
     return text.trim();
   } catch (err) {
     await logError("ai/narrate-scene", err, meta);
@@ -239,7 +261,7 @@ export async function narrateRecruit(input: RecruitNarrationInput, meta: { chara
   try {
     const { system: baseSystem, user, maxTokens } = buildRecruitNarrationPrompt(input);
     const system = baseSystem + (await loadDirectives(meta.characterId));
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: await narrationValidatorFor(meta.characterId) });
     return text.trim();
   } catch (err) {
     await logError("ai/narrate-recruit", err, meta);

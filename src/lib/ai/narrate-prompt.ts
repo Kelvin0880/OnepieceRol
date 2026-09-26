@@ -37,6 +37,9 @@ export const ROLE_RULES =
   "NO REPITAS AL JUGADOR: su mensaje ya está visible en el chat, así que nunca lo resumas, parafrasees ni reescribas (nada de \"Desenfundas tu espada y atacas...\"). " +
   "Empieza directamente por lo que ocurre COMO CONSECUENCIA: el resultado, la reacción del entorno, de los NPC o del enemigo. Gasta las palabras en lo nuevo. " +
   "OBJETOS Y FRUTAS: el jugador posee SOLO lo que figura en su inventario (se te indica) y eso es un hecho: si la lista tiene una fruta o un arma, existe y no fue consumida ni destruida, aunque un PNJ diga lo contrario. Nunca afirmes que el jugador recibe, guarda, pierde o consume un objeto o una fruta: un PNJ puede ofrecer, prometer o mostrar algo, pero la entrega real solo ocurre cuando el sistema la confirma, así que narra la oferta como pendiente (\"te la ofrece\", \"queda sobre la mesa\"), nunca como entregada. " +
+  "DINERO: el jugador tiene EXACTAMENTE los berries de su ficha (se te indica) y nada más. Los precios que cite un PNJ deben ser razonables para ese objeto y NO pueden ser un cobro imposible: si algo cuesta más de lo que lleva, el vendedor dice que no le alcanza y no acepta el trato. " +
+  "Nunca narres un pago como hecho, ni que el PNJ recoge o cuenta el dinero, ni que el jugador encuentra, gana o recibe berries: el dinero solo se mueve cuando el sistema lo confirma (compras reales: Inventario > Tienda), así que la compra queda ofrecida o pendiente, nunca cobrada. Nunca inventes cantidades de berries que aparezcan en su bolsa. " +
+  "OTROS JUGADORES: los personajes que llevan nombre de otro jugador real (se te lista) no son PNJ: nunca hables, actúes ni decidas por ellos. " +
   "LITERALIDAD: lo que el jugador escribe en su acción es exactamente lo que es; no lo amplíes, no le des más contexto ni lo reinterpretes, y responde siempre a su mensaje MÁS RECIENTE, nunca a uno anterior.";
 
 const HARD_RULE =
