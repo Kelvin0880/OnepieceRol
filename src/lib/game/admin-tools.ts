@@ -1,5 +1,5 @@
 import { prisma } from "../db";
-import { arcEligible, arcTitle, ARC_TOTAL_STAGES, type ArcKind } from "../engine/world-arcs";
+import { arcEligible, arcTitle, ARC_TOTAL_STAGES, RECLAIM_ASPIRANTS, type ArcKind } from "../engine/world-arcs";
 import { adminListEvents, cancelPlayerEvent, createPlayerEvent, forceResolvePlayerEvent, PlayerEventError } from "./player-events";
 import { tickWorldHappenings } from "./world-happenings";
 import { postNews } from "./death-resolution";
@@ -30,6 +30,8 @@ export async function getAdminOverview() {
     reports: reports.map((r) => ({ id: r.id, author: names.get(r.characterId) ?? "(personaje borrado)", text: r.text, at: r.createdAt })),
     errors: errors.map((e) => ({ id: e.id, context: e.context, message: e.message.slice(0, 240), at: e.createdAt })),
     events,
+    actors: (await prisma.worldActor.findMany({ select: { name: true, status: true, role: true, factionName: true }, orderBy: { name: "asc" } })).map((a) => ({ name: a.name, status: a.status, role: a.role, factionName: a.factionName })),
+    characters: (await prisma.character.findMany({ where: { status: "ALIVE" }, select: { name: true, level: true }, orderBy: { name: "asc" }, take: 300 })).map((c) => ({ name: c.name, level: c.level })),
     islands: (await prisma.island.findMany({ select: { name: true }, orderBy: { name: "asc" } })).map((i) => i.name),
   };
 }
@@ -80,6 +82,10 @@ export async function startArcManual(targetName: string, aggressorName: string, 
   const [target, aggressor] = await Promise.all([prisma.worldActor.findFirst({ where: { name: targetName.trim() } }), prisma.worldActor.findFirst({ where: { name: aggressorName.trim() } })]);
   if (!target || !aggressor) throw new AdminToolError("No encuentro a uno de los dos personajes: escribe el nombre exacto del códice.");
   if (target.id === aggressor.id) throw new AdminToolError("El objetivo y el agresor no pueden ser el mismo personaje.");
+  if (kind === "reclaim") {
+    if (!RECLAIM_ASPIRANTS.includes(aggressor.name) || aggressor.status !== "DEFEATED") throw new AdminToolError("Solo un antiguo Yonko derrotado (Kaido, Big Mom) puede intentar recuperar el título.");
+    if (target.role !== "YONKO" || target.status !== "ACTIVE") throw new AdminToolError(`${target.name} no es un Yonko en activo.`);
+  } else
   for (const a of [target, aggressor]) {
     if (!arcEligible({ id: a.id, name: a.name, role: a.role, status: a.status, factionType: a.factionType, powerLevel: a.powerLevel })) throw new AdminToolError(`${a.name} no puede protagonizar un evento (no está activo o es un personaje protegido).`);
   }

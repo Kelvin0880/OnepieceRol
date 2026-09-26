@@ -46,7 +46,7 @@ import { classifyPlayerAction, ActionId } from "../ai/classify-action";
 import { beginPartyTurn, advancePartyTurn, releasePartyTurnLock, writePartyMessage, echoToParty, confirmLeaveParty as partyConfirmLeaveParty, rejoinParty as partyRejoinParty } from "./party";
 import { CharacterStatus } from "@prisma/client";
 import { addStanding } from "./alliance";
-import { recordMissionEvent } from "./missions";
+import { recordMissionEvent, judgeAndRecordMissions } from "./missions";
 import { recordConsequence, rollConsequenceForExplore } from "./consequences";
 import { ONE_PIECE_TRUTH, ONE_PIECE_TRUTH_TITLE, truthNewsBody } from "./endgame-lore";
 
@@ -1458,7 +1458,9 @@ export async function narrateSceneAction(characterId: string, userId: string, fr
     { characterId: character.id }
   );
 
-  return emptyResult([text], character.level);
+  const result = emptyResult([text], character.level);
+  result.log.push(...(await judgeAndRecordMissions(character.id, freeText, text, true)));
+  return result;
 }
 
 /**
@@ -2054,7 +2056,11 @@ async function withMissions<T extends { log: string[] }>(characterId: string, re
 }
 
 export async function exploreCharacter(characterId: string, userId: string, intentText?: string): Promise<ActionResult> {
-  return withMissions(characterId, await exploreCharacterInner(characterId, userId, intentText), [{ kind: "explore" }]);
+  const inner = await exploreCharacterInner(characterId, userId, intentText);
+  const story = inner.log.join(" ");
+  const result = await withMissions(characterId, inner, [{ kind: "explore" }]);
+  if (intentText) result.log.push(...(await judgeAndRecordMissions(characterId, intentText, story, false)));
+  return result;
 }
 
 export async function resolveMercyChoice(characterId: string, userId: string, spare: boolean): Promise<ActionResult> {

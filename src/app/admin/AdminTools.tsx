@@ -8,6 +8,31 @@ interface Overview {
   errors: { id: string; context: string; message: string; at: string }[];
   events: { id: string; title: string; islandName: string; status: string; rewardText: string; winnerName: string | null; createdBy: string; entries: { name: string; isNpc: boolean; status: string }[] }[];
   islands: string[];
+  actors: { name: string; status: string; role: string; factionName: string }[];
+  characters: { name: string; level: number }[];
+}
+
+function IslandSelect({ value, onChange, islands }: { value: string; onChange: (v: string) => void; islands: string[] }) {
+  return (
+    <select className={`${field} sm:w-56`} value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="">Isla: cualquiera</option>
+      {islands.map((i) => <option key={i} value={i}>{i}</option>)}
+    </select>
+  );
+}
+
+function ActorSelect({ label, value, onChange, actors }: { label: string; value: string; onChange: (v: string) => void; actors: { name: string; factionName: string; status: string }[] }) {
+  const groups = [...new Set(actors.map((a) => a.factionName))].sort();
+  return (
+    <select className={`${field} sm:w-64`} value={value} onChange={(e) => onChange(e.target.value)}>
+      <option value="">{label}</option>
+      {groups.map((g) => (
+        <optgroup key={g} label={g}>
+          {actors.filter((a) => a.factionName === g).map((a) => <option key={a.name} value={a.name}>{a.name}{a.status !== "ACTIVE" ? " (derrotado)" : ""}</option>)}
+        </optgroup>
+      ))}
+    </select>
+  );
 }
 
 const field = "w-full text-sm bg-transparent border border-[--line] rounded px-3 py-2";
@@ -87,7 +112,7 @@ export default function AdminTools() {
         <p className="text-xs text-ink-dim">La IA inventa la prueba y sus rivales; el premio lo fija el sistema. Sale en las noticias. Deja la idea en blanco para que invente todo.</p>
         <input className={field} placeholder="Idea opcional (ej.: una carrera de barcas con premio)" value={f.evIdea} onChange={(e) => set("evIdea", e.target.value)} data-testid="admin-event-idea" />
         <div className="flex flex-wrap gap-2">
-          <input className={`${field} sm:w-56`} list="admin-islands" placeholder="Isla (opcional)" value={f.evIsland} onChange={(e) => set("evIsland", e.target.value)} />
+          <IslandSelect value={f.evIsland} onChange={(v) => set("evIsland", v)} islands={o.islands} />
           <input className={`${field} w-28`} type="number" min={1} max={60} value={f.evMax} onChange={(e) => set("evMax", e.target.value)} title="Nivel máximo" />
           <select className={`${field} w-44`} value={f.evFruit} onChange={(e) => set("evFruit", e.target.value)}>
             <option value="auto">Fruta: a criterio del sistema</option>
@@ -134,7 +159,7 @@ export default function AdminTools() {
         <p className="text-xs text-ink-dim">Escribe una idea y la IA la desarrolla como noticia en el mundo (o pulsa sin idea para que invente uno ahora). No puede matar ni capturar a personajes canon.</p>
         <textarea className={`${field} min-h-16`} placeholder="Idea (ej.: una tormenta de arena descubre unas ruinas en Alabasta)" value={f.idea} onChange={(e) => set("idea", e.target.value)} data-testid="admin-happening-idea" />
         <div className="flex flex-wrap gap-2">
-          <input className={`${field} sm:w-56`} list="admin-islands" placeholder="Isla (opcional)" value={f.island} onChange={(e) => set("island", e.target.value)} />
+          <IslandSelect value={f.island} onChange={(v) => set("island", v)} islands={o.islands} />
           <button className="btn-gold px-3 py-2 text-sm" disabled={busy} data-testid="admin-happening-go" onClick={() => run({ op: "propose_happening", idea: f.idea || null, island: f.island || null }, "Suceso publicado en las noticias")}>
             Publicar suceso
           </button>
@@ -154,11 +179,12 @@ export default function AdminTools() {
         <h2 className="font-display text-lg text-gold-bright">Iniciar un evento mundial</h2>
         <p className="text-xs text-ink-dim">Una historia de 6 capítulos entre dos personajes canon (nombre exacto del códice). Al final decides tú si el desenlace es definitivo.</p>
         <div className="flex flex-wrap gap-2">
-          <input className={`${field} sm:w-56`} placeholder="Objetivo (ej.: Shanks)" value={f.arcT} onChange={(e) => set("arcT", e.target.value)} />
-          <input className={`${field} sm:w-56`} placeholder="Agresor (ej.: Akainu)" value={f.arcA} onChange={(e) => set("arcA", e.target.value)} />
+          <ActorSelect label="Objetivo…" value={f.arcT} onChange={(v) => set("arcT", v)} actors={o.actors.filter((a) => a.status === "ACTIVE")} />
+          <ActorSelect label="Agresor…" value={f.arcA} onChange={(v) => set("arcA", v)} actors={o.actors.filter((a) => a.status === "ACTIVE" || (f.arcKind === "reclaim" && a.status === "DEFEATED"))} />
           <select className={`${field} w-40`} value={f.arcKind} onChange={(e) => set("arcKind", e.target.value)}>
             <option value="capture">Captura</option>
             <option value="death">Muerte</option>
+            <option value="reclaim">Recuperar el título de Yonko</option>
           </select>
           <button className="btn-gold px-3 py-2 text-sm" disabled={busy} data-testid="admin-start-arc-go" onClick={() => run({ op: "start_arc", target: f.arcT, aggressor: f.arcA, kind: f.arcKind }, "Evento mundial iniciado")}>
             Iniciar

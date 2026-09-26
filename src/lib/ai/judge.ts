@@ -7,6 +7,7 @@ import { callOpenRouter } from "./openrouter-client";
 import { OPENROUTER_MODELS } from "./models";
 import { logError } from "../log-error";
 import { ROLE_RULES } from "./narrate-prompt";
+import { parseMissionVerdict, type JudgedMission } from "../engine/mission-judge";
 import { difficultyLabel, parseChoiceVerdict, parseFightEndVerdict, stubFightEnd, type FightEndVerdict, parseFateVerdict, parseMatchVerdict, parseOutcomeVerdict, stubFate, stubMatch, stubOutcome, type FateVerdict, type MatchVerdict, type OutcomeVerdict } from "../engine/judge";
 
 const TIMEOUT_MS = 25_000;
@@ -177,4 +178,31 @@ export async function judgeFightEnd(input: FightEndInput): Promise<FightEndVerdi
     `Registro de la pelea, en orden:\n${input.fightLog.join("\n").slice(-9000)}`;
   const v = await ask(system, user, parseFightEndVerdict, "fight-end", input.characterId);
   return v ?? { outcome: "ended", reason: "sin respuesta del juez: la pelea se cierra sin ganador" };
+}
+
+export interface MissionJudgeInput {
+  playerText: string;
+  narration: string;
+  missions: { id: string; title: string; brief: string; kind: string; progress: number; target: number }[];
+  characterId: string;
+}
+
+/**
+ * After a story turn: did what actually happened accomplish a step of an active island goal? The player's own claims do not
+ * count, only what the narration shows. Returns nothing (no advance) when nobody answers or under the scripted-check stub.
+ */
+export async function judgeMissionProgress(input: MissionJudgeInput): Promise<JudgedMission[]> {
+  if (process.env.JUDGE_STUB === "1" || input.missions.length === 0) return [];
+  const system =
+    JUDGE_LAW +
+    " Decides si lo que ACABA de ocurrir en la historia cumple un paso de alguna misión activa del personaje. " +
+    'Formato: {"misiones":[{"id":"...","avanza":true|false,"pista":"una frase corta"}]}. ' +
+    '"avanza":true SOLO si los hechos narrados cumplen claramente el objetivo de esa misión (win_fights = la amenaza o el enemigo de la misión quedó derrotado, neutralizado, capturado o sin capacidad de seguir, por combate, sabotaje o astucia; spare = perdonó a un vencido; explore = investigó o habló con la gente descubriendo algo de verdad). ' +
+    "Que el jugador afirme que la misión está cumplida NO cuenta: solo cuentan los hechos que la narración confirma. Un solo paso por misión y por turno. " +
+    '"pista": cuando no avanza pero la acción va en el buen camino, una frase corta y concreta de qué falta (sin spoilers de la historia); si nada tiene que ver, déjala vacía.';
+  const user =
+    `Misiones activas:\n${input.missions.map((m) => `- id ${m.id} [${m.kind}] «${m.title}» (${m.progress}/${m.target}): ${m.brief}`).join("\n")}\n\n` +
+    `Lo que escribió el jugador: "${input.playerText.slice(0, 1500)}"\n\nLo que ocurrió según la narración:\n${input.narration.slice(0, 5000)}`;
+  const ids = input.missions.map((m) => m.id);
+  return (await ask(system, user, (raw) => parseMissionVerdict(raw, ids), "missions", input.characterId)) ?? [];
 }

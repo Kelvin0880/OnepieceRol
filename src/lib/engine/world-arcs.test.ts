@@ -138,3 +138,35 @@ describe("outcomes and helpers", () => {
     expect(chapterLocation(5, { target: "A", aggressor: null, nearTarget: null, siege: null })).toBe("A");
   });
 });
+
+import { pickReclaimCast, reclaimAspirantWins, narrationKind, outcomeActorStatus as outcomeStatus, verdictOutcome as verdictOf, arcTitle as titleOf } from "./world-arcs";
+
+describe("reclaiming the Yonko throne", () => {
+  const A = (id: string, name: string, role: string, status: string) => ({ id, name, role, status, factionType: "PIRATE", powerLevel: 95 });
+  const rng = () => 0.1;
+  it("pairs a defeated aspirant with a sitting Yonko, never the other way", () => {
+    const cast = pickReclaimCast(rng, [A("1", "Kaido", "NOTABLE_PIRATE", "DEFEATED"), A("2", "Shanks", "YONKO", "ACTIVE"), A("3", "Buggy", "NOTABLE_PIRATE", "ACTIVE")]);
+    expect(cast?.aggressor.name).toBe("Kaido");
+    expect(cast?.target.name).toBe("Shanks");
+    expect(cast?.kind).toBe("reclaim");
+  });
+  it("needs both an aspirant and a sitting Yonko", () => {
+    expect(pickReclaimCast(rng, [A("2", "Shanks", "YONKO", "ACTIVE")])).toBeNull();
+    expect(pickReclaimCast(rng, [A("1", "Kaido", "NOTABLE_PIRATE", "DEFEATED")])).toBeNull();
+    expect(pickReclaimCast(rng, [A("1", "Kaido", "NOTABLE_PIRATE", "ACTIVE"), A("2", "Shanks", "YONKO", "ACTIVE")])).toBeNull();
+  });
+  it("defenders who saved the day beat the judge; otherwise the judge decides", () => {
+    expect(reclaimAspirantWins("saved", true)).toBe(false);
+    expect(reclaimAspirantWins("none", true)).toBe(true);
+    expect(reclaimAspirantWins("none", false)).toBe(false);
+  });
+  it("a defeated aspirant that survives stays defeated, and never becomes a plain capture kind", () => {
+    expect(outcomeStatus("survived", "DEFEATED")).toBe("DEFEATED");
+    expect(outcomeStatus("survived", "ACTIVE")).toBe("ACTIVE");
+    expect(outcomeStatus("capture", "DEFEATED")).toBe("CAPTURED");
+    expect(verdictOf("reclaim_lost", true)).toBe("capture");
+    expect(verdictOf("reclaim_lost", false)).toBe("survived");
+    expect(narrationKind("reclaim")).toBe("capture");
+    expect(titleOf("reclaim", "Shanks", "Kaido")).toContain("Kaido");
+  });
+});

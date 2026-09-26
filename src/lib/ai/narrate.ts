@@ -38,6 +38,7 @@ import { OPENROUTER_MODELS } from "./models";
 import { parseCompanionProfile } from "../engine/companions";
 import { isWithPlayer } from "../engine/empire";
 import { describeCapabilities } from "../engine/capabilities";
+import { worldStateBlock } from "../game/world-state";
 import { realPlayersBlock, voicesRealPlayer, inventsSystemResult, type RealPlayer } from "../engine/real-players";
 import { describeAttributes } from "../engine/attributes";
 import { describeStyles } from "../engine/styles";
@@ -118,6 +119,7 @@ export async function loadDirectives(characterId: string): Promise<string> {
     // Dynamic import: game/world-arcs imports this module for its own narration.
     const presence = await import("../game/world-arcs").then((m) => m.worldPresenceFor(c.currentIslandId)).catch(() => "");
     const players = realPlayersBlock(await loadRealPlayers(characterId));
+    const worldState = await worldStateBlock();
     const missions = await prisma.mission.findMany({ where: { characterId, status: "ACTIVE", islandId: c.currentIslandId }, select: { title: true, progress: true, target: true } }).catch(() => []);
     const situation = `LUGAR ACTUAL: ${(await prisma.island.findUnique({ where: { id: c.currentIslandId }, select: { name: true } }))?.name ?? "desconocido"} (la escena ocurre AQUÍ; no la traslades ni inventes locales de otra isla).` +
       (missions.length ? ` MISIONES ACTIVAS aquí (solo el sistema las avanza, completa y paga; NUNCA anuncies una misión completada, recompensa, reputación ni subida de nivel): ${missions.map((m) => `${m.title} ${m.progress}/${m.target}`).join("; ")}.` : "");
@@ -125,7 +127,9 @@ export async function loadDirectives(characterId: string): Promise<string> {
 
 ${caps}
 
-${situation}${players ? `
+${situation}${worldState ? `
+
+${worldState}` : ""}${players ? `
 
 ${players}` : ""}${presence ? `
 
@@ -279,7 +283,7 @@ export async function narratePartyScene(input: PartySceneNarrationInput, meta: {
   try {
     const { system: baseSystem, user, maxTokens } = buildPartySceneNarrationPrompt(input);
     const pact = (await prisma.party.findUnique({ where: { id: meta.partyId }, select: { scenePact: true } }))?.scenePact;
-    const system = baseSystem + directivesBlock("balanced", pact ? `PACTO DE ESCENA acordado por los jugadores fuera de rol (móntalo dentro de la historia con naturalidad, dando protagonismo a todos y respetando lo pactado): ${pact}` : undefined);
+    const system = baseSystem + (await worldStateBlock()) + directivesBlock("balanced", pact ? `PACTO DE ESCENA acordado por los jugadores fuera de rol (móntalo dentro de la historia con naturalidad, dando protagonismo a todos y respetando lo pactado): ${pact}` : undefined);
     const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
     return text.trim();
   } catch (err) {

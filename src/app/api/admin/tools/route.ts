@@ -12,7 +12,7 @@ const schema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("create_event"), idea: z.string().max(800).optional().nullable(), island, maxLevel: z.number().int().min(1).max(60).optional(), withFruit: z.boolean().optional().nullable() }),
   z.object({ op: z.literal("cancel_event"), eventId: z.string() }),
   z.object({ op: z.literal("force_event"), eventId: z.string() }),
-  z.object({ op: z.literal("start_arc"), target: z.string().max(80), aggressor: z.string().max(80), kind: z.enum(["death", "capture"]) }),
+  z.object({ op: z.literal("start_arc"), target: z.string().max(80), aggressor: z.string().max(80), kind: z.enum(["death", "capture", "reclaim"]) }),
 ]);
 
 export async function GET() {

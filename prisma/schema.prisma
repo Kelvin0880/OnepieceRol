@@ -759,6 +759,9 @@ model WorldActor {
   seaToIslandId     String?
   locationHidden    Boolean   @default(false)
   locationUpdatedAt DateTime?
+  // Captured canon actors: the Impel Down level they are held on (1-6) and since when.
+  prisonLevel       Int?
+  capturedAt        DateTime?
   statsJson     String?
   abilitiesJson String?
   factionType  FactionType @default(UNAFFILIATED)
@@ -1188,4 +1191,26 @@ model CharacterPortrait {
   image       Bytes
   mimeType    String
   updatedAt   DateTime @default(now())
+}
+
+// A Government admiral sent to crush the pirate players of an island (rare event). The crossing takes time so players can
+// leave; on arrival the fight is automatic and unavoidable for whoever stayed. Leaving empty-handed costs the same time back.
+model AdmiralDispatch {
+  id               String    @id @default(cuid())
+  admiralActorId   String
+  admiralName      String
+  originIslandId   String?
+  targetIslandId   String
+  targetIslandName String
+  status           String    @default("EN_ROUTE") // EN_ROUTE | ARRIVED | RETURNING | ENDED
+  travelMs         Int
+  departedAt       DateTime  @default(now())
+  arrivesAt        DateTime
+  returnsAt        DateTime?
+  arrivedAt        DateTime?
+  endedAt          DateTime?
+  jointFightId     String?
+  captured         String    @default("[]") // JSON: names of the players taken prisoner
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
 }

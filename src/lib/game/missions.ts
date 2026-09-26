@@ -6,6 +6,8 @@ import { narrateIslandBriefing } from "../ai/narrate";
 import { grantXp } from "./xp";
 import { addStanding } from "./alliance";
 import { notifyCharacters } from "../realtime";
+import { judgeMissionProgress } from "../ai/judge";
+import { judgeableKinds } from "../engine/mission-judge";
 
 const inFlight = new Map<string, Promise<void>>();
 
@@ -104,39 +106,71 @@ export async function getMissionState(characterId: string) {
   };
 }
 
+type ActiveMission = Awaited<ReturnType<typeof prisma.mission.findMany>>[number];
+
+/** Applies progress to missions and pays the completed ones. Shared by exact engine events and by the story judge. */
+async function settleGains(characterId: string, gains: { m: ActiveMission; gain: number }[]): Promise<string[]> {
+  const c = await prisma.character.findUnique({ where: { id: characterId } });
+  if (!c) return [];
+  const log: string[] = [];
+  let berries = 0;
+  let xp = 0;
+  for (const { m, gain } of gains) {
+    const progress = m.progress + gain;
+    if (!isComplete(progress, m.target)) {
+      await prisma.mission.update({ where: { id: m.id }, data: { progress } });
+      log.push(`Misión «${m.title}»: ${progress}/${m.target}.`);
+      continue;
+    }
+    await prisma.mission.update({ where: { id: m.id }, data: { progress: m.target, status: "DONE", completedAt: new Date() } });
+    berries += m.berries;
+    xp += m.xp;
+    log.push(`¡Misión cumplida! «${m.title}» (฿ ${m.berries.toLocaleString("es-ES")}, ${m.xp} XP).`);
+    if (m.patronActorId) await addStanding(m.patronActorId, characterId, { mission: m.tier - 1 }, `cumpliste «${m.title}»`);
+  }
+  if (berries || xp) {
+    const gained = await grantXp(c.experience, c.level, xp);
+    await prisma.character.update({ where: { id: c.id }, data: { berries: c.berries + berries, experience: gained.xp, level: gained.level } });
+    if (gained.leveledUp) log.push(`¡Subes de nivel! Ahora eres nivel ${gained.level}.`);
+  }
+  return log;
+}
+
 /** Advances every active mission the event counts toward; pays out completed ones. Never throws into the action that triggered it. */
 export async function recordMissionEvent(characterId: string, event: MissionEvent): Promise<string[]> {
   try {
     const c = await prisma.character.findUnique({ where: { id: characterId } });
     if (!c) return [];
     const active = await prisma.mission.findMany({ where: { characterId, status: "ACTIVE" } });
-    const log: string[] = [];
-    let berries = 0;
-    let xp = 0;
+    const gains: { m: ActiveMission; gain: number }[] = [];
     for (const m of active) {
-      const sameIsland = m.islandId === c.currentIslandId;
       // Travel goals complete on arrival elsewhere; everything else only counts on the island that issued it.
-      if (event.kind !== "travel" && !sameIsland) continue;
+      if (event.kind !== "travel" && m.islandId !== c.currentIslandId) continue;
       const gain = progressGain({ kind: m.kind as MissionKind, progress: m.progress, target: m.target, destination: m.destination }, event);
-      if (gain === 0) continue;
-      const progress = m.progress + gain;
-      if (!isComplete(progress, m.target)) {
-        await prisma.mission.update({ where: { id: m.id }, data: { progress } });
-        log.push(`Misión «${m.title}»: ${progress}/${m.target}.`);
-        continue;
-      }
-      await prisma.mission.update({ where: { id: m.id }, data: { progress: m.target, status: "DONE", completedAt: new Date() } });
-      berries += m.berries;
-      xp += m.xp;
-      log.push(`¡Misión cumplida! «${m.title}» (฿ ${m.berries.toLocaleString("es-ES")}, ${m.xp} XP).`);
-      if (m.patronActorId) await addStanding(m.patronActorId, characterId, { mission: m.tier - 1 }, `cumpliste «${m.title}»`);
+      if (gain > 0) gains.push({ m, gain });
     }
-    if (berries || xp) {
-      const gained = await grantXp(c.experience, c.level, xp);
-      await prisma.character.update({ where: { id: c.id }, data: { berries: c.berries + berries, experience: gained.xp, level: gained.level } });
-      if (gained.leveledUp) log.push(`¡Subes de nivel! Ahora eres nivel ${gained.level}.`);
-    }
-    return log;
+    return await settleGains(characterId, gains);
+  } catch {
+    return [];
+  }
+}
+
+/**
+ * The referee reads a story turn and moves the island goals it really accomplished (a sabotage that ends a gang counts
+ * as much as a brawl), plus a hint when the player is on the right track. One step per mission per turn, only here.
+ */
+export async function judgeAndRecordMissions(characterId: string, playerText: string, narration: string, includeExplore: boolean): Promise<string[]> {
+  try {
+    const c = await prisma.character.findUnique({ where: { id: characterId }, select: { currentIslandId: true } });
+    if (!c || !narration.trim()) return [];
+    const kinds = judgeableKinds(includeExplore);
+    const active = await prisma.mission.findMany({ where: { characterId, status: "ACTIVE", islandId: c.currentIslandId, kind: { in: kinds } } });
+    if (active.length === 0) return [];
+    const verdicts = await judgeMissionProgress({ playerText, narration, characterId, missions: active.map((m) => ({ id: m.id, title: m.title, brief: m.brief, kind: m.kind, progress: m.progress, target: m.target })) });
+    const gains = verdicts.filter((v) => v.advance).flatMap((v) => { const m = active.find((x) => x.id === v.id); return m ? [{ m, gain: 1 }] : []; });
+    const log = await settleGains(characterId, gains);
+    const hints = verdicts.filter((v) => !v.advance && v.hint).map((v) => `Misión «${active.find((x) => x.id === v.id)?.title}»: ${v.hint}`);
+    return [...log, ...hints.slice(0, 1)];
   } catch {
     return [];
   }

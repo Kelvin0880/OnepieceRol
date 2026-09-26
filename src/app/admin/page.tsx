@@ -29,7 +29,7 @@ export default function AdminPage() {
   const [error, setError] = useState<string | null>(null);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
-  const [confirm, setConfirm] = useState<{ id: string; approve: boolean } | null>(null);
+  const [confirm, setConfirm] = useState<{ id: string; approve: boolean; choice?: "capture" | "death" | "survived" } | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetch("/api/admin/world-arcs");
@@ -121,8 +121,8 @@ export default function AdminPage() {
               </p>
               {confirm?.id === a.id ? (
                 <div className="flex gap-2 items-center flex-wrap">
-                  <span className="text-sm text-blood">{confirm.approve ? "Esto es irreversible. ¿Confirmas?" : `¿Confirmas que ${a.target} sobreviva?`}</span>
-                  <button className="btn-gold px-3 py-1.5 text-xs" disabled={busy} onClick={() => send({ op: "decide", arcId: a.id, approve: confirm.approve })} data-testid="admin-confirm">
+                  <span className="text-sm text-blood">{confirm.choice === "death" ? `Esto es irreversible: ${a.target} MUERE. ¿Confirmas?` : confirm.choice === "capture" ? `${a.target} queda CAPTURADO en Impel Down. ¿Confirmas?` : confirm.approve ? "Esto es irreversible. ¿Confirmas?" : `¿Confirmas que ${a.target} sobreviva?`}</span>
+                  <button className="btn-gold px-3 py-1.5 text-xs" disabled={busy} onClick={() => send({ op: "decide", arcId: a.id, approve: confirm.approve, choice: confirm.choice })} data-testid="admin-confirm">
                     Sí, confirmar
                   </button>
                   <button className="btn-ghost px-3 py-1.5 text-xs" onClick={() => setConfirm(null)}>
@@ -130,6 +130,13 @@ export default function AdminPage() {
                   </button>
                 </div>
               ) : (
+                a.kind === "reclaim_lost" ? (
+                <div className="flex gap-2 flex-wrap">
+                  <button className="btn-ghost px-3 py-1.5 text-xs" onClick={() => setConfirm({ id: a.id, approve: true, choice: "capture" })} data-testid="admin-choose-capture">Capturarlo</button>
+                  <button className="btn-ghost px-3 py-1.5 text-xs" onClick={() => setConfirm({ id: a.id, approve: true, choice: "death" })} data-testid="admin-choose-death">Que muera</button>
+                  <button className="btn-gold px-3 py-1.5 text-xs" onClick={() => setConfirm({ id: a.id, approve: false, choice: "survived" })} data-testid="admin-choose-survive">Que sobreviva</button>
+                </div>
+                ) : (
                 <div className="flex gap-2">
                   <button className="btn-ghost px-3 py-1.5 text-xs" onClick={() => setConfirm({ id: a.id, approve: true })} data-testid="admin-approve">
                     Permitirlo
@@ -138,6 +145,7 @@ export default function AdminPage() {
                     No permitirlo (sobrevive)
                   </button>
                 </div>
+                )
               )}
             </div>
           )}

@@ -13,15 +13,21 @@ import {
   nextBeatTime,
   outcomeActorStatus,
   pickArcCast,
-  FEATURED_ACTOR_NAMES,
+  RECLAIM_ASPIRANTS,
+  narrationKind,
+  pickReclaimCast,
+  reclaimAspirantWins,
   shouldStartArc,
   verdictOutcome,
 } from "../engine/world-arcs";
 import { MovableActor, PresenceActor, describePresence, pickMoves, seaLabel, whereLabel } from "../engine/actor-movement";
 import { narrateWorldEvent } from "../ai/narrate";
+import { judgeMatch } from "../ai/judge";
 import { Contribution, InterventionSide, addContribution, interventionBlockReason, interventionMinLevel, interventionTilt, isInterventionSide, vanguardFor } from "../engine/arc-intervention";
 import { startJointFight, freePartyMemberIds, JointFightError } from "./joint-fight";
 import { postNews } from "./death-resolution";
+import { invalidateWorldState } from "./world-state";
+import { actorPrisonCell } from "../engine/world-state";
 import { recentHappeningsFor } from "./world-happenings";
 
 const OPEN_STATUSES = ["ACTIVE", "AWAITING_CONSENT"];
@@ -159,7 +165,7 @@ async function runArcBeat(arcId: string): Promise<void> {
   const context: string[] = JSON.parse(arc.contextJson);
   const brief = fillBrief(chapter.brief, arc.targetName, arc.aggressorName);
   const narrated = await narrateWorldEvent(
-    { kind: arc.kind as ArcKind, stage, totalStages: arc.totalStages, chapterLabel: chapter.label, brief, targetName: arc.targetName, aggressorName: arc.aggressorName, locationName: place, storySoFar: context },
+    { kind: narrationKind(arc.kind as ArcKind), reclaim: arc.kind === "reclaim", stage, totalStages: arc.totalStages, chapterLabel: chapter.label, brief, targetName: arc.targetName, aggressorName: arc.aggressorName, locationName: place, storySoFar: context },
     fallbackChapter(chapter.label, chapter.brief, place, arc.targetName, arc.aggressorName),
     { arcId: arc.id, stage: String(stage) }
   );
@@ -186,7 +192,9 @@ async function runArcBeat(arcId: string): Promise<void> {
     prisma.worldClock.update({ where: { id: 1 }, data: { heat: { increment: 3 } } }),
   ]);
   presenceCache.clear();
-  if (isLast) {
+  if (isLast && arc.kind === "reclaim") {
+    await resolveReclaim(arc.id);
+  } else if (isLast) {
     const fresh = await prisma.worldArc.findUnique({ where: { id: arc.id } });
     const contribs = fresh ? (JSON.parse(fresh.contributionsJson) as Contribution[]) : [];
     if (fresh && interventionTilt(contribs) === "saved") {
@@ -216,7 +224,8 @@ export async function tickWorldArcs(now = new Date()): Promise<void> {
     ]);
     const rng = varietyRng(`arc:${Math.floor(Date.now() / 60_000)}`);
     if (!shouldStartArc(rng, { hasOpenArc: false, lastResolvedAt: lastResolved?.updatedAt ?? null, heat: clock?.heat ?? 0, now })) return;
-    const cast = pickArcCast(rng, actors, FEATURED_ACTOR_NAMES);
+    const reclaimPool = await prisma.worldActor.findMany({ where: { OR: [{ status: "DEFEATED", name: { in: RECLAIM_ASPIRANTS } }, { status: "ACTIVE", role: "YONKO" }] }, select: { id: true, name: true, role: true, status: true, factionType: true, powerLevel: true } });
+    const cast = (rng() < 0.4 ? pickReclaimCast(rng, reclaimPool) : null) ?? pickArcCast(rng, actors);
     if (!cast) return;
     await prisma.worldArc.create({
       data: {
@@ -236,13 +245,14 @@ export async function tickWorldArcs(now = new Date()): Promise<void> {
 }
 
 /** The game owner's verdict. Only here can a canon character die or be captured; a denial always means they survive. */
-export async function decideArc(arcId: string, approve: boolean, decidedBy: string): Promise<{ outcome: ArcOutcome; headline: string }> {
+export async function decideArc(arcId: string, approve: boolean, decidedBy: string, choice?: "capture" | "death" | "survived"): Promise<{ outcome: ArcOutcome; headline: string }> {
   const arc = await prisma.worldArc.findUnique({ where: { id: arcId } });
   if (!arc) throw new WorldArcError("Ese evento no existe.");
   if (arc.status !== "AWAITING_CONSENT" || arc.consent !== "PENDING") throw new WorldArcError("Este evento no está esperando una decisión.");
   const claimed = await prisma.worldArc.updateMany({ where: { id: arc.id, status: "AWAITING_CONSENT", consent: "PENDING" }, data: { consent: approve ? "APPROVED" : "DENIED" } });
   if (claimed.count === 0) throw new WorldArcError("Otra decisión se te adelantó.");
-  return finalizeArc(arc.id, verdictOutcome(arc.kind as ArcKind, approve), decidedBy);
+  const outcome = arc.kind === "reclaim_lost" && choice ? choice : verdictOutcome(arc.kind as ArcKind, approve);
+  return finalizeArc(arc.id, outcome, decidedBy);
 }
 
 /** Publishes the ending and applies it. Shared by the owner's verdict and by adventurers saving the target on their own. */
@@ -263,7 +273,7 @@ async function finalizeArc(arcId: string, outcome: ArcOutcome, decidedBy: string
       ? `${arc.targetName} ha sido capturado en ${place}. Su destino queda en manos de sus captores.`
       : `${arc.targetName} ha escapado de ${place} contra todo pronóstico.${rescuers} ${arc.aggressorName ?? "Sus perseguidores"} vuelve(n) con las manos vacías.`;
   const narrated = await narrateWorldEvent(
-    { kind: arc.kind as ArcKind, stage: arc.totalStages + 1, totalStages: arc.totalStages, chapterLabel: "Desenlace", brief: "", targetName: arc.targetName, aggressorName: arc.aggressorName, locationName: place, storySoFar: context, verdict: outcome },
+    { kind: narrationKind(arc.kind as ArcKind), reclaim: arc.kind === "reclaim" || arc.kind === "reclaim_lost", stage: arc.totalStages + 1, totalStages: arc.totalStages, chapterLabel: "Desenlace", brief: "", targetName: arc.targetName, aggressorName: arc.aggressorName, locationName: place, storySoFar: context, verdict: outcome },
     { headline: outcome === "survived" ? `${arc.targetName} escapa del cerco` : outcome === "death" ? `Muere ${arc.targetName}` : `Capturan a ${arc.targetName}`, body: fallbackBody },
     { arcId: arc.id, verdict: outcome }
   );
@@ -283,10 +293,10 @@ async function finalizeArc(arcId: string, outcome: ArcOutcome, decidedBy: string
           prisma.worldActor.update({
             where: { id: target.id },
             data: {
-              status: outcomeActorStatus(outcome),
+              status: outcomeActorStatus(outcome, target.status),
               currentFocus: outcome === "survived" ? "En fuga tras un cerco fallido" : outcome === "capture" ? "Prisionero" : null,
               busyUntil: outcome === "survived" ? new Date(now.getTime() + 12 * 60 * 60 * 1000) : null,
-              ...(outcome === "capture" && impel ? { currentIslandId: impel.id, locationHidden: false } : {}),
+              ...(outcome === "capture" && impel ? { currentIslandId: impel.id, locationHidden: false, locationKind: "island", seaFromIslandId: null, seaToIslandId: null, prisonLevel: actorPrisonCell(target.canonBounty != null ? Number(target.canonBounty) : null, target.powerLevel), capturedAt: now } : {}),
               ...(outcome === "survived" ? { locationHidden: true } : {}),
               locationUpdatedAt: now,
             },
@@ -297,7 +307,68 @@ async function finalizeArc(arcId: string, outcome: ArcOutcome, decidedBy: string
     prisma.worldClock.update({ where: { id: 1 }, data: { heat: { increment: outcome === "survived" ? 5 : 15 } } }),
   ]);
   presenceCache.clear();
+  invalidateWorldState();
   return { outcome, headline: narrated.headline };
+}
+
+// ---------------------------------------------------------------- reclaiming the Yonko throne
+
+function fighterOf(a: { name: string; powerLevel: number; abilitiesJson: string | null }) {
+  const abilities = a.abilitiesJson ? (JSON.parse(a.abilitiesJson) as string[]).slice(0, 6).join("; ") : "";
+  return { name: a.name, level: a.powerLevel, atk: a.powerLevel * 10, def: a.powerLevel * 9, kit: abilities || undefined };
+}
+
+/**
+ * The throne fight. Adventurers who defended the target win it for them; otherwise the judge weighs both sides.
+ * A win hands over the title and the territory (the loser lives, dethroned). A loss never decides the aspirant's fate:
+ * the arc turns into "reclaim_lost" and waits for the owner (capture, death or mercy).
+ */
+async function resolveReclaim(arcId: string): Promise<void> {
+  const arc = await prisma.worldArc.findUnique({ where: { id: arcId } });
+  if (!arc || arc.kind !== "reclaim" || !arc.aggressorId) return;
+  const [target, aspirant] = await Promise.all([prisma.worldActor.findUnique({ where: { id: arc.targetActorId } }), prisma.worldActor.findUnique({ where: { id: arc.aggressorId } })]);
+  if (!target || !aspirant) return;
+  const contribs = JSON.parse(arc.contributionsJson) as Contribution[];
+  const tilt = interventionTilt(contribs);
+  const verdict = tilt === "saved" ? null : await judgeMatch(fighterOf(aspirant), fighterOf(target), `Duelo por el trono de Yonko: ${aspirant.name} (derrotado antes) intenta arrebatárselo a ${target.name}.`);
+  const aspirantWins = reclaimAspirantWins(tilt, verdict?.winner === "a");
+  const context: string[] = JSON.parse(arc.contextJson);
+  const islands = await loadIslands();
+  const now = new Date();
+
+  if (!aspirantWins) {
+    const helpers = [...new Set(contribs.filter((c) => c.side !== "assist").map((c) => c.name))];
+    await prisma.$transaction([
+      prisma.worldArc.update({
+        where: { id: arc.id },
+        data: { kind: "reclaim_lost", targetActorId: aspirant.id, targetName: aspirant.name, aggressorId: target.id, aggressorName: target.name, status: "AWAITING_CONSENT", consent: "PENDING", contextJson: JSON.stringify(appendContext(context, `${aspirant.name} fue derrotado en su asalto al trono de ${target.name}${helpers.length ? ` con ayuda de ${helpers.join(", ")}` : ""}.`)) },
+      }),
+      prisma.newsItem.create({
+        data: { headline: `${aspirant.name} fracasa: ${target.name} conserva el trono`, body: `El intento de ${aspirant.name} de recuperar el título de Yonko terminó en derrota ante ${target.name}${helpers.length ? `, con la ayuda de ${helpers.join(", ")}` : ""}. Su destino está por decidirse.`, category: "Eventos mundiales", severity: "major", worldActorId: aspirant.id, locationName: islands.get(target.currentIslandId ?? "")?.name ?? "Ubicación desconocida", arcId: arc.id, arcStage: arc.totalStages + 1 },
+      }),
+    ]);
+    presenceCache.clear();
+    invalidateWorldState();
+    return;
+  }
+
+  const territories = await prisma.territory.findMany({ where: { OR: [{ ownerActorId: target.id }, { homeActorId: target.id }] } });
+  const place = islands.get(target.currentIslandId ?? target.homeIslandId ?? "")?.name ?? "Ubicación desconocida";
+  const narrated = await narrateWorldEvent(
+    { kind: "capture", reclaim: true, stage: arc.totalStages + 1, totalStages: arc.totalStages, chapterLabel: "Desenlace", brief: "", targetName: target.name, aggressorName: aspirant.name, locationName: place, storySoFar: context, verdict: "reclaimed" },
+    { headline: `${aspirant.name} recupera el trono de Yonko`, body: `${aspirant.name} derrotó a ${target.name} en ${place} y se quedó con su territorio. ${target.name} huye, sin el título.` },
+    { arcId: arc.id, verdict: "reclaimed" }
+  );
+  await prisma.$transaction([
+    prisma.newsItem.create({ data: { headline: narrated.headline, body: narrated.body, category: "Eventos mundiales", severity: "major", worldActorId: aspirant.id, locationName: place, islandId: target.currentIslandId ?? target.homeIslandId, arcId: arc.id, arcStage: arc.totalStages + 1 } }),
+    prisma.worldArc.update({ where: { id: arc.id }, data: { status: "RESOLVED", outcome: "reclaimed", consent: "NONE", decidedBy: "juicio", decidedAt: now, contextJson: JSON.stringify(appendContext(context, `Desenlace: ${narrated.headline}`)) } }),
+    prisma.worldActor.update({ where: { id: aspirant.id }, data: { status: "ACTIVE", role: "YONKO", rankLabel: "Yonko (recuperó el trono)", currentIslandId: target.currentIslandId ?? target.homeIslandId, homeIslandId: target.homeIslandId ?? aspirant.homeIslandId, locationKind: "island", seaFromIslandId: null, seaToIslandId: null, locationHidden: false, locationUpdatedAt: now, busyUntil: null, currentFocus: "Reina en el territorio que arrebató" } }),
+    prisma.worldActor.update({ where: { id: target.id }, data: { role: "NOTABLE_PIRATE", rankLabel: "Ex-Yonko (destronado)", locationHidden: true, locationUpdatedAt: now, busyUntil: new Date(now.getTime() + 2 * DAY_MS), currentFocus: "Huye tras perder su trono" } }),
+    ...territories.map((t) => prisma.territory.update({ where: { id: t.id }, data: { ownerActorId: aspirant.id, homeActorId: aspirant.id, ownerName: aspirant.name } })),
+    prisma.worldClock.update({ where: { id: 1 }, data: { heat: { increment: 15 } } }),
+  ]);
+  presenceCache.clear();
+  invalidateWorldState();
 }
 
 // ---------------------------------------------------------------- player intervention
@@ -453,7 +524,7 @@ export async function getArcsForAdmin() {
     nextBeatAt: a.nextBeatAt.toISOString(),
     story: JSON.parse(a.contextJson) as string[],
     interventions: JSON.parse(a.contributionsJson) as Contribution[],
-    proposal: a.kind === "death" ? `¿Permites que ${a.targetName} MUERA${a.aggressorName ? ` a manos de ${a.aggressorName}` : ""}?` : `¿Permites que ${a.targetName} sea CAPTURADO${a.aggressorName ? ` por ${a.aggressorName}` : ""}?`,
+    proposal: a.kind === "reclaim_lost" ? `${a.targetName} fracasó en su intento de recuperar el trono de Yonko${a.aggressorName ? ` ante ${a.aggressorName}` : ""} y está a merced de sus vencedores. ¿Qué decides: CAPTURA, MUERTE o que sobreviva?` : a.kind === "death" ? `¿Permites que ${a.targetName} MUERA${a.aggressorName ? ` a manos de ${a.aggressorName}` : ""}?` : `¿Permites que ${a.targetName} sea CAPTURADO${a.aggressorName ? ` por ${a.aggressorName}` : ""}?`,
   }));
 }
 

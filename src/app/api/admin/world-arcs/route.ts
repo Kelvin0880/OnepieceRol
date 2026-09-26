@@ -5,7 +5,7 @@ import { decideArc, getArcsForAdmin, advanceArcNow, cancelArc, WorldArcError } f
 import { logError } from "@/lib/log-error";
 
 const schema = z.discriminatedUnion("op", [
-  z.object({ op: z.literal("decide"), arcId: z.string(), approve: z.boolean() }),
+  z.object({ op: z.literal("decide"), arcId: z.string(), approve: z.boolean(), choice: z.enum(["capture", "death", "survived"]).optional() }),
   z.object({ op: z.literal("advance"), arcId: z.string() }),
   z.object({ op: z.literal("cancel"), arcId: z.string() }),
 ]);
@@ -27,7 +27,7 @@ export async function POST(req: NextRequest) {
     const body = parsed.data;
     switch (body.op) {
       case "decide":
-        return NextResponse.json(await decideArc(body.arcId, body.approve, username));
+        return NextResponse.json(await decideArc(body.arcId, body.approve, username, body.choice));
       case "advance":
         await advanceArcNow(body.arcId);
         return NextResponse.json({ ok: true });

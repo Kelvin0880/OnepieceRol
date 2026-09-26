@@ -648,6 +648,8 @@ export function buildRecruitNarrationPrompt(input: RecruitNarrationInput): Promp
 
 export interface WorldEventNarrationInput {
   kind: "death" | "capture";
+  /** True when the arc is a former Yonko going for a sitting Yonko's throne. */
+  reclaim?: boolean;
   /** 1..totalStages = a build-up chapter; totalStages + 1 = the verdict. */
   stage: number;
   totalStages: number;
@@ -660,7 +662,7 @@ export interface WorldEventNarrationInput {
   /** One line per chapter already published, oldest first: the story so far. */
   storySoFar: string[];
   /** Set only on the verdict, once the game owner has decided. */
-  verdict?: "death" | "capture" | "survived";
+  verdict?: "death" | "capture" | "survived" | "reclaimed";
 }
 
 const WORLD_EVENT_BUILDUP_RULE =
@@ -686,11 +688,14 @@ export function buildWorldEventPrompt(input: WorldEventNarrationInput): { system
     ? ""
     : input.verdict === "death"
     ? `RESULTADO DECIDIDO: ${input.targetName} MUERE en este enfrentamiento${input.aggressorName ? ` a manos de ${input.aggressorName} o de sus fuerzas` : ""}.\n`
+    : input.verdict === "reclaimed"
+    ? `RESULTADO DECIDIDO: ${input.aggressorName} DERROTA a ${input.targetName}, recupera el título de Yonko y se queda con su territorio. ${input.targetName} sigue vivo pero pierde el trono y huye. Narra el cambio de poder y sus consecuencias en el mundo.
+`
     : input.verdict === "capture"
     ? `RESULTADO DECIDIDO: ${input.targetName} es CAPTURADO${input.aggressorName ? ` por ${input.aggressorName}` : ""} y queda preso.\n`
     : `RESULTADO DECIDIDO: ${input.targetName} SOBREVIVE y escapa contra todo pronóstico; ${input.aggressorName ?? "sus perseguidores"} fracasa(n). Narra la huida y sus consecuencias.\n`;
   const user =
-    `Evento: ${input.kind === "capture" ? "la caza de" : "el enfrentamiento mortal de"} ${input.targetName}${input.aggressorName ? ` contra ${input.aggressorName}` : ""}.\n` +
+    `Evento: ${input.reclaim ? "el intento de recuperar el trono de Yonko de" : input.kind === "capture" ? "la caza de" : "el enfrentamiento mortal de"} ${input.targetName}${input.aggressorName ? ` contra ${input.aggressorName}` : ""}.\n` +
     `Lugar de los hechos: ${input.locationName}.\n` +
     (isVerdict ? `Capítulo final (desenlace).\n` : `Capítulo ${input.stage} de ${input.totalStages}: ${input.chapterLabel}.\nQué muestra este capítulo: ${input.brief}\n`) +
     verdictLine +

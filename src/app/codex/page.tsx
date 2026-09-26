@@ -36,6 +36,8 @@ interface Actor {
   home: string | null;
   location: string | null;
   locationKind: string | null;
+  prisonLevel?: number | null;
+  capturedAt?: string | null;
   focus: string | null;
 }
 
@@ -62,6 +64,36 @@ function Bar({ label, value }: { label: string; value: number }) {
       <div className="h-1 rounded bg-black/30 overflow-hidden">
         <div className="h-full" style={{ width: `${Math.min(100, value)}%`, background: "var(--gold)" }} />
       </div>
+    </div>
+  );
+}
+
+const CELLS = [
+  { n: 1, label: "Nivel 1 — Infierno Carmesí" },
+  { n: 2, label: "Nivel 2 — Infierno de las Bestias" },
+  { n: 3, label: "Nivel 3 — Infierno de Hambre" },
+  { n: 4, label: "Nivel 4 — Infierno de Fuego Abrasador" },
+  { n: 5, label: "Nivel 5 — Infierno de Hielo" },
+  { n: 6, label: "Nivel 6 — Nivel Eterno" },
+];
+
+/** Every canon prisoner by Impel Down level, with the level needed to attempt a rescue raid. */
+function PrisonSection({ actors }: { actors: Actor[] }) {
+  const held = actors.filter((a) => a.status === "CAPTURED");
+  return (
+    <div className="flex flex-col gap-3" data-testid="prison-section">
+      <p className="text-sm text-ink-dim">Impel Down, por niveles. Solo el dueño del juego decide una captura; una vez decidida, el preso figura aquí hasta que lo rescaten. Un rescate exige llegar a Impel Down (nivel 45) y vencer a los guardias del nivel.</p>
+      {CELLS.map((c) => {
+        const here = held.filter((a) => (a.prisonLevel ?? 1) === c.n);
+        return (
+          <div key={c.n} className="panel p-3 flex flex-col gap-2" data-testid={`prison-level-${c.n}`}>
+            <div className="flex justify-between text-sm"><span className="font-display text-gold-bright">{c.label}</span><span className="text-xs text-ink-dim">rescate: nivel {Math.round(90 * (1 + 0.3 * c.n)) + c.n * 15}+</span></div>
+            {here.length === 0 ? <p className="text-xs text-ink-dim">Vacío.</p> : here.map((a) => (
+              <div key={a.id} className="text-sm flex justify-between"><span>{a.name} <span className="text-xs text-ink-dim">({a.factionName})</span></span><span className="text-xs text-ink-dim">{a.capturedAt ? new Date(a.capturedAt).toLocaleDateString("es-ES") : ""}</span></div>
+            ))}
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -93,6 +125,12 @@ function ActorCard({ a }: { a: Actor }) {
         <span className="text-right">{a.canonWeapon ?? "—"}</span>
         <span className="text-ink-dim">Nivel de poder</span>
         <span className="text-right">{a.powerLevel}</span>
+        {a.status === "CAPTURED" && (
+          <>
+            <span className="text-ink-dim">Encarcelado en</span>
+            <span className="text-right text-orange-300" data-testid="codex-prison">⛓ {a.location}</span>
+          </>
+        )}
         {!gone && (
           <>
             <span className="text-ink-dim">Ubicación</span>
@@ -210,7 +248,7 @@ function PlayersSection({ query }: { query: string }) {
 }
 
 export default function CodexPage() {
-  const [section, setSection] = useState<"canon" | "players">("canon");
+  const [section, setSection] = useState<"canon" | "players" | "prison">("canon");
   const [actors, setActors] = useState<Actor[] | null>(null);
   const [faction, setFaction] = useState("ALL");
   const [showHistory, setShowHistory] = useState(false);
@@ -247,6 +285,9 @@ export default function CodexPage() {
         <button onClick={() => setSection("canon")} className={`px-3 py-1.5 rounded text-sm border ${section === "canon" ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="codex-tab-canon">
           Personajes canon
         </button>
+        <button onClick={() => setSection("prison")} className={`px-3 py-1.5 rounded text-sm border ${section === "prison" ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="codex-tab-prison">
+          Prisioneros
+        </button>
         <button onClick={() => setSection("players")} className={`px-3 py-1.5 rounded text-sm border ${section === "players" ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="codex-tab-players">
           Jugadores
         </button>
@@ -258,6 +299,8 @@ export default function CodexPage() {
           <PlayersSection query={query} />
         </>
       )}
+
+      {section === "prison" && <PrisonSection actors={actors ?? []} />}
 
       {section === "canon" && (<>
       <div className="flex flex-wrap gap-2 items-center">

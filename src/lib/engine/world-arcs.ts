@@ -15,8 +15,30 @@ export const ARC_MIN_HEAT = 20;
 export const ARC_START_CHANCE_PER_TICK = 0.02;
 export const ARC_CONTEXT_LINES = 8;
 
-export type ArcKind = "death" | "capture";
-export type ArcOutcome = "death" | "capture" | "survived";
+/** reclaim = a defeated former Yonko goes for a sitting Yonko's throne; reclaim_lost = it failed and the owner decides the aspirant's fate. */
+export type ArcKind = "death" | "capture" | "reclaim" | "reclaim_lost";
+export type ArcOutcome = "death" | "capture" | "survived" | "reclaimed";
+
+/** The kind the narrator prompts understand. */
+export function narrationKind(kind: ArcKind): "death" | "capture" {
+  return kind === "death" ? "death" : "capture";
+}
+
+/** Former emperors who are out of power (status DEFEATED) and can only get the title back by taking it. */
+export const RECLAIM_ASPIRANTS = ["Kaido", "Charlotte Linlin (Big Mom)"];
+
+/** A defeated aspirant against a sitting canon Yonko. Null when nobody qualifies. */
+export function pickReclaimCast(rng: Rng, actors: ArcActor[]): { target: ArcActor; aggressor: ArcActor; kind: ArcKind } | null {
+  const aspirants = actors.filter((a) => a.status === "DEFEATED" && RECLAIM_ASPIRANTS.includes(a.name));
+  const sitting = actors.filter((a) => a.status === "ACTIVE" && a.role === "YONKO");
+  if (aspirants.length === 0 || sitting.length === 0) return null;
+  return { aggressor: aspirants[Math.floor(rng() * aspirants.length)], target: sitting[Math.floor(rng() * sitting.length)], kind: "reclaim" };
+}
+
+/** Who wins the throne fight: defenders that saved the day win; otherwise the judge's pick (a = aspirant). */
+export function reclaimAspirantWins(tilt: "saved" | "none" | string, judgeSaysAspirant: boolean): boolean {
+  return tilt === "saved" ? false : judgeSaysAspirant;
+}
 export type ChapterKind = "rumor" | "mobilization" | "clash" | "escalation" | "siege" | "ultimatum";
 
 export interface Chapter {
@@ -133,6 +155,7 @@ export function shouldStartArc(rng: Rng, ctx: StartContext): boolean {
 }
 
 export function arcTitle(kind: ArcKind, target: string, aggressor: string): string {
+  if (kind === "reclaim") return `${aggressor} va por el trono de ${target}`;
   return kind === "capture" ? `La caza de ${target}` : `${target} contra ${aggressor}`;
 }
 
@@ -140,12 +163,15 @@ export function appendContext(lines: string[], line: string, max = ARC_CONTEXT_L
   return [...lines, line].slice(-max);
 }
 
-export function outcomeActorStatus(outcome: ArcOutcome): "DECEASED" | "CAPTURED" | "ACTIVE" {
-  return outcome === "death" ? "DECEASED" : outcome === "capture" ? "CAPTURED" : "ACTIVE";
+export function outcomeActorStatus(outcome: ArcOutcome, current = "ACTIVE"): "DECEASED" | "CAPTURED" | "ACTIVE" | "DEFEATED" {
+  if (outcome === "death") return "DECEASED";
+  if (outcome === "capture") return "CAPTURED";
+  return current === "DEFEATED" ? "DEFEATED" : "ACTIVE";
 }
 
 export function verdictOutcome(kind: ArcKind, approved: boolean): ArcOutcome {
-  return approved ? kind : "survived";
+  if (!approved) return "survived";
+  return kind === "reclaim" || kind === "reclaim_lost" ? "capture" : kind;
 }
 
 /**

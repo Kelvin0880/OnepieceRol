@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { whereLabel } from "@/lib/engine/actor-movement";
+import { prisonLabel } from "@/lib/engine/world-state";
 import { actorStyleNames } from "@/lib/engine/actor-styles";
 
 /** Public codex of the canon cast. A character moving in secret never reveals where they are. */
@@ -37,8 +38,10 @@ export async function GET() {
       abilities: a.abilitiesJson ? (JSON.parse(a.abilitiesJson) as string[]) : [],
       styles: actorStyleNames(a.name),
       home: a.homeIslandId ? islandName.get(a.homeIslandId) ?? null : null,
-      location: a.status === "ACTIVE" ? whereOf(a).name : null,
-      locationKind: a.status === "ACTIVE" ? whereOf(a).kind : null,
+      location: a.status === "ACTIVE" ? whereOf(a).name : a.status === "CAPTURED" ? prisonLabel(a.prisonLevel) : null,
+      locationKind: a.status === "ACTIVE" ? whereOf(a).kind : a.status === "CAPTURED" ? "prison" : null,
+      prisonLevel: a.status === "CAPTURED" ? a.prisonLevel : null,
+      capturedAt: a.status === "CAPTURED" ? a.capturedAt : null,
       focus: a.status === "ACTIVE" ? a.currentFocus : null,
     })),
   });
