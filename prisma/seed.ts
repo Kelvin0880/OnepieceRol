@@ -5,7 +5,7 @@ import { ACTOR_PROFILES, FRUIT_ASSIGNMENTS, profileStatsJson } from "../src/lib/
 import { EXTRA_ACTORS } from "../src/lib/game/world-actor-extra";
 import { MORE_ACTORS, RELOCATIONS } from "../src/lib/game/world-actor-more";
 import { WAVE4_ACTORS, WAVE4_RELOCATIONS } from "../src/lib/game/world-actor-wave4";
-import { IMPEL_ACTORS } from "../src/lib/game/world-actor-impel";
+import { IMPEL_ACTORS, placeCanonPrisoners } from "../src/lib/game/world-actor-impel";
 import { ISLAND_NPC_DATA } from "../src/lib/game/island-npc-data";
 import { seedIslandRoster } from "../src/lib/game/island-npcs";
 import { WAVE4_ISLANDS, WAVE4_ADJACENCY, WAVE4_STORIES, WAVE4_TERRITORIES } from "../src/lib/game/islands-wave4";
@@ -1355,6 +1355,8 @@ async function main() {
 
   // The filler cast of every island (bartenders, guards, thugs...): the only named non-canon characters the AI may use.
   console.log(`Seeded ${await seedIslandRoster(ISLAND_NPC_DATA, prisma)} island residents.`);
+
+  console.log(`Placed ${await placeCanonPrisoners(prisma as never)} canon prisoners in Impel Down.`);
 
   // One-time corrections of where a few canon characters live (only applied when the actor still sits at its old place).
   for (const [actorName, islandKey] of Object.entries({ ...RELOCATIONS, ...WAVE4_RELOCATIONS })) {

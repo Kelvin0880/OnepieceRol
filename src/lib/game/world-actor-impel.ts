@@ -27,3 +27,23 @@ export const IMPEL_LEVEL_GUARD: Record<number, string> = {
   5: "Minozebra",
   6: "Minokoala",
 };
+
+/** Canon characters who are already behind bars when the world begins (name -> Impel Down level). */
+export const CANON_PRISONERS: Record<string, number> = {
+  "Donquixote Doflamingo": 6,
+};
+
+/** Puts the canon prisoners in their cell. Only touches actors still ACTIVE, so a verdict or a rescue is never undone by a reseed. */
+export async function placeCanonPrisoners(db: { worldActor: { updateMany: (args: never) => Promise<{ count: number }> }; island: { findUnique: (args: never) => Promise<{ id: string } | null> } }): Promise<number> {
+  const impel = await db.island.findUnique({ where: { name: "Impel Down" } } as never);
+  if (!impel) return 0;
+  let n = 0;
+  for (const [name, level] of Object.entries(CANON_PRISONERS)) {
+    const r = await db.worldActor.updateMany({
+      where: { name, status: "ACTIVE" },
+      data: { status: "CAPTURED", prisonLevel: level, capturedAt: new Date(), currentIslandId: impel.id, locationKind: "island", seaFromIslandId: null, seaToIslandId: null, locationHidden: false, locationUpdatedAt: new Date(), currentFocus: null },
+    } as never);
+    n += r.count;
+  }
+  return n;
+}

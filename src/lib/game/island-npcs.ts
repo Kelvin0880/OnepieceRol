@@ -65,14 +65,19 @@ export async function rosterBlockFor(islandId: string, islandName: string, chara
 
 /** Every name the AI may put in a scene at this island: residents (any state, so the dead can be remembered), canon actors, players, the character's own people. */
 export async function allowedNamesFor(characterId: string, islandId: string): Promise<string[]> {
-  const [roster, actors, chars, mine, places] = await Promise.all([
+  const [roster, actors, chars, mine, places, recent, pending] = await Promise.all([
     loadRoster(islandId),
     prisma.worldActor.findMany({ select: { name: true } }),
     prisma.character.findMany({ where: { status: "ALIVE" }, select: { name: true }, take: 400 }),
     prisma.nPCCompanion.findMany({ where: { characterId }, select: { name: true } }),
     prisma.island.findMany({ select: { name: true } }),
+    prisma.sceneMessage.findMany({ where: { characterId }, orderBy: { createdAt: "desc" }, take: 14, select: { text: true } }),
+    prisma.pendingEncounter.findUnique({ where: { characterId }, select: { enemyJson: true } }),
   ]);
-  return [...roster.map((n) => n.name), ...actors.map((a) => a.name), ...chars.map((c) => c.name), ...mine.map((c) => c.name), ...places.map((p) => p.name)];
+  // Names already established in the running scene stay usable (scenes that began before the roster existed); a new invention is still caught at its introduction.
+  const established = recent.flatMap((m) => m.text.match(/[A-ZÁÉÍÓÚÑ][a-záéíóúñü'’-]{2,}/g) ?? []);
+  const enemy = pending ? [(JSON.parse(pending.enemyJson) as { name?: string }).name ?? ""] : [];
+  return [...roster.map((n) => n.name), ...actors.map((a) => a.name), ...chars.map((c) => c.name), ...mine.map((c) => c.name), ...places.map((p) => p.name), ...established, ...enemy];
 }
 
 export interface BoundEnemy {

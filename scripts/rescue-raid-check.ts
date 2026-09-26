@@ -25,7 +25,7 @@ async function main() {
   await prisma.worldActor.update({ where: { id: deep.id }, data: { status: "CAPTURED", prisonLevel: 6, capturedAt: new Date(), currentIslandId: impel.id } });
 
   const state = await getRescueRaidState(c.id);
-  assert(!!state && state.prisoners.length === 2, "on Impel Down the player sees the canon prisoners");
+  assert(!!state && state.prisoners.length === 3 && state.prisoners.some((p) => p.name.includes("Doflamingo") && p.cell === 6), "on Impel Down the player sees the canon prisoners (Doflamingo waits on level 6)");
   assert(state!.prisoners.find((p) => p.cell === 6)!.blockReason !== null, "the deepest cell is out of reach for a lone level-46");
   assert(state!.prisoners.find((p) => p.cell === 1)!.blockReason === null, "the shallowest is within reach");
   let refused = false;
