@@ -73,3 +73,6 @@
 
 ## Hecho el 2026-09-26 (tarde)
 - [x] Vida que no bajaba en combate (Barbosa vs Akio: 3 rondas con golpes narrados y 0 de daño para ambos): el árbitro devolvía `cambios` en 0 aunque la narración mostraba impactos. Ahora una herida narrada que cuesta 0 provoca un reintento correctivo y, si persiste, el código apunta un mínimo (roce 3 %, golpe sólido 8 % de la vida máxima). Vale para combate solo y en grupo (no en duelos entre jugadores). Vida de Barbosa corregida a mano en producción (106 → 93) y la de Akio (185 → 135).
+- [x] Narrador en modo "narrar" escribía acciones que el jugador no escribió (caso Sebastian vs Akio: esquiva, bloqueo con la vaina y Haki inventados). Ahora hay regla "una jugada a la vez" en los prompts, un filtro (`playerActSentences`) con un reintento correctivo y recorte de frases, tanto en escena solo como en compartida. Respuesta de Sebastian rehecha en producción.
+- [x] Regla Logia en todos los prompts (`LOGIA_RULE`): solo el Haki de Armadura hiere a un Logia.
+- [x] Fruta original Tsuki Tsuki no Mi (Logia lunar, 1-de-1) en `game/devil-fruit-original.ts`; entregada a Zarpe (Marina, nivel 60, Vicealmirante, despertada) en producción.

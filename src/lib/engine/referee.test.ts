@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { unbookedWounds, floorWounds, foldUnknownChanges, checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
+import { playerActSentences, dropSentences, unbookedWounds, floorWounds, foldUnknownChanges, checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
 
 const NARR = "El rival bloquea con el antebrazo y responde con una patada baja que se acerca a tu rodilla.";
 const good = (extra = "") => JSON.stringify({ narracion: NARR, cambios: [{ nombre: "Kirito", vida: 10, aguante: 5 }, { nombre: "Bandido", vida: 20, aguante: 8 }], ...(extra ? { x: extra } : {}) });
@@ -274,5 +274,36 @@ describe("wounds the story shows must cost life", () => {
   it("does not invent wounds for a dodged or missed attack", () => {
     const clean = { narration: "El lingote pasó de largo y se estrelló contra la pared. Akio permanece intacto.", changes: [], };
     expect(unbookedWounds(clean, actors, true)).toEqual([]);
+  });
+});
+
+describe("scene narration must not act for the player", () => {
+  const written = "Ajeno a aquello, me quedo mirando a Akio con la mano sobre el mango de mi katana enfundada, con mi Haki de observación activo. Ven y empecemos esta batalla";
+  const narration =
+    'Akio desaparece de su posición y su katana llega a tu cuello en un tajo horizontal. Tu espada aún está en su vaina. Te lanzas hacia atrás y a un lado, con brusquedad. Con un gruñido de esfuerzo, tu mano derecha actúa. Llevas la vaina de tu katana en un bloqueo ascendente. Akio intenta un corte y, si te apartas, girará sobre su pie.';
+  it("flags the dodge and the block the player never wrote, but not the rival's conditional plan", () => {
+    const bad = playerActSentences(narration, written);
+    expect(bad.some((s) => s.includes("Te lanzas hacia atrás"))).toBe(true);
+    expect(bad.some((s) => s.includes("Llevas la vaina"))).toBe(true);
+    expect(bad.some((s) => s.includes("si te apartas"))).toBe(false);
+  });
+  it("respects a dodge the player did write", () => {
+    expect(playerActSentences("Te lanzas hacia atrás y a un lado.", "Me lanzo hacia atrás para esquivar el tajo.")).toEqual([]);
+  });
+  it("drops only the flagged sentences", () => {
+    const bad = playerActSentences(narration, written);
+    const clean = dropSentences(narration, bad);
+    expect(clean).not.toContain("Te lanzas");
+    expect(clean).toContain("Akio desaparece");
+  });
+});
+
+describe("scene narration: second real Akio case", () => {
+  it("flags a resolved dodge written as the player's reaction", () => {
+    const written = "Ajeno a aquello, me quedo mirando a Akio con la mano sobre el mango de mi katana enfundada. Ven y empecemos esta batalla";
+    const text = "El filo atraviesa el aire donde tu cabeza estaba un instante antes. Tu reacción, forzada al límite por tu Haki, ha sido un giro brusco hacia la derecha, sintiendo el viento de la hoja pasar rozando tu mejilla. Akio pivota con una patada baja.";
+    const bad = playerActSentences(text, written);
+    expect(bad.length).toBeGreaterThanOrEqual(2);
+    expect(dropSentences(text, bad)).toContain("Akio pivota");
   });
 });

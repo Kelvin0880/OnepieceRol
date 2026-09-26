@@ -33,7 +33,7 @@ import {
 } from "./narrate-prompt";
 import { callOpenRouter } from "./openrouter-client";
 import { buildRefereePrompt, type RefereeInput } from "./referee-prompt";
-import { checkConsistency, floorWounds, foldUnknownChanges, parseRefereeVerdict, sanitizeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
+import { checkConsistency, dropSentences, floorWounds, playerActSentences, foldUnknownChanges, parseRefereeVerdict, sanitizeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
 import { OPENROUTER_MODELS } from "./models";
 import { parseCompanionProfile } from "../engine/companions";
 import { isWithPlayer } from "../engine/empire";
@@ -290,6 +290,20 @@ export async function narrateJointFight(input: JointFightNarrationInput, meta: {
  * acknowledgement (never a made-up mechanical outcome) on AI failure, same
  * never-throws contract as the others.
  */
+/** The narrator never writes the player's dodges, blocks or attacks, nor lands a hit on them: one corrective retry, then those sentences are cut. */
+export async function keepPlayerActsHis(text: string, playerText: string, again: (extra: string) => Promise<string>): Promise<string> {
+  const bad = playerActSentences(text, playerText);
+  if (bad.length === 0) return text;
+  const second = await again(`
+
+CORRECCIÓN OBLIGATORIA: en tu respuesta anterior escribiste acciones o resultados que el jugador NO escribió (esquivas, bloqueos, contraataques, movimientos suyos o un golpe ya recibido): ${bad.slice(0, 4).map((s) => `"${s.slice(0, 120)}"`).join(" | ")}. Reescribe: si un NPC ataca, cuenta solo el INICIO y su intención (\"intenta...\", \"si llega a conectar...\") y TERMINA ahí; el jugador responderá en su siguiente mensaje cómo lo recibe.`).catch(() => null);
+  const candidate = second ?? text;
+  const bad2 = playerActSentences(candidate, playerText);
+  if (bad2.length === 0) return candidate;
+  const cut = dropSentences(candidate, bad2);
+  return cut.length >= 80 ? cut : candidate;
+}
+
 export async function narrateScene(input: SceneNarrationInput, meta: { characterId: string }): Promise<string> {
   try {
     const { system: baseSystem, user, maxTokens } = buildSceneNarrationPrompt(input);
@@ -339,8 +353,10 @@ ${islandTxt}` : "") + (rosterTxt ? `
 ${rosterTxt}` : "") + (playersTxt ? `
 
 ${playersTxt}` : "") + directivesBlock("balanced", pact ? `PACTO DE ESCENA acordado por los jugadores fuera de rol (móntalo dentro de la historia con naturalidad, dando protagonismo a todos y respetando lo pactado): ${pact}` : undefined);
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: (t) => isValidNarration(t) && voicesRealPlayer(t, playerNames) === null && !inventsSystemResult(t) && (allowedParty.length === 0 || inventedNames(t, allowedParty).length === 0) });
-    return text.trim();
+    const validateParty = (t: string) => isValidNarration(t) && voicesRealPlayer(t, playerNames) === null && !inventsSystemResult(t) && (allowedParty.length === 0 || inventedNames(t, allowedParty).length === 0);
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: validateParty });
+    const written = input.actions?.length ? input.actions.map((x) => x.text).join(" ") : input.playerText;
+    return (await keepPlayerActsHis(text, written, (extra) => callOpenRouter(system, user + extra, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: validateParty }))).trim();
   } catch (err) {
     await logError("ai/narrate-party-scene", err, meta);
     return "El mundo sigue su curso alrededor del grupo, pero por ahora nada más que contar. (La IA no respondió a tiempo — prueba de nuevo en un momento.)";

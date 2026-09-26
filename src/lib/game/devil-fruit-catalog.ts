@@ -1,6 +1,7 @@
 import { FruitType, Rarity } from "@prisma/client";
 import { EXTRA_FRUITS, SINGLETON_OVERRIDES } from "./devil-fruit-extra";
 import { EVENT_FRUITS } from "./devil-fruit-events";
+import { ORIGINAL_FRUITS } from "./devil-fruit-original";
 
 /**
  * Single source of truth for every devil fruit "kind" in the game — moved
@@ -487,4 +488,4 @@ const BASE_FRUITS: DevilFruitCatalogEntry[] = [
   },
 ];
 
-export const DEVIL_FRUIT_CATALOG: DevilFruitCatalogEntry[] = [...BASE_FRUITS, ...EXTRA_FRUITS, ...EVENT_FRUITS].map((f) => (SINGLETON_OVERRIDES.has(f.name) ? { ...f, isSingleton: true } : f));
+export const DEVIL_FRUIT_CATALOG: DevilFruitCatalogEntry[] = [...BASE_FRUITS, ...EXTRA_FRUITS, ...EVENT_FRUITS, ...ORIGINAL_FRUITS].map((f) => (SINGLETON_OVERRIDES.has(f.name) ? { ...f, isSingleton: true } : f));

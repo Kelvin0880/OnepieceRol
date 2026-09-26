@@ -1,5 +1,6 @@
 import { describe, it, expect } from "vitest";
 import {
+  ROLE_RULES,
   buildExploreNarrationPrompt,
   buildCombatNarrationPrompt,
   buildMemoryUpdatePrompt,
@@ -268,5 +269,12 @@ describe("no echo of the player's own action", () => {
 describe("invented NPCs get proper names", () => {
   it("the shared role rules require a proper name for every invented character", () => {
     expect(buildSceneNarrationPrompt({ characterName: "K", faction: "PIRATE", level: 1, islandName: "X", islandDescription: "Y", playerText: "hola" }).system).toContain("NOMBRES PROPIOS");
+  });
+});
+
+describe("Logia rule", () => {
+  it("tells every narrator and referee that only Armament Haki hurts a Logia", () => {
+    expect(ROLE_RULES).toMatch(/LOGIA/);
+    expect(ROLE_RULES).toMatch(/HAKI DE ARMADURA/);
   });
 });

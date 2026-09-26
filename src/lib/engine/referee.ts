@@ -379,3 +379,35 @@ export function checkConsistency(verdict: RefereeVerdict, bounds: RefereeBound[]
   }
   return issues;
 }
+
+// ---------------------------------------------------------------------------------------------
+// Scene narration outside the referee (reported 2026-09-26, Sebastian vs Akio): the narrator answered a player who
+// only stood on guard by resolving the rival's slash AND writing the player's dodge, block and Haki for them.
+// ---------------------------------------------------------------------------------------------
+
+const LANDED_STRICT = /\bte\s+(golpea|golpeó|alcanza|alcanzó|hiere|hirió|impacta|impactó|roza|rozó|derriba|derribó|atraviesa|atravesó|corta|cortó|clava|clavó)\b/i;
+const UNWRITTEN_REACTION = /\b(te\s+(desplazas|mueves|giras|agachas|tiras|impulsas|haces\s+a\s+un\s+lado|dejas\s+caer|adelantas)|desenvainad[ao]|se\s+desenvaina|sale\s+en\s+un\s+contraataque|(no\s+)?(retrocedes|retrocediste|cedes|desenvainas)|tu\s+(espada|katana|pistola)\s+(sale|se\s+alza|responde|silba)|tu\s+reacci[oó]n|un\s+giro\s+(brusco|defensivo|r[aá]pido)|sintiendo\s+el\s+viento|rozando\s+tu\s+(mejilla|cuello|rostro|cara|hombro)|(atraviesa|corta)\s+el\s+aire\s+donde\s+(tu|estabas|estaba)|tu\s+cuerpo\s+reacciona|tu\s+mano\s+(derecha|izquierda)\s+act[uú]a|(llevas|alzas|levantas|interpones|cruzas)\s+(la\s+vaina|tu\s+(espada|katana|brazo|antebrazo|arma))|(bloqueas|bloqueaste|paras|desvías|desviaste|esquivas|esquivaste|te\s+lanzas|te\s+echas|te\s+agachas|te\s+apartas|retrocedes|contraatacas|desenvainas|desenvainaste|golpeas|atacas)\b)/i;
+
+/** Sentences of a scene narration that act for the player (a dodge, block or attack they did not write) or land a hit on them. */
+export function playerActSentences(text: string, playerText: string): string[] {
+  const wroteDefence = WROTE_DEFENCE.test(playerText);
+  const wroteOffence = WROTE_OFFENCE.test(playerText);
+  const bad: string[] = [];
+  for (const sentence of splitSentences(text)) {
+    // "Si esquivas, ..." / "No desenvainas" are the rival planning or a refusal, not the player acting.
+    if (/\b(si|en\s+caso\s+de\s+que|por\s+si|cuando)\b/i.test(sentence)) continue;
+    if (LANDED_STRICT.test(sentence)) bad.push(sentence);
+    else if (!wroteDefence && (UNWRITTEN_DEFENCE.test(sentence) || UNWRITTEN_REACTION.test(sentence))) bad.push(sentence);
+    else if (!wroteOffence && UNWRITTEN_OFFENCE.test(sentence)) bad.push(sentence);
+  }
+  return bad;
+}
+
+export function dropSentences(text: string, sentences: string[]): string {
+  const drop = new Set(sentences);
+  return text
+    .split(/\n{2,}/)
+    .map((par) => splitSentences(par).filter((s) => !drop.has(s)).join(" "))
+    .filter((par) => par.length > 0)
+    .join("\n\n");
+}
