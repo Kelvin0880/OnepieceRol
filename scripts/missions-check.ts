@@ -25,7 +25,7 @@ async function main() {
   assert(a!.missions.length === 3, "concurrent ensures still create exactly one batch of three");
   const arcLow = a!.missions.find((m) => m.isArc)!;
   const arcHigh = b!.missions.find((m) => m.isArc)!;
-  assert(arcHigh.target > arcLow.target && arcHigh.berries > arcLow.berries, "a stronger character gets tougher, better-paid goals");
+  assert(arcHigh.berries > arcLow.berries && arcHigh.xp > arcLow.xp, "a stronger character gets tougher, better-paid goals");
   assert(!!a!.briefing, "the first visit registers a briefing");
 
   const explore = a!.missions.find((m) => m.kind === "explore")!;

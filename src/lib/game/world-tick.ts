@@ -6,6 +6,7 @@ import { tickWorldArcs, moveActorsTick, actorLocation } from "./world-arcs";
 import { logError } from "../log-error";
 import { tickColiseum } from "./coliseum";
 import { tickAdmiralDispatch } from "./admiral-dispatch";
+import { tickIslandNpcs } from "./island-npcs";
 import { tickWorldHappenings } from "./world-happenings";
 import { tickPlayerEvents } from "./player-events";
 
@@ -38,6 +39,8 @@ async function tickWorldIfDueInner(): Promise<void> {
   void tickColiseum();
   // Rarely the Government sends an admiral against the pirate players of an island; also settles arrival/return.
   void tickAdmiralDispatch();
+  // A dead resident's job gets a new named successor after a while.
+  void tickIslandNpcs();
   // One AI-invented happening per 24 h, also fire-and-forget.
   void tickWorldHappenings();
   // Player events (beginner trials): retries pending verdicts and announces a new one every 24 h.

@@ -71,7 +71,7 @@ export async function moveActorsTick(): Promise<void> {
   const fresh = await prisma.worldActor.findMany({ where: { status: "ACTIVE" } });
   const movable: MovableActor[] = fresh.map((a) => ({
     id: a.id, name: a.name, factionType: a.factionType, role: a.role, status: a.status, locationKind: a.locationKind,
-    currentIslandId: a.currentIslandId, homeIslandId: a.homeIslandId, pinned: pinnedIds.has(a.id) || (a.busyUntil !== null && a.busyUntil > now),
+    currentIslandId: a.currentIslandId, homeIslandId: a.homeIslandId, pinned: pinnedIds.has(a.id) || a.factionName === "Impel Down" || (a.busyUntil !== null && a.busyUntil > now),
   }));
   const moves = pickMoves(varietyRng(`moves:${Math.floor(Date.now() / 60_000)}`), movable, (id) => islands.get(id)?.neighbors ?? []);
   for (const m of moves) {

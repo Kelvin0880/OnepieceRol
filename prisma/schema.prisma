@@ -824,7 +824,9 @@ model Mission {
   id            String    @id @default(cuid())
   characterId   String
   islandId      String
-  kind          String // explore | win_fights | train | spare | travel
+  kind          String // explore | win_fights | train | spare | travel | defeat_npc
+  giverNpcId    String? // island resident who asks for it
+  targetNpcId   String? // island resident that must fall (defeat_npc)
   title         String
   brief         String
   target        Int
@@ -1215,4 +1217,34 @@ model AdmiralDispatch {
   captured         String    @default("[]") // JSON: names of the players taken prisoner
   createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
+}
+
+// Filler cast of an island (2026-09-26): the named bartenders, guards, dockers, petty thieves and marines the narrator is
+// allowed to use. The AI may not invent named characters outside this roster, the codex lists them, and when one dies a
+// successor with the same job is generated (successorId) so the island never runs out of people or of quest-givers.
+model IslandNpc {
+  id          String    @id @default(cuid())
+  name        String    @unique
+  islandId    String
+  // Stable job key inside an island ("tabernero", "guardia-puerta", "nivel-3-carcelero"); a successor inherits it.
+  slot        String
+  title       String // "Tabernero del Sombrero Roto"
+  category    String // guard | thug | civilian | merchant | marine | pirate | official | other
+  description String
+  personality String
+  level       Int       @default(2)
+  abilitiesJson String? // string[] of what they can really do in a fight
+  weapon      String?
+  status      String    @default("ALIVE") // ALIVE | DEAD | CAPTURED
+  diedAt      DateTime?
+  diedNote    String? // "Muerto a manos de Sebastian en Pueblo Foosha"
+  memoryJson  String? // string[] of notes about what happened to them / with whom (max 8)
+  // CAPTURED: held by the law until recoversAt; a beaten-but-spared resident is unavailable until recoversAt too.
+  recoversAt  DateTime?
+  stateNote   String?
+  successorId String?
+  generation  Int       @default(1)
+  createdAt   DateTime  @default(now())
+
+  @@index([islandId, status])
 }

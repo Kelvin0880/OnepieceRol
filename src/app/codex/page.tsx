@@ -78,6 +78,8 @@ const CELLS = [
 ];
 
 /** Every canon prisoner by Impel Down level, with the level needed to attempt a rescue raid. */
+import ResidentsSection from "./ResidentsSection";
+
 function PrisonSection({ actors }: { actors: Actor[] }) {
   const held = actors.filter((a) => a.status === "CAPTURED");
   return (
@@ -248,7 +250,7 @@ function PlayersSection({ query }: { query: string }) {
 }
 
 export default function CodexPage() {
-  const [section, setSection] = useState<"canon" | "players" | "prison">("canon");
+  const [section, setSection] = useState<"canon" | "players" | "prison" | "residents">("canon");
   const [actors, setActors] = useState<Actor[] | null>(null);
   const [faction, setFaction] = useState("ALL");
   const [showHistory, setShowHistory] = useState(false);
@@ -288,6 +290,9 @@ export default function CodexPage() {
         <button onClick={() => setSection("prison")} className={`px-3 py-1.5 rounded text-sm border ${section === "prison" ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="codex-tab-prison">
           Prisioneros
         </button>
+        <button onClick={() => setSection("residents")} className={`px-3 py-1.5 rounded text-sm border ${section === "residents" ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="codex-tab-residents">
+          Habitantes
+        </button>
         <button onClick={() => setSection("players")} className={`px-3 py-1.5 rounded text-sm border ${section === "players" ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="codex-tab-players">
           Jugadores
         </button>
@@ -301,6 +306,8 @@ export default function CodexPage() {
       )}
 
       {section === "prison" && <PrisonSection actors={actors ?? []} />}
+
+      {section === "residents" && <ResidentsSection />}
 
       {section === "canon" && (<>
       <div className="flex flex-wrap gap-2 items-center">

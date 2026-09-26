@@ -31,10 +31,13 @@ import { toCombatant, generalSkillModifier } from "./derive";
 import { tickWorldIfDue } from "./world-tick";
 import { getOpenDuelFor, submitDuelAction } from "./duel";
 import { maybeCompactCharacterScene, maybeCompactPartyScene } from "./scene-compaction";
+import { isFighter, npcLoot } from "../engine/island-npc";
+import { bindRandomFighter, bindTarget, defeatIslandNpc, killIslandNpc, noteNpc, whyNotAvailable } from "./island-npcs";
 import { postNews, handleDeathCheck } from "./death-resolution";
 import { grantPoneglyphRead } from "./poneglyph";
 import { grantXp } from "./xp";
-import { grantLoot, storeFruitInBag } from "./inventory";
+import { grantItem, grantLoot, storeFruitInBag } from "./inventory";
+import { getItemDef } from "../engine/inventory";
 import { intellectTacticEdge } from "../engine/attributes";
 import { applyGuardianPresence, guardianBaseRewards, markActorDefeated, findPoneglyphGuardian, ACTOR_REWARD_MULTIPLIER } from "./guardian";
 import { isActorHome, stealthDifficulty, stealthModifier, stealthResultFrom, STEALTH_HEAT, STEALTH_STAMINA_COST, CAUGHT_HP_FRACTION } from "../engine/guardian";
@@ -137,6 +140,10 @@ export async function tryDropFruit(characterId: string, newsLog: string[]): Prom
 
 interface StoredEnemy {
   name: string;
+  /** The island resident (IslandNpc) this enemy is: while the fight lasts nobody else can use them; their death/injury is recorded. */
+  islandNpcId?: string;
+  /** Category of that resident (guard, thug, civilian...): decides what defeating them pays. */
+  npcCategory?: string;
   hp: number;
   atk: number;
   def: number;
@@ -427,6 +434,10 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
       personality: resolution.enemy.personality,
       worldActorId: resolution.enemy.worldActorId,
     };
+    if (!enemy.isBoss && !enemy.worldActorId) {
+      const resident = await bindRandomFighter(character.currentIslandId, `${beat}:${character.id}`, character.id);
+      if (resident) enemy = { ...enemy, name: resident.name, personality: resident.personality, level: resident.level, islandNpcId: resident.npcId, npcCategory: resident.category, hp: Math.max(enemy.hp, resident.stats.hp), atk: Math.max(enemy.atk, resident.stats.atk) };
+    }
     // A Poneglyph's guardian is whoever the holder's schedule says: the
     // subordinate when they're away, usually the holder themself when home.
     let guardianRewards: {
@@ -879,19 +890,19 @@ export async function attackCharacter(
   if (character.pendingEncounter) throw new GameActionError("Ya estás en medio de un enfrentamiento.");
 
   const tier = opts.tier ?? "average";
-  const name = cleanTargetName(opts.target);
+  // The target must be someone who exists: a free resident of the island. Nobody named = an anonymous bystander.
+  const bound = opts.target ? await bindTarget(character.currentIslandId, opts.target, character.id) : null;
+  if (!bound && opts.target) {
+    const why = await whyNotAvailable(character.currentIslandId, opts.target, character.id);
+    if (why) throw new GameActionError(why);
+  }
+  const name = bound ? bound.name : cleanTargetName(opts.target);
   const playerBase = toCombatant(character);
   const built = buildSceneEnemy(name, { ...playerBase, hp: character.maxHp, maxHp: character.maxHp }, tier);
-  const enemy: StoredEnemy = {
-    name,
-    hp: built.maxHp,
-    atk: built.atk,
-    def: built.def,
-    spd: built.spd,
-    isBoss: tier === "elite",
-    level: built.level,
-  };
-  const assessment = assessThreat(playerBase, built);
+  const enemy: StoredEnemy = bound
+    ? { name, hp: bound.stats.hp, atk: bound.stats.atk, def: bound.stats.def, spd: bound.stats.spd, isBoss: false, level: bound.level, personality: bound.personality, islandNpcId: bound.npcId, npcCategory: bound.category }
+    : { name, hp: built.maxHp, atk: built.atk, def: built.def, spd: built.spd, isBoss: tier === "elite", level: built.level };
+  const assessment = assessThreat(playerBase, bound ? { name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd } : built);
 
   // With crewmates sharing the scene, the fight is everyone's: they each act every round.
   const allies = await freePartyMemberIds(character.id);
@@ -901,8 +912,8 @@ export async function attackCharacter(
       characterIds: allies,
       enemy,
       rewards: {
-        berries: 0,
-        xp: tierXp(tier),
+        berries: bound ? bound.rewards.berries : 0,
+        xp: bound ? bound.rewards.xp : tierXp(tier),
         bounty: 0,
         islandDanger: character.currentIsland.dangerLevel,
       },
@@ -925,8 +936,8 @@ export async function attackCharacter(
       characterId: character.id,
       enemyJson: JSON.stringify(enemy),
       rewardsJson: JSON.stringify({
-        berries: 0,
-        xp: tierXp(tier),
+        berries: bound ? bound.rewards.berries : 0,
+        xp: bound ? bound.rewards.xp : tierXp(tier),
         bounty: 0,
         islandDanger: character.currentIsland.dangerLevel,
       } satisfies StoredRewards),
@@ -1082,10 +1093,11 @@ async function resolveMercyChoiceInner(characterId: string, userId: string, spar
   const log: string[] = [];
 
   const mercyMultiplier = spare ? 0.7 : 1;
-  const berriesDelta = rewards.berries + Math.round(berryReward(rewards.islandDanger, enemy.isBoss) * mercyMultiplier);
-  const baseBounty = rewards.bounty + bountyReward(rewards.islandDanger, character.level, enemy.isBoss);
+  const bystander = !!enemy.islandNpcId && !!enemy.npcCategory && !isFighter(enemy.npcCategory);
+  const berriesDelta = rewards.berries + (bystander ? 0 : Math.round(berryReward(rewards.islandDanger, enemy.isBoss) * mercyMultiplier));
+  const baseBounty = bystander ? 0 : rewards.bounty + bountyReward(rewards.islandDanger, character.level, enemy.isBoss);
   const bountyDelta = character.faction === "PIRATE" || character.faction === "BOUNTY_HUNTER" ? Math.round(baseBounty * mercyMultiplier) : Math.round((baseBounty / 20_000) * mercyMultiplier);
-  const xpDelta = rewards.xp + 10;
+  const xpDelta = bystander ? 0 : rewards.xp + 10;
 
   if (enemy.isBoss || enemy.worldActorId || enemy.consequenceStage) {
     await recordConsequence(character.id, enemy, spare ? "spared" : "killed", {
@@ -1093,6 +1105,20 @@ async function resolveMercyChoiceInner(characterId: string, userId: string, spar
       name: character.currentIsland.name,
     });
   }
+
+  if (enemy.islandNpcId) {
+    log.push(...(spare ? await defeatIslandNpc(enemy.islandNpcId, { id: character.id, name: character.name, faction: character.faction }, character.currentIsland.name) : await killIslandNpc(enemy.islandNpcId, { id: character.id, name: character.name }, character.currentIsland.name)));
+  }
+
+  if (enemy.islandNpcId && enemy.npcCategory && !spare && isFighter(enemy.npcCategory)) {
+    const item = npcLoot(`${enemy.islandNpcId}:${pending.id}`, enemy.npcCategory, enemy.level ?? 2);
+    if (item) {
+      const note = await grantItem(character.id, item, 1);
+      const def = getItemDef(item);
+      log.push(note ?? `Registras el cuerpo de ${enemy.name} y encuentras: ${def?.name ?? item}.`);
+    }
+  }
+  if (bystander && !spare) log.push(`${enemy.name} no era un combatiente: no hay gloria en esto, solo lo poco que llevaba encima.`);
 
   if (spare) {
     log.push(`Decides perdonar a ${enemy.name} y lo dejas ir con vida.`);

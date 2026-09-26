@@ -59,6 +59,7 @@ const VARIETY_ALLOWED = new Set([
   "lib/game/world-tick.ts", // which ambient headline
   "lib/game/world-happenings.ts", // which island/idea when the AI is offline
   "lib/game/player-events.ts", // which unique fruit an event offers among equivalents
+  "lib/engine/island-npc.ts", // which resident among equivalents / the name of a successor when the AI is offline
   "lib/engine/inventory.ts", // which catalogue item among equivalents (lootFor)
 ]);
 
@@ -93,6 +94,7 @@ describe("no dice anywhere", () => {
       "lib/engine/missions.ts",
       "lib/engine/world-arcs.ts",
       "lib/engine/admiral-dispatch.ts",
+      "lib/engine/island-npc.ts",
       "lib/engine/world-happenings.ts",
       "lib/engine/world.ts",
       "lib/engine/voyage.ts",

@@ -39,6 +39,8 @@ import { parseCompanionProfile } from "../engine/companions";
 import { isWithPlayer } from "../engine/empire";
 import { describeCapabilities } from "../engine/capabilities";
 import { worldStateBlock } from "../game/world-state";
+import { allowedNamesFor, rosterBlockFor } from "../game/island-npcs";
+import { inventedNames } from "../engine/island-npc";
 import { merchantStock } from "../engine/merchant";
 import { getItemDef } from "../engine/inventory";
 import { shopPrice } from "../game/inventory";
@@ -88,10 +90,21 @@ export async function loadRealPlayers(characterId: string): Promise<RealPlayer[]
   }));
 }
 
+/** Names the AI may use at the character's current island (roster, canon, players, own people); empty when the lookup fails. */
+export async function allowedNamesForCharacter(characterId: string): Promise<string[]> {
+  try {
+    const c = await prisma.character.findUnique({ where: { id: characterId }, select: { currentIslandId: true } });
+    return c ? await allowedNamesFor(characterId, c.currentIslandId) : [];
+  } catch {
+    return [];
+  }
+}
+
 /** Rejects a narration where an invented voice or action is put in another player's character (the model then tries the next one). */
 export async function narrationValidatorFor(characterId: string): Promise<(text: string) => boolean> {
   const names = (await loadRealPlayers(characterId).catch(() => [])).map((p) => p.name);
-  return (text) => isValidNarration(text) && voicesRealPlayer(text, names) === null && !inventsSystemResult(text);
+  const allowed = await allowedNamesForCharacter(characterId);
+  return (text) => isValidNarration(text) && voicesRealPlayer(text, names) === null && !inventsSystemResult(text) && inventedNames(text, allowed).length === 0;
 }
 
 /** Tone + standing out-of-role notes + the sheet of what the character can really do; never throws (defaults if the row is missing). */
@@ -125,6 +138,7 @@ export async function loadDirectives(characterId: string): Promise<string> {
     const players = realPlayersBlock(await loadRealPlayers(characterId));
     const worldState = await worldStateBlock();
     const isle = await prisma.island.findUnique({ where: { id: c.currentIslandId }, select: { name: true, dangerLevel: true } });
+    const roster = isle ? await rosterBlockFor(c.currentIslandId, isle.name, characterId).catch(() => "") : "";
     const stock = isle ? merchantStock(isle.name, isle.dangerLevel) : null;
     const merchant = stock
       ? stock.items.length + stock.weapons.length === 0
@@ -147,7 +161,9 @@ ${worldState}` : ""}${players ? `
 
 ${players}` : ""}${presence ? `
 
-${presence}` : ""}${directivesBlock(c.narratorTone, c.oocNotes)}`;
+${presence}` : ""}${roster ? `
+
+${roster}` : ""}${directivesBlock(c.narratorTone, c.oocNotes)}`;
   } catch {
     return directivesBlock();
   }
@@ -495,11 +511,27 @@ export async function refereeExchange(input: RefereeInput, meta: { characterId?:
     if (!parsed) return null;
     // What the text says must match what the numbers do: one corrective retry, then the sanitizer drops what is still unsupported.
     const issues = checkConsistency(parsed, bounds);
+    const knownNames = meta.characterId ? await allowedNamesForCharacter(meta.characterId) : [];
+    const madeUp = knownNames.length ? inventedNames(`${parsed.narration} ${parsed.rivalIntent ?? ""}`, knownNames) : [];
+    if (madeUp.length > 0) issues.push(`Inventaste personajes con nombre que no existen en esta isla (${madeUp.join(", ")}): PROHIBIDO. Usa solo los HABITANTES de la lista, los personajes canon o gente anónima ("un guardia").`);
     if (issues.length > 0) {
       const again = await ask(`\n\nCORRECCIÓN OBLIGATORIA de tu respuesta anterior:\n- ${issues.join("\n- ")}\nVuelve a escribir el JSON completo corrigiendo eso.`).catch(() => null);
       if (again) parsed = again;
+      // Invented characters are never accepted: one more try, then no verdict (the player resends) rather than a made-up cast.
+      if (madeUp.length > 0) {
+        let still = inventedNames(`${parsed.narration} ${parsed.rivalIntent ?? ""}`, knownNames);
+        if (still.length > 0) {
+          const third = await ask(`\n\nCORRECCIÓN FINAL: sigues nombrando personajes que no existen (${still.join(", ")}). Reescribe TODO el JSON sin ningún nombre que no esté en la lista de habitantes o el canon; usa "un guardia", "otro hombre", etc.`).catch(() => null);
+          if (third) parsed = third;
+          still = inventedNames(`${parsed.narration} ${parsed.rivalIntent ?? ""}`, knownNames);
+          if (still.length > 0) {
+            await logError(`ai/referee-${meta.context}-invented`, new Error(`invented names: ${still.join(", ")}`), logMeta);
+            return null;
+          }
+        }
+      }
     }
-    const rival = input.actors.find((a) => a.side === "enemy")?.name ?? "El rival";
+    const rival =input.actors.find((a) => a.side === "enemy")?.name ?? "El rival";
     if (input.mode !== "duel") parsed = foldUnknownChanges(parsed, input.actors.map((a) => a.name), rival);
     const { verdict, report } = sanitizeVerdict(parsed, input.actions.map((a) => a.text).join("\n"), rival, input.mode === "solo" ? input.actors.find((a) => a.side === "player")?.name : undefined);
     if (issues.length > 0 || report.removed.length > 0) {

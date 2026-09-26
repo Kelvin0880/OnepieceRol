@@ -33,7 +33,12 @@ async function generateBatch(characterId: string): Promise<void> {
   if (!shouldGenerateBatch(active, last?.createdAt.getTime() ?? null, Date.now())) return;
 
   const neighbours = await openNeighbours(island.connections, c.level);
-  const specs = generateMissionSpecs(varietyRng(`${characterId}:${island.id}:${Math.floor(Date.now() / 3_600_000)}`), { level: c.level, danger: island.dangerLevel, minLevel: island.minLevelToEnter, islandName: island.name, arcHook: island.arcHook, openNeighbours: neighbours });
+  const { loadRoster, engagedNpcIds } = await import("./island-npcs");
+  const { npcState } = await import("../engine/island-npc");
+  const rosterAll = await loadRoster(island.id);
+  const engaged = await engagedNpcIds(characterId);
+  const residents = rosterAll.filter((n) => npcState(n, new Date(), engaged).usable).map((n) => ({ id: n.id, name: n.name, title: n.title, category: n.category, level: n.level }));
+  const specs = generateMissionSpecs(varietyRng(`${characterId}:${island.id}:${Math.floor(Date.now() / 3_600_000)}`), { level: c.level, danger: island.dangerLevel, minLevel: island.minLevelToEnter, islandName: island.name, arcHook: island.arcHook, openNeighbours: neighbours, residents });
   const { patronActorId } = await islandPowers(island.id);
   await prisma.mission.createMany({
     data: specs.map((s) => ({
@@ -49,6 +54,8 @@ async function generateBatch(characterId: string): Promise<void> {
       destination: s.destination,
       isArc: s.isArc,
       patronActorId: s.isArc ? patronActorId : null,
+      giverNpcId: s.giverNpcId ?? null,
+      targetNpcId: s.targetNpcId ?? null,
     })),
   });
 
@@ -146,7 +153,7 @@ export async function recordMissionEvent(characterId: string, event: MissionEven
     for (const m of active) {
       // Travel goals complete on arrival elsewhere; everything else only counts on the island that issued it.
       if (event.kind !== "travel" && m.islandId !== c.currentIslandId) continue;
-      const gain = progressGain({ kind: m.kind as MissionKind, progress: m.progress, target: m.target, destination: m.destination }, event);
+      const gain = progressGain({ kind: m.kind as MissionKind, progress: m.progress, target: m.target, destination: m.destination, targetNpcId: m.targetNpcId }, event);
       if (gain > 0) gains.push({ m, gain });
     }
     return await settleGains(characterId, gains);

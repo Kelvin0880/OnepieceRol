@@ -1,5 +1,6 @@
 import { prisma } from "../db";
 import { actorCombatStats } from "../engine/guardian";
+import { IMPEL_LEVEL_GUARD } from "./world-actor-impel";
 import { rescueBlockReason, rescueRequirement, rescueRewards } from "../engine/rescue-raid";
 import { prisonLabel } from "../engine/world-state";
 import { postNews } from "./death-resolution";
@@ -40,11 +41,15 @@ export async function startRescueRaid(characterId: string, userId: string, actor
   if (reason) throw new RescueRaidError(reason);
   const req = rescueRequirement(cell);
   const stats = actorCombatStats(req.guardPower);
+  // The chief guard of that level is a canon character, not an invented jailer.
+  const guard = await prisma.worldActor.findUnique({ where: { name: IMPEL_LEVEL_GUARD[cell] ?? IMPEL_LEVEL_GUARD[1] } });
   try {
     const started = await startJointFight({
       kind: "rescue",
       characterIds: group.map((g) => g.id),
-      enemy: { name: `Guardia mayor del ${prisonLabel(cell).replace("Impel Down, ", "")}`, ...stats, isBoss: true, personality: "Carcelero implacable de Impel Down: no deja salir a nadie" },
+      enemy: guard
+        ? { name: guard.name, ...stats, isBoss: true, personality: guard.personality ?? "Carcelero implacable de Impel Down: no deja salir a nadie", worldActorId: guard.id }
+        : { name: `Guardia mayor del ${prisonLabel(cell).replace("Impel Down, ", "")}`, ...stats, isBoss: true, personality: "Carcelero implacable de Impel Down: no deja salir a nadie" },
       rewards: rescueRewards(cell, req.guardPower),
       stakes: `Rescate de ${actor.name} en ${prisonLabel(cell)}. Si el guardia cae, el preso queda libre.`,
       context: { rescueActorId: actor.id },

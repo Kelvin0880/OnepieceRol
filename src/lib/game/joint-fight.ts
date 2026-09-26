@@ -37,6 +37,8 @@ export interface JointEnemy {
   level?: number;
   personality?: string;
   worldActorId?: string;
+  /** Island resident (IslandNpc) fought here: locked for everyone else, fate recorded when the fight ends. */
+  islandNpcId?: string;
   isActor?: boolean;
 }
 
@@ -644,6 +646,20 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
     const { handleSovereignFightSettled } = await import("./sovereignty");
     const fresh = await prisma.jointFight.findUniqueOrThrow({ where: { id: fightId }, include: { participants: true } });
     closing.push(...(await handleSovereignFightSettled({ contextJson: fresh.contextJson, outcome, humans: fresh.participants.filter((p) => !p.isNpc).map((p) => ({ characterId: p.characterId, status: p.status, name: p.name })) })));
+  }
+  if (enemy.islandNpcId) {
+    const { killIslandNpc, defeatIslandNpc, noteNpc } = await import("./island-npcs");
+    const place = (await prisma.island.findUnique({ where: { id: fight.islandId }, select: { name: true } }))?.name ?? "la isla";
+    const lead = humans[0];
+    const leader = lead ? await prisma.character.findUnique({ where: { id: lead.characterId }, select: { id: true, name: true, faction: true } }) : null;
+    const team = humans.map((h) => h.name).join(", ");
+    if (outcome === "victory" && leader) {
+      const fate = await judgeFate({ victim: { name: enemy.name, level: enemy.level ?? 2, durability: 20, willpower: 20, faction: "PIRATE" }, cause: `Fue derrotado en combate por ${team}.`, killer: { name: team, isBoss: false }, islandName: place, islandDanger: rewards.islandDanger, characterId: leader.id });
+      if (fate.fate === "death") await killIslandNpc(enemy.islandNpcId, { id: leader.id, name: team, credit: humans.map((h) => h.characterId) }, place);
+      else await defeatIslandNpc(enemy.islandNpcId, { id: leader.id, name: team, faction: leader.faction, credit: humans.map((h) => h.characterId) }, place);
+    } else if (outcome === "defeat") {
+      await noteNpc(enemy.islandNpcId, `Derrotó a ${team} en ${place}`);
+    }
   }
   if (closing.length) await prisma.jointFightMessage.create({ data: { fightId, authorCharacterId: null, authorName: "Narrador", text: closing.join(" ") } });
 }

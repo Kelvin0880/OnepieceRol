@@ -21,8 +21,9 @@ export async function tickWorldHappenings(now = new Date(), opts: { force?: bool
     if (islands.length === 0) return false;
     const rng = varietyRng(`happening:${Math.floor(now.getTime() / 3_600_000)}`);
     const seeds = pickSeeds(rng, [], 3);
+    const npcs = await prisma.islandNpc.findMany({ where: { status: "ALIVE" }, select: { name: true, title: true, islandId: true } });
     const ai = await inventHappening({
-      islands: islands.map((i) => ({ name: i.name, sea: String(i.sea), danger: i.dangerLevel, control: i.factionControl })),
+      islands: islands.map((i) => ({ name: i.name, sea: String(i.sea), danger: i.dangerLevel, control: i.factionControl, residents: npcs.filter((n) => n.islandId === i.id).slice(0, 6).map((n) => `${n.name} (${n.title})`) })),
       recentHeadlines: recent.map((r) => r.headline),
       seeds,
       heat: clock?.heat ?? 10,
