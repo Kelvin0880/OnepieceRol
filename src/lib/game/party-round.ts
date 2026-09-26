@@ -1,6 +1,7 @@
 // Shared crew scene in rounds: the narrator opens, every member writes their action, then the narrator answers ALL of them at once.
 import { prisma } from "../db";
 import { narratePartyScene } from "../ai/narrate";
+import { extractCombatMarker } from "../engine/referee";
 import { missingMembers, orderedActions, parseRound, roundComplete } from "../engine/party-round";
 import { notifyParty } from "./notify";
 import { writePartyMessage } from "./party";
@@ -81,7 +82,7 @@ export async function resolvePartyRound(partyId: string, force = false): Promise
     const anyone = await prisma.character.findUnique({ where: { id: ordered[0].characterId }, include: { currentIsland: true } });
     if (!anyone) throw new PartyRoundError("Nadie del grupo sigue aquí.");
     const named = ordered.map((a) => ({ name: members.find((m) => m.id === a.characterId)?.name ?? "Alguien", text: a.text }));
-    const text = await narratePartyScene(
+    const rawText = await narratePartyScene(
       {
         islandName: anyone.currentIsland.name,
         islandDescription: anyone.currentIsland.description,
@@ -94,7 +95,12 @@ export async function resolvePartyRound(partyId: string, force = false): Promise
       },
       { partyId: party.id }
     );
-    await writePartyMessage(party.id, null, "Narrador", text);
+    const marked = extractCombatMarker(rawText);
+    const text = marked.text;
+    const fightNotice = marked.attacker ? await import("./perform-action").then((m) => m.startFightFromNarration(ordered[0].characterId, marked.attacker!)).catch(() => null) : null;
+    await writePartyMessage(party.id, null, "Narrador", fightNotice ? `${text}
+
+${fightNotice}` : text);
     const now = Date.now();
     await prisma.sceneMessage.createMany({
       data: ordered.flatMap((a, i) => [

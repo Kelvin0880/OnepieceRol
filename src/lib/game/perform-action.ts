@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { logError } from "../log-error";
 import { varietyRng } from "../engine/rng";
 import { pickEventTemplate, resolveEvent, eventDifficulty, parseEventBody, EventBody } from "../engine/events";
 import { judgeOutcome, judgeChoice, judgeFightEnd } from "../ai/judge";
@@ -11,7 +12,7 @@ import { resolveEnemyKit } from "./enemy-kit";
 import { estimateLevel, applyFatigueToCombatant, npcStaminaAfterExchange, npcBaseEffort } from "../engine/resilience";
 import type { EffortLevel } from "../engine/stamina";
 import { Combatant } from "../engine/combat";
-import { applyVerdict, NO_VERDICT_TEXT } from "../engine/referee";
+import { applyVerdict, extractCombatMarker, NO_VERDICT_TEXT } from "../engine/referee";
 import { trainHaki, conquerorsHakiAwakens } from "../engine/haki";
 import { trainFruitMastery, canAwaken, FRUIT_PHASE_LABELS, fruitPhase } from "../engine/fruit-mastery";
 import { TechniqueId, TECHNIQUE_LABELS } from "../engine/techniques";
@@ -1470,6 +1471,46 @@ export async function restCharacter(characterId: string, userId: string): Promis
  * engage, flee). Never fails outright — narrateScene has its own
  * never-throws contract with a safe fallback line.
  */
+/**
+ * The narrator can open the fight itself: when a real resident of the island starts the aggression, this creates the fight
+ * (solo encounter, or a shared fight for a crew in one scene) with that resident as the rival. Nothing is resolved here: the
+ * narration already announced the rival's first attack, and the player's next message is how they receive it.
+ * Returns the notice for the scene, or null when nothing started (unknown/busy name, already fighting...).
+ */
+export async function startFightFromNarration(characterId: string, attackerName: string): Promise<string | null> {
+  const character = await prisma.character.findUnique({ where: { id: characterId }, include: { currentIsland: true, pendingEncounter: true, devilFruit: true, equippedWeapon: true, styles: true, ownedWeapons: { where: { wielded: true } } } });
+  if (!character || character.status !== "ALIVE" || character.pendingEncounter) return null;
+  if ((await getOpenDuelFor(character.id)) || (await getOpenJointFightFor(character.id))) return null;
+  const bound = await bindTarget(character.currentIslandId, attackerName, character.id);
+  if (!bound) return null;
+  const enemy: StoredEnemy = { name: bound.name, hp: bound.stats.hp, atk: bound.stats.atk, def: bound.stats.def, spd: bound.stats.spd, isBoss: false, level: bound.level, personality: bound.personality, islandNpcId: bound.npcId, npcCategory: bound.category };
+  const rewards = { berries: bound.rewards.berries, xp: bound.rewards.xp, bounty: 0, islandDanger: character.currentIsland.dangerLevel };
+  const allies = await freePartyMemberIds(character.id);
+  try {
+    if (allies.length >= 2) {
+      await startJointFight({ kind: "party", characterIds: allies, enemy, rewards, stakes: `${bound.name} ha atacado al grupo.` });
+    } else {
+      const playerBase = toCombatant(character);
+      await prisma.pendingEncounter.create({
+        data: {
+          characterId: character.id,
+          enemyJson: JSON.stringify(enemy),
+          rewardsJson: JSON.stringify(rewards satisfies StoredRewards),
+          narrative: `${bound.name} ataca a ${character.name}.`,
+          assessment: assessThreat(playerBase, { name: bound.name, hp: enemy.hp, maxHp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd }),
+          phase: "fighting",
+          enemyHp: enemy.hp,
+          roundNumber: 0,
+        },
+      });
+    }
+  } catch (err) {
+    await logError("perform-action/fight-from-narration", err, { characterId });
+    return null;
+  }
+  return `⚔ ${bound.name} ha empezado el combate. Responde cómo recibes su ataque.`;
+}
+
 export async function narrateSceneAction(characterId: string, userId: string, freeText: string): Promise<ActionResult> {
   const character = await loadCharacterOrThrow(characterId, userId);
   if (character.pendingEncounter) throw new GameActionError("Tienes un enfrentamiento sin resolver. Decide si luchar o huir primero.");
@@ -1489,8 +1530,11 @@ export async function narrateSceneAction(characterId: string, userId: string, fr
     { characterId: character.id }
   );
 
-  const result = emptyResult([text], character.level);
-  result.log.push(...(await judgeAndRecordMissions(character.id, freeText, text, true)));
+  const marked = extractCombatMarker(text);
+  const result = emptyResult([marked.text], character.level);
+  result.log.push(...(await judgeAndRecordMissions(character.id, freeText, marked.text, true)));
+  const fightNotice = marked.attacker ? await startFightFromNarration(character.id, marked.attacker) : null;
+  if (fightNotice) result.log.push(fightNotice);
   return result;
 }
 

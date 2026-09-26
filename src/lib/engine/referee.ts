@@ -411,3 +411,16 @@ export function dropSentences(text: string, sentences: string[]): string {
     .filter((par) => par.length > 0)
     .join("\n\n");
 }
+
+// The narrator opens the fight mode itself when a real NPC starts the physical aggression (Sebastian vs Akio, 2026-09-26:
+// the rival attacked first in a plain scene and no fight ever started). It signals it with a last line the code validates.
+const COMBAT_MARKER = /\[\[\s*COMBATE\s*:\s*([^\]\n]+?)\s*\]\]/gi;
+
+export function extractCombatMarker(text: string): { text: string; attacker: string | null } {
+  let attacker: string | null = null;
+  const clean = text.replace(COMBAT_MARKER, (_m, name: string) => {
+    attacker = attacker ?? name.trim();
+    return "";
+  });
+  return { text: clean.replace(/\n{3,}/g, "\n\n").trim(), attacker };
+}

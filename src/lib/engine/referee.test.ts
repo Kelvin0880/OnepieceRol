@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { playerActSentences, dropSentences, unbookedWounds, floorWounds, foldUnknownChanges, checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
+import { extractCombatMarker, playerActSentences, dropSentences, unbookedWounds, floorWounds, foldUnknownChanges, checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
 
 const NARR = "El rival bloquea con el antebrazo y responde con una patada baja que se acerca a tu rodilla.";
 const good = (extra = "") => JSON.stringify({ narracion: NARR, cambios: [{ nombre: "Kirito", vida: 10, aguante: 5 }, { nombre: "Bandido", vida: 20, aguante: 8 }], ...(extra ? { x: extra } : {}) });
@@ -305,5 +305,16 @@ describe("scene narration: second real Akio case", () => {
     const bad = playerActSentences(text, written);
     expect(bad.length).toBeGreaterThanOrEqual(2);
     expect(dropSentences(text, bad)).toContain("Akio pivota");
+  });
+});
+
+describe("extractCombatMarker", () => {
+  it("takes the attacker's name out of the narration", () => {
+    const r = extractCombatMarker("Akio ataca.\n\n[[COMBATE: Akio]]");
+    expect(r).toEqual({ text: "Akio ataca.", attacker: "Akio" });
+  });
+  it("leaves a normal narration alone and strips stray markers", () => {
+    expect(extractCombatMarker("Nada pasa.")).toEqual({ text: "Nada pasa.", attacker: null });
+    expect(extractCombatMarker("Texto [[combate:  Kaleb ]] más").text).toBe("Texto  más");
   });
 });
