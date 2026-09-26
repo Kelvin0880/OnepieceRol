@@ -70,3 +70,6 @@
 - [ ] Guerras: que los Shichibukai puedan ser llamados por el Gobierno a defender una base (hoy solo actúan marines y CP-0).
 - [ ] El Coliseo como duelo en vivo, y Barbanegra con dos frutas como dato real (siguen pendientes).
 
+
+## Hecho el 2026-09-26 (tarde)
+- [x] Vida que no bajaba en combate (Barbosa vs Akio: 3 rondas con golpes narrados y 0 de daño para ambos): el árbitro devolvía `cambios` en 0 aunque la narración mostraba impactos. Ahora una herida narrada que cuesta 0 provoca un reintento correctivo y, si persiste, el código apunta un mínimo (roce 3 %, golpe sólido 8 % de la vida máxima). Vale para combate solo y en grupo (no en duelos entre jugadores). Vida de Barbosa corregida a mano en producción (106 → 93) y la de Akio (185 → 135).

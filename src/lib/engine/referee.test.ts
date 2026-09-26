@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { foldUnknownChanges, checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
+import { unbookedWounds, floorWounds, foldUnknownChanges, checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
 
 const NARR = "El rival bloquea con el antebrazo y responde con una patada baja que se acerca a tu rodilla.";
 const good = (extra = "") => JSON.stringify({ narracion: NARR, cambios: [{ nombre: "Kirito", vida: 10, aguante: 5 }, { nombre: "Bandido", vida: 20, aguante: 8 }], ...(extra ? { x: extra } : {}) });
@@ -244,5 +244,35 @@ describe("foldUnknownChanges", () => {
   it("leaves the verdict alone when the rival is not in the list", () => {
     const v = { narration: "x", changes: [{ name: "Leo", hp: 9, stamina: 0 }] };
     expect(foldUnknownChanges(v, ["Barbosa"], "Otro")).toBe(v);
+  });
+});
+
+describe("wounds the story shows must cost life", () => {
+  const actors = [
+    { name: "Barbosa", side: "player" as const, hp: 106, maxHp: 106 },
+    { name: "Akio", side: "enemy" as const, hp: 185, maxHp: 185 },
+  ];
+  const narration =
+    "Akio lanzó su katana en un movimiento proyectil, logrando que el filo rozara tu hombro izquierdo. Sentiste un ardor punzante. Elevaste tu pistola y disparaste a bocajarro; el impacto de la bala en su cuerpo lo hizo tambalear hacia atrás.\n\nAkio, herido y tambaleante tras recibir el disparo, se detuvo.\n\nAkio intenta agarrarte por la muñeca y, si llega a conectar, un corte profundo.";
+  const verdict = { narration, rivalIntent: "Akio intenta agarrarte por la muñeca y, si llega a conectar, un corte profundo.", changes: [{ name: "Barbosa", hp: 0, stamina: 0 }, { name: "Akio", hp: 0, stamina: 0 }] };
+
+  it("flags both fighters when the numbers are all zero, ignoring the rival's announced intention", () => {
+    const missing = unbookedWounds(verdict, actors, true);
+    expect(missing.map((m) => m.name).sort()).toEqual(["Akio", "Barbosa"]);
+    expect(checkConsistency(verdict, actors, true).some((i) => i.includes("Barbosa"))).toBe(true);
+  });
+
+  it("books a minimum only for the wounded, and never touches life the model already booked", () => {
+    const floored = floorWounds(verdict, actors, true);
+    const loss = (n: string) => floored.changes.find((c) => c.name === n)!.hp;
+    expect(loss("Akio")).toBe(Math.round(185 * 0.08));
+    expect(loss("Barbosa")).toBeGreaterThan(0);
+    const booked = floorWounds({ ...verdict, changes: [{ name: "Barbosa", hp: 9, stamina: 0 }, { name: "Akio", hp: 20, stamina: 0 }] }, actors, true);
+    expect(booked.changes.map((c) => c.hp)).toEqual([9, 20]);
+  });
+
+  it("does not invent wounds for a dodged or missed attack", () => {
+    const clean = { narration: "El lingote pasó de largo y se estrelló contra la pared. Akio permanece intacto.", changes: [], };
+    expect(unbookedWounds(clean, actors, true)).toEqual([]);
   });
 });

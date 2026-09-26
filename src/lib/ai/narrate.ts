@@ -33,7 +33,7 @@ import {
 } from "./narrate-prompt";
 import { callOpenRouter } from "./openrouter-client";
 import { buildRefereePrompt, type RefereeInput } from "./referee-prompt";
-import { checkConsistency, foldUnknownChanges, parseRefereeVerdict, sanitizeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
+import { checkConsistency, floorWounds, foldUnknownChanges, parseRefereeVerdict, sanitizeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
 import { OPENROUTER_MODELS } from "./models";
 import { parseCompanionProfile } from "../engine/companions";
 import { isWithPlayer } from "../engine/empire";
@@ -547,11 +547,12 @@ export async function refereeExchange(input: RefereeInput, meta: { characterId?:
       });
       return parseRefereeVerdict(raw);
     };
-    const bounds = input.actors.map((a) => ({ name: a.name, hp: a.hp, maxHp: a.maxHp }));
+    const bounds = input.actors.map((a) => ({ name: a.name, side: a.side, hp: a.hp, maxHp: a.maxHp }));
+    const solo = input.mode === "solo";
     let parsed = await ask("");
     if (!parsed) return null;
     // What the text says must match what the numbers do: one corrective retry, then the sanitizer drops what is still unsupported.
-    const issues = checkConsistency(parsed, bounds);
+    const issues = checkConsistency(parsed, bounds, solo);
     const knownNames = meta.characterId
       ? await allowedNamesForCharacter(meta.characterId)
       : meta.islandId
@@ -582,7 +583,8 @@ export async function refereeExchange(input: RefereeInput, meta: { characterId?:
     if (issues.length > 0 || report.removed.length > 0) {
       await logError(`ai/referee-${meta.context}-guard`, new Error(`issues: ${issues.join(" | ").slice(0, 300)} removed ${report.removed.length}: ${report.removed.join(" | ").slice(0, 400)}`), logMeta);
     }
-    return verdict;
+    // Still unbooked after the retry: the code books the minimum the story itself shows (never in PvP, where the referee is neutral).
+    return input.mode === "duel" ? verdict : floorWounds(verdict, bounds, solo);
   } catch (err) {
     await logError(`ai/referee-${meta.context}`, err, logMeta);
     return null;

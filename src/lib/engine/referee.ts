@@ -135,6 +135,7 @@ export function foldUnknownChanges(verdict: RefereeVerdict, knownNames: string[]
 
 export interface RefereeBound {
   name: string;
+  side?: "player" | "ally" | "enemy";
   hp: number;
   maxHp: number;
   stamina?: number;
@@ -311,10 +312,58 @@ export function sanitizeVerdict(verdict: RefereeVerdict, playerText: string, riv
 /** Sentences that say someone can no longer fight. */
 export const DEFEAT_PHRASES = /\b(cae\s+(inerte|muert[oa]|inconsciente|desplomad[oa]|de\s+espaldas|sin\s+vida)|queda(n)?\s+(inconsciente|fuera\s+de\s+combate|inerte|sin\s+vida)|(ha\s+)?muert[oa]\b|\bmuere\b|sin\s+vida|no\s+puede\s+(continuar|seguir)|sin\s+poder\s+(continuar|seguir)|ha\s+llegado\s+a\s+su\s+fin|cuerpo\s+cae|pierde\s+el\s+conocimiento|queda\s+derrotad[oa]|victoria\s+es\s+tuya)/i;
 
+// A wound the story shows must cost life: reported 2026-09-26, three rounds of grazes, a pistol-butt to the jaw and a
+// point-blank shot left both fighters at full HP because the model booked every change as 0.
+const NEGATED_WOUND = /\b(no\s|ni\s|sin\s|esquiv|evit|fall[oó]|fallar|de\s+largo|intact|ileso|desvi|par[oó]\s|bloque|a\s+escasos)/i;
+const SOLID_WOUND = /\b(herid[oa]|sangr\w*|tambale\w*|desestabiliz\w*|conect(?:ó|a|ando)|se\s+clav\w*|atraves\w*|tajo|golpe\s+s[óo]lido|derrib\w*|aturd\w*|dolor\s+agudo|impacto\s+de\s+la\s+bala|recibi(?:ó|r)\s+el\s+(?:golpe|disparo))/i;
+const GRAZE_WOUND = /\b(roz(?:ó|o|a|aron)|rozad\w*|magull\w*|ardor|ara[ñn]\w*|raspón|superficial)/i;
+
+export type WoundLevel = "graze" | "solid";
+export const WOUND_FLOOR_FRACTION: Record<WoundLevel, number> = { graze: 0.03, solid: 0.08 };
+
+/** Fighters whose wounds the narration shows (by name; the player as "tú" in a solo fight) but whose life loss was booked as 0. */
+export function unbookedWounds(verdict: RefereeVerdict, actors: RefereeBound[], solo: boolean): { name: string; level: WoundLevel }[] {
+  const head = verdict.rivalIntent && verdict.narration.endsWith(verdict.rivalIntent) ? verdict.narration.slice(0, verdict.narration.length - verdict.rivalIntent.length) : verdict.narration;
+  const found = new Map<string, WoundLevel>();
+  const mark = (name: string, level: WoundLevel) => {
+    if (found.get(name) !== "solid") found.set(name, level);
+  };
+  const player = actors.filter((a) => a.side === "player");
+  for (const sentence of splitSentences(head)) {
+    if (NEGATED_WOUND.test(sentence)) continue;
+    const level: WoundLevel | null = SOLID_WOUND.test(sentence) ? "solid" : GRAZE_WOUND.test(sentence) ? "graze" : null;
+    if (!level) continue;
+    const named = actors.filter((a) => a.name.length > 1 && norm(sentence).includes(norm(a.name)));
+    if (named.length > 0) for (const a of named) mark(a.name, level);
+    else if (solo && player.length === 1 && /\b(te|tu|tus|sentiste|sientes)\b/i.test(sentence)) mark(player[0].name, level);
+  }
+  const booked = (n: string) => verdict.changes.filter((c) => norm(c.name) === norm(n)).reduce((t, c) => t + c.hp, 0);
+  return [...found].filter(([n]) => booked(n) === 0).map(([name, level]) => ({ name, level }));
+}
+
+/** Last resort after the corrective retry: a shown wound costs at least a graze (3%) or a solid hit (8%) of maximum life. */
+export function floorWounds(verdict: RefereeVerdict, actors: RefereeBound[], solo: boolean): RefereeVerdict {
+  const missing = unbookedWounds(verdict, actors, solo);
+  if (missing.length === 0) return verdict;
+  const changes = [...verdict.changes];
+  for (const m of missing) {
+    const a = actors.find((x) => x.name === m.name);
+    if (!a) continue;
+    const loss = Math.max(1, Math.round(a.maxHp * WOUND_FLOOR_FRACTION[m.level]));
+    const idx = changes.findIndex((c) => norm(c.name) === norm(m.name));
+    if (idx >= 0) changes[idx] = { ...changes[idx], hp: loss };
+    else changes.push({ name: m.name, hp: loss, stamina: 0 });
+  }
+  return { ...verdict, changes };
+}
+
 const MIN_INTENT_CHARS = 350;
 
-export function checkConsistency(verdict: RefereeVerdict, bounds: RefereeBound[]): string[] {
+export function checkConsistency(verdict: RefereeVerdict, bounds: RefereeBound[], solo = false): string[] {
   const issues: string[] = [];
+  for (const w of unbookedWounds(verdict, bounds, solo)) {
+    issues.push(`Narras que ${w.name} resulta herido o alcanzado, pero en "cambios" su vida perdida es 0. Todo golpe que la narración muestra que conecta cuesta vida (roce 2-6%, golpe sólido 8-18% de su vida máxima): pon la cifra que corresponda o reescribe sin que conecte.`);
+  }
   const declared = (verdict.defeated ?? []).map(norm);
   for (const name of verdict.defeated ?? []) {
     const b = bounds.find((x) => norm(x.name) === norm(name));
