@@ -11,6 +11,7 @@ import {
   fallbackSuccessor,
   matchNpc,
   npcState,
+  npcReturn,
   isFighter,
   npcRewards,
   npcStats,
@@ -119,7 +120,10 @@ export async function whyNotAvailable(islandId: string, text: string, characterI
   if (!n) return null;
   const real = roster.find((r) => r.id === n.id)!;
   const st = npcState(real, new Date(), await engagedNpcIds(characterId));
-  return st.usable ? null : `${real.name} no está disponible ahora: ${st.label}.`;
+  if (st.usable) return null;
+  const back = npcReturn(real, new Date());
+  const wait = back ? ` Faltan unos ${Math.max(1, Math.ceil((back.at.getTime() - Date.now()) / 60_000))} min${back.kind === "sucesor" ? " para que llegue su sucesor" : " para que vuelva"}.` : "";
+  return `${real.name} no está disponible ahora: ${st.label}.${wait}`;
 }
 
 export async function getNpcKit(npcId: string): Promise<string | null> {
@@ -296,7 +300,8 @@ export async function getIslandCast(islandId: string, characterId: string) {
     .filter((n) => n.status !== "DEAD" || (n.diedNote && true))
     .map((n) => {
       const st = npcState(n, now, engaged);
-      return { id: n.id, name: n.name, title: n.title, category: n.category, level: n.level, fighter: isFighter(n.category), state: st.label, usable: st.usable, dead: n.status === "DEAD", personality: n.personality, memory: (n.memoryJson ? (JSON.parse(n.memoryJson) as string[]) : []).slice(-2), diedNote: n.diedNote };
+      const back = npcReturn(n, now);
+      return { returnAt: back ? back.at.toISOString() : null, returnKind: back ? back.kind : null, id: n.id, name: n.name, title: n.title, category: n.category, level: n.level, fighter: isFighter(n.category), state: st.label, usable: st.usable, dead: n.status === "DEAD", personality: n.personality, memory: (n.memoryJson ? (JSON.parse(n.memoryJson) as string[]) : []).slice(-2), diedNote: n.diedNote };
     })
     .sort((a, b) => Number(a.dead) - Number(b.dead) || Number(b.usable) - Number(a.usable) || a.name.localeCompare(b.name));
 }

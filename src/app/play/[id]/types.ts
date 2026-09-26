@@ -213,6 +213,8 @@ export interface IslandCastEntry {
   personality: string;
   memory: string[];
   diedNote: string | null;
+  returnAt: string | null;
+  returnKind: string | null;
 }
 
 export interface RescueRaidState {

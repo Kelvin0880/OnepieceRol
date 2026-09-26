@@ -19,6 +19,8 @@ export interface IslandNpcRow {
   generation: number;
   recoversAt?: Date | null;
   stateNote?: string | null;
+  diedAt?: Date | null;
+  successorId?: string | null;
 }
 
 export const REPLACEMENT_DELAY_MS = 60 * 60_000;
@@ -34,6 +36,20 @@ export function npcState(n: IslandNpcRow, now: Date, engaged: Set<string>): { us
   if (n.recoversAt && n.recoversAt.getTime() > now.getTime()) return { usable: false, label: n.stateNote ?? "herido, recuperándose" };
   if (engaged.has(n.id)) return { usable: false, label: "ocupado peleando con otro aventurero" };
   return { usable: true, label: "disponible" };
+}
+
+export type NpcReturnKind = "herido" | "detenido" | "sucesor";
+
+/** When a resident who is out of play comes back (hurt, arrested) or is replaced (dead), for the live countdown on screen. */
+export function npcReturn(n: IslandNpcRow, now: Date): { at: Date; kind: NpcReturnKind } | null {
+  if (n.status === "DEAD") {
+    if (n.successorId || !n.diedAt) return null;
+    return { at: new Date(n.diedAt.getTime() + REPLACEMENT_DELAY_MS), kind: "sucesor" };
+  }
+  if (!n.recoversAt || n.recoversAt.getTime() <= now.getTime()) return null;
+  if (n.status === "CAPTURED") return { at: n.recoversAt, kind: "detenido" };
+  if (n.status === "ALIVE") return { at: n.recoversAt, kind: "herido" };
+  return null;
 }
 
 export function parseList(json: string | null | undefined): string[] {

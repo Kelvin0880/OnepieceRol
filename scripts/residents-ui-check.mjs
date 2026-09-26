@@ -59,6 +59,21 @@ try {
   await page.click('[data-testid="residents-dead"]');
   await page.waitForSelector('[data-testid="resident-card"]');
   check("the dead are listed apart with how they died", /muerto a manos de Prueba/.test(await page.locator('[data-testid="residents-section"]').textContent()));
+  check("the dead one shows the live countdown to the successor (1 h)", /sucesor en (5[5-9]|60):/.test(await page.locator('[data-testid="residents-section"]').textContent()) || /sucesor en dd:dd/.test(await page.locator('[data-testid="residents-section"]').textContent()));
+  const tick1 = await page.locator('[data-testid="countdown"]').first().textContent();
+  await page.waitForTimeout(2200);
+  const tick2 = await page.locator('[data-testid="countdown"]').first().textContent();
+  check("the countdown ticks in real time", tick1 !== tick2, tick1 + " -> " + tick2);
+  const names = JSON.parse(execSync("npx tsx scripts/hurt-a-resident.ts", { encoding: "utf8" }).trim().split(String.fromCharCode(10)).pop());
+  await page.goto(`${BASE}/codex`);
+  await page.click('[data-testid="codex-tab-residents"]');
+  await page.fill('[data-testid="residents-search"]', names.hurt);
+  await page.waitForFunction(() => document.querySelectorAll('[data-testid="resident-card"]').length === 1);
+  { const t = await page.locator('[data-testid="resident-card"]').first().textContent(); check("a hurt resident shows the countdown", /vuelve en (19|20):\d\d/.test(t), t.slice(0, 120)); }
+  await page.screenshot({ path: path.join(shots, "residents-03-hurt.png") });
+  await page.fill('[data-testid="residents-search"]', names.jailed);
+  await page.waitForFunction(() => document.querySelectorAll('[data-testid="resident-card"]').length === 1);
+  check("an arrested resident shows 'sale en 59:xx/1:00:00'", /sale en (59:dd|1:00:00)/.test(await page.locator('[data-testid="resident-card"]').first().textContent()));
   await page.screenshot({ path: path.join(shots, "residents-02-codex.png"), fullPage: false });
   const overflow = await page.evaluate(() => document.documentElement.scrollWidth > 390 + 2);
   check("no horizontal overflow at 390px", !overflow);

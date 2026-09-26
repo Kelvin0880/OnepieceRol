@@ -1,5 +1,6 @@
 "use client";
 
+import Countdown from "@/components/ui/Countdown";
 import { useEffect, useMemo, useState } from "react";
 
 interface Resident {
@@ -19,6 +20,8 @@ interface Resident {
   usable: boolean;
   diedNote: string | null;
   generation: number;
+  returnAt: string | null;
+  returnKind: string | null;
 }
 
 export default function ResidentsSection() {
@@ -72,7 +75,7 @@ export default function ResidentsSection() {
                   <div className="flex justify-between gap-2">
                     <span className="font-semibold">{r.name}</span>
                     <span className={`text-[10px] uppercase tracking-wide ${r.usable ? "text-emerald-300" : r.status === "DEAD" ? "text-blood" : "text-amber-300"}`} data-testid="resident-state">
-                      {r.state}
+                      {r.state}{r.returnAt && r.returnKind ? <> · <Countdown at={r.returnAt} kind={r.returnKind} /></> : null}
                     </span>
                   </div>
                   <div className="text-xs text-ink-dim">

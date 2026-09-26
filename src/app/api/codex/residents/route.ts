@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { npcState, parseList } from "@/lib/engine/island-npc";
+import { npcReturn, npcState, parseList } from "@/lib/engine/island-npc";
 import { engagedNpcIds } from "@/lib/game/island-npcs";
 
 /** Public codex of the filler cast of every island, with their live state (free, fighting, hurt, arrested, dead). */
@@ -15,7 +15,10 @@ export async function GET() {
   return NextResponse.json({
     residents: rows.map((n) => {
       const st = npcState(n, now, engaged);
+      const back = npcReturn(n, now);
       return {
+        returnAt: back ? back.at.toISOString() : null,
+        returnKind: back ? back.kind : null,
         id: n.id,
         name: n.name,
         island: island.get(n.islandId)?.name ?? "?",

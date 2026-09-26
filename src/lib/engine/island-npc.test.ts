@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { isFighter, npcLoot, npcRewards, npcState, appendMemory, dueForReplacement, fallbackSuccessor, inventedNames, matchNpc, npcStats, parseGeneratedNpc, pickCombatNpc, rosterBlock, type IslandNpcRow } from "./island-npc";
+import { npcReturn, isFighter, npcLoot, npcRewards, npcState, appendMemory, dueForReplacement, fallbackSuccessor, inventedNames, matchNpc, npcStats, parseGeneratedNpc, pickCombatNpc, rosterBlock, type IslandNpcRow } from "./island-npc";
 
 const npc = (over: Partial<IslandNpcRow>): IslandNpcRow => ({
   id: "1", name: "Rocco Barrica", islandId: "i", slot: "guardia-puerta", title: "Guardia del almacén", category: "guard", description: "d", personality: "Bruto y leal.",
@@ -151,5 +151,20 @@ describe("fighters, rewards and loot", () => {
     for (let i = 0; i < 200; i++) { const d = npcLoot(`s${i}`, "guard", 1); if (d) drops.add(d); }
     expect([...drops].every((d) => d === "vendaje" || d === "racion")).toBe(true);
     expect(drops.size).toBeGreaterThan(0);
+  });
+});
+
+describe("npcReturn (the live countdown)", () => {
+  const now = new Date("2026-01-02T12:00:00Z");
+  const base: IslandNpcRow = { id: "1", islandId: "i", name: "X", slot: "s", title: "t", category: "guard", description: "d", personality: "p", level: 3, abilitiesJson: null, weapon: null, status: "ALIVE", diedNote: null, memoryJson: null, generation: 1 };
+  it("counts down a hurt resident, an arrested one and a dead one's successor", () => {
+    expect(npcReturn({ ...base, recoversAt: new Date("2026-01-02T12:20:00Z") }, now)).toEqual({ at: new Date("2026-01-02T12:20:00Z"), kind: "herido" });
+    expect(npcReturn({ ...base, status: "CAPTURED", recoversAt: new Date("2026-01-02T13:00:00Z") }, now)?.kind).toBe("detenido");
+    expect(npcReturn({ ...base, status: "DEAD", diedAt: new Date("2026-01-02T11:30:00Z") }, now)).toEqual({ at: new Date("2026-01-02T12:30:00Z"), kind: "sucesor" });
+  });
+  it("shows nothing for a free resident, an expired wait or an already replaced one", () => {
+    expect(npcReturn(base, now)).toBeNull();
+    expect(npcReturn({ ...base, recoversAt: new Date("2026-01-02T11:00:00Z") }, now)).toBeNull();
+    expect(npcReturn({ ...base, status: "DEAD", diedAt: new Date("2026-01-02T11:30:00Z"), successorId: "n" }, now)).toBeNull();
   });
 });

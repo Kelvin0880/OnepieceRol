@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { Swords, Users } from "lucide-react";
+import Countdown from "@/components/ui/Countdown";
 import type { CanonHereState, IslandCastEntry } from "./types";
 
 type Act = (body: Record<string, unknown>, path?: string) => Promise<void>;
@@ -123,7 +124,7 @@ export function IslandPeoplePanel({ canon, cast, islandName, act, busy, error, j
             <div key={r.id} className="rounded border border-white/10 p-2" data-testid="cast-entry">
               <div className="flex justify-between gap-2">
                 <span className="text-sm">{r.name} <span className="text-xs text-ink-dim">· {r.title}</span></span>
-                <span className={`text-[10px] uppercase tracking-wide shrink-0 ${r.usable ? "text-emerald-300" : "text-amber-300"}`} data-testid="cast-state">{r.state}</span>
+                <span className={`text-[10px] uppercase tracking-wide shrink-0 ${r.usable ? "text-emerald-300" : "text-amber-300"}`} data-testid="cast-state">{r.state}{r.returnAt && r.returnKind ? <> · <Countdown at={r.returnAt} kind={r.returnKind} /></> : null}</span>
               </div>
               <p className="text-[11px] text-ink-dim">{CATEGORY_LABEL[r.category] ?? r.category} · nivel {r.level}{r.fighter ? "" : " · no combate"} · {r.personality}</p>
               {r.memory.length > 0 && <p className="text-[11px] text-ink-dim italic">Recuerda: {r.memory.join(" · ")}</p>}
@@ -134,7 +135,7 @@ export function IslandPeoplePanel({ canon, cast, islandName, act, busy, error, j
           )}
           {showDead && dead.map((r) => (
             <div key={r.id} className="rounded border border-white/10 p-2 opacity-60 text-xs">
-              {r.name} · {r.title} — {r.diedNote ?? "muerto"}
+              {r.name} · {r.title} — {r.diedNote ?? "muerto"}{r.returnAt && r.returnKind ? <> · <Countdown at={r.returnAt} kind={r.returnKind} /></> : null}
             </div>
           ))}
           <p className="text-[11px] text-ink-dim">Solo estas personas existen aquí con nombre. También en el Códice → Habitantes.</p>
