@@ -170,3 +170,32 @@ describe("reclaiming the Yonko throne", () => {
     expect(titleOf("reclaim", "Shanks", "Kaido")).toContain("Kaido");
   });
 });
+
+describe("prison arcs", () => {
+  const now = new Date("2026-01-02T12:00:00Z");
+  const held = (over: Record<string, unknown> = {}) => ({ id: "d", name: "Doflamingo", factionName: "Familia Donquixote (encarcelado)", powerLevel: 93, capturedAt: new Date("2026-01-01T00:00:00Z"), prisonLevel: 6, ...over });
+  const actor = (id: string, power: number, faction = "Familia Donquixote") => ({ id, name: id, role: "NOTABLE_PIRATE", status: "ACTIVE", factionType: "PIRATE", powerLevel: power, factionName: faction });
+  const rngOf = (v: number) => () => v;
+  it("only prisoners held long enough try to get out", async () => {
+    const { pickPrisonCast } = await import("./world-arcs");
+    expect(pickPrisonCast(rngOf(0.1), [held({ capturedAt: new Date("2026-01-02T10:00:00Z") })], [], null, now)).toBeNull();
+    expect(pickPrisonCast(rngOf(0.9), [held()], [], null, now)?.kind).toBe("breakout");
+  });
+  it("a strong free member of their own crew turns it into a rescue, never an invented rescuer", async () => {
+    const { pickPrisonCast } = await import("./world-arcs");
+    const cast = pickPrisonCast(rngOf(0.1), [held()], [actor("Diamante", 78), actor("Debil", 20), actor("Otro", 90, "Marina")], null, now);
+    expect(cast?.kind).toBe("crew_rescue");
+    expect(cast?.aggressor?.id).toBe("Diamante");
+    expect(pickPrisonCast(rngOf(0.1), [held()], [actor("Otro", 90, "Marina")], null, now)?.kind).toBe("breakout");
+  });
+  it("chapters never reveal the outcome and the deeper cell is harder", async () => {
+    const { chaptersFor, isPrisonKind, prisonDefensePower, PRISON_TOTAL_STAGES } = await import("./world-arcs");
+    expect(isPrisonKind("breakout") && isPrisonKind("crew_rescue") && !isPrisonKind("death")).toBe(true);
+    for (const k of ["breakout", "crew_rescue"]) {
+      const list = chaptersFor(k);
+      expect(list).toHaveLength(PRISON_TOTAL_STAGES);
+      expect(list[list.length - 1].brief).toContain("NO reveles");
+    }
+    expect(prisonDefensePower(6, 70)).toBeGreaterThan(prisonDefensePower(1, 70));
+  });
+});

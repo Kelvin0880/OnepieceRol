@@ -241,18 +241,19 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const isImprisoned = character.status === "IMPRISONED";
   const free = !isDead && !isImprisoned;
 
-  // Party turn-gating never applies while resolving a personal fight — you can't be blocked from fighting for your
-  // life by whose turn it is in the group scene (see resolvePartyFreeTextAction in perform-action.ts).
-  const isMyPartyTurn = party ? party.turnOrder[party.turnIndex] === character.id : true;
-  const partyBlocksInput = !!party && !character.pendingEncounter && !duelActive && !jointActive && (party.awaitingNarrator || !isMyPartyTurn);
+  // Party rounds: everyone writes, then the narrator answers all at once. A personal fight is never blocked by the round
+  // (see resolvePartyFreeTextAction in perform-action.ts).
+  const iActedThisRound = party ? party.actedIds.includes(character.id) : false;
+  const partyBlocksInput = !!party && !character.pendingEncounter && !duelActive && !jointActive && (party.awaitingNarrator || iActedThisRound);
+  const roundMissing = party ? party.members.filter((m) => !party.actedIds.includes(m.id)).map((m) => m.name) : [];
   const partyTurnLabel =
     !party || character.pendingEncounter || jointActive
       ? null
       : party.awaitingNarrator
-      ? "El narrador está pensando..."
-      : isMyPartyTurn
-      ? "Es tu turno."
-      : `Le toca a ${party.members.find((m) => m.id === party.turnOrder[party.turnIndex])?.name ?? "otro miembro del grupo"}.`;
+      ? "El narrador está respondiendo a la ronda..."
+      : iActedThisRound
+      ? `Ya actuaste. Esperando a ${roundMissing.join(", ") || "el narrador"}.`
+      : `Ronda: ${party.actedIds.length} de ${party.members.length} han actuado.`;
   const actions = { act: doPrisonAction, busy: battleBusy, error: battleError };
 
   return (
@@ -355,7 +356,9 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
               setShowLeaveConfirm={setShowLeaveConfirm}
               partyBlocksInput={partyBlocksInput}
               partyTurnLabel={partyTurnLabel}
-              isMyTurnNow={isMyPartyTurn && !party?.awaitingNarrator}
+              isMyTurnNow={!partyBlocksInput}
+              canCloseRound={!!party && party.actedIds.length > 0 && !party.awaitingNarrator}
+              onCloseRound={() => doAction({ action: "party_close_round" })}
             />
           )}
           {error && (

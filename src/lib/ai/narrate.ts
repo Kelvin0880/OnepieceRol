@@ -39,7 +39,7 @@ import { parseCompanionProfile } from "../engine/companions";
 import { isWithPlayer } from "../engine/empire";
 import { describeCapabilities } from "../engine/capabilities";
 import { worldStateBlock } from "../game/world-state";
-import { allowedNamesFor, rosterBlockFor } from "../game/island-npcs";
+import { allowedNamesAt, allowedNamesEverywhere, allowedNamesFor, rosterBlockFor } from "../game/island-npcs";
 import { inventedNames } from "../engine/island-npc";
 import { merchantStock } from "../engine/merchant";
 import { getItemDef } from "../engine/inventory";
@@ -313,8 +313,20 @@ export async function narratePartyScene(input: PartySceneNarrationInput, meta: {
   try {
     const { system: baseSystem, user, maxTokens } = buildPartySceneNarrationPrompt(input);
     const pact = (await prisma.party.findUnique({ where: { id: meta.partyId }, select: { scenePact: true } }))?.scenePact;
-    const system = baseSystem + (await worldStateBlock()) + directivesBlock("balanced", pact ? `PACTO DE ESCENA acordado por los jugadores fuera de rol (móntalo dentro de la historia con naturalidad, dando protagonismo a todos y respetando lo pactado): ${pact}` : undefined);
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
+    const party = await prisma.party.findUnique({ where: { id: meta.partyId }, select: { turnOrder: true } });
+    const memberIds = party ? (JSON.parse(party.turnOrder) as string[]) : [];
+    const lead = memberIds[0] ? await prisma.character.findUnique({ where: { id: memberIds[0] }, select: { id: true, currentIslandId: true, currentIsland: { select: { name: true } } } }) : null;
+    const rosterTxt = lead ? await rosterBlockFor(lead.currentIslandId, lead.currentIsland.name, lead.id).catch(() => "") : "";
+    const playersTxt = lead ? realPlayersBlock(await loadRealPlayers(lead.id).catch(() => [])) : "";
+    const playerNames = lead ? (await loadRealPlayers(lead.id).catch(() => [])).map((p) => p.name) : [];
+    const memberNames = memberIds.length ? (await prisma.character.findMany({ where: { id: { in: memberIds } }, select: { name: true } })).map((c) => c.name) : [];
+    const allowedParty = lead ? await allowedNamesAt(lead.currentIslandId, memberNames).catch(() => [] as string[]) : [];
+    const system = baseSystem + (await worldStateBlock()) + (rosterTxt ? `
+
+${rosterTxt}` : "") + (playersTxt ? `
+
+${playersTxt}` : "") + directivesBlock("balanced", pact ? `PACTO DE ESCENA acordado por los jugadores fuera de rol (móntalo dentro de la historia con naturalidad, dando protagonismo a todos y respetando lo pactado): ${pact}` : undefined);
+    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: (t) => isValidNarration(t) && voicesRealPlayer(t, playerNames) === null && !inventsSystemResult(t) && (allowedParty.length === 0 || inventedNames(t, allowedParty).length === 0) });
     return text.trim();
   } catch (err) {
     await logError("ai/narrate-party-scene", err, meta);
@@ -333,6 +345,19 @@ export function isValidSummaryJson(text: string): boolean {
 }
 
 /** Rejects malformed JSON or missing fields the same way isValidNarration rejects garbage prose — treated as a failed model, moves to the next one. */
+/** Appended to every text that is not tied to one player: nobody with a name may be made up. */
+const NAMES_RULE =
+  "\n\nREGLA ABSOLUTA: no inventes ningún personaje con nombre propio (ni testigos, ni capitanes, ni funcionarios, ni vecinos). Usa SOLO los nombres que aparecen en los datos que se te dan; para cualquier otro papel usa una descripción anónima (\"un pescador\", \"un oficial\").";
+
+async function newsValidator(extraAllowed: string[] = []): Promise<(t: string) => boolean> {
+  const allowed = [...(await allowedNamesEverywhere().catch(() => [] as string[])), ...extraAllowed];
+  return (t) => {
+    if (!isValidNewsJson(t)) return false;
+    const p = JSON.parse(t) as { headline: string; body: string };
+    return inventedNames(`${p.headline} ${p.body}`, allowed).length === 0;
+  };
+}
+
 function isValidNewsJson(text: string): boolean {
   try {
     const parsed = JSON.parse(text);
@@ -355,12 +380,12 @@ export async function narrateNews(
 ): Promise<{ headline: string; body: string }> {
   try {
     const { system, user } = buildNewsNarrationPrompt(input);
-    const raw = await callOpenRouter(system, user, {
+    const raw = await callOpenRouter(system + NAMES_RULE, user, {
       models: OPENROUTER_MODELS,
       jsonMode: true,
       timeoutMs: NARRATION_TIMEOUT_MS,
       maxTokens: 300,
-      validate: isValidNewsJson,
+      validate: await newsValidator(),
     });
     const parsed = JSON.parse(raw);
     return { headline: String(parsed.headline).trim(), body: String(parsed.body).trim() };
@@ -374,7 +399,7 @@ export async function narrateNews(
 export async function narrateWorldEvent(input: WorldEventNarrationInput, fallback: { headline: string; body: string }, meta: Record<string, string>): Promise<{ headline: string; body: string }> {
   try {
     const { system, user } = buildWorldEventPrompt(input);
-    const raw = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, jsonMode: true, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 500, validate: isValidNewsJson });
+    const raw = await callOpenRouter(system + NAMES_RULE, user, { models: OPENROUTER_MODELS, jsonMode: true, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 500, validate: await newsValidator() });
     const parsed = JSON.parse(raw);
     return { headline: String(parsed.headline).trim(), body: String(parsed.body).trim() };
   } catch (err) {
@@ -390,12 +415,12 @@ export async function narrateBountyDigest(
 ): Promise<{ headline: string; body: string }> {
   try {
     const { system, user } = buildBountyDigestPrompt(input);
-    const raw = await callOpenRouter(system, user, {
+    const raw = await callOpenRouter(system + NAMES_RULE, user, {
       models: OPENROUTER_MODELS,
       jsonMode: true,
       timeoutMs: NARRATION_TIMEOUT_MS,
       maxTokens: 400,
-      validate: isValidNewsJson,
+      validate: await newsValidator(),
     });
     const parsed = JSON.parse(raw);
     return { headline: String(parsed.headline).trim(), body: String(parsed.body).trim() };
@@ -465,7 +490,8 @@ export async function updateCharacterMemory(characterId: string, currentSummary:
 export async function narrateIslandBriefing(input: IslandBriefingInput, meta: { characterId: string }): Promise<string> {
   try {
     const { system, user } = buildIslandBriefingPrompt(input);
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2200, validate: isValidNarration });
+    const names = [...(await allowedNamesEverywhere().catch(() => [] as string[])), ...input.powers.map((p) => p.name), input.characterName];
+    const text = await callOpenRouter(system + NAMES_RULE, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 2200, validate: (t) => isValidNarration(t) && inventedNames(t, names).length === 0 });
     return text.trim();
   } catch (err) {
     await logError("ai/island-briefing", err, meta);
@@ -478,7 +504,9 @@ export async function narrateColiseumRound(input: ColiseumNarrationInput, meta: 
   const fallback = input.matches.map((m) => (m.walkover ? `${m.winner} avanza sin combatir.` : `${m.winner} vence a ${m.winner === m.a ? m.b : m.a}.`)).join(" ");
   try {
     const { system, user, maxTokens } = buildColiseumPrompt(input);
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: isValidNarration });
+    const everywhere = await allowedNamesEverywhere().catch(() => [] as string[]);
+    const names = [...everywhere, ...input.matches.flatMap((m) => [m.a, m.b, m.winner])];
+    const text = await callOpenRouter(system + NAMES_RULE, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens, validate: (t) => isValidNarration(t) && inventedNames(t, names).length === 0 });
     return text.trim();
   } catch (err) {
     await logError("ai/narrate-coliseum", err, meta);
@@ -490,7 +518,7 @@ export async function narrateColiseumRound(input: ColiseumNarrationInput, meta: 
  * The dice-free judge of one combat exchange (solo, duel or group). Returns null when no model produced a
  * valid verdict: callers then leave the fight untouched instead of inventing numbers.
  */
-export async function refereeExchange(input: RefereeInput, meta: { characterId?: string; context: string }): Promise<RefereeVerdict | null> {
+export async function refereeExchange(input: RefereeInput, meta: { characterId?: string; islandId?: string; context: string }): Promise<RefereeVerdict | null> {
   if (process.env.REFEREE_STUB === "1") return stubVerdict(input.actors, input.fleeAttempt);
   const logMeta = meta.characterId ? { characterId: meta.characterId } : undefined;
   try {
@@ -511,7 +539,11 @@ export async function refereeExchange(input: RefereeInput, meta: { characterId?:
     if (!parsed) return null;
     // What the text says must match what the numbers do: one corrective retry, then the sanitizer drops what is still unsupported.
     const issues = checkConsistency(parsed, bounds);
-    const knownNames = meta.characterId ? await allowedNamesForCharacter(meta.characterId) : [];
+    const knownNames = meta.characterId
+      ? await allowedNamesForCharacter(meta.characterId)
+      : meta.islandId
+      ? await allowedNamesAt(meta.islandId, [...input.actors.map((a) => a.name), ...input.actions.map((a) => a.name), ...(input.fightLog ?? []).join(" ").match(/[A-ZÁÉÍÓÚÑ][a-záéíóúñü'’-]{2,}/g) ?? []])
+      : [];
     const madeUp = knownNames.length ? inventedNames(`${parsed.narration} ${parsed.rivalIntent ?? ""}`, knownNames) : [];
     if (madeUp.length > 0) issues.push(`Inventaste personajes con nombre que no existen en esta isla (${madeUp.join(", ")}): PROHIBIDO. Usa solo los HABITANTES de la lista, los personajes canon o gente anónima ("un guardia").`);
     if (issues.length > 0) {
@@ -572,7 +604,8 @@ export async function narrateDuelReport(input: DuelReportInput, meta: { duelId: 
       "basada SOLO en el resultado y el extracto que se te da. Nombra el lugar. No inventes muertes, capturas ni heridas que no consten en el resultado. Responde solo con el texto de la crónica.";
     const excerpt = input.transcript.join(String.fromCharCode(10)).slice(-1800);
     const user = ["Lugar: " + input.placeName + ".", "Tipo: " + (input.lethal ? "duelo a muerte" : "duelo amistoso") + ".", "Vencedor: " + (input.winnerName ?? "nadie") + ". Perdedor: " + input.loserName + ".", "Resultado: " + OUTCOME_FACTS[input.outcome] + ".", "Extracto del duelo:", excerpt].join(String.fromCharCode(10));
-    const text = await callOpenRouter(system, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 300, validate: isValidNarration });
+    const names = [...(await allowedNamesEverywhere().catch(() => [] as string[])), input.loserName, ...(input.winnerName ? [input.winnerName] : [])];
+    const text = await callOpenRouter(system + NAMES_RULE, user, { models: OPENROUTER_MODELS, timeoutMs: NARRATION_TIMEOUT_MS, maxTokens: 300, validate: (t) => isValidNarration(t) && inventedNames(t, names).length === 0 });
     return text.trim();
   } catch (err) {
     await logError("ai/duel-report", err, meta);

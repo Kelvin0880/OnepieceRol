@@ -76,6 +76,8 @@ export interface PartyState {
   turnOrder: string[];
   turnIndex: number;
   awaitingNarrator: boolean;
+  /** Members who already acted this round. */
+  actedIds: string[];
   members: { id: string; name: string }[];
   messages: PartyMsg[];
 }

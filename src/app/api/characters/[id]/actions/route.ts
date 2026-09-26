@@ -1,3 +1,4 @@
+import { PartyRoundError, closePartyRound } from "@/lib/game/party-round";
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUserId, UnauthorizedError } from "@/lib/require-user";
@@ -33,6 +34,7 @@ const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("retry_joint_round") }),
   z.object({ action: z.literal("confirm_leave_party") }),
   z.object({ action: z.literal("rejoin_party") }),
+  z.object({ action: z.literal("party_close_round") }),
 ]);
 
 // Free text is the primary input path (see resolveFreeTextAction) — the
@@ -110,6 +112,8 @@ async function dispatch(
       return await confirmLeaveParty(id, userId);
     case "rejoin_party":
       return await rejoinParty(id, userId);
+    case "party_close_round":
+      return await closePartyRound(id, userId);
   }
 }
 
@@ -122,7 +126,7 @@ async function handleError(err: unknown) {
     return NextResponse.json({ error: err.message }, { status: 400 });
   if (err instanceof DuelError)
     return NextResponse.json({ error: err.message }, { status: 400 });
-  if (err instanceof GameActionError)
+  if (err instanceof GameActionError || err instanceof PartyRoundError)
     return NextResponse.json({ error: err.message }, { status: 400 });
   await logError("api/characters/[id]/actions", err);
   return NextResponse.json(

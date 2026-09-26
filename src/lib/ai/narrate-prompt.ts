@@ -420,6 +420,8 @@ export interface PartySceneNarrationInput {
   partyRoster: PartyMemberInfo[]; // everyone currently sharing this scene, including whoever's turn this is
   actingCharacterName: string; // whose turn produced this beat
   playerText: string;
+  /** Round mode: every member's action of this round, in join order. The narrator answers all of them at once. */
+  actions?: { name: string; text: string }[];
   recentParty?: string[]; // recent PartySceneMessage rows, formatted "Nombre: texto" / "Narrador: texto", oldest first
   memorySummary?: string; // compacted older shared-scene history (game/scene-compaction.ts)
 }
@@ -442,8 +444,9 @@ const PARTY_SCENE_HARD_RULE =
  * discipline (see classify-action.ts).
  */
 export function buildPartySceneNarrationPrompt(input: PartySceneNarrationInput): PromptOut {
-  const plan = planLength("chat", input.playerText);
-  const system = `${PARTY_SCENE_HARD_RULE} ${SCENE_STYLE_RULE}`;
+  const roundMode = !!input.actions && input.actions.length > 0;
+  const plan = planLength("chat", roundMode ? input.actions!.map((a) => a.text).join("\n") : input.playerText);
+  const system = `${PARTY_SCENE_HARD_RULE} ${SCENE_STYLE_RULE}` + (roundMode ? " ORDEN DE LA ESCENA: tú abres, todos los jugadores escriben su acción, y AHORA respondes a TODAS las acciones a la vez, en el orden dado y sin dejar a nadie sin respuesta (cada jugador debe ver su consecuencia), como una sola escena coherente donde las acciones se entrelazan." : "");
   const rosterLine = input.partyRoster.map((m) => `${m.name} (nivel ${m.level}, ${m.faction})`).join(", ");
   const transcriptBlock =
     input.recentParty && input.recentParty.length > 0 ? `\n\nLo que ha pasado en esta escena hasta ahora:\n${input.recentParty.join("\n")}` : "";
@@ -453,7 +456,9 @@ export function buildPartySceneNarrationPrompt(input: PartySceneNarrationInput):
     (input.memorySummary ? `\n\nLo ocurrido antes en esta escena (resumen): ${input.memorySummary}` : "") +
     transcriptBlock +
     "\n\nContinúa la escena como narrador, dirigiéndote al grupo cuando tenga sentido. Tu primera frase ya debe ser lo que pasa DESPUÉS." +
-    currentActionBlock(input.playerText, input.actingCharacterName) +
+    (roundMode
+      ? `\n\nACCIONES DE ESTA RONDA (responde a TODAS ahora, no a mensajes anteriores). Cada jugador escribe:\n${input.actions!.map((a) => `--- ${a.name} ---\n"""\n${a.text.trim()}\n"""`).join("\n")}\nTómalas literalmente: es exactamente lo que hace y dice cada personaje; no les añadas intenciones, emociones ni acciones que no escribieron, no las reinterpretes y no las repitas. Si alguien pregunta algo a un PNJ, ese PNJ contesta. Narra las consecuencias directas de todas juntas y deja que cada jugador siga.`
+      : currentActionBlock(input.playerText, input.actingCharacterName)) +
     `\n\n${plan.instruction}`;
   return { system, user, maxTokens: plan.maxTokens };
 }
@@ -555,12 +560,14 @@ export interface IslandBriefingInput {
   /** Canon figures tied to this island (holders, rulers): name plus a short description. */
   powers: { name: string; description: string }[];
   missions: { title: string; brief: string }[];
+  /** The island's own named people: the only non-canon characters the briefing may name. */
+  residents?: { name: string; title: string; personality: string }[];
 }
 
 const BRIEFING_HARD_RULE =
   "Eres el narrador (rol master) de un juego de rol de One Piece. El jugador acaba de llegar a una isla (o de empezar su aventura en ella) y tu deber es darle el PANORAMA COMPLETO de la isla: su historia y ambiente, quién manda, " +
   "los villanos o poderes que la marcan y qué está pasando ahora mismo — usando SOLO los datos que se te dan, sin inventar personajes nombrados nuevos ni cambiar nada de lo que ya está decidido. " +
-  "Después presenta, dentro de la ficción y con la voz de un personaje o del propio ambiente (un vigía, un tabernero, un rumor), las MISIONES que se te dan como oportunidades concretas para progresar a su nivel, sin cambiar sus objetivos ni inventar recompensas. " +
+  "Después presenta, dentro de la ficción y con la voz de uno de los HABITANTES que se te dan o del propio ambiente (un rumor), las MISIONES que se te dan como oportunidades concretas para progresar a su nivel, sin cambiar sus objetivos ni inventar recompensas. " +
   "No otorgues ni quites nada ni decidas lo que hace el jugador: solo informa y ofrece. No reveles que eres una IA. " +
   "Escribe en español, tono oscuro y evocador de One Piece, 4-6 párrafos en prosa, sin JSON, sin encabezados, sin listas, sin markdown. " +
   ROLE_RULES;
@@ -575,6 +582,7 @@ export function buildIslandBriefingPrompt(input: IslandBriefingInput): { system:
     `Ambiente: ${input.islandDescription}\n` +
     `Lo que está pasando ahora: ${input.arcHook ?? "la vida sigue su curso, pero hay tensión bajo la superficie."}\n\n` +
     `Poderes y villanos vinculados a la isla:\n${powers}\n\n` +
+    `Habitantes de la isla (los ÚNICOS personajes de relleno con nombre que puedes mencionar; nada de inventar otros):\n${input.residents?.length ? input.residents.map((r) => `- ${r.name}, ${r.title}: ${r.personality}`).join("\n") : "- (nadie con nombre: solo gente anónima)"}\n\n` +
     `Misiones que se le ofrecen (preséntalas de forma natural):\n${missions}`;
   return { system: BRIEFING_HARD_RULE, user };
 }
@@ -586,6 +594,7 @@ export function buildStaticBriefing(input: IslandBriefingInput): string {
     input.arcHook ? `Lo que se cuece ahora mismo: ${input.arcHook}` : "",
     input.factionControl ? `Aquí manda: ${input.factionControl}.` : "",
     input.powers.length ? `Nombres que conviene conocer: ${input.powers.map((p) => `${p.name} (${p.description})`).join("; ")}.` : "",
+    input.residents?.length ? `Gente de la isla: ${input.residents.slice(0, 6).map((r) => `${r.name} (${r.title})`).join("; ")}.` : "",
     `Para progresar, esto es lo que se te ofrece: ${input.missions.map((m) => `«${m.title}» — ${m.brief}`).join(" ")}`,
   ];
   return parts.filter(Boolean).join("\n\n");
@@ -662,7 +671,9 @@ export interface WorldEventNarrationInput {
   /** One line per chapter already published, oldest first: the story so far. */
   storySoFar: string[];
   /** Set only on the verdict, once the game owner has decided. */
-  verdict?: "death" | "capture" | "survived" | "reclaimed";
+  verdict?: "death" | "capture" | "survived" | "reclaimed" | "freed" | "held";
+  /** A captured canon character trying to get out of Impel Down: alone (breakout) or with their own people (rescue). */
+  prison?: "breakout" | "rescue";
 }
 
 const WORLD_EVENT_BUILDUP_RULE =
@@ -682,7 +693,8 @@ const WORLD_EVENT_STYLE_RULE =
 
 export function buildWorldEventPrompt(input: WorldEventNarrationInput): { system: string; user: string } {
   const isVerdict = input.verdict !== undefined;
-  const system = `${isVerdict ? WORLD_EVENT_VERDICT_RULE : WORLD_EVENT_BUILDUP_RULE} ${WORLD_EVENT_STYLE_RULE}`;
+  const buildup = input.prison ? WORLD_EVENT_BUILDUP_RULE.replace("los personajes canon siguen vivos, libres y en su puesto al terminar el texto", "los personajes canon siguen vivos y el preso sigue encerrado al terminar el texto") : WORLD_EVENT_BUILDUP_RULE;
+  const system = `${isVerdict ? WORLD_EVENT_VERDICT_RULE : buildup} ${WORLD_EVENT_STYLE_RULE}`;
   const story = input.storySoFar.length ? `\nLa historia hasta ahora:\n${input.storySoFar.map((l, i) => `${i + 1}. ${l}`).join("\n")}\n` : "\n(Este es el primer capítulo.)\n";
   const verdictLine = !isVerdict
     ? ""
@@ -691,11 +703,15 @@ export function buildWorldEventPrompt(input: WorldEventNarrationInput): { system
     : input.verdict === "reclaimed"
     ? `RESULTADO DECIDIDO: ${input.aggressorName} DERROTA a ${input.targetName}, recupera el título de Yonko y se queda con su territorio. ${input.targetName} sigue vivo pero pierde el trono y huye. Narra el cambio de poder y sus consecuencias en el mundo.
 `
+    : input.verdict === "freed"
+    ? `RESULTADO DECIDIDO: ${input.targetName} LOGRA SALIR de Impel Down${input.prison === "rescue" && input.aggressorName ? ` gracias a ${input.aggressorName}` : " por sí mismo"}; la prisión queda humillada y el fugitivo desaparece en las sombras. Narra la fuga y sus consecuencias.\n`
+    : input.verdict === "held"
+    ? `RESULTADO DECIDIDO: el intento FRACASA: ${input.targetName} sigue encerrado en Impel Down${input.prison === "rescue" && input.aggressorName ? ` y ${input.aggressorName} tiene que retirarse` : ""}. Narra el fracaso y sus consecuencias.\n`
     : input.verdict === "capture"
     ? `RESULTADO DECIDIDO: ${input.targetName} es CAPTURADO${input.aggressorName ? ` por ${input.aggressorName}` : ""} y queda preso.\n`
     : `RESULTADO DECIDIDO: ${input.targetName} SOBREVIVE y escapa contra todo pronóstico; ${input.aggressorName ?? "sus perseguidores"} fracasa(n). Narra la huida y sus consecuencias.\n`;
   const user =
-    `Evento: ${input.reclaim ? "el intento de recuperar el trono de Yonko de" : input.kind === "capture" ? "la caza de" : "el enfrentamiento mortal de"} ${input.targetName}${input.aggressorName ? ` contra ${input.aggressorName}` : ""}.\n` +
+    `Evento: ${input.prison === "breakout" ? "el intento de fuga de Impel Down de" : input.prison === "rescue" ? "el rescate de Impel Down de" : input.reclaim ? "el intento de recuperar el trono de Yonko de" : input.kind === "capture" ? "la caza de" : "el enfrentamiento mortal de"} ${input.targetName}${input.aggressorName ? ` contra ${input.aggressorName}` : ""}.\n` +
     `Lugar de los hechos: ${input.locationName}.\n` +
     (isVerdict ? `Capítulo final (desenlace).\n` : `Capítulo ${input.stage} de ${input.totalStages}: ${input.chapterLabel}.\nQué muestra este capítulo: ${input.brief}\n`) +
     verdictLine +

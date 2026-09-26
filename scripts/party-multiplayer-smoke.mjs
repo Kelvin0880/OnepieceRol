@@ -68,34 +68,41 @@ try {
   await b.page.screenshot({ path: path.join(shotsDir, "party-01-b-shared-scene.png"), fullPage: true });
   check("both clients show the shared party scene panel", true);
 
-  // Captain (A) founded the crew, so turn order puts her first.
-  check("it's the captain's turn first", await a.page.locator("text=Es tu turno.").isVisible().catch(() => false));
-  check("the second member's turn is blocked, showing whose turn it is", await b.page.locator("text=Le toca a Capitana A.").isVisible().catch(() => false));
-  const bActuarDisabled = await b.page.locator('button:has-text("Actuar")').isDisabled();
-  check("out-of-turn member's Actuar button is disabled", bActuarDisabled);
+  // Rounds: everybody writes, then the narrator answers all actions at once. No turn order.
+  check("a round starts with nobody having acted", await a.page.locator("text=Ronda: 0 de 2 han actuado.").isVisible().catch(() => false));
+  await b.page.fill("textarea", "prueba");
+  check("nobody is locked out at the start of a round", !(await b.page.locator('button:has-text("Actuar")').isDisabled()));
+  await b.page.fill("textarea", "");
 
-  await act(a.page, "Miro a mi tripulación y les propongo explorar juntos el pueblo.");
-  await a.page.screenshot({ path: path.join(shotsDir, "party-02-a-turn-done.png"), fullPage: true });
+  const narratorCount = async (page) => page.locator(".bubble-narrator").count();
+  await act(a.page, "Sonrío a mis compañeros y les comento en voz alta lo tranquilo que parece el pueblo.");
+  await a.page.waitForSelector("text=Esperando a Marinero B", { timeout: 90000 }).catch(() => {});
+  await a.page.screenshot({ path: path.join(shotsDir, "party-02-a-acted.png"), fullPage: true });
+  check("after acting, the member waits for the rest instead of getting an answer", await a.page.locator("text=Esperando a Marinero B").first().isVisible().catch(() => false));
+  check("the action is visible to the whole group right away", await (async () => { await b.page.reload(); await b.page.waitForSelector("text=Escena compartida", { timeout: 45000 }); return b.page.locator("text=lo tranquilo que parece el pueblo").first().isVisible().catch(() => false); })());
+  check("the second member sees the round is one action in", await b.page.locator("text=Ronda: 1 de 2 han actuado.").isVisible().catch(() => false));
+  const before = await narratorCount(b.page);
 
-  await b.page.reload();
-  await b.page.waitForSelector("text=Escena compartida", { timeout: 45000 });
-  check("turn passed to the second member after the captain's beat", await b.page.locator("text=Es tu turno.").isVisible().catch(() => false));
-  await b.page.screenshot({ path: path.join(shotsDir, "party-03-b-turn.png"), fullPage: true });
-
-  await act(b.page, "Sigo a mi capitana y observo el pueblo con curiosidad.");
-  await b.page.screenshot({ path: path.join(shotsDir, "party-04-b-turn-done.png"), fullPage: true });
-
+  await act(b.page, "Asiento con calma y le respondo a mi capitana que estoy de acuerdo con ella.");
+  await b.page.screenshot({ path: path.join(shotsDir, "party-04-b-acted.png"), fullPage: true });
   await a.page.reload();
   await a.page.waitForSelector("text=Escena compartida", { timeout: 45000 });
+  await a.page.waitForSelector("text=Ronda: 0 de 2 han actuado.", { timeout: 45000 });
+  check("once everyone acted the narrator answered and a new round opened", true);
   check("captain's client shows both names in the shared transcript", await a.page.locator("text=Marinero B").first().isVisible().catch(() => false));
   await a.page.screenshot({ path: path.join(shotsDir, "party-05-a-sees-both.png"), fullPage: true });
-
-  // Turn wrapped back to the captain after B's beat — pass it to B again
-  // before B can act.
-  await act(a.page, "Sigo mirando alrededor mientras esperamos noticias.");
   await b.page.reload();
   await b.page.waitForSelector("text=Escena compartida", { timeout: 45000 });
-  await b.page.waitForSelector("text=Es tu turno.", { timeout: 45000 });
+  check("exactly one narrator answer covered the round", (await narratorCount(b.page)) - before === 1);
+
+  // Someone can close a round with the actions already in.
+  await act(a.page, "Sigo mirando alrededor mientras esperamos noticias.");
+  check("the close-round button appears once someone acted", await a.page.locator('[data-testid="party-close-round"]').isVisible().catch(() => false));
+  await a.page.click('[data-testid="party-close-round"]');
+  await a.page.waitForSelector("text=Ronda: 0 de 2 han actuado.", { timeout: 60000 });
+  check("closing the round makes the narrator answer with whoever acted", true);
+  await b.page.reload();
+  await b.page.waitForSelector("text=Escena compartida", { timeout: 45000 });
 
   // Separation: free text should require an explicit confirm, not act immediately.
   await b.page.fill("textarea", "Me separo del grupo y me voy por mi cuenta a mirar el mercado.");

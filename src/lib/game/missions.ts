@@ -84,6 +84,7 @@ async function generateBatch(characterId: string): Promise<void> {
         isStart,
         powers,
         missions: specs.map((s) => ({ title: s.title, brief: s.brief })),
+        residents: rosterAll.filter((n) => n.status === "ALIVE").slice(0, 10).map((n) => ({ name: n.name, title: n.title, personality: n.personality })),
       },
       { characterId }
     );

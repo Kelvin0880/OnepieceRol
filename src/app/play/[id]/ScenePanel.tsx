@@ -33,6 +33,8 @@ export default function ScenePanel({
   partyBlocksInput,
   partyTurnLabel,
   isMyTurnNow,
+  canCloseRound,
+  onCloseRound,
 }: {
   character: Character;
   party: PartyState | null;
@@ -49,6 +51,8 @@ export default function ScenePanel({
   partyBlocksInput: boolean;
   partyTurnLabel: string | null;
   isMyTurnNow: boolean;
+  canCloseRound: boolean;
+  onCloseRound: () => Promise<boolean>;
 }) {
   const [closeFightOpen, setCloseFightOpen] = useState(false);
   const [closeFightNote, setCloseFightNote] = useState("");
@@ -149,6 +153,11 @@ export default function ScenePanel({
             <label className="text-xs text-ink-dim" htmlFor="free-text">
               ¿Qué haces?
             </label>
+            {party && canCloseRound && !jointActive && !enc && (
+              <button type="button" className="btn-ghost px-2 py-1 text-xs" disabled={busy} onClick={() => void onCloseRound()} data-testid="party-close-round">
+                Que el narrador responda ya
+              </button>
+            )}
             {partyTurnLabel && <span className={`text-xs ${isMyTurnNow ? "text-gold chip border-gold/60" : "text-ink-dim italic"}`}>{partyTurnLabel}</span>}
           </div>
           {showLeaveConfirm && (

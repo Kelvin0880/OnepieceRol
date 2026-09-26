@@ -5,6 +5,8 @@ import { CharacterStatus } from "@prisma/client";
 import { judgeOutcome } from "../ai/judge";
 import { MAX_COMPANIONS, RecruitTier, companionMaxHp, companionSheet, parseCompanionProfile, normalizeRole, recruitDifficulty, startingLoyalty } from "../engine/companions";
 import { narrateRecruit, getRecentScene } from "../ai/narrate";
+import { engagedNpcIds, loadRoster, recruitIslandNpc } from "./island-npcs";
+import { matchNpc, npcState } from "../engine/island-npc";
 
 export class CompanionError extends Error {}
 
@@ -108,8 +110,22 @@ export async function recruitCompanion(characterId: string, userId: string, opts
   if (!c || c.userId !== userId) throw new CompanionError("Personaje no encontrado.");
   if (c.status !== CharacterStatus.ALIVE) throw new CompanionError("Este personaje ya no puede actuar.");
 
-  const name = cleanNpcName(opts.target);
-  if (!name) throw new CompanionError("No tengo claro a quién quieres reclutar. Nómbralo en tu mensaje (por ejemplo: «Jorge, únete a mi tripulación»).");
+  const typed = cleanNpcName(opts.target);
+  if (!typed) throw new CompanionError("No tengo claro a quién quieres reclutar. Nómbralo en tu mensaje (por ejemplo: «Jorge, únete a mi tripulación»).");
+  // Only real people can be recruited: an island resident who is free right now. Never a name the player made up, never a canon character.
+  const roster = await loadRoster(c.currentIslandId);
+  const engaged = await engagedNpcIds(characterId);
+  const now = new Date();
+  const wanted = matchNpc(roster.map((r) => ({ ...r, status: "ALIVE" })), typed);
+  const resident = wanted ? roster.find((r) => r.id === wanted.id) ?? null : null;
+  if (!resident) {
+    const canon = await prisma.worldActor.findFirst({ where: { name: { contains: typed } }, select: { name: true } });
+    if (canon) throw new CompanionError(`${canon.name} es un personaje canon: no se une a tripulaciones sueltas. Pídele un encargo o desafíalo desde «Gente de ${c.currentIsland.name}».`);
+    throw new CompanionError(`No hay nadie llamado así en ${c.currentIsland.name}. Mira «Gente de ${c.currentIsland.name}» para ver a quién puedes reclutar.`);
+  }
+  const state = npcState(resident, now, engaged);
+  if (!state.usable) throw new CompanionError(`${resident.name} no está disponible ahora: ${state.label}.`);
+  const name = resident.name;
   const alive = c.companions.filter((n) => n.status === CharacterStatus.ALIVE);
   if (alive.length >= MAX_COMPANIONS) throw new CompanionError(`Tu tripulación NPC ya está completa (${MAX_COMPANIONS} nakamas). Un nakama nuevo tendría que ocupar un sitio libre.`);
   if (alive.some((n) => n.name.toLowerCase() === name.toLowerCase())) throw new CompanionError(`${name} ya es tu nakama.`);
@@ -138,7 +154,8 @@ export async function recruitCompanion(characterId: string, userId: string, opts
   if (accepted) {
     const loyalty = startingLoyalty(tacticModifier);
     const max = companionMaxHp(c.level, role);
-    await prisma.nPCCompanion.create({ data: { characterId, name, role, hp: max, maxHp: max, loyalty } });
+    await prisma.nPCCompanion.create({ data: { characterId, name, role, hp: max, maxHp: max, loyalty, personality: resident.personality } });
+    await recruitIslandNpc(resident.id, { id: c.id, name: c.name }, c.currentIsland.name);
     const line = `${name} (${role}) se une a tu tripulación como nakama. Estará siempre a tu nivel.`;
     await prisma.gameLogEntry.create({ data: { characterId, kind: "recruit", text: line } });
     return { log: [prose, line], accepted: true, companionName: name };

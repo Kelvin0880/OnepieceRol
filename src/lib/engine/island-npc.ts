@@ -29,6 +29,7 @@ const strip = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerC
 /** What a resident is doing right now. Only a free, living one can be talked to or fought; everyone else is off-limits to the AI and to other players. */
 export function npcState(n: IslandNpcRow, now: Date, engaged: Set<string>): { usable: boolean; label: string } {
   if (n.status === "DEAD") return { usable: false, label: "muerto" };
+  if (n.status === "RECRUITED") return { usable: false, label: n.stateNote ?? "se marchó con un aventurero" };
   if (n.status === "CAPTURED") return { usable: false, label: n.stateNote ? `capturado (${n.stateNote})` : "capturado por la ley" };
   if (n.recoversAt && n.recoversAt.getTime() > now.getTime()) return { usable: false, label: n.stateNote ?? "herido, recuperándose" };
   if (engaged.has(n.id)) return { usable: false, label: "ocupado peleando con otro aventurero" };
@@ -158,7 +159,7 @@ export function npcSummaryForFight(n: IslandNpcRow): string {
 
 /** Dead residents whose job still needs someone, once the mourning delay has passed. */
 export function dueForReplacement<T extends { status: string; successorId: string | null; diedAt: Date | null }>(rows: T[], now: Date, delayMs = REPLACEMENT_DELAY_MS): T[] {
-  return rows.filter((r) => r.status === "DEAD" && !r.successorId && r.diedAt && now.getTime() - r.diedAt.getTime() >= delayMs);
+  return rows.filter((r) => (r.status === "DEAD" || r.status === "RECRUITED") && !r.successorId && r.diedAt && now.getTime() - r.diedAt.getTime() >= delayMs);
 }
 
 const FIRST = ["Bruno", "Marga", "Tobías", "Ilsa", "Garrick", "Nerea", "Dorian", "Selka", "Fenn", "Yara", "Olaf", "Mirta", "Kasper", "Lidia", "Hobb", "Tamsin", "Rurik", "Perla", "Doma", "Vesper", "Cato", "Nilo", "Sabina", "Orrin", "Zelda", "Bram", "Isolde", "Ferro", "Lucía", "Tarek", "Odalys", "Wren", "Gaspar", "Kenji", "Maru", "Ayla", "Ronan", "Suri", "Anselmo", "Kaia"];

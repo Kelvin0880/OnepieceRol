@@ -238,7 +238,7 @@ async function resolveDuelRoundFor(duelId: string) {
           { name: b.name, text: bTactic === FLEE_FAILED_TACTIC ? "intenta huir del duelo pero no lo consigue" : duel.opponentAction ?? "", technique: bTech !== "none" ? TECHNIQUE_LABELS[bTech] : undefined },
         ],
       },
-      { context: "duel" }
+      { context: "duel", islandId: duel.islandId }
     );
     if (!verdict) {
       // Nothing was judged: give both moves back so the round can be resubmitted untouched.

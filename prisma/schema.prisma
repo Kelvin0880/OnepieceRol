@@ -221,6 +221,9 @@ model Party {
   compactedUntil   DateTime?
   // Out-of-role agreement between the players ("somos 4 y haremos un 4 vs 4 amistoso"): the narrator stages it in-story.
   scenePact        String?
+  // Rounds: every member writes their action, then the narrator answers ALL of them at once. roundActionsJson = { characterId: text } of this round.
+  roundActionsJson String              @default("{}")
+  roundStartedAt   DateTime?
   awaitingNarrator Boolean             @default(false) // true right after a human posts, until the AI reply lands — locks out other submits meanwhile; false on creation, since nobody has spoken yet and it's simply turnIndex 0's turn
   createdAt        DateTime            @default(now())
   updatedAt        DateTime            @updatedAt

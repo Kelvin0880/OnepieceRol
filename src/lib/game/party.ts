@@ -1,6 +1,7 @@
 import { prisma } from "../db";
 import { buildTurnOrder, nextTurnIndex } from "../engine/party-turns";
 import { notifyParty } from "./notify";
+import { parseRound, roundStalled } from "../engine/party-round";
 
 /**
  * Live multiplayer party scenes — crewmates who are physically together
@@ -80,7 +81,7 @@ export async function syncPartyForCharacter(characterId: string): Promise<void> 
     // simply turnOrder[0]'s turn, not a narrator reply in flight.
     await prisma.party.update({
       where: { id: existing.id },
-      data: { turnOrder: JSON.stringify(turnOrder), turnIndex: 0, awaitingNarrator: false, members: { set: memberIds.map((id) => ({ id })) } },
+      data: { turnOrder: JSON.stringify(turnOrder), turnIndex: 0, awaitingNarrator: false, roundActionsJson: "{}", roundStartedAt: null, members: { set: memberIds.map((id) => ({ id })) } },
     });
   }
 }
@@ -120,7 +121,8 @@ export type BeginPartyTurnResult =
   | { ok: false; reason: string };
 
 /**
- * Checks whose turn it is and, if it's this character's, locks the party
+ * Rounds replaced turns: everybody writes their action and the narrator answers all of them at once (game/party-round.ts).
+ * This only gathers the scene context. (Old doc: checks whose turn it is and, if it's this character's, locks the party
  * (awaitingNarrator = true) so a second member can't post into the same
  * beat. Read-check-write happens inside one transaction, matching
  * world-tick.ts's existing use of $transaction for a similar
@@ -130,32 +132,18 @@ export type BeginPartyTurnResult =
 export async function beginPartyTurn(characterId: string): Promise<BeginPartyTurnResult> {
   const character = await prisma.character.findUnique({ where: { id: characterId } });
   if (!character?.partyId) return { ok: false, reason: "No estás compartiendo una escena con tu tripulación ahora mismo." };
-  const partyId = character.partyId;
-
-  return prisma.$transaction(async (tx) => {
-    const party = await tx.party.findUnique({
-      where: { id: partyId },
-      include: { members: { select: { id: true, name: true, faction: true, level: true } }, messages: { orderBy: { createdAt: "desc" }, take: 14 } },
-    });
-    if (!party) return { ok: false, reason: "El grupo ya no existe." };
-    if (party.awaitingNarrator) return { ok: false, reason: "Espera a que el narrador responda." };
-
-    const turnOrder = JSON.parse(party.turnOrder) as string[];
-    if (turnOrder[party.turnIndex] !== characterId) {
-      const waitingFor = party.members.find((m) => m.id === turnOrder[party.turnIndex]);
-      return { ok: false, reason: `Espera tu turno — le toca a ${waitingFor?.name ?? "otro miembro del grupo"}.` };
-    }
-
-    await tx.party.update({ where: { id: party.id }, data: { awaitingNarrator: true } });
-
-    return {
-      ok: true as const,
-      partyId: party.id,
-      roster: party.members.map((m) => ({ name: m.name, faction: m.faction, level: m.level })),
-      recentLines: [...party.messages].reverse().map((m) => `${m.authorName}: ${m.text.length > 1800 ? m.text.slice(-1800) : m.text}`),
-      memorySummary: party.memorySummary ?? undefined,
-    };
+  const party = await prisma.party.findUnique({
+    where: { id: character.partyId },
+    include: { members: { select: { id: true, name: true, faction: true, level: true } }, messages: { orderBy: { createdAt: "desc" }, take: 14 } },
   });
+  if (!party) return { ok: false, reason: "El grupo ya no existe." };
+  return {
+    ok: true as const,
+    partyId: party.id,
+    roster: party.members.map((m) => ({ name: m.name, faction: m.faction, level: m.level })),
+    recentLines: [...party.messages].reverse().map((m) => `${m.authorName}: ${m.text.length > 1800 ? m.text.slice(-1800) : m.text}`),
+    memorySummary: party.memorySummary ?? undefined,
+  };
 }
 
 /** Advances to the next member's turn and unlocks the party. Used after a "narrate"/mechanical turn resolves. */
@@ -188,6 +176,9 @@ export interface PartyStateForCharacter {
   turnOrder: string[];
   turnIndex: number;
   awaitingNarrator: boolean;
+  /** Members who already wrote their action this round (the texts are in the feed). */
+  actedIds: string[];
+  roundStartedAt: Date | null;
   members: { id: string; name: string }[];
   messages: { id: string; authorCharacterId: string | null; authorName: string; text: string; createdAt: Date }[];
 }
@@ -201,11 +192,17 @@ export async function getPartyStateForCharacter(characterId: string): Promise<Pa
     include: { members: { select: { id: true, name: true } }, messages: { orderBy: { createdAt: "asc" }, take: 60 } },
   });
   if (!party) return null;
+  // Self-healing: a round nobody closes is answered anyway, with whoever already acted.
+  if (!party.awaitingNarrator && roundStalled(party.roundStartedAt, Object.keys(parseRound(party.roundActionsJson)).length, new Date())) {
+    void import("./party-round").then((m) => m.resolvePartyRound(party.id, true)).catch(() => undefined);
+  }
   return {
     id: party.id,
     turnOrder: JSON.parse(party.turnOrder) as string[],
     turnIndex: party.turnIndex,
     awaitingNarrator: party.awaitingNarrator,
+    actedIds: Object.keys(parseRound(party.roundActionsJson)),
+    roundStartedAt: party.roundStartedAt,
     members: party.members,
     messages: party.messages,
   };

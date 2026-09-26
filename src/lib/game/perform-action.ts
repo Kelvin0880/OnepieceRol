@@ -46,7 +46,8 @@ import { DEVIL_FRUIT_CATALOG } from "./devil-fruit-catalog";
 import { applyBountyOrNotoriety } from "./reputation";
 import { narrateExplore, narrateEncounterIntro, narrateCombat, refereeExchange, narrateScene, narratePartyScene, getRecentScene, getFightLog, updateCharacterMemory } from "../ai/narrate";
 import { classifyPlayerAction, ActionId } from "../ai/classify-action";
-import { beginPartyTurn, advancePartyTurn, releasePartyTurnLock, writePartyMessage, echoToParty, confirmLeaveParty as partyConfirmLeaveParty, rejoinParty as partyRejoinParty } from "./party";
+import { beginPartyTurn, writePartyMessage, echoToParty, confirmLeaveParty as partyConfirmLeaveParty, rejoinParty as partyRejoinParty } from "./party";
+import { PartyRoundError, resolvePartyRound, submitRoundAction } from "./party-round";
 import { CharacterStatus } from "@prisma/client";
 import { addStanding } from "./alliance";
 import { recordMissionEvent, judgeAndRecordMissions } from "./missions";
@@ -1757,12 +1758,10 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
   const { action } = partyClassified;
 
   if (action === "unclear") {
-    await releasePartyTurnLock(begin.partyId);
     throw new GameActionError("No logro entender qué quieres hacer. Prueba a describirlo de otra forma.");
   }
 
   if (action === "leave_party") {
-    await releasePartyTurnLock(begin.partyId);
     return {
       ...emptyResult(["¿Quieres separarte de tus nakamas? Puedes reunirte con ellos más tarde si sigues en la misma isla."], character.level),
       confirmRequired: "leave_party",
@@ -1770,24 +1769,18 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
   }
 
   if (action === "narrate") {
-    const text = await narratePartyScene(
-      {
-        islandName: character.currentIsland.name,
-        islandDescription: character.currentIsland.description,
-        partyRoster: begin.roster,
-        actingCharacterName: character.name,
-        playerText: freeText,
-        recentParty: begin.recentLines,
-        memorySummary: begin.memorySummary,
-      },
-      { partyId: begin.partyId }
-    );
-    await writePartyMessage(begin.partyId, character.id, character.name, freeText);
-    await writePartyMessage(begin.partyId, null, "Narrador", text);
-    await advancePartyTurn(begin.partyId);
-    await prisma.sceneMessage.createMany({ data: exchangeRows(character.id, freeText, text) });
-    void maybeCompactPartyScene(begin.partyId);
-    return emptyResult([text], character.level);
+    // Round: the action goes into the shared feed now; the narrator answers everybody's actions together once all have acted.
+    try {
+      const round = await submitRoundAction({ id: character.id, name: character.name }, begin.partyId, freeText);
+      if (!round.allIn) {
+        return emptyResult([`Tu acción está en la ronda. Esperando a ${round.waitingFor.join(", ")}: cuando todos hayan actuado, el narrador responderá a todos a la vez (o pulsa «Que el narrador responda ya»).`], character.level);
+      }
+      const text = await resolvePartyRound(begin.partyId);
+      return emptyResult(text ? [text] : ["Todos habéis actuado: el narrador está preparando la respuesta."], character.level);
+    } catch (err) {
+      if (err instanceof PartyRoundError) throw new GameActionError(err.message);
+      throw err;
+    }
   }
 
   let result: ActionResult;
@@ -1841,8 +1834,6 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
         break;
     }
   } catch (err) {
-    // An action that fails (training cooldown, no room for a nakama...) must not leave the whole group waiting on a narrator that will never answer.
-    await releasePartyTurnLock(begin.partyId);
     throw err;
   }
 
@@ -1850,7 +1841,6 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
   await prisma.sceneMessage.createMany({ data: exchangeRows(character.id, freeText, finalLog.join("\n\n")) });
   await writePartyMessage(begin.partyId, character.id, character.name, freeText);
   await writePartyMessage(begin.partyId, null, "Narrador", sharedLine);
-  await advancePartyTurn(begin.partyId);
 
   return { ...result, log: finalLog };
 }

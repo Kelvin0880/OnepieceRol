@@ -126,6 +126,17 @@ export async function getNpcKit(npcId: string): Promise<string | null> {
   return n ? npcSummaryForFight(n) : null;
 }
 
+/** A resident who joins a player's crew leaves the island; the tick gives their job to a successor. */
+export async function recruitIslandNpc(npcId: string, by: { id: string; name: string }, islandName: string): Promise<void> {
+  const n = await prisma.islandNpc.findUnique({ where: { id: npcId } });
+  if (!n || n.status !== "ALIVE") return;
+  await prisma.islandNpc.update({
+    where: { id: npcId },
+    data: { status: "RECRUITED", diedAt: new Date(), diedNote: `se unió a la tripulación de ${by.name}`, stateNote: `se marchó con ${by.name}`, memoryJson: appendMemory(n.memoryJson, `Se unió a la tripulación de ${by.name} en ${islandName}`) },
+  });
+  await postNews(`${n.name} se une a la tripulación de ${by.name}`, `${n.name} (${n.title}) ha dejado ${islandName} para navegar con ${by.name}.`, "Tripulaciones", by.id, "normal", { islandId: n.islandId, locationName: islandName });
+}
+
 export async function noteNpc(npcId: string, note: string): Promise<void> {
   const n = await prisma.islandNpc.findUnique({ where: { id: npcId }, select: { memoryJson: true } });
   if (!n) return;
@@ -188,7 +199,7 @@ async function creditMissions(npcId: string, by: { id?: string; credit?: string[
 
 export async function tickIslandNpcs(now = new Date()): Promise<number> {
   await prisma.islandNpc.updateMany({ where: { status: "CAPTURED", recoversAt: { lte: now } }, data: { status: "ALIVE", recoversAt: null, stateNote: null } });
-  const dead = await prisma.islandNpc.findMany({ where: { status: "DEAD", successorId: null } });
+  const dead = await prisma.islandNpc.findMany({ where: { status: { in: ["DEAD", "RECRUITED"] }, successorId: null } });
   const due = dueForReplacement(dead, now).slice(0, MAX_SUCCESSORS_PER_TICK);
   if (due.length === 0) return 0;
   const taken = new Set([...(await prisma.islandNpc.findMany({ select: { name: true } })).map((x) => x.name), ...(await prisma.worldActor.findMany({ select: { name: true } })).map((x) => x.name)]);
@@ -287,4 +298,36 @@ export async function getIslandCast(islandId: string, characterId: string) {
       return { id: n.id, name: n.name, title: n.title, category: n.category, level: n.level, fighter: isFighter(n.category), state: st.label, usable: st.usable, dead: n.status === "DEAD", personality: n.personality, memory: (n.memoryJson ? (JSON.parse(n.memoryJson) as string[]) : []).slice(-2), diedNote: n.diedNote };
     })
     .sort((a, b) => Number(a.dead) - Number(b.dead) || Number(b.usable) - Number(a.usable) || a.name.localeCompare(b.name));
+}
+
+/** Every name the AI may use at an island when no single character is the viewpoint (joint fights, duels, world texts). */
+export async function allowedNamesAt(islandId: string | null, extra: string[] = []): Promise<string[]> {
+  const [roster, actors, chars, places] = await Promise.all([
+    islandId ? loadRoster(islandId) : Promise.resolve([] as IslandNpcRow[]),
+    prisma.worldActor.findMany({ select: { name: true } }),
+    prisma.character.findMany({ where: { status: "ALIVE" }, select: { name: true }, take: 400 }),
+    prisma.island.findMany({ select: { name: true } }),
+  ]);
+  return [...roster.map((n) => n.name), ...actors.map((a) => a.name), ...chars.map((c) => c.name), ...places.map((p) => p.name), ...extra];
+}
+
+/** Every name in the whole world (residents of every island, canon, players, places): for texts that are not tied to one island. */
+export async function allowedNamesEverywhere(): Promise<string[]> {
+  const [npcs, actors, chars, places] = await Promise.all([
+    prisma.islandNpc.findMany({ select: { name: true } }),
+    prisma.worldActor.findMany({ select: { name: true } }),
+    prisma.character.findMany({ select: { name: true }, take: 800 }),
+    prisma.island.findMany({ select: { name: true } }),
+  ]);
+  return [...npcs.map((n) => n.name), ...actors.map((a) => a.name), ...chars.map((c) => c.name), ...places.map((p) => p.name)];
+}
+
+/** World facts + the island's residents, for referees that have no single character (joint fights). */
+export async function sceneDirectivesFor(islandId: string): Promise<string> {
+  const island = await prisma.island.findUnique({ where: { id: islandId }, select: { name: true } });
+  const [world, roster] = await Promise.all([
+    import("./world-state").then((m) => m.worldStateBlock()).catch(() => ""),
+    island ? rosterBlockFor(islandId, island.name) : Promise.resolve(""),
+  ]);
+  return [world, roster].filter(Boolean).map((t) => "\n\n" + t).join("");
 }

@@ -437,8 +437,9 @@ async function resolveJointRoundFor(fightId: string) {
           },
         ],
         actions: actionsForNarration.map((a) => ({ name: a.name, text: a.text, technique: a.technique })),
+        directives: await (await import("./island-npcs")).sceneDirectivesFor(fight.islandId),
       },
-      { context: "joint" }
+      { context: "joint", islandId: fight.islandId }
     );
     if (!verdict) {
       // Nothing was judged: hand the round back so the same moves can be resubmitted.

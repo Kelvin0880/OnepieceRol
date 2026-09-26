@@ -1,6 +1,8 @@
 import { callOpenRouter } from "./openrouter-client";
 import { OPENROUTER_MODELS } from "./models";
 import { logError } from "../log-error";
+import { allowedNamesEverywhere } from "../game/island-npcs";
+import { inventedNames } from "../engine/island-npc";
 import { parseHappening, type Happening, type HappeningSeed } from "../engine/world-happenings";
 
 export interface HappeningInput {
@@ -29,13 +31,14 @@ export async function inventHappening(input: HappeningInput): Promise<Happening 
     `Ideas de tipo, solo como inspiración (mejor inventa algo propio): ${input.seeds.map((s) => s.kind).join(", ")}.` +
     (input.idea ? `\n\nEL DUEÑO DEL JUEGO PROPONE ESTE SUCESO, DESARROLLALO fielmente (respetando las reglas duras): ${input.idea}` : "") +
     (input.forceIsland ? `\nDebe ocurrir en: ${input.forceIsland}.` : "");
+  const allowed = await allowedNamesEverywhere().catch(() => [] as string[]);
   try {
     const raw = await callOpenRouter(SYSTEM, user, {
       models: OPENROUTER_MODELS,
       jsonMode: true,
       timeoutMs: 75_000,
       maxTokens: 900,
-      validate: (t) => parseHappening(t, input.islands.map((i) => i.name)) !== null,
+      validate: (t) => { const h = parseHappening(t, input.islands.map((i) => i.name)); return h !== null && inventedNames(`${h.headline} ${h.body}`, allowed).length === 0; },
     });
     const h = parseHappening(raw, input.islands.map((i) => i.name));
     return h && input.forceIsland ? { ...h, islandName: input.forceIsland } : h;

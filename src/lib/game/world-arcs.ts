@@ -8,6 +8,11 @@ import {
   arcDue,
   arcTitle,
   chapterAt,
+  isPrisonKind,
+  PRISON_ARC_CHANCE,
+  PRISON_TOTAL_STAGES,
+  pickPrisonCast,
+  prisonDefensePower,
   chapterLocation,
   fillBrief,
   nextBeatTime,
@@ -152,20 +157,22 @@ async function runArcBeat(arcId: string): Promise<void> {
   ]);
   if (!target) return;
 
+  const prison = isPrisonKind(arc.kind);
+  const impelIsland = [...islands.values()].find((i) => i.name === "Impel Down");
   const targetIsland = target.currentIslandId ?? target.homeIslandId;
   const aggressorIsland = aggressor?.currentIslandId ?? aggressor?.homeIslandId ?? null;
   const nearTarget = pickStable(islands.get(targetIsland ?? "")?.neighbors ?? [], `${arc.id}:near`);
   const siege = pickStable((islands.get(nearTarget ?? "")?.neighbors ?? []).filter((n) => n !== targetIsland), `${arc.id}:siege`) ?? nearTarget;
   // The escalation is a running fight on the water between the target's island and the next one: never pinned to a place it did not happen.
   const atSea = stage === 4 && !!targetIsland && !!nearTarget;
-  const locId = atSea ? null : chapterLocation(stage, { target: targetIsland, aggressor: aggressorIsland, nearTarget, siege });
-  const place = atSea ? seaLabel(islands.get(targetIsland!)?.name, islands.get(nearTarget!)?.name) : locId ? islands.get(locId)?.name ?? "Ubicación desconocida" : "Ubicación desconocida";
+  const locId = prison ? (impelIsland?.id ?? null) : atSea ? null : chapterLocation(stage, { target: targetIsland, aggressor: aggressorIsland, nearTarget, siege });
+  const place = prison ? "Impel Down" : atSea ? seaLabel(islands.get(targetIsland!)?.name, islands.get(nearTarget!)?.name) : locId ? islands.get(locId)?.name ?? "Ubicación desconocida" : "Ubicación desconocida";
 
-  const chapter = chapterAt(stage);
+  const chapter = chapterAt(stage, arc.kind);
   const context: string[] = JSON.parse(arc.contextJson);
   const brief = fillBrief(chapter.brief, arc.targetName, arc.aggressorName);
   const narrated = await narrateWorldEvent(
-    { kind: narrationKind(arc.kind as ArcKind), reclaim: arc.kind === "reclaim", stage, totalStages: arc.totalStages, chapterLabel: chapter.label, brief, targetName: arc.targetName, aggressorName: arc.aggressorName, locationName: place, storySoFar: context },
+    { kind: narrationKind(arc.kind as ArcKind), reclaim: arc.kind === "reclaim", prison: arc.kind === "breakout" ? "breakout" : arc.kind === "crew_rescue" ? "rescue" : undefined, stage, totalStages: arc.totalStages, chapterLabel: chapter.label, brief, targetName: arc.targetName, aggressorName: arc.aggressorName, locationName: place, storySoFar: context },
     fallbackChapter(chapter.label, chapter.brief, place, arc.targetName, arc.aggressorName),
     { arcId: arc.id, stage: String(stage) }
   );
@@ -181,18 +188,20 @@ async function runArcBeat(arcId: string): Promise<void> {
       data: {
         contextJson: JSON.stringify(appendContext(context, `Capítulo ${stage} (${chapter.label}, ${place}): ${narrated.headline}`)),
         nextBeatAt: nextBeatTime(now, varietyRng(`beat:${arcId}:${stage}`)),
-        ...(isLast ? { status: "AWAITING_CONSENT", consent: "PENDING" } : {}),
+        ...(isLast && !prison ? { status: "AWAITING_CONSENT", consent: "PENDING" } : {}),
       },
     }),
-    // The story moves the people in it, and keeps them out of unrelated ambient news meanwhile.
-    prisma.worldActor.update({ where: { id: target.id }, data: { ...(atSea ? { locationKind: "sea", currentIslandId: null, seaFromIslandId: targetIsland, seaToIslandId: nearTarget } : { locationKind: "island", currentIslandId: locId ?? target.currentIslandId, seaFromIslandId: null, seaToIslandId: null }), locationHidden: false, locationUpdatedAt: now, currentFocus: `En pleno suceso: ${arc.title}`, busyUntil: new Date(now.getTime() + (isLast ? 14 * DAY_MS : 12 * 60 * 60 * 1000)) } }),
-    ...(aggressor && stage >= 3
+    // The story moves the people in it, and keeps them out of unrelated ambient news meanwhile (a prison arc leaves everyone where they are).
+    ...(prison ? [] : [prisma.worldActor.update({ where: { id: target.id }, data: { ...(atSea ? { locationKind: "sea", currentIslandId: null, seaFromIslandId: targetIsland, seaToIslandId: nearTarget } : { locationKind: "island", currentIslandId: locId ?? target.currentIslandId, seaFromIslandId: null, seaToIslandId: null }), locationHidden: false, locationUpdatedAt: now, currentFocus: `En pleno suceso: ${arc.title}`, busyUntil: new Date(now.getTime() + (isLast ? 14 * DAY_MS : 12 * 60 * 60 * 1000)) } })]),
+    ...(aggressor && stage >= 3 && !prison
       ? [prisma.worldActor.update({ where: { id: aggressor.id }, data: { ...(atSea ? { locationKind: "sea", currentIslandId: null, seaFromIslandId: targetIsland, seaToIslandId: nearTarget } : { locationKind: "island", currentIslandId: locId ?? aggressor.currentIslandId, seaFromIslandId: null, seaToIslandId: null }), locationHidden: false, locationUpdatedAt: now, currentFocus: `En pleno suceso: ${arc.title}`, busyUntil: new Date(now.getTime() + (isLast ? 14 * DAY_MS : 12 * 60 * 60 * 1000)) } })]
       : []),
     prisma.worldClock.update({ where: { id: 1 }, data: { heat: { increment: 3 } } }),
   ]);
   presenceCache.clear();
-  if (isLast && arc.kind === "reclaim") {
+  if (isLast && prison) {
+    await resolvePrisonArc(arc.id);
+  } else if (isLast && arc.kind === "reclaim") {
     await resolveReclaim(arc.id);
   } else if (isLast) {
     const fresh = await prisma.worldArc.findUnique({ where: { id: arc.id } });
@@ -224,6 +233,20 @@ export async function tickWorldArcs(now = new Date()): Promise<void> {
     ]);
     const rng = varietyRng(`arc:${Math.floor(Date.now() / 60_000)}`);
     if (!shouldStartArc(rng, { hasOpenArc: false, lastResolvedAt: lastResolved?.updatedAt ?? null, heat: clock?.heat ?? 0, now })) return;
+    if (rng() < PRISON_ARC_CHANCE) {
+      const held = await prisma.worldActor.findMany({ where: { status: "CAPTURED" } });
+      if (held.length > 0) {
+        const allActors = await prisma.worldActor.findMany({ where: { status: "ACTIVE" }, select: { id: true, name: true, role: true, status: true, factionType: true, factionName: true, powerLevel: true } });
+        const warden = allActors.find((a) => a.name === "Magellan") ?? null;
+        const castP = pickPrisonCast(rng, held.map((h) => ({ id: h.id, name: h.name, factionName: h.factionName, powerLevel: h.powerLevel, capturedAt: h.capturedAt, prisonLevel: h.prisonLevel })), allActors, warden, now);
+        if (castP) {
+          await prisma.worldArc.create({
+            data: { kind: castP.kind, title: arcTitle(castP.kind, castP.target.name, castP.aggressor?.name ?? ""), targetActorId: castP.target.id, targetName: castP.target.name, aggressorId: castP.aggressor?.id ?? null, aggressorName: castP.aggressor?.name ?? null, totalStages: PRISON_TOTAL_STAGES, nextBeatAt: now },
+          });
+          return;
+        }
+      }
+    }
     const reclaimPool = await prisma.worldActor.findMany({ where: { OR: [{ status: "DEFEATED", name: { in: RECLAIM_ASPIRANTS } }, { status: "ACTIVE", role: "YONKO" }] }, select: { id: true, name: true, role: true, status: true, factionType: true, powerLevel: true } });
     const cast = (rng() < 0.4 ? pickReclaimCast(rng, reclaimPool) : null) ?? pickArcCast(rng, actors);
     if (!cast) return;
@@ -381,6 +404,58 @@ async function resolveReclaim(arcId: string): Promise<void> {
   invalidateWorldState();
 }
 
+/**
+ * The last chapter of a prison arc: the judge weighs the attempt (the prisoner alone or with their crew's leader) against the cell's guard.
+ * A win frees them (alive, hidden, out of Impel Down); a loss keeps them in. No verdict from the owner: neither outcome kills or captures anyone.
+ */
+async function resolvePrisonArc(arcId: string): Promise<void> {
+  const arc = await prisma.worldArc.findUnique({ where: { id: arcId } });
+  if (!arc || !isPrisonKind(arc.kind)) return;
+  const target = await prisma.worldActor.findUnique({ where: { id: arc.targetActorId } });
+  if (!target || target.status !== "CAPTURED") {
+    await prisma.worldArc.update({ where: { id: arc.id }, data: { status: "RESOLVED", outcome: "held", consent: "NONE", decidedBy: "juicio", decidedAt: new Date() } });
+    return;
+  }
+  const ally = arc.kind === "crew_rescue" && arc.aggressorId ? await prisma.worldActor.findUnique({ where: { id: arc.aggressorId } }) : null;
+  const cell = target.prisonLevel ?? 1;
+  const { IMPEL_LEVEL_GUARD } = await import("./world-actor-impel");
+  const guard = await prisma.worldActor.findUnique({ where: { name: IMPEL_LEVEL_GUARD[cell] ?? IMPEL_LEVEL_GUARD[1] } });
+  const warden = await prisma.worldActor.findUnique({ where: { name: "Magellan" } });
+  const defensePower = prisonDefensePower(cell, Math.max(guard?.powerLevel ?? 50, Math.round((warden?.powerLevel ?? 80) * 0.7)));
+  // Alone, a prisoner in Kairoseki is far weaker than free; with their crew's leader outside the odds are real.
+  const attackPower = ally ? Math.round(Math.max(ally.powerLevel, target.powerLevel * 0.8) + target.powerLevel * 0.2) : Math.round(target.powerLevel * 0.7);
+  const context: string[] = JSON.parse(arc.contextJson);
+  const verdict = await judgeMatch(
+    { name: ally ? `${ally.name} y ${target.name}` : target.name, level: attackPower, atk: attackPower * 10, def: attackPower * 9, kit: (ally ? ally.abilitiesJson : target.abilitiesJson) ?? undefined },
+    { name: `La guardia de Impel Down (${guard?.name ?? "carceleros"}${warden ? ` y ${warden.name}` : ""})`, level: defensePower, atk: defensePower * 10, def: defensePower * 9 },
+    `${arc.kind === "crew_rescue" ? `${ally?.name ?? "Los suyos"} asaltan Impel Down para liberar a ${target.name}` : `${target.name} intenta escapar por su cuenta`} del nivel ${cell}.`
+  );
+  const freed = verdict.winner === "a";
+  const islands = await loadIslands();
+  const place = "Impel Down";
+  const narrated = await narrateWorldEvent(
+    { kind: "capture", reclaim: false, prison: arc.kind === "breakout" ? "breakout" : "rescue", stage: arc.totalStages + 1, totalStages: arc.totalStages, chapterLabel: "Desenlace", brief: "", targetName: target.name, aggressorName: arc.aggressorName, locationName: place, storySoFar: context, verdict: freed ? "freed" : "held" },
+    freed
+      ? { headline: `${target.name} se fuga de Impel Down`, body: `${target.name} ha conseguido salir de Impel Down${ally ? ` con la ayuda de ${ally.name}` : ""}. Nadie sabe dónde se esconde ahora.` }
+      : { headline: `Fracasa el intento de sacar a ${target.name} de Impel Down`, body: `${target.name} sigue encerrado en Impel Down tras un intento fallido${ally ? `: ${ally.name} tuvo que retirarse` : ""}.` },
+    { arcId: arc.id, verdict: freed ? "freed" : "held" }
+  );
+  const now = new Date();
+  const impel = [...islands.values()].find((i) => i.name === "Impel Down");
+  const near = impel ? impel.neighbors : [];
+  const hideOn = near.length ? pickStable(near, `${arc.id}:hide`) : null;
+  await prisma.$transaction([
+    prisma.newsItem.create({ data: { headline: narrated.headline, body: narrated.body, category: "Eventos mundiales", severity: "major", worldActorId: target.id, locationName: place, islandId: impel?.id ?? null, arcId: arc.id, arcStage: arc.totalStages + 1 } }),
+    prisma.worldArc.update({ where: { id: arc.id }, data: { status: "RESOLVED", outcome: freed ? "freed" : "held", consent: "NONE", decidedBy: "juicio", decidedAt: now, contextJson: JSON.stringify(appendContext(context, `Desenlace: ${narrated.headline}`)) } }),
+    ...(freed
+      ? [prisma.worldActor.update({ where: { id: target.id }, data: { status: "ACTIVE", prisonLevel: null, capturedAt: null, locationHidden: true, currentIslandId: hideOn ?? impel?.id ?? null, locationKind: "island", locationUpdatedAt: now, currentFocus: "Fugitivo, escondido tras salir de Impel Down", busyUntil: new Date(now.getTime() + DAY_MS) } })]
+      : [prisma.worldActor.update({ where: { id: target.id }, data: { capturedAt: now } })]),
+    prisma.worldClock.update({ where: { id: 1 }, data: { heat: { increment: freed ? 12 : 4 } } }),
+  ]);
+  presenceCache.clear();
+  invalidateWorldState();
+}
+
 // ---------------------------------------------------------------- player intervention
 
 async function currentArcLocation(arcId: string): Promise<{ islandId: string | null; name: string | null }> {
@@ -407,7 +482,7 @@ export interface CharacterWorldEvent {
 export async function getWorldEventForCharacter(characterId: string): Promise<CharacterWorldEvent | null> {
   const [ch, arc] = await Promise.all([
     prisma.character.findUnique({ where: { id: characterId }, select: { level: true, currentIslandId: true, status: true } }),
-    prisma.worldArc.findFirst({ where: { status: { in: OPEN_STATUSES }, kind: { not: "player_verdict" } }, orderBy: { createdAt: "desc" } }),
+    prisma.worldArc.findFirst({ where: { status: { in: OPEN_STATUSES }, kind: { notIn: ["player_verdict", "breakout", "crew_rescue"] } }, orderBy: { createdAt: "desc" } }),
   ]);
   if (!ch || !arc) return null;
   const where = await currentArcLocation(arc.id);

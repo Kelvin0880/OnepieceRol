@@ -76,8 +76,9 @@ export async function createPlayerEvent(opts: CreateEventOptions = {}) {
   const fruit = wantsFruit && fruits.length > 0 ? fruits[Math.floor(rng() * fruits.length)] : null;
   if (opts.withFruit && !fruit) throw new PlayerEventError("No quedan frutas únicas de evento sin dueño.");
 
+  const npcRows = await prisma.islandNpc.findMany({ where: { status: "ALIVE" }, select: { name: true, title: true, islandId: true } });
   const draft = await inventEvent({
-    islands: (candidates.length > 0 ? candidates : islands).map((i) => ({ name: i.name, danger: i.dangerLevel })),
+    islands: (candidates.length > 0 ? candidates : islands).map((i) => ({ name: i.name, danger: i.dangerLevel, residents: npcRows.filter((n) => n.islandId === i.id).slice(0, 5).map((n) => `${n.name} (${n.title})`) })),
     recentTitles: recent.map((r) => r.title),
     maxLevel,
     fruit: fruit ? { name: fruit.name, description: fruit.description } : null,
@@ -104,12 +105,15 @@ export async function createPlayerEvent(opts: CreateEventOptions = {}) {
     },
   });
   const now = new Date();
+  // The rivals are real residents of that island (never invented): the ones with most standing first.
+  const residents = (await prisma.islandNpc.findMany({ where: { islandId: island.id, status: "ALIVE" }, orderBy: [{ level: "desc" }, { name: "asc" }] })).slice(0, 3);
+  const rivals = residents.length > 0 ? residents.map((n) => ({ name: n.name, concept: `${n.title}. ${n.personality}`, level: Math.max(1, Math.min(maxLevel, n.level)) })) : [];
   await prisma.playerEventEntry.createMany({
-    data: draft.rivals.map((r) => ({ eventId: ev.id, name: r.name, isNpc: true, level: r.level, concept: r.concept, status: "SUBMITTED", submittedAt: now })),
+    data: rivals.map((r) => ({ eventId: ev.id, name: r.name, isNpc: true, level: r.level, concept: r.concept, status: "SUBMITTED", submittedAt: now })),
   });
   await postNews(
     `Evento para principiantes en ${island.name}: ${ev.title}`,
-    `${ev.description}\n\nPremio para el ganador: ${rewardText}. Abierto a niveles ${ev.minLevel}-${ev.maxLevel}. Para participar debes estar en ${island.name}. Las inscripciones están abiertas al menos ${REGISTRATION_WINDOW_MS / 3_600_000} horas y no hay límite de tiempo para completar la prueba: el evento termina cuando todos los inscritos hayan terminado. Rivales ya inscritos: ${draft.rivals.map((r) => r.name).join(", ")}.`,
+    `${ev.description}\n\nPremio para el ganador: ${rewardText}. Abierto a niveles ${ev.minLevel}-${ev.maxLevel}. Para participar debes estar en ${island.name}. Las inscripciones están abiertas al menos ${REGISTRATION_WINDOW_MS / 3_600_000} horas y no hay límite de tiempo para completar la prueba: el evento termina cuando todos los inscritos hayan terminado. Rivales ya inscritos: ${rivals.map((r) => r.name).join(", ") || "ninguno todavía"}.`,
     EVENT_NEWS_CATEGORY,
     undefined,
     "major",
