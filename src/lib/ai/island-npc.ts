@@ -103,3 +103,26 @@ export async function generateIslandLore(p: { name: string; description: string;
     return null;
   }
 }
+
+const MORE_SYSTEM =
+  STYLE +
+  "La isla ya tiene un reparto de relleno (te lo doy). Escribe una SEGUNDA OLA de entre 8 y 10 personajes NUEVOS con oficios y caras distintas a los existentes: gente corriente con vida propia (pescadores, cocineros, niños huérfanos, cazarrecompensas retirados, cartógrafos, contrabandistas, sacerdotes, marineros, aprendices, curanderos), otros con peso en la trama local (una rival, un informante, un cobrador de deudas, un veterano con un secreto). " +
+  "Cada uno lleva LORE real: una descripción de 3 a 4 frases con su pasado, qué quiere, a quién conoce en la isla (solo nombres de la lista de existentes) y un secreto o gancho pequeño que un aventurero pueda descubrir hablando con ellos. La personalidad, 1-2 frases con su forma de hablar. " +
+  "Al menos tres deben poder pelear (categorías guard, thug, marine o pirate), con niveles coherentes con el peligro de la isla (peligro 1 = niveles 1-4; peligro 5 = 8-16; peligro 9-10 = 30-50); los civiles y comerciantes son débiles. Nunca uses personajes canon del manga ni nombres prohibidos, ni repitas un oficio o nombre existente. " +
+  'Responde SOLO JSON: {"npcs":[{"slot":"clave-corta-sin-espacios","name":"...","title":"oficio y lugar","category":"guard|thug|civilian|merchant|marine|pirate|official|other","level":3,"description":"3-4 frases","personality":"1-2 frases","weapon":"","abilities":["..."]}]}.';
+
+export async function generateMoreResidents(p: { name: string; description: string; arcHook: string | null; danger: number; control: string | null; existing: { name: string; title: string }[]; forbidden: string[] }): Promise<SeedNpc[] | null> {
+  const user =
+    `Isla: ${p.name}. Peligro ${p.danger}/10${p.control ? `, controla: ${p.control}` : ""}.\nDescripción: ${p.description}\nGancho actual: ${p.arcHook ?? "(ninguno)"}\n` +
+    `Reparto ya existente (no lo repitas; puedes hacer que los nuevos los conozcan): ${p.existing.map((e) => `${e.name} (${e.title})`).join("; ")}.\n` +
+    `Nombres prohibidos (canon o ya usados): ${p.forbidden.slice(0, 300).join(", ")}.`;
+  const taken = new Set(p.forbidden);
+  try {
+    const raw = await callOpenRouter(MORE_SYSTEM, user, { models: OPENROUTER_MODELS, jsonMode: true, timeoutMs: 90_000, maxTokens: 3600, validate: (t) => parseRoster(t, taken) !== null });
+    const out = parseRoster(raw, taken);
+    return out ? out.map((n) => ({ ...n, slot: `w2-${n.slot}` })) : null;
+  } catch (err) {
+    await logError("ai/island-roster-more", err, { island: p.name });
+    return null;
+  }
+}

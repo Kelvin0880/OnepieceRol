@@ -58,8 +58,8 @@ describe("stats, memory and replacement", () => {
   it("replaces the dead only after the delay and only once", () => {
     const now = new Date("2026-01-02T12:00:00Z");
     const rows = [
-      { status: "DEAD", successorId: null, diedAt: new Date("2026-01-02T01:00:00Z") },
-      { status: "DEAD", successorId: null, diedAt: new Date("2026-01-02T10:00:00Z") },
+      { status: "DEAD", successorId: null, diedAt: new Date("2026-01-02T09:00:00Z") },
+      { status: "DEAD", successorId: null, diedAt: new Date("2026-01-02T11:30:00Z") },
       { status: "DEAD", successorId: "x", diedAt: new Date("2026-01-01T00:00:00Z") },
       { status: "ALIVE", successorId: null, diedAt: null },
     ];

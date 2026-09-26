@@ -76,3 +76,9 @@
 - [x] Narrador en modo "narrar" escribía acciones que el jugador no escribió (caso Sebastian vs Akio: esquiva, bloqueo con la vaina y Haki inventados). Ahora hay regla "una jugada a la vez" en los prompts, un filtro (`playerActSentences`) con un reintento correctivo y recorte de frases, tanto en escena solo como en compartida. Respuesta de Sebastian rehecha en producción.
 - [x] Regla Logia en todos los prompts (`LOGIA_RULE`): solo el Haki de Armadura hiere a un Logia.
 - [x] Fruta original Tsuki Tsuki no Mi (Logia lunar, 1-de-1) en `game/devil-fruit-original.ts`; entregada a Zarpe (Marina, nivel 60, Vicealmirante, despertada) en producción.
+- [x] +384 habitantes de relleno (segunda ola, ~16 por isla, 762 en total) con lore, oficio, pasado y gancho; guías de isla regeneradas con todos ellos; misiones y narrador los usan (todo sale del reparto real).
+- [x] 121 frutas del diablo nuevas (207 en el catálogo): canon que faltaba + inventadas de todos los tipos (Paramecia, Zoan, Zoan Antigua, Zoan Mítica, Logia), todas con descripción, en `game/devil-fruit-canon-more.ts` y `devil-fruit-invented-*.ts`.
+- [x] Barbanegra con dos frutas de verdad en BD (`WorldActor.secondDevilFruitId`): Yami Yami + Gura Gura, visibles en el códice y en su kit de combate.
+- [x] Recuperación más corta: habitante perdonado 20 min, detenido 1 h, sucesor tras muerte 1 h; canon perdonado/derrotado 1 h.
+- [x] La IA abre el modo lucha: el narrador marca `[[COMBATE: Nombre]]` cuando un habitante real empieza la agresión y el juego crea la pelea (solo o en grupo).
+- [x] GitHub Pages (guia.html y mapa.html) actualizadas.

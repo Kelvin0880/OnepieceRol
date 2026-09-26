@@ -7,6 +7,7 @@ import { MORE_ACTORS, RELOCATIONS } from "../src/lib/game/world-actor-more";
 import { WAVE4_ACTORS, WAVE4_RELOCATIONS } from "../src/lib/game/world-actor-wave4";
 import { IMPEL_ACTORS, placeCanonPrisoners } from "../src/lib/game/world-actor-impel";
 import { ISLAND_NPC_DATA } from "../src/lib/game/island-npc-data";
+import { ISLAND_NPC_DATA_WAVE2 } from "../src/lib/game/island-npc-data-wave2";
 import { seedIslandRoster } from "../src/lib/game/island-npcs";
 import { assignCanonSeats } from "../src/lib/game/canon-seats";
 import { seedHistoryStones } from "../src/lib/game/history-stones";
@@ -742,6 +743,7 @@ async function main() {
     rankLabel?: string;
     canonBounty?: bigint;
     canonWeapon?: string;
+    secondDevilFruitName?: string; // only Teach holds two fruits
     devilFruitName?: string; // looked up in fruitsByName — must be an isSingleton catalog entry
   };
 
@@ -767,6 +769,7 @@ async function main() {
       factionName: "Piratas de Barbanegra",
       canonBounty: BigInt(3_996_000_000),
       devilFruitName: "Yami Yami no Mi",
+      secondDevilFruitName: "Gura Gura no Mi",
     },
     {
       name: "Buggy",
@@ -1281,6 +1284,7 @@ async function main() {
   const worldActors: Record<string, { id: string }> = {};
   for (const a of actors) {
     const devilFruitId = a.devilFruitName ? fruitsByName[a.devilFruitName]?.id : undefined;
+    const secondDevilFruitId = a.secondDevilFruitName ? fruitsByName[a.secondDevilFruitName]?.id : undefined;
     const actor = await prisma.worldActor.upsert({
       where: { name: a.name },
       update: {
@@ -1291,6 +1295,7 @@ async function main() {
         canonBounty: a.canonBounty,
         canonWeapon: a.canonWeapon,
         devilFruitId,
+        secondDevilFruitId,
       },
       create: {
         name: a.name,
@@ -1304,6 +1309,7 @@ async function main() {
         canonBounty: a.canonBounty,
         canonWeapon: a.canonWeapon,
         devilFruitId,
+        secondDevilFruitId,
       },
     });
     worldActors[a.name] = actor;
@@ -1356,7 +1362,7 @@ async function main() {
   }
 
   // The filler cast of every island (bartenders, guards, thugs...): the only named non-canon characters the AI may use.
-  console.log(`Seeded ${await seedIslandRoster(ISLAND_NPC_DATA, prisma)} island residents.`);
+  console.log(`Seeded ${await seedIslandRoster([...ISLAND_NPC_DATA, ...ISLAND_NPC_DATA_WAVE2], prisma)} island residents.`);
 
   console.log(`Placed ${await placeCanonPrisoners(prisma as never)} canon prisoners in Impel Down.`);
   console.log(`Assigned ${await assignCanonSeats(prisma as never)} canon seats of command.`);

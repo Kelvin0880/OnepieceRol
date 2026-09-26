@@ -254,7 +254,7 @@ export async function submitCanonVerdict(characterId: string, userId: string, ch
   const place = me.currentIsland.name;
   if (choice === "spare") {
     if (actor) {
-      await prisma.worldActor.update({ where: { id: actor.id }, data: { busyUntil: new Date(Date.now() + 24 * 3600_000), currentFocus: `Recuperándose de su derrota ante ${me.name}`, locationHidden: true, locationUpdatedAt: new Date() } });
+      await prisma.worldActor.update({ where: { id: actor.id }, data: { busyUntil: new Date(Date.now() + 3600_000), currentFocus: `Recuperándose de su derrota ante ${me.name}`, locationHidden: true, locationUpdatedAt: new Date() } });
       await recordMercyIncident(actor.id, me.id, `${me.name} le perdonó la vida en ${place}`);
       await addStanding(actor.id, me.id, { mercy: true }, `perdonaste a ${actor.name}`);
     }

@@ -21,8 +21,8 @@ import {
 } from "../engine/island-npc";
 
 const MAX_SUCCESSORS_PER_TICK = 3;
-const WOUNDED_MS = 3 * 60 * 60_000;
-const JAIL_MS = 24 * 60 * 60_000;
+const WOUNDED_MS = 20 * 60_000;
+const JAIL_MS = 60 * 60_000;
 const LAW_FACTIONS = new Set(["MARINE", "CP0", "BOUNTY_HUNTER"]);
 const CRIMINAL = new Set(["thug", "pirate"]);
 

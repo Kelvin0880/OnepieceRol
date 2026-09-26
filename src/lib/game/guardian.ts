@@ -23,7 +23,7 @@ export interface GuardianRewardsBase {
 }
 
 export const ACTOR_REWARD_MULTIPLIER = 3;
-export const ACTOR_RECOVERY_HOURS = 6;
+export const ACTOR_RECOVERY_HOURS = 1;
 
 /** The boss event of an island that holds a Poneglyph: its subordinate spec and the stone it guards. Null when the island has none. */
 export async function findPoneglyphGuardian(islandId: string): Promise<{ body: EventBody; enemy: EnemySpec; poneglyphId: string; templateTitle: string } | null> {

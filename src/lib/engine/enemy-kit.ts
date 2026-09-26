@@ -16,6 +16,8 @@ export interface EnemyKit {
   observationHaki: number;
   conqueror: boolean;
   fruit?: { name: string; phase: KitFruitPhase };
+  /** Only Marshall D. Teach owns a second fruit. */
+  secondFruit?: { name: string; phase: KitFruitPhase };
   weapon?: string;
   abilities: string[];
 }
@@ -78,6 +80,7 @@ export function deriveEnemyKit(input: KitInput): EnemyKit {
     observationHaki: d.observationHaki ?? derived.observationHaki,
     conqueror: d.conqueror ?? derived.conqueror,
     fruit: d.fruit ?? derived.fruit,
+    ...(d.secondFruit ? { secondFruit: d.secondFruit } : {}),
     weapon: d.weapon ?? derived.weapon,
     abilities: d.abilities && d.abilities.length > 0 ? d.abilities : derived.abilities,
   };
@@ -100,6 +103,7 @@ export function describeEnemyKit(name: string, kit: EnemyKit): string {
   parts.push(`Haki de Observación: ${hakiWord(kit.observationHaki)}${kit.observationHaki > 0 ? ` (${kit.observationHaki}/100)` : ""}`);
   parts.push(`Haki del Rey: ${kit.conqueror ? "lo posee" : "no lo posee"}`);
   parts.push(kit.fruit ? `Fruta del Diablo: ${kit.fruit.name}, ${PHASE_WORD[kit.fruit.phase]}` : "Fruta del Diablo: ninguna");
+  if (kit.secondFruit) parts.push(`SEGUNDA Fruta del Diablo (posee DOS a la vez, único en el mundo): ${kit.secondFruit.name}, ${PHASE_WORD[kit.secondFruit.phase]}`);
   if (kit.weapon) parts.push(`arma: ${kit.weapon}`);
   if (kit.abilities.length) parts.push(`técnicas propias: ${kit.abilities.join("; ")}`);
   return `REPERTORIO REAL DE ${name.toUpperCase()} (juega TODO esto, con inteligencia y variedad, y NADA que no esté aquí): ${parts.join("; ")}.`;

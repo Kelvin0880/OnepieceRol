@@ -4,3751 +4,4190 @@ import type { IslandLore } from "../engine/island-lore";
 export const ISLAND_LORE_DATA: IslandLore[] = [
  {
   "island": "Alabasta",
-  "atmosphere": "Un reino desértico al borde de la guerra civil, donde la arena guarda secretos más viejos que el propio Gobierno Mundial. El sol abraza la tierra con un calor intenso, pero bajo la superficie arde un conflicto que divide a su gente. El aire está cargado de tensión, de susurros de traición y del eco de tambores de guerra en la distancia.",
-  "history": "Alabasta fue fundada por la familia Nefertari y prosperó gracias al Poneglyph que esconde la historia antigua. Durante siglos fue un reino próspero, pero una sequía prolongada, alimentada por la manipulación de Crocodile y Baroque Works, ha destrozado su agricultura y creado escasez de agua. La desconfianza hacia la corona ha crecido hasta desembocar en una rebelión abierta, con el pueblo culpando al rey por su desgracia. La verdadera amenaza es una conspiración externa que busca derrocar al gobierno legítimo.",
+  "atmosphere": "Un reino desértico al borde de la guerra civil, donde la arena guarda secretos más viejos que el propio Gobierno Mundial. El aire vibra con calor y tensión, y cada sombra en las dunas podría esconder un espía o un rebelde.",
+  "history": "Alabasta ha sido durante siglos un reino próspero bajo el reinado de la familia Nefertari, gobernando desde Alubarna y custodiando un antiguo secreto. La reciente sequía extrema, atribuida falsamente a la Corona por agentes externos, ha sembrado el descontento y alimentado una rebelión. Las tensiones entre la capital, las ciudades leales y las zonas sedientas han llevado al reino al borde de un conflicto abierto.",
   "customs": [
-   "El 'Beso de la Arena', un saludo tradicional que consiste en llevar los dedos a los labios y luego a la frente, simbolizando respeto por el desierto y por el interlocutor.",
-   "El 'Mercado del Atardecer', donde las caravanas se reúnen al caer el sol para comerciar cuando el calor es menos intenso, un evento social crucial.",
-   "La 'Ofrenda a los Pozos Secos', una costumbre antigua de dejar pequeñas piedras pintadas junto a los pozos agotados como plegaria por el regreso del agua."
+   "El trueque de agua y sombra es tan valioso como el oro; las negociaciones se hacen a la sombra y con vasos de líquido precioso.",
+   "Las caravanas del desierto son sagradas; atacarlas es uno de los mayores crímenes, y ofrecerles agua es un deber.",
+   "En el Bazar de Alubarna, los tratos se cierran con un apretón de manos bajo un velo, para que ni el sol ni los ojos indiscretos sean testigos."
   ],
   "places": [
    {
     "name": "El Cactus Sediento",
     "kind": "taberna",
-    "description": "Un refugio polvoriento en Nanohana, donde el aire huele a cerveza tibia y arena. Las paredes están cubiertas de mapas desgastados y objetos encontrados en el desierto. Es el lugar perfecto para escuchar rumores antes de adentrarse en las dunas.",
+    "description": "Un refugio polvoriento en Nanohana donde el aire huele a cerveza tibia y arena. Las paredes están llenas de mapas borrosos y objetos traídos de las dunas.",
     "regulars": [
      "Aziza Cactus",
-     "Jalil Duna",
-     "Nadir el Agua Clara"
-    ]
-   },
-   {
-    "name": "Puerto de Nanohana",
-    "kind": "puerto",
-    "description": "El bullicioso y principal punto de entrada al reino, lleno de barcos mercantes, contrabandistas y marines que vigilan con recelo. La actividad nunca cesa, incluso bajo el sol abrasador.",
-    "regulars": [
-     "Capitán Omar de la Roca",
-     "Nadir el Agua Clara"
-    ]
-   },
-   {
-    "name": "Las Dunas Prohibidas",
-    "kind": "desierto",
-    "description": "Un vasto mar de arena traicionero, con dunas movedizas y tormentas de arena impredecibles. Se rumorea que esconde ruinas antiguas y la entrada a ciudades perdidas bajo la arena.",
-    "regulars": [
-     "Jalil Duna",
-     "Ezekiel del Viento Seco",
-     "Ramses Sal"
+     "Riad el Sin Bandera",
+     "Sana del Oasis Seco"
     ]
    },
    {
     "name": "Archivos Reales de Alubarna",
-    "kind": "archivo/biblioteca",
-    "description": "Un majestuoso edificio de piedra blanca en la capital, lleno de estanterías que alcanzan el techo con pergaminos y libros históricos. El aire es seco y tranquilo, un santuario del conocimiento.",
+    "kind": "archivo",
+    "description": "Una cámara fresca y silenciosa bajo el palacio, llena de pergaminos antiguos y estantes de piedra. El eco de los pasos revela la soledad del lugar.",
     "regulars": [
-     "Farid el Archivista"
+     "Farid el Archivista",
+     "Halim el Trazador"
+    ]
+   },
+   {
+    "name": "Bazar de las Sombras de Alubarna",
+    "kind": "mercado",
+    "description": "Un laberinto de toldos que cortan el sol abrasador, donde se venden desde especias hasta secretos. Los murmullos son la moneda principal.",
+    "regulars": [
+     "Shadiya del Velo Oscuro",
+     "Nadir el Agua Clara"
     ]
    },
    {
     "name": "Cuartel de los Marines de Yuuba",
     "kind": "cuartel",
-    "description": "Una fortaleza austera y pesada de piedra arenisca, ondea la bandera de la Marina. El ambiente es tenso y disciplinado, con marines preparándose para el estallido del conflicto civil.",
+    "description": "Una fortaleza de adobe que se eleva sobre el pueblo seco. Los marines patrullan con miradas cansadas bajo el sol implacable.",
     "regulars": [
+     "Capitán Omar de la Roca",
+     "Kareem la Cicatriz"
+    ]
+   },
+   {
+    "name": "Las Dunas Prohibidas",
+    "kind": "desierto/ruinas",
+    "description": "Un mar de arena movediza y vientos cortantes que esconde antiguas estructuras petrificadas. Solo los locos o los desesperados se aventuran aquí.",
+    "regulars": [
+     "Jalil Duna",
+     "Malik Puño de Arena",
+     "Ezekiel del Viento Seco"
+    ]
+   },
+   {
+    "name": "Ruinas del Velo de Arena",
+    "kind": "ruinas",
+    "description": "Restos de piedra tallada por el viento a la sombra de un cañón. Un lugar donde los tejedores buscan inspiración y los rebeldes, refugio.",
+    "regulars": [
+     "Samira del Velo",
+     "Yasmin la Sedienta"
+    ]
+   },
+   {
+    "name": "Posada del Marinero Sin Bandera",
+    "kind": "posada",
+    "description": "Una construcción robusta cerca del puerto de Nanohana, con ventanas que dan al mar y recuerdos piratas colgados en las paredes.",
+    "regulars": [
+     "Riad el Sin Bandera",
+     "Leila la Cantinera",
+     "Sana del Oasis Seco"
+    ]
+   },
+   {
+    "name": "Forja de la Cicatriz en Yuuba",
+    "kind": "herrería",
+    "description": "Una choza con el sonido constante del martillo sobre el yunque. El calor de la fragua rivaliza con el del desierto.",
+    "regulars": [
+     "Kareem la Cicatriz",
      "Capitán Omar de la Roca"
     ]
    },
    {
-    "name": "Mercado de las Sombras de Alubarna",
-    "kind": "mercado",
-    "description": "Un mercado cubierto en la capital, donde los puestos venden especias, telas finas y agua a precios exorbitantes. El murmullo de las negociaciones se mezcla con el aroma a incienso.",
-    "regulars": [
-     "Samira del Velo",
-     "Nadir el Agua Clara"
-    ]
-   },
-   {
-    "name": "Ruinas de los Antiguos en el Desierto",
-    "kind": "ruinas",
-    "description": "Restos de piedra erosionada que emergen de la arena, con jeroglíficos casi borrados por el viento. Un lugar de peregrinación para estudiosos y un refugio para contrabandistas.",
-    "regulars": [
-     "Samira del Velo",
-     "Ezekiel del Viento Seco",
-     "Jalil Duna"
-    ]
-   },
-   {
-    "name": "La Arena Caliente",
-    "kind": "arena de combate/guarida",
-    "description": "Un pozo de lucha clandestino excavado bajo la arena, donde se realizan apuestas ilegales y se resuelven disputas con violencia. El aire es sofocante y huele a sudor y polvo.",
-    "regulars": [
-     "Brahim Arena Caliente"
-    ]
-   },
-   {
-    "name": "Oasis Secreto de la Tribu Perdida",
+    "name": "Oasis del Viento Seco",
     "kind": "oasis",
-    "description": "Un pequeño y escondido oasis conocido solo por unos pocos nómadas y guías. Es un lugar de encuentro pacífico, donde el agua es clara y las palmeras ofrecen una sombra preciada.",
+    "description": "Un pequeño manantial escondido entre rocas, rodeado de palmeras mustias. Es un punto de encuentro secreto y un lugar de curación.",
     "regulars": [
+     "Yasmin la Sedienta",
      "Ezekiel del Viento Seco",
-     "Ramses Sal"
+     "Malik Puño de Arena"
     ]
    },
    {
-    "name": "Palacio Real de Alubarna",
-    "kind": "palacio",
-    "description": "El imponente palacio de la familia real, construido en lo alto de un risco con vistas a la ciudad y al desierto. Es un símbolo de poder y, actualmente, el epicentro de la tensión política.",
+    "name": "Arena Caliente (Distrito de Nanohana)",
+    "kind": "distrito/plaza",
+    "description": "Una plaza polvorienta donde se resuelven los 'asuntos' de manera rápida y violenta. El aire está cargado de amenazas no dichas.",
     "regulars": [
-     "Ramses Sal",
-     "Farid el Archivista"
+     "Brahim Arena Caliente",
+     "Tariq el Perseguidor",
+     "Jalil Duna"
     ]
    }
   ],
   "rumors": [
-   "Se dice que un arma antigua capaz de convertir la arena en roca o en un mar de lava está enterrada bajo las Dunas Prohibidas, y ambos bandos la buscan.",
-   "Un espía de Baroque Works opera en el Mercado de las Sombras, vendiendo información falsa para avivar la rebelión y desestabilizar el reino.",
-   "Hay una caravana de agua envenenada que viaja desde Nanohana hacia los pueblos rebeldes, un acto de sabotaje que podría desatar una masacre y culpar al rey.",
-   "El Capitán Omar de la Roca está acumulando armas de forma ilegal en el cuartel de Yuuba, preparándose no para mantener la paz, sino para tomar el control cuando caiga el reino.",
-   "Ezekiel del Viento Seco, el último de su tribu, conoce la ubicación de un Poneglyph perdido que revelaría la verdadera historia de Alabasta y desbarataría la conspiración."
+   "Se dice que una antigua arma, capaz de convertir la arena en agua, está enterrada bajo las Dunas Prohibidas, y ambos bandos la buscan.",
+   "Un cargamento masivo de agua pura, destinado a Yuuba, ha desaparecido en el desierto; algunos culpan a los rebeldes, otros a contrabandistas.",
+   "En los Archivos Reales hay un mapa que muestra una red de túneles secretos bajo Alubarna, posiblemente usados para espiar o escapar.",
+   "Una tribu nómada, que se creía extinta, ha sido vista cerca de las ruinas; se rumorea que conocen el verdadero origen de la sequía.",
+   "En el Bazar de las Sombras se ofrece una recompensa enorme por la cabeza de un 'traidor' que tiene información que podría detener la guerra, pero nadie sabe su identidad."
   ]
  },
  {
   "island": "Amazon Lily",
-  "atmosphere": "Una isla salvaje y hermosa donde las mujeres guerreras Kuja dominan el paisaje. El aire es cálido y denso, con el zumbido constante de insectos y los gritos ocasionales de serpientes gigantes. La presencia masculina es una anomalía peligrosa, y el miedo a la ira de la emperatriz impregna cada conversación y mirada hacia los forasteros.",
-  "history": "Amazon Lily ha sido desde tiempos inmemoriales el reino exclusivo de las guerreras Kuja, una sociedad matriarcal que ha prosperado en aislamiento. La isla se rige bajo el mandato de la Emperatriz, la pirata más fuerte de la tribu, quien mantiene una estricta prohibición contra los hombres. Su historia reciente se vio alterada por la visita de un único hombre, Monkey D. Luffy, un evento que dejó una profunda, aunque controvertida, impresión en algunas guerreras.",
+  "atmosphere": "Tensa y vigilante. Los bosques espesos y las serpientes gigantes mantienen una belleza salvaje y letal. Un silencio alerta reina, roto solo por los susurros de las guerreras Kuja y el movimiento sigiloso de la fauna. El miedo a los hombres es palpable, y la autoridad de la emperatriz impregna cada rincón.",
+  "history": "Amazon Lily es un reino ancestral habitado exclusivamente por mujeres, las guerreras Kuja, quienes desarrollaron una sociedad y cultura únicas basadas en el combate y la hermandad. Su aislamiento fue absoluto hasta el incidente con el Pirata 'Straw Hat' Luffy, que alteró la norma de la prohibición total de hombres. Desde entonces, la vigilancia se ha intensificado, aunque la ley sigue siendo implacable.",
   "customs": [
-   "El Haki es enseñado y practicado desde la niñez, siendo parte integral de la identidad Kuja y su defensa.",
-   "Los rituales y celebraciones, como los combates en la arena, son acompañados por cantos y música ancestrales dirigidos por una cantora designada.",
-   "Cazar serpientes gigantes y dominarlas como monturas o compañeras es una prueba de habilidad y valor para las Kuja.",
-   "Cualquier contacto con hombres está estrictamente prohibido y se castiga severamente, salvo en circunstancias excepcionales decretadas por la Emperatriz."
+   "Prohibición total de hombres en la isla, salvo excepciones extremas y bajo estricta custodia, so pena de ejecución.",
+   "Adoración y convivencia con las serpientes gigantes, consideradas criaturas sagradas y símbolos de poder.",
+   "Las decisiones importantes, como el destino de los intrusos, las toma únicamente la Emperatriz Boa Hancock, y su palabra es ley.",
+   "El comercio y la vida social giran en torno a la fuerza y la habilidad en combate, veneradas por encima de todo.",
+   "Los rituales ancestrales con cánticos y ofrendas a las serpientes son parte esencial de la vida espiritual Kuja."
   ],
   "places": [
    {
+    "name": "El Pueblo Kuja",
+    "kind": "asentamiento principal",
+    "description": "Un conjunto de casas y estructuras elegantes construidas con madera y lianas, integradas en los árboles gigantes. Es el corazón de la vida cotidiana y el comercio local.",
+    "regulars": [
+     "Sumire",
+     "Hana",
+     "Rin",
+     "Chiyo"
+    ]
+   },
+   {
     "name": "Palacio de la Emperatriz",
     "kind": "palacio",
-    "description": "Una imponente estructura de piedra y madera tallada, coronando la isla. Es el centro del poder y la residencia de la gobernante, vigilada constantemente por las guerreras más leales.",
+    "description": "Una imponente estructura de piedra blanca y columnas talladas, situada en un acantilado con vista al mar. Es el centro del poder y la toma de decisiones.",
     "regulars": [
-     "Yoshino"
+     "Yoshino",
+     "Uta",
+     "Tsubaki"
     ]
    },
    {
-    "name": "Arena de los Combates Kuja",
-    "kind": "arena",
-    "description": "Un enorme anfiteatro al aire libre donde las guerreras entrenan, se prueban y celebran torneos. El suelo está marcado por años de duras batallas y el uso del Haki.",
+    "name": "Mercado de las Artesanas",
+    "kind": "mercado",
+    "description": "Una plaza vibrante llena de puestos donde se venden joyas, telas tejidas, armas y pociones. El regateo es feroz y las miradas, escrutadoras.",
     "regulars": [
-     "Tsubaki",
-     "Uta"
-    ]
-   },
-   {
-    "name": "Pueblo Tejedor",
-    "kind": "aldea",
-    "description": "Un conjunto de cabañas donde se elaboran las telas, ropas y velas para las Kuja. Es un lugar de trabajo tranquilo, lleno de coloridos hilos y el sonido rítmico de los telares.",
-    "regulars": [
+     "Hana",
+     "Chiyo",
      "Sumire"
     ]
    },
    {
-    "name": "Jardín Secreto de las Hierbas",
-    "kind": "jardín",
-    "description": "Un recinto vallado y protegido, repleto de plantas medicinales, venenosas y raras. El aire huele a tierra húmeda y flores exóticas.",
+    "name": "Jardín Secreto de las Herbolarías",
+    "kind": "jardín / taller",
+    "description": "Un claro oculto en el bosque, repleto de plantas medicinales y venenosas de colores vibrantes. Un olor a tierra húmeda y hierbas dulces lo impregna todo.",
     "regulars": [
-     "Koto"
+     "Koto",
+     "Sakura"
     ]
    },
    {
-    "name": "Mercado de las Artesanías",
-    "kind": "mercado",
-    "description": "Un bullicioso mercado al aire libre donde se comercian joyas, armas talladas, cerámicas y otros bienes elaborados por las Kuja. El brillo del oro y las gemas es omnipresente.",
-    "regulars": [
-     "Hana"
-    ]
-   },
-   {
-    "name": "Profundidades del Bosque Serpentino",
+    "name": "Bosque de las Profundidades",
     "kind": "bosque",
-    "description": "La parte más densa y peligrosa de la jungla, hogar de las serpientes gigantes más feroces. Solo las cazadoras más experimentadas se aventuran aquí.",
+    "description": "Una espesura impenetrable donde habitan las serpientes gigantes más grandes y peligrosas. La luz apenas se filtra, y los sonidos de la fauna son constantes.",
     "regulars": [
-     "Ran"
+     "Ran",
+     "Yuki"
     ]
    },
    {
     "name": "Caleta Escondida",
-    "kind": "puerto",
-    "description": "Una pequeña ensenada rocosa, alejada de los principales muelles. Es usada por pescadoras y exploradoras para acceder al mar de forma discreta.",
+    "kind": "puerto / caleta",
+    "description": "Una pequeña ensenada rocosa, alejada de los puertos principales, utilizada por pescadoras y para accesos discretos. Las olas rompen con fuerza contra las piedras.",
     "regulars": [
      "Tsukimi",
-     "Himiko"
+     "Mizore"
     ]
    },
    {
-    "name": "Acantilado de la Vigilancia Oeste",
+    "name": "Prisión de Lianas",
+    "kind": "prisión",
+    "description": "Una construcción de madera y gruesas lianas vivas sobre un árbol gigante, donde se confina a los infractores. El aire es húmedo y se escuchan susurros entre las hojas.",
+    "regulars": [
+     "Ayame"
+    ]
+   },
+   {
+    "name": "Acantilado Sur",
     "kind": "puesto de vigilancia",
-    "description": "Un promontorio rocoso con una vista despejada del mar. Desde aquí, las exploradoras escanean el horizonte en busca de intrusos, especialmente ahora.",
+    "description": "Un risco escarpado con una vista panorámica del mar. Desde aquí, las vigilantes escrutan el horizonte en busca de velas o intrusos.",
     "regulars": [
+     "Hotaru",
      "Himiko"
     ]
    },
    {
-    "name": "Cueva de los Rituales Ancestrales",
+    "name": "Santuario de las Serpientes Ancianas",
     "kind": "templo",
-    "description": "Una caverna natural cerca de la costa, decorada con pinturas y símbolos antiguos. Aquí se realizan ceremonias importantes para honrar a los antepasados y a la isla.",
+    "description": "Una gruta natural adornada con ofrendas y pinturas rupestres que representan serpientes. Un silencio reverencial y un olor a incienso pesan en el aire.",
     "regulars": [
-     "Uta",
-     "Koto"
+     "Kiyomi",
+     "Uta"
+    ]
+   },
+   {
+    "name": "Cabaña de la Veterana",
+    "kind": "casa / refugio",
+    "description": "Una cabaña apartada y llena de recuerdos de viajes, situada en los límites del pueblo. Mapas antiguos y armas exóticas cuelgan de las paredes.",
+    "regulars": [
+     "Kaede",
+     "Suzu"
     ]
    }
   ],
   "rumors": [
-   "Un extraño, un hombre, apareció herido entre las rocas de la costa oeste. La Guardia lo tiene bajo custodia, pero la Emperatriz aún no ha dado su veredicto final.",
-   "Algunas novicias murmuran que la última vez que un hombre llegó a la isla, la Emperatriz actuó de forma... inusual. ¿Podría repetirse la historia?",
-   "Una serpiente gigante albina, considerada un augurio de cambio, ha sido avistada en las profundidades del bosque, inquietando a las cazadoras más veteranas.",
-   "Se dice que la Cantora de los Rituales, Uta, ha estado componiendo una nueva canción que habla de \"romper cadenas\", lo que algunas consideran peligrosamente provocativo.",
-   "Las exploradoras reportan un aumento en la actividad de la Marina cerca de los límites territoriales de Calm Belt, aunque aún no se han atrevido a acercarse."
+   "Un extraño (posiblemente un hombre) apareció herido entre las rocas de la costa oeste, y la emperatriz guarda un inquietante silencio sobre su destino.",
+   "Alguien está robando huevos de las serpientes gigantes sagradas del bosque profundo, provocando su furia y poniendo en peligro a las cazadoras.",
+   "Se rumorea que una cartógrafa renegada, Mizore, está trazando mapas secretos de las rutas de acceso a la isla para venderlos al exterior.",
+   "La instructora Tsubaki sospecha que una de sus novicias más prometedoras está recibiendo instrucción de combate de una fuente prohibida o externa.",
+   "Una enfermedad desconocida está afectando a las serpientes más jóvenes del santuario, y las herbolarías no encuentran la cura en sus jardines."
   ]
  },
  {
   "island": "Archipiélago Sabaody",
-  "atmosphere": "Setenta y nueve manglares gigantes de una savia especial, cuyas raíces generan burbujas que impregnan cada rincón. Una capa de alegría frívola y turística encubre la opresión más brutal: la sombra de los Dragones Celestiales y la subasta de esclavos es tangible. Es un crisol de piratas ansiosos por el Nuevo Mundo, marinos en alerta máxima y el miedo constante a que un capricho noble desate un desastre.",
-  "history": "El archipiélago siempre fue el último obstáculo natural antes de descender a las profundidades del Nuevo Mundo. Su función como puerto de recubrimiento de barcos con cobre se desarrolló hace siglos. Con el tiempo, la Marina estableció una base sólida para controlar el flujo de piratas, y los Dragones Celestiales hicieron de su cercanía a Mariejois un patio de recreo personal, institucionalizando el comercio de personas.",
+  "atmosphere": "Un aparente carnaval de burbujas multicolores y mercaderes alegres cubre una realidad opresiva y violenta. La Marina patrulla con rigurosidad, la casa de subastas opera con impunidad, y la amenaza de los Dragones Celestiales flota como una nube de terror. Es un lugar de paso obligado para los más ambiciosos, donde el peligro acecha tras cada brillante pompa.",
+  "history": "Hace siglos, los manglares gigantes que respiran burbujas fueron descubiertos, proporcionando una barrera natural única. Con el tiempo, se convirtió en el puente vital entre la primera mitad del Grand Line y el Nuevo Mundo. La Marina estableció una base importante aquí para controlar el flujo de piratas, y los Dragones Celestiales, atraídos por la rareza del lugar y la casa de subastas, hicieron de una zona su patio de recreo privado y temido.",
   "customs": [
-   "Nunca toques las burbujas de los nobles. Se considera una afrenta directa.",
-   "Todos los negocios aceptan pagos en 'burbujas de lujo', burbujas especialmente revestidas de metales preciosos.",
-   "Antes de zarpar hacia el Nuevo Mundo, es tradición romper una burbuja en el muelle para desear suerte.",
-   "Quedarse mirando a un Dragón Celestial o su séquito es un grave insulto que puede costar la vida.",
-   "En las tabernas, la bebida local es la 'savia efervescente', un licor fermentado de los manglares."
+   "No se debe nunca, bajo ninguna circunstancia, mirar fijamente o hacer un gesto de desaprobación hacia un Dragón Celestial. Su seguridad es la máxima ley.",
+   "Es común negociar el precio del revestimiento de cobre para las naves con historias de aventuras o información valiosa, además de Berries.",
+   "Las burbujas de resina son utilizadas para todo, desde transporte (burbuja-coche) hasta almacenamiento, y romper una propiedad ajena es una grave ofensa."
   ],
   "places": [
    {
     "name": "Taberna Burbujeante",
-    "kind": "taberna",
-    "description": "Una taberna acogedora construida dentro de un gran bulbo de raíz, donde las burbujas flotan entre las mesas sirviendo de porta copas. El aire huele a savia dulce y cerveza rancia. En un rincón tranquilo, entre mapas antiguos, un viejo estudia en silencio.",
+    "kind": "Taberna",
+    "description": "Una taberna acogedora y bulliciosa donde las burbujas sirven como mesas y sillas. El aire huele a cerveza espumosa y resina dulce. Es el refugio favorito de piratas con recompensa para obtener información sin ser molestados de inmediato.",
     "regulars": [
      "Bubilo el Gordo",
-     "Noro el Sabio"
+     "Noro el Sabio",
+     "Karlo Drenaj"
     ]
    },
    {
-    "name": "Casa de Subastas de la Humanidad",
-    "kind": "casa de subastas",
-    "description": "Un edificio lujoso y opresivo, con alfombras rojas y candelabros de oro. El escenario central está siempre iluminado, listo para presentar la próxima 'mercancía especial'. El ambiente es tenso, mezcla de codicia y crueldad.",
+    "name": "Puerto del Manglar 44",
+    "kind": "Puerto",
+    "description": "El principal punto de atraque para naves que buscan revestimiento de cobre. Un caos organizado de carpinteros, comerciantes y marineros. Las gruesas raíces de los manglares sirven como muelles naturales.",
+    "regulars": [
+     "Taimur el Revestidor",
+     "Lina de la Antorcha",
+     "Senda Lira"
+    ]
+   },
+   {
+    "name": "Mercado de las Pompas",
+    "kind": "Mercado",
+    "description": "Un colorido mercado al aire libre donde todo se vende dentro de burbujas de resina: comida, ropa, armas. Los gritos de los vendedores compiten con el estallido casual de las pompas.",
+    "regulars": [
+     "Frida Marea",
+     "Bardo Espino",
+     "Teresa Sabio"
+    ]
+   },
+   {
+    "name": "Casa de Subastas 'Orquídea Dorada'",
+    "kind": "Casa de Subastas",
+    "description": "Un edificio lujoso y ominoso con columnas de mármol. En su interior, bajo candelabros brillantes, se subasta de todo, desde tesoros hasta personas. La atmósfera es de codicia contenida y crueldad disfrazada de elegancia.",
     "regulars": [
      "Dario el Mercader",
-     "Gronk el Musculoso"
+     "Gronk el Musculoso",
+     "Ronan Orden"
     ]
    },
    {
-    "name": "Base Naval de Sabaody",
-    "kind": "cuartel",
-    "description": "Una fortaleza de acero y concreto que se alza junto al muelle principal, con cañones apuntando a los manglares. Los marinos patrullan con rigidez, observando a cada pirata con desconfianza. Las paredes están llenas de carteles de recompensa.",
+    "name": "Cuartel General de la Marina, Sabaody",
+    "kind": "Cuartel",
+    "description": "Una fortaleza imponente de acero y vidrio construida alrededor de un manglar central. Las banderas de la Marina ondean con rigor. Es un recordatorio constante de quién tiene el control oficial de la zona.",
     "regulars": [
+     "Capitán Fumio Hiroshi",
      "Teniente Rika Saito",
-     "Capitán Fumio Hiroshi"
+     "Bruno Nocturno"
     ]
    },
    {
-    "name": "Muelle del Revestimiento",
-    "kind": "puerto",
-    "description": "Un puerto caótico y ruidoso donde los barcos se elevan en diques secos gigantes, cubiertos de burbujas de resina y cobre fundido. El olor a metal caliente y madera quemada es constante. Artesanos y capataces gritan órdenes.",
+    "name": "Bosque Prohibido de la Resina",
+    "kind": "Bosque",
+    "description": "Una zona densa de manglares donde las burbujas se forman en tamaños descomunales y la luz se filtra de manera extraña. Está plagado de bestias salvajes y leyendas sobre tesoros o criaturas antiguas atrapadas en ámbar de resina.",
     "regulars": [
-     "Taimur el Revestidor",
-     "Lina de la Antorcha"
+     "Vito Noche"
     ]
    },
    {
-    "name": "Mercado de las Burbujas",
-    "kind": "mercado",
-    "description": "Un bazar abierto y vibrante bajo las grandes raíces, donde todo se vende dentro de burbujas: comida, ropa, armas e incluso mascotas exóticas. El regateo es feroz y el ambiente es una mezcla de culturas de todos los mares.",
+    "name": "Callejón de los Susurros",
+    "kind": "Callejón / Mercado Negro",
+    "description": "Un estrecho pasadizo entre las raíces, iluminado solo por luciérnagas en burbujas. Es el centro del comercio ilegal de Sabaody, donde se vende información, armas prohibidas y mapas falsos.",
     "regulars": [
-     "Taimur el Revestidor",
-     "Dario el Mercader"
+     "Vito Noche",
+     "Ronan Orden",
+     "Karlo Drenaj"
     ]
    },
    {
-    "name": "Paseo de los Dragones",
-    "kind": "plaza",
-    "description": "Una avenida amplia e inmaculadamente limpia, flanqueada por tiendas de lujo inaccesibles para la mayoría. Aquí es común ver los grotescos paseos de los nobles en sus trajes de astronauta, escoltados por guardias. Todos bajan la mirada.",
-    "regulars": [
-     "Teniente Rika Saito"
-    ]
-   },
-   {
-    "name": "Parque de Atracciones de Sabaody",
-    "kind": "parque de atracciones",
-    "description": "Una zona de esparcimiento iluminada con luces de colores, donde las atracciones utilizan las propiedades de las burbujas para flotar y girar. Es el lugar favorito de los turistas adinerados y un intento de normalidad en medio del caos.",
+    "name": "Jardines de los Nobles",
+    "kind": "Zona Residencial / Parque",
+    "description": "Un área inmaculada y silenciosa, separada por altas rejas. Los caminos son de piedra pulida y los árboles están podados a la perfección. Aquí pasean los Dragones Celestiales con sus trajes herméticos, una zona de terrorosa tranquilidad.",
     "regulars": []
    },
    {
-    "name": "Bosque de los Manglares Ancianos",
-    "kind": "bosque",
-    "description": "En las zonas menos transitadas del archipiélago, los manglares crecen más densos y salvajes. Las burbujas aquí son más grandes y erráticas. Es un lugar de encuentro furtivo para piratas que quieren evitar a la Marina o a los cazadores de recompensas.",
-    "regulars": []
-   },
-   {
-    "name": "Taller de la Antorcha",
-    "kind": "taller de naves",
-    "description": "Un cobertizo lleno de herramientas, planos y el aroma a madera y brea. Barcos en miniatura y piezas de cobre cuelgan del techo. Es el refugio de una artesana dedicada que sueña con construir el barco perfecto para desafiar el Nuevo Mundo.",
+    "name": "Cabaña de la Curandera",
+    "kind": "Casa / Consultorio",
+    "description": "Una pequeña cabaña construida dentro de una burbuja gigante y estable. En su interior huele a hierbas medicinales y resina calmante. Estantes llenos de frascos con extraños ingredientes burbujeantes.",
     "regulars": [
-     "Lina de la Antorcha"
+     "Teresa Sabio"
     ]
    },
    {
-    "name": "Ruinas del Asentamiento Antiguo",
-    "kind": "ruinas",
-    "description": "Restos de piedra cubiertos de musgo y enredados en las raíces más antiguas, cerca del fondo de los manglares. Pocos las visitan, pero algunos eruditos creen que guardan secretos anteriores a la creación del gobierno mundial. El ambiente es húmedo y silencioso.",
+    "name": "Plaza del Reloj de Burbujas",
+    "kind": "Plaza Pública",
+    "description": "El corazón aparentemente turístico de Sabaody. Un gran reloj hecho de burbujas sincronizadas marca el tiempo. Artistas callejeros, músicos y turistas se congregan aquí, ignorando voluntariamente la oscuridad a solo unas calles de distancia.",
     "regulars": [
-     "Noro el Sabio"
+     "Bardo Espino",
+     "Senda Lira",
+     "Frida Marea"
     ]
    }
   ],
   "rumors": [
-   "Dicen que Noro el Sabio, el viejo de la Taberna Burbujeante, no solo lee Poneglifos, sino que tiene un mapa hacia uno oculto en las raíces más profundas.",
-   "Una nueva 'mercancía estrella', un músico de una raza rarísima, llegará pronto a la Casa de Subastas. Su precio podría comprar una flota.",
-   "El Capitán Fumio Hiroshi está obsesionado con capturar a un pirata con recompensa específico que se está revistiendo el barco, y planea una redada en el Muelle.",
-   "Una grieta en una raíz principal está filtrando savia pura y tóxica, amenazando con envenenar todo un sector de burbujas y a quienes las respiran.",
-   "Gronk el Musculoso busca venganza contra un grupo de piratas que humilló a su jefe Dario en una subasta, y está contratando matones."
+   "Se dice que Noro el Sabio, en el fondo de la Taberna Burbujeante, no solo lee Poneglifos, sino que posee un mapa incompleto hacia uno sumergido cerca del archipiélago.",
+   "Una bestia gigante, mitad pez mitad manglar, ha sido vista en las profundidades del Bosque Prohibido de la Resina. Su corazón de resina pura valdría una fortuna.",
+   "Vito Noche busca un equipo desesperado para un último gran golpe: robar un 'fruto del diablo' que será subastado en la 'Orquídea Dorada' la próxima luna llena.",
+   "El Capitán Fumio Hiroshi tiene órdenes secretas de capturar a un pirata específico con recompensa alta vivo, para una entrega especial a los Dragones Celestiales, y está dispuesto a hacer tratos sucios para lograrlo.",
+   "Algunas de las burbujas del archipiélago no están hechas de resina común, sino de los suspiros petrificados de una antigua tribu, y quien las recoja correctamente podría obtener recuerdos o poder."
   ]
  },
  {
   "island": "Cuartel Marine G-5",
-  "atmosphere": "Una base de entrenamiento gris y disciplinada en el límite del East Blue, donde los reclutas aprenden que la justicia absoluta empieza por obedecer órdenes. El aire huele a acero, sudor y determinación. Todo es rígido, desde las formaciones hasta las miradas de los soldados. Los gritos de los instructores y el eco de los pasos marciales crean una sinfonía constante de orden y disciplina.",
-  "history": "Establecida en una isla estratégica del East Blue para formar a la nueva generación de marines. Durante años, ha moldeado a reclutas en soldados rígidos y eficientes, aunque algunos terminan demasiado fanáticos. Recientemente, su reputación se ha visto desafiada por el creciente número de piratas novatos en la zona.",
+  "atmosphere": "Gris, disciplinada y cargada de una tensión silenciosa. El aire huele a sudor, metal y el humo de los fogones de los baños. Las paredes resuenan con órdenes militares, pasos marciales y el ocasional susurro de rumores entre los reclutas. La justicia absoluta se enseña aquí como una obediencia ciega, y la presión por dar resultados es palpable en cada rincón.",
+  "history": "El Cuartel G-5 fue establecido como un puesto de avanzada en la frontera del East Blue para mantener el orden y formar nuevas generaciones de marines. Durante años, su disciplina férrea ha forjado soldados leales. En los últimos tiempos, sin embargo, el aumento de la actividad pirata novata en la zona ha puesto a prueba sus métodos tradicionales y la paciencia de su comandante.",
   "customs": [
-   "El saludo al comandante al amanecer es obligatorio para todo el personal.",
-   "Los reclutas deben lavar y pulir el equipamiento de sus superiores como parte del entrenamiento.",
-   "La cena en la cantina es un acto silencioso, donde solo se escuchan los cubiertos."
+   "El 'Saludo del Amanecer': cada mañana, todos los reclutas deben presentarse ante el asta de la bandera para jurar lealtad a la Justicia antes del desayuno.",
+   "La 'Cena del Silencio': en el comedor principal, está prohibido hablar durante la primera media hora de la cena, para fomentar la reflexión sobre el deber del día.",
+   "La 'Inspección del Honor': cada fin de semana, un oficial superior inspecciona al azar los barracones y pertenencias personales, buscando cualquier señal de indisciplina o 'pensamiento blando'."
   ],
   "places": [
    {
-    "name": "Torre de Vigilancia Alfa",
-    "kind": "torre",
-    "description": "Una torre de vigilancia de acero que domina el horizonte marino. Las banderas marinas ondean con fuerza en su cima y desde aquí se divisan las rutas de entrada a la isla. Es el primer punto de contacto con cualquier amenaza.",
+    "name": "La Cantina del Límite",
+    "kind": "taberna",
+    "description": "Una cantina austera de paredes de piedra, el único lugar donde se permite cierto relax (controlado). El olor a cerveza tibia y guiso barato llena el aire. Junior sirve bebidas con una sonrisa cansina, siempre atento a las quejas de los clientes.",
     "regulars": [
+     "Junior el Tabernero",
+     "Lia la Recluta",
+     "Barnaby"
+    ]
+   },
+   {
+    "name": "El Patio de Instrucción",
+    "kind": "cuartel",
+    "description": "Un enorme rectángulo de tierra apisonada, marcado por huellas de botas y manchas de óxido. Aquí es donde el Sargento Tango y el Capataz Gred rompen y moldean a los reclutas bajo el sol y la lluvia. El eco de los conteos de flexiones es constante.",
+    "regulars": [
+     "Sargento Tango",
+     "Gred el Capataz",
+     "Lia la Recluta"
+    ]
+   },
+   {
+    "name": "La Torre de Vigilancia 'Ojo del Este'",
+    "kind": "torre de vigilancia",
+    "description": "Una torre de piedra alta y estrecha con ventanas estrechas que dominan el horizonte marino. Siempre hay un guardia en turno, pegado a un catalejo. El viento silba entre las almenas, y el registro de avistamientos es meticuloso.",
+    "regulars": [
+     "Kaine",
      "Hans el Guardia"
     ]
    },
    {
-    "name": "Patio de Entrenamiento Principal",
-    "kind": "campo de entrenamiento",
-    "description": "Un vasto patio de tierra batida y grava donde los reclutas se rompen el cuerpo y la voluntad. Marcado por obstáculos, dianas y áreas para combate cuerpo a cuerpo, siempre está lleno de actividad y órdenes a gritos.",
+    "name": "Los Archivos y Cartografía",
+    "kind": "archivo",
+    "description": "Una habitación abarrotada de estantes polvorientos, mapas enrollados y pilas de informes. El aire huele a papel viejo y tinta. Isolde organiza este caos con una eficiencia silenciosa, anotando cada movimiento de barcos en la región.",
     "regulars": [
-     "Sargento Tango",
-     "Lia la Recluta",
-     "Gred el Capataz"
-    ]
-   },
-   {
-    "name": "Cantina 'El Cuerno de Sirena'",
-    "kind": "taberna/cantina",
-    "description": "El único lugar donde se permite cierta relajación, aunque mínima. Huele a café fuerte y comida sencilla. Las mesas están llenas de marines cansados que hablan en susurros sobre sus jornadas.",
-    "regulars": [
-     "Junior el Tabernero",
-     "Lia la Recluta",
+     "Isolde",
      "Teniente Armstrong"
     ]
    },
    {
-    "name": "Almacén de Suministros",
+    "name": "La Enfermería",
+    "kind": "enfermería",
+    "description": "Una sala blanca y desinfectada, demasiado silenciosa. Las camas están siempre impecables, esperando a los heridos del entrenamiento. Vera se mueve entre ellas comprobando vendajes y medicamentos con una calma profesional.",
+    "regulars": [
+     "Vera",
+     "Rufus el Mecánico"
+    ]
+   },
+   {
+    "name": "El Taller de Maquinaria",
+    "kind": "taller",
+    "description": "Un cobertizo de metal lleno de herramientas, piezas de barco y el olor penetrante a aceite y carbón. Rufus suele estar cubierto de grasa, martilleando o ajustando el equipo de la base. Es un desorden organizado donde todo tiene su lugar.",
+    "regulars": [
+     "Rufus el Mecánico",
+     "Clyde"
+    ]
+   },
+   {
+    "name": "El Almacén de Suministros",
     "kind": "almacén",
-    "description": "Un hangar enorme y ordenado, repleto de cajas con munición, uniformes y raciones. Aquí todo tiene su lugar y su inventario se revisa diariamente. Es un lugar de intercambio constante de mercancías y rumores.",
+    "description": "Un edificio largo y bajo, siempre cerrado con candado. Dentro, los estantes están repletos de raciones, uniformes y material de entrenamiento. Melo negocia cada entrega con el teniente, llevando un registro escrupuloso de cada clavo.",
     "regulars": [
      "Melo el Comerciante",
-     "Hans el Guardia"
-    ]
-   },
-   {
-    "name": "Taller de Mantenimiento",
-    "kind": "taller",
-    "description": "Un caos controlado de herramientas, piezas de repuesto y aceite. Aquí se reparan armas, vehículos y cualquier equipo del cuartel. El sonido del metal es constante.",
-    "regulars": [
-     "Rufus el Mecánico",
-     "Gred el Capataz"
-    ]
-   },
-   {
-    "name": "Cuarto de Reuniones del Comandante",
-    "kind": "oficina/cuartel",
-    "description": "Una sala austera y fría, con un gran mapa del East Blue en la pared y una mesa de reuniones de acero pulido. Aquí se planifican las operaciones y se reciben las reprimendas. La presión por obtener resultados es palpable.",
-    "regulars": [
      "Teniente Armstrong",
-     "Sargento Tango"
-    ]
-   },
-   {
-    "name": "Barracas de los Reclutas",
-    "kind": "dormitorio",
-    "description": "Una larga nave con literas de metal perfectamente alineadas. No hay espacio para lo personal, solo para el descanso funcional. Por la noche se escuchan los suspiros y quejas ahogadas de los novatos.",
-    "regulars": [
-     "Lia la Recluta",
      "Hans el Guardia"
     ]
    },
    {
-    "name": "Muelle de Despliegue",
-    "kind": "puerto",
-    "description": "Un muelle militar robusto donde atracan las pequeñas embarcaciones de patrulla y los barcos de suministro. La actividad es constante, con marines cargando provisiones o preparándose para zarpar en misiones.",
+    "name": "Los Baños Comunales y Calderas",
+    "kind": "baños comunales",
+    "description": "Una sala de vapor y azulejos sucios en el sótano del cuartel. El calor es sofocante y el sonido del agua goteando es constante. Clyde, el fogonero, mantiene las calderas encendidas, un trabajo solitario y sudoroso.",
     "regulars": [
-     "Gred el Capataz",
-     "Rufus el Mecánico",
-     "Melo el Comerciante"
+     "Clyde",
+     "Barnaby"
+    ]
+   },
+   {
+    "name": "El Muelle de Inspección",
+    "kind": "puerto",
+    "description": "Un muelle de madera reforzada que se adentra en el mar frío. Aquí atracan los barcos de suministro y, ocasionalmente, barcos detenidos para inspección. Raz merodea por aquí, observando las cargas y tomando notas en un pequeño libro.",
+    "regulars": [
+     "Raz",
+     "Hans el Guardia",
+     "Kaine"
+    ]
+   },
+   {
+    "name": "La Panadería de la Base",
+    "kind": "panadería",
+    "description": "Un pequeño anexo junto a la cocina principal, donde el aroma a pan recién horneado es el único consuelo matutino. Boris trabaja antes del amanecer, y su producto es la mercancía más valiosa y disputada del cuartel.",
+    "regulars": [
+     "Boris Panaderia",
+     "Lia la Recluta",
+     "Junior el Tabernero"
     ]
    }
   ],
   "rumors": [
-   "Se rumorea que el Teniente Armstrong está preparando una operación secreta contra una tripulación novata muy problemática.",
-   "Alguien ha estado robando pequeñas cantidades de pólvora del almacén, y los superiores creen que es un recluta.",
-   "Un barco de suministros desapareció sin dejar rastro en una ruta supuestamente segura, y se sospecha de piratas locales.",
-   "Un viejo marine dice haber visto una extraña luz bajo el agua cerca del muelle en las noches sin luna."
+   "Un barco de suministros llegó la semana pasada con varias cajas selladas con el símbolo de la Justicia, pero nadie, ni siquiera Melo, tiene permiso para abrirlas. Se guardan bajo llave en el almacén.",
+   "Clyde jura haber visto luces extrañas, como señales, en la costa norte en noches sin luna, pero cada vez que informa, el Teniente Armstrong le dice que son imaginaciones suyas.",
+   "El viejo Barnaby, cuando ha bebido demasiado en la cantina, murmura sobre un 'expediente sellado' en los archivos que habla de una antigua instalación abandonada cerca de la base, de la época de su fundación.",
+   "Raz ha estado interrogando a marineros mercantes en el muelle con más insistencia de lo habitual, preguntando por un barco pequeño y rápido con una vela parchada, que no figura en ningún registro oficial.",
+   "Entre los reclutas circula el chisme de que la próxima inspección del comandante no será rutinaria; vendrá con un enviado de la sede principal para evaluar la 'eficacia operativa' tras los últimos problemas con piratas novatos."
   ]
  },
  {
   "island": "Dressrosa",
-  "atmosphere": "Una vibrante máscara de fiesta eterna y pasión desbordante, con el perfume embriagador de flores exóticas y el rugido de la multitud del coliseo. Bajo el sol y los cánticos, en las calles adoquinadas, una tensión sorda recuerda las pesadillas de un pasado reciente, una cicatriz que palpita bajo los edificios de juguete reconstruidos.",
-  "history": "Durante una década, la isla y su pueblo vivieron como marionetas bajo el cruel juego de un rey impostor. Liberada tras una batalla épica que destrozó su palacio, Dressrosa se reconstruyó con esfuerzo, recuperando su nombre y su alegría, pero cargando con el peso del recuerdo y la desconfianza hacia el poder. El coliseo, otrora un teatro de engaños, busca ahora un nuevo propósito bajo la atenta mirada de las nuevas autoridades.",
+  "atmosphere": "La isla de la pasión: un tapiz vibrante de flores, plazas soleadas y música callejera que apenas disimula el miedo a recaer en la pesadilla de un reinado de marionetas. El rugido del coliseo es un latido constante, pero bajo el entusiasmo por la fama y los espectáculos, las calles guardan el silencio tenso de cicatrices que no terminan de cerrar.",
+  "history": "Dressrosa fue gobernada durante una década por el tirano Donquixote Doflamingo, quien convirtió a sus ciudadanos en marionetas de juguete. Tras su derrota a manos de la alianza Pirata-Mugiwaras y el Ejército Revolucionario, el reino fue liberado y comenzó una dolorosa reconstrucción. El rey Riku regresó al trono, pero la sombra de la Familia Donquixote y las cicatrices físicas y emocionales de aquellos años aún marcan cada rincón de la isla.",
   "customs": [
-   "Ofrecer una rosa roja a un rival antes de un duelo, como símbolo de pasión y respeto, sin importar el desenlace.",
-   "Cada atardecer, en la Plaza de los Suspiros, la gente se detiene un momento en silencio, un ritual colectivo para recordar y luego seguir.",
-   "Los combates del Coliseo Corrida ya no otorgan títulos ni frutas del diablo, pero un triunfo allí sigue siendo la forma más rápida de ganar fama y respeto en la isla."
+   "El 'Baile de las Rosas' cada atardecer en la Plaza de los Suspiros, un ritual para honrar a los liberados del hechizo del juguete.",
+   "Ofrecer una flor exótica a los recién llegados al puerto como símbolo de bienvenida y advertencia tácita de la fragilidad de la paz.",
+   "Narrar en voz baja, en las tabernas, las historias de los 'Años de Juguete' para que nadie las olvide, aunque sea peligroso."
   ],
   "places": [
    {
     "name": "Las Rosas Tostadas",
     "kind": "taberna",
-    "description": "Un local cálido y ruidoso, siempre lleno del olor a vino especiado y carne a la brasa. Sus paredes están decoradas con carteles de antiguos gladiadores y ramos de flores marchitas. Es el lugar donde se cierran apuestas y se cuentan las hazañas del día.",
+    "description": "Una taberna acogedora y llena de macetas, donde el olor a café fuerte y vino barato se mezcla con el rumor de conversaciones bajas y miradas esquivas. Un refugio para quienes no quieren ser vistos.",
     "regulars": [
-     "Brisa"
+     "Brisa",
+     "Tullius",
+     "Greta"
     ]
    },
    {
     "name": "Coliseo Corrida",
     "kind": "coliseo",
-    "description": "El gigante de piedra donde el rugido de la multitud parece sacudir los cimientos. La arena, reluciente y marcada, es un altar para la reputación. En las gradas más altas, las sombras observan en silencio, separadas del bullicio general.",
+    "description": "La arena monumental vuelve a retumbar con el clamor de la multitud y el choque de armas. Las luchas ya no son por la Fruta Mera Mera, sino por gloria, venganzas personales o el simple espectáculo. El aire huele a polvo, sudor y ambición.",
     "regulars": [
      "Lépido",
-     "Torvo"
-    ]
-   },
-   {
-    "name": "Mercado de la Ribera",
-    "kind": "mercado",
-    "description": "Una explosión de color y aromas junto al río, con toldos de lona ondeando bajo el sol. Los puestos rebosan de flores imposibles, especias y telas brillantes. Es el corazón comercial de la isla y un hervidero de chismes.",
-    "regulars": [
-     "Azahara"
+     "Torvo",
+     "Pompa"
     ]
    },
    {
     "name": "Plaza de los Suspiros",
     "kind": "plaza",
-    "description": "Una plaza amplia y bella, con una fuente central y bancos de piedra bajo árboles en flor. Tiene una calma peculiar, casi reverencial, especialmente al atardecer. Es el lugar de la memoria colectiva.",
+    "description": "El corazón social de Dressrosa, adornada con fuentes y arriates de flores desbordantes. Es donde la ciudad exhala sus alegrías y sus pesares, y donde los viejos narradores mantienen viva la memoria colectiva.",
     "regulars": [
-     "Argos"
+     "Argos",
+     "Mirlo",
+     "Sileno"
     ]
    },
    {
-    "name": "Plaza de la Fuente",
-    "kind": "plaza",
-    "description": "Un cruce bullicioso y turístico cerca del coliseo, siempre llena de vendedores ambulantes y visitantes. La gran fuente es un punto de encuentro, pero también un lugar donde los bolsillos desaparecen con destreza.",
+    "name": "Mercado de la Ribera",
+    "kind": "mercado",
+    "description": "Un estallido de color y aroma donde se apilan flores exóticas, especias y recuerdos turísticos del coliseo. El regateo es feroz y los ojos de los vendedores están siempre alerta.",
     "regulars": [
-     "Mirlo",
+     "Azahara",
+     "Calista",
      "Pompa"
     ]
    },
    {
-    "name": "Puerto de Acacias",
+    "name": "Puerto Reconstruido (Puerto Rico)",
     "kind": "puerto",
-    "description": "Un puerto en constante renovación, con grúas, andamios y el sonido del martilleo mezclándose con los gritos de los estibadores. Los barcos nuevos atracan junto a muelles recién reconstruidos, símbolo del progreso de Dressrosa.",
+    "description": "Andamios y grúas conviven con los nuevos muelles de piedra clara. Es un símbolo de la recuperación, pero también un punto de tensión entre la actividad legal y los movimientos furtivos que prefieren los viejos muelles abandonados.",
     "regulars": [
-     "Yunque"
+     "Yunque",
+     "Greta",
+     "Nereo"
     ]
    },
    {
-    "name": "Cuartel de la Fuerza de Orden",
-    "kind": "cuartel",
-    "description": "Un edificio nuevo, de líneas severas y pulcras, que contrasta con la arquitectura juguetona de la ciudad. Los guardias entrenan en su patio con disciplina férrea. Representa la nueva ley, vigilante y estricta.",
+    "name": "Callejón de los Suspiros",
+    "kind": "callejón",
+    "description": "Una vía estrecha y sombría, alejada del bullicio de las plazas. Aquí los negocios son discretos y las sombras albergan secretos, deudas pendientes y los ecos del pasado.",
     "regulars": [
+     "Sileno",
+     "Corvus Marro",
+     "Seraphina"
+    ]
+   },
+   {
+    "name": "Gradas Altas del Coliseo",
+    "kind": "palco",
+    "description": "Una zona reservada y lujosa, con butacas de terciopelo y servicio de camareros. Desde aquí, la élite y quienes mueven los hilos observan el espectáculo de la arena con mirada fría y calculadora.",
+    "regulars": [
+     "Torvo",
+     "Seraphina",
      "Vargas"
     ]
    },
    {
-    "name": "Archivo del Coliseo",
-    "kind": "oficina de registro",
-    "description": "Una habitación abarrotada de pergaminos, libros de actas y estanterías polvorientas en un ala del coliseo. El aire huele a papel viejo y tinta. Aquí se registra cada combate, cada gladiador y cada apuesta oficial.",
+    "name": "Plaza de la Fuente",
+    "kind": "plaza secundaria",
+    "description": "Una plaza más pequeña y menos vigilada, donde turistas descuidados y marineros en tierra son el blanco perfecto para carteristas y matones que operan a plena luz del día.",
     "regulars": [
-     "Lépido"
+     "Mirlo",
+     "Corvus Marro"
     ]
    },
    {
-    "name": "Callejón de los Alfareros",
-    "kind": "calle comercial",
-    "description": "Una calle empedrada y estrecha, más tranquila, donde los artesanos modelan y pintan coloridas figurillas de cerámica. Muchas representan a gladiadores, reyes o... juguetes rotos. Es un rincón de artesanía y memoria silenciosa.",
-    "regulars": []
+    "name": "Acantilados del Este y Puerto Escondido",
+    "kind": "costa natural y puerto clandestino",
+    "description": "Un paisaje agreste de rocas afiladas y cuevas ocultas por la vegetación. Entre las grietas se esconden restos de los muelles usados por la Familia Donquixote y, se rumorea, aún sirven para tráficos no oficiales.",
+    "regulars": [
+     "Nereo",
+     "Greta",
+     "Hierro"
+    ]
    },
    {
-    "name": "Mirador del Palacio Viejo",
-    "kind": "mirador/ruinas",
-    "description": "Un promontorio con vistas espectaculares a la ciudad y al mar. Solo quedan algunos cimientos y escaleras rotas del antiguo palacio de juguete. La gente viene aquí para reflexionar, a menudo en completo silencio.",
-    "regulars": []
+    "name": "Cuartel de la Fuerza de Orden Público",
+    "kind": "cuartel",
+    "description": "Un edificio nuevo de aspecto severo, destinado a proyectar seguridad y ley. Sin embargo, sus pasillos están llenos de tensiones entre los guardias leales al rey y aquellos que añoran el 'orden' brutal del antiguo régimen.",
+    "regulars": [
+     "Vargas"
+    ]
    }
   ],
   "rumors": [
-   "Se dice que en los túneles bajo el coliseo, aún no sellados del todo, se pueden encontrar restos olvidados de la fábrica de juguetes, y que a veces se oyen sollozos.",
-   "Corre el rumor de que algunos de los combates más prometedores del coliseo son 'arreglados' desde las gradas altas, para moldear la reputación de ciertos gladiadores a conveniencia.",
-   "Algunos marineros hablan de extrañas luces que se ven de noche en las ruinas del palacio viejo, como si algo o alguien aún merodeara por allí.",
-   "Hay quien susurra que ciertas flores exóticas del mercado, las más bellas y raras, no crecen en ningún vivero de la isla, sino en un jardín secreto que nadie puede encontrar.",
-   "Se rumorea que la Fuerza de Orden Público intercepta y revisa en secreto cierta correspondencia que llega al puerto, buscando mensajes codificados o señales de antiguos colaboradores del régimen anterior."
+   "Se dice que en los túneles bajo el coliseo, nunca completamente explorados, aún deambulan marionetas de juguete que no recuperaron su forma humana.",
+   "Un cargamento de armas de tecnología extraña, posiblemente restos del negocio de SMILE, ha aparecido en el mercado negro del Puerto Escondido.",
+   "Alguien está sobornando a los funcionarios del coliseo para que ciertos luchadores 'tengan un accidente' antes de llegar a la final, y las apuestas se están volviendo mortales.",
+   "Un grupo de ciudadanos, traumatizados por los años de opresión, planea un ataque simbólico contra el coliseo para 'acabar con el circo de la violencia', sin importar las víctimas.",
+   "Se escuchan golpes metálicos y cantos tristes por las noches cerca de las antiguas minas secretas, como si los esclavos que allí murieran aún estuvieran trabajando."
   ]
  },
  {
   "island": "Elbaf",
-  "atmosphere": "Una tierra de titanes donde cada árbol es una catedral viva y cada piedra parece contener un eco de batalla ancestral. El aire huele a tierra húmeda, hierro frío y humo de leña gigante. El rugido de una pelea ritual o el eco de una canción de guerra pueden sacudir el suelo en cualquier momento.",
-  "history": "Isla de los gigantes, cuna de los guerreros más temidos del mundo. Su historia se escribe en batallas y juramentos tallados en piedra. Una generación atrás, una gran promesa entre los clanes fue rota, desencadenando un conflicto que, aunque muchos ya olvidaron su origen, sigue definiendo su honor y dividiendo a su pueblo. Hoy, dos campeones llevan décadas luchando en un duelo sin fin que mantiene la isla en un punto muerto de gloria y frustración.",
+  "atmosphere": "Tierra de colosos, donde cada paso hace temblar el suelo y el honor es un yunque que forja cada acción. Bosques de una escala que aplasta el alma humana, con árboles que son montañas vivientes. El aire huele a tierra húmeda, madera rota y el humo de los grandes fogones. El rugido de los gigantes y el estruendo de sus combates son la banda sonora constante. Los humanos son como insectos, tolerados a veces, ignorados o aplastados con facilidad.",
+  "history": "Isla ancestral de los gigantes, cuna de guerreros cuya historia se mide en siglos de batallas y juramentos sagrados. Hace generaciones, dos gigantes legendarios hicieron una promesa que ahora divide al pueblo. Una disputa eterna comenzó, olvidando el origen pero manteniendo viva la llama del conflicto por honor. El Consejo de Gigantes intenta mantener un frágil orden mientras el resto del mundo los ve como una leyenda salvaje.",
   "customs": [
-   "El 'Habla de Piedra': Antes de cualquier acuerdo importante, las palabras clave se graban en una piedra que se rompe en dos, una mitad para cada parte.",
-   "El Gran Fogón Comunal: Al caer la noche, cada aldea se reúne alrededor de un fuego monumental para compartir comida, historias de hazañas y resolver disputas menores.",
-   "El Camino del Susurro: Los jóvenes guerreros deben pasar una noche en solitario en el Bosque de los Susurros para 'escuchar' el juicio de los ancestros antes de ser considerados adultos."
+   "El 'Desafío del Honor': disputas se resuelven con combate singular, pero no a muerte, sino hasta que uno admita su error o quede incapacitado.",
+   "Los 'Juramentos en Piedra': promesas importantes se graban en las colosales Piedras del Juramento; romperlas es la mayor deshonra.",
+   "El 'Gran Fogón Comunal': al anochecer, los gigantes se reúnen para comer, beber y contar hazañas; los forasteros son juzgados por su comportamiento aquí."
   ],
   "places": [
    {
-    "name": "El Hacha y el Cántaro",
+    "name": "'El Hacha y el Cántaro'",
     "kind": "taberna",
-    "description": "Una taberna tallada en la base de un árbol colosal, con mesas que son secciones de troncos y barriles del tamaño de casas humanas. El olor a cerveza fuerte y carne ahumada llena el aire, y las paredes están adornadas con hachas de batalla y los cántaros que dan nombre al lugar.",
+    "description": "Una taberna tallada en la base de un árbol inmenso, con mesas de roca y barriles más altos que una casa humana. El aire es denso por el humo de la hoguera central y el olor a cerveza de miel fuerte. Los cántaros para servir son del tamaño de bañeras.",
     "regulars": [
      "Hjalmar Piedrarraiga",
      "Kettil Rompehuesos",
-     "Thrain Ojo de Halcón"
+     "Baldur Roca"
     ]
    },
    {
-    "name": "La Roca del Consejo",
-    "kind": "asamblea",
-    "description": "Un enorme promontorio de piedra pulida por el tiempo, con asientos esculpidos en la roca viva. Es el lugar donde los guerreros más veteranos y sabios debaten los asuntos de la isla, con vistas a los vastos bosques y al campo de batalla de los dos gigantes.",
+    "name": "Roca del Consejo",
+    "kind": "cuartel",
+    "description": "Una meseta de piedra pulida por los siglos, rodeada de estatuas de guerreros ancestrales. Aquí se reúne el consejo de gigantes y su guardia mantiene una vigilancia feroz. Las runas de leyes antiguas están grabadas en el suelo.",
     "regulars": [
      "Gunnvor la Sentenciadora",
-     "Freyja Runasangre"
+     "Alfrik Korador"
+    ]
+   },
+   {
+    "name": "Piedras del Juramento",
+    "kind": "templo",
+    "description": "Un círculo de monolitos de obsidiana más altos que un acantilado, cubiertos de runas brillantes con una energía antigua. El silencio aquí es absoluto y el aire vibra con poder. Es el lugar más sagrado de Elbaf.",
+    "regulars": [
+     "Freyja Runasangre",
+     "Magnus Petromed"
+    ]
+   },
+   {
+    "name": "Gran Fogón Comunal",
+    "kind": "plaza",
+    "description": "Una explanada enorme con un fuego perpetuo que quema troncos enteros de árboles colosales. Es el corazón social de la aldea, donde se cocina, come y discute. El olor a carne asada y pan gigante es constante.",
+    "regulars": [
+     "Sigrun Caldero Hirviente",
+     "Bjorn Caminante de Bestias",
+     "Kneicht Trebajo"
     ]
    },
    {
     "name": "Bosque de los Susurros",
-    "kind": "bosque sagrado",
-    "description": "Un bosque ancestral donde los árboles alcanzan alturas imposibles y sus copas forman un dosel que apenas deja pasar la luz. Se dice que el viento que corre entre las enormes raíces y troncos susurra los secretos y juicios de los gigantes que ya no están. Un lugar de prueba y contemplación.",
+    "kind": "bosque",
+    "description": "Una densa selva de árboles tan altos que sus copas se pierden en las nubes. La luz es tenue y verde, y los sonidos parecen susurrar secretos antiguos. Es fácil perderse y encontrar bestias colosales.",
     "regulars": [
-     "Brodir Fuerzapura"
+     "Brodir Fuerzapura",
+     "Hakan Mecha"
     ]
    },
    {
-    "name": "Las Piedras del Juramento",
-    "kind": "templo/ruinas",
-    "description": "Un círculo de monolitos de piedra rúnica, más altos que muchos acantilados. Las superficies están cubiertas de runas desgastadas que narran promesas, tratados y maldiciones ancestrales. El aire aquí es denso y silencioso, cargado de historia.",
+    "name": "Playa de los Gigantes",
+    "kind": "playa",
+    "description": "Una costa de guijarros del tamaño de casas, donde yacen restos de naves naufragadas como juguetes rotos y reliquias de antiguas batallas. Las olas rompen con furia contra las rocas gigantes.",
     "regulars": [
-     "Freyja Runasangre"
+     "Magnus Petromed",
+     "Kaira El Viento"
     ]
    },
    {
-    "name": "El Gran Fogón Comunal",
-    "kind": "plaza/área social",
-    "description": "El corazón de la aldea principal, donde un fuego perpetuo arde en un pozo de piedra del tamaño de una plaza de pueblo humano. Es el lugar de reunión para comidas, canciones y narración de sagas bajo el cielo estrellado.",
+    "name": "Aldea de los Gigantes",
+    "kind": "aldea",
+    "description": "Casas de piedra y madera toscamente talladas, con puertas que son portones de fortaleza. Calles anchas de tierra pisoteada donde los gigantes van a sus quehaceres. El centro de la vida cotidiana, lejos del consejo y los juramentos.",
     "regulars": [
-     "Sigrun Caldero Hirviente",
      "Astrid Hilo de Nube",
-     "Bjorn Caminante de Bestias"
+     "Vilda la Espina",
+     "Kneicht Trebajo"
     ]
    },
    {
-    "name": "Puestos del Ojo de Halcón",
+    "name": "Puesto de Thrain",
     "kind": "mercado",
-    "description": "Un conjunto de mesas y cobertizos desplegados cerca del camino principal, donde se intercambian bienes foráneos por recursos locales. Se pueden ver desde herramientas de hierro y telas extrañas hasta extraños artefactos de mundos más pequeños.",
+    "description": "Un tenderete caótico donde el comerciante Thrain apila reliquias, armas rotas y suministros para humanos y gigantes curiosos. Es un punto de encuentro para forasteros y gigantes menos tradicionales.",
     "regulars": [
-     "Thrain Ojo de Halcón"
+     "Thrain Ojo de Halcón",
+     "Kaira El Viento"
     ]
    },
    {
-    "name": "Las Tierras Altas Tejedoras",
-    "kind": "taller/aldea secundaria",
-    "description": "Una serie de cabañas en las laderas más altas, donde el aire es frío y claro. Aquí se hila la lana de las ovejas colosales en telas de una resistencia legendaria, y se tejen los estandartes y tapices que narran las batallas del clan.",
+    "name": "Centro Sanitario",
+    "kind": "hospital",
+    "description": "Una gran cabaña de madera y pieles llena de hierbas colgantes y el olor a ungüentos. Aquí se tratan las heridas de batalla y las enfermedades, con métodos que mezclan lo primitivo y lo efectivo.",
     "regulars": [
-     "Astrid Hilo de Nube"
+     "Finn Blanco",
+     "Baldur Roca"
     ]
    },
    {
-    "name": "El Valle de las Bestias Guardianas",
-    "kind": "granja/pastizal",
-    "description": "Un vasto valle donde pastan las enormes ovejas colosales y otros animales de carga. Sus balidos resuenan como truenos lejanos. Las cabañas de los cuidadores parecen juguetes al pie de las laderas.",
+    "name": "Selva Alta de Caza",
+    "kind": "bosque",
+    "description": "Una zona del bosque más densa y peligrosa, reservada para la caza de bestias colosales. Hay trampas naturales y artificiales, y los cazadores gigantes prueban aquí su valor.",
     "regulars": [
-     "Bjorn Caminante de Bestias"
+     "Alfrik Korador",
+     "Hakan Mecha"
     ]
-   },
-   {
-    "name": "El Campo de la Promesa Rota",
-    "kind": "lugar de conflicto",
-    "description": "Una extensa llanura entre dos colinas, marcada por innumerables cráteres, árboles partidos y el suelo removido por décadas de combate. Es el escenario del duelo interminable entre los dos gigantes legendarios, un recordatorio físico del conflicto actual.",
-    "regulars": []
    }
   ],
   "rumors": [
-   "Se dice que Freyja Runasangre, la custodia, ha encontrado un fragmento de la Piedra del Juramento original que podría revelar las palabras exactas de la promesa olvidada, pero teme que su revelación cause más violencia.",
-   "El duelo de los dos gigantes no es solo por honor: algunos murmuran que luchan sobre quién tiene derecho a un tesoro o un artefacto ancestral escondido en lo más profundo del Bosque de los Susurros.",
-   "Alguien está ofreciendo suministros de calidad sospechosamente alta (quizás incluso armas) a ambos bandos del conflicto, avivando las llamas de la rivalidad en lugar de apagarlas.",
-   "Los 'Susurros' del bosque sagrado se han vuelto más fuertes y agresivos últimamente, y algunos jóvenes que hicieron la prueba no han regresado. Brodir Fuerzapura está cada vez más inquieto.",
-   "Una antigua costumbre olvidada dice que si un forastero (alguien sin tamaño ni prejuicios de gigante) logra detener el duelo, tendrá derecho a pedir un juramento de la isla. Alguien está difundiendo esta idea entre los visitantes."
+   "Las Piedras del Juramento están empezando a agrietarse, lo que algunos ven como un presagio de que el conflicto eterno debe terminar o Elbaf caerá.",
+   "Se dice que en lo más profundo del Bosque de los Susurros yace el verdadero origen de la promesa olvidada, guardado por un guardian ancestral que no es un gigante.",
+   "Un barco humano recientemente naufragado en la Playa de los Gigantes llevaba un mapa que señala una 'reliquia del primer gigante', algo que podría cambiar el equilibrio de poder.",
+   "Kettil Rompehuesos está buscando humanos lo suficientemente tontos para robar una reliquia de las Piedras del Juramento, prometiéndoles riquezas a cambio.",
+   "Algunos gigantes jóvenes, cansados de la lucha eterna, están conspirando en secreto en 'El Hacha y el Cántaro' para forzar una reconciliación, incluso si significa traicionar a los legendarios."
   ]
  },
  {
   "island": "Enies Lobby",
-  "atmosphere": "Una isla de mármol blanco y acero, donde la ley es sinónimo de sentencia. El aire frío y cargado de salitre se mezcla con el eco de los engranajes del Portal de la Justicia y los pasos marciales de la guardia. El Árbol del Conocimiento marchito se alza como un mudo testigo de innumerables condenas, todo bajo la mirada inexpugnable de las torres judiciales.",
-  "history": "Construida como la sede judicial definitiva del Gobierno Mundial, Enies Lobby ha procesado y encarcelado a incontables criminales. Su puerta siempre abierta, el Portal de la Justicia, es una trampa bien conocida. Hace décadas, un Poneglifo confiscado fue sellado en sus archivos más profundos, un secreto que hoy CP-0 protege con celo absoluto, haciendo de la isla una fortaleza inexpugnable.",
+  "atmosphere": "La sede judicial del Gobierno Mundial, un monumento al poder y el terror. Torres de mármol blanco inmaculado se alzan contra un cielo perpetuamente diurno, vigiladas por guardias severos. El aire está cargado de silencio y la amenaza del vacío de los precipicios que rodean la isla, todo dominado por la presencia del Portal de la Justicia y la sombra del marchito Árbol del Conocimiento.",
+  "history": "Construida para ser el bastión judicial inexpugnable del Gobierno Mundial, Enies Lobby ha procesado y enviado a incontables enemigos del orden mundial hacia Impel Down a través de su portal. Su Árbol del Conocimiento, otrora un símbolo de sabiduría, marchitó misteriosamente hace décadas, coincidiendo con la confiscación de un Poneglifo que ahora yace sellado en sus archivos. Desde entonces, es una fortaleza herméticamente controlada por el CP-0.",
   "customs": [
-   "La Justicia siempre vigila: los guardias patrullan en formaciones perfectas y cualquier desviación del protocolo se castiga de inmediato.",
-   "El silencio del culpable: en las áreas judiciales, se espera un silencio absoluto, rotos solo por las voces de los oficiales o los llantos de los condenados.",
-   "Ofrenda al Árbol Seco: aunque marchito, los cuidadores rituales mantienen una rutina diaria de 'alimentar' sus raíces con pergaminos de sentencias ejecutadas, un acto simbólico de que la ley lo nutre "
+   "El 'Veredicto Silencioso': Nadie discute las órdenes de los superiores. La obediencia es total y se manifiesta en un habla susurrante y formal en los corredores.",
+   "El Ritual del Árbol Marchito: Cada amanecer (ritual, pues el sol no se pone), Elara del Árbol Seco realiza una ofrenda de agua pura a las raíces del Árbol del Conocimiento, un acto simbólico de espera",
+   "La Inspección del Vacío: Los guardias asignados a los precipicios deben realizar guardias de larga duración mirando al abismo, una prueba de temple que muchos no superan."
   ],
   "places": [
    {
-    "name": "El Archivo del Árbol del Conocimiento",
-    "kind": "archivo",
-    "description": "Un laberinto de estanterías infinitas y polvorientas, iluminado por tenues luces de den-den mushi. Aquí yacen los expedientes de todos los procesados en Enies Lobby.",
+    "name": "El Portal de la Justicia",
+    "kind": "portal/estructura",
+    "description": "Un inmenso arco de piedra negra y acero, cuyos engranajes giran con un crujido ensordecedor. Es la entrada y salida oficial a la isla, conectando directamente con el transporte hacia Impel Down. El suelo a sus pies está desgastado por miles de arrastres de cadenas.",
     "regulars": [
+     "Arlon Grimsight",
+     "Sargento Garrigan",
+     "Kael el Engranaje"
+    ]
+   },
+   {
+    "name": "El Árbol del Conocimiento Marchito",
+    "kind": "lugar ritual",
+    "description": "Un colosal árbol petrificado y sin hojas en el corazón del complejo. Sus ramas retorcidas proyectan sombras inquietantes sobre el mármol blanco. A sus pies, siempre hay un cuenco de ofrenda vacío y una atmósfera de pesar.",
+    "regulars": [
+     "Elara del Árbol Seco",
      "Serius Parchment"
     ]
    },
    {
-    "name": "La Atalaya del Portal",
-    "kind": "cuartel de vigilancia",
-    "description": "Una sala de control con ventanales que dominan el enorme agujero circular del Portal de la Justicia. Paneles con palancas y tubos de voz permiten operar los mecanismos de la puerta.",
+    "name": "El Archivo Sellado",
+    "kind": "archivo/biblioteca",
+    "description": "Una sala en las profundidades del Árbol del Conocimiento, protegida por puertas de acero y múltiples cerraduras. Está repleta de estanterías vacías salvo por un único estante con un documento bajo llave. El polvo se acumula, pero hay huellas recientes.",
     "regulars": [
-     "Arlon Grimsight",
-     "Kael el Engranaje"
+     "Serius Parchment",
+     "Lysander el Pálido"
+    ]
+   },
+   {
+    "name": "Las Torres del Juicio",
+    "kind": "torres/cuartel",
+    "description": "Tres imponentes torres de mármol blanco conectadas por pasarelas elevadas. Albergan salas de tribunal (ahora en desuso), oficinas de CP-0 y los cuarteles de la guardia. El sonido de botas marciales resuena constantemente en sus corredores.",
+    "regulars": [
+     "Teniente Corvus",
+     "Brogus el Firme",
+     "Borin el Saciado"
     ]
    },
    {
     "name": "El Comedor de la Guardia",
     "kind": "comedor",
-    "description": "Una sala amplia y funcional con mesas largas de metal. El olor a comida sencilla pero abundante llena el aire, un lugar donde los guardias pueden bajar ligeramente la guardia.",
+    "description": "Una sala fría y funcional con largas mesas de metal. La comida es sencilla y abundante, servida en silencio. El olor a estofado barato y café fuerte impregna el aire. Es el único lugar donde los guardias bajan mínimamente la guardia.",
     "regulars": [
      "Borin el Saciado",
-     "Teniente Corvus"
+     "Sargento Garrigan",
+     "Brin 'Cicatriz'"
     ]
    },
    {
     "name": "Los Precipicios del Vacío",
-    "kind": "zona exterior peligrosa",
-    "description": "Los bordes de la isla, donde el mármol se desmorona hacia un abismo infinito de nubes y corrientes marinas furiosas. Cadenas oxidadas se pierden en la bruma.",
+    "kind": "acantilado/patrulla",
+    "description": "Los bordes de la isla, donde la tierra termina abruptamente en un abismo sin fin. Fuertes vientos azotan la zona. Cadenas oxidadas y viejos amarres cuelgan hacia la nada. Es el lugar más solitario y peligroso de la isla.",
     "regulars": [
-     "Silas Void-Walker"
+     "Silas Void-Walker",
+     "Jorik"
     ]
    },
    {
-    "name": "La Raíz del Árbol Seco",
-    "kind": "sitio ritual",
-    "description": "La base del enorme y marchito Árbol del Conocimiento. El suelo está cubierto de pergaminos gastados y símbolos judiciales pintados con tinta negra.",
+    "name": "El Muelle de la 'Providencia Silenciosa'",
+    "kind": "puerto/muelle",
+    "description": "Un pequeño y discreto muelle en una grieta protegida de los precipicios. Solo atraca el buque de logística del Gobierno. El ambiente es de prisas contenidas y descarga sigilosa de suministros bajo la mirada atenta de los guardias.",
     "regulars": [
-     "Elara del Árbol Seco"
+     "Capitán Halvor",
+     "Señora Velora"
     ]
    },
    {
-    "name": "El Muelle de la Autoridad",
-    "kind": "puerto restringido",
-    "description": "El único punto de acceso permitido, vigilado por torretas y guardias de élite. Solo atracan barcos con el sello del Gobierno Mundial o la Marina.",
+    "name": "Los Corredores de Celdas",
+    "kind": "calabozos/pasillos",
+    "description": "Un laberinto de pasillos húmedos y fríos bajo las torres, con celdas vacías cuyas puertas nunca se cierran del todo, chirriando con el viento. El silencio aquí es absoluto y opresivo, roto solo por el sonido de una escoba.",
     "regulars": [
-     "Teniente Corvus"
+     "Lysander el Pálido",
+     "Maren"
     ]
    },
    {
-    "name": "Las Calderas del Firme",
-    "kind": "sala de máquinas",
-    "description": "Un infierno de vapor y metal bajo las torres. Gigantescos engranajes y tuberías mantienen en funcionamiento los sistemas de la isla, desde las puertas hasta la calefacción.",
+    "name": "La Sala de Mecanismos",
+    "kind": "taller/mecánica",
+    "description": "Una caverna llena de engranajes, poleas y vapor, ubicada bajo el Portal de la Justicia. El calor es sofocante y el ruido de las máquinas, ensordecedor. Es el corazón mecánico que mantiene funcionando la ilusión de normalidad.",
     "regulars": [
-     "Brogus el Firme",
-     "Kael el Engranaje"
+     "Kael el Engranaje",
+     "Pike"
     ]
    },
    {
-    "name": "La Despensa de Velora",
-    "kind": "almacén de suministros",
-    "description": "Un almacén meticulosamente organizado donde se reciben y almacenan todos los víveres, materiales y suministros oficiales para la sede judicial.",
+    "name": "El Nicho del Verdicto Final",
+    "kind": "templo/ermita",
+    "description": "Una pequeña capilla oscura y desnuda tallada en la roca, con vista al abismo. No hay iconos, solo un bloque de piedra a modo de altar. Aquí se venera el concepto abstracto e inexorable de la justicia del Gobierno Mundial.",
     "regulars": [
-     "Señora Velora",
-     "Borin el Saciado"
-    ]
-   },
-   {
-    "name": "La Sala de Interrogatorios Primarios",
-    "kind": "celda judicial",
-    "description": "Una habitación fría y desnuda de mármol, con una mesa y dos sillas fijas al suelo. Una mirilla en la puerta permite la observación externa.",
-    "regulars": [
-     "Teniente Corvus"
-    ]
-   },
-   {
-    "name": "La Galería de los Condenados",
-    "kind": "pasillo ceremonial",
-    "description": "Un largo corredor que conecta las celdas con el Portal. Las paredes están talladas con los rostros de famosos piratas juzgados aquí, una advertencia silenciosa para los nuevos prisioneros.",
-    "regulars": [
-     "Arlon Grimsight"
+     "Anselm del Vacío"
     ]
    }
   ],
   "rumors": [
-   "Se dice que el archivo sellado sobre el Poneglifo no es un simple documento, sino una llave física que abre una cámara oculta dentro del tronco hueco del Árbol del Conocimiento.",
-   "Los exploradores de los precipicios hablan de 'ecos' que no son del viento: susurros de prisioneros que intentaron escapar y cayeron al vacío, cuyas voces quedaron atrapadas en las corrientes.",
-   "Un rumor entre los técnicos sugiere que el Portal de la Justicia tiene un 'modo de fallo' secreto. Si se manipulan las calderas principales en una secuencia específica, la puerta podría quedarse atascada en 'abierto' durante unos preciosos ",
-   "La Señora Velora a veces recibe pedidos de ingredientes exóticos y específicos que no figuran en ningún menú oficial, destinados a banquetes privados de altos funcionarios del CP-0 que visitan en secreto.",
-   "Algunos guardias veteranos juran que, en noches de luna llena, el Árbol Seco parece 'sangrar' una savia negra y espesa por sus grietas, y que Elara del Árbol Seco la recoge en frascos de cristal."
+   "El archivo sellado en el Árbol del Conocimiento no contiene solo la ubicación de un Poneglifo, sino las coordenadas de una 'Isla Perdida' anterior al Siglo Vacío.",
+   "El Árbol del Conocimiento no está realmente muerto; su corazón late muy lentamente bajo tierra, y su savia (ahora negra como la tinta) mana en algún lugar de los precipicios.",
+   "El Portal de la Justicia tiene un fallo: si se activa en una secuencia específica y errónea, no envía a Impel Down, sino a un lugar desconocido en los mares.",
+   "Algunos de los 'desaparecidos' que intentaron infiltrarse en Enies Lobby no murieron, sino que fueron reclutados a la fuerza por el CP-0 tras un lavado de cerebro, y ahora trabajan entre el personal de mantenimiento.",
+   "El buque 'Providencia Silenciosa' no solo trae suministros; a veces lleva 'paquetes especiales' en cajas selladas que bajan directamente al Archivo Sellado, y que nadie vuelve a ver salir."
   ]
  },
  {
   "island": "G-8 Navarone",
-  "atmosphere": "Una inmensa fortaleza naval de acero y piedra, encajonada entre acantilados inexpugnables. El aire huele a salitre, aceite y, de fondo, al constante aroma de la cocina masiva. El silbato de las formaciones, el eco de los pasos en los patios y el susurro de los radares crean un zumbido de disciplina militar perfecta, ahora tensa por una vigilancia extraordinaria.",
-  "history": "Construida por la Marina en una formación natural de acantilados en forma de anillo, Navarone fue diseñada para ser una prisión y una base de operaciones inexpugnable. Su reputación de \"trampa para piratas\" es legendaria, ya que su única entrada es también una trampa mortal controlada por las baterías de los acantilados. Durante años, el Comodoro (ahora Comandante) Jonathan la ha dirigido con una mezcla de eficiencia militar y pragmática humanidad, convirtiendo su cocina en el corazón operativo de la base.",
+  "atmosphere": "Una fortaleza marina imponente, un hormiguero disciplinado y ruidoso de miles de uniformes blancos, cañones y órdenes. El aire huele a salitre, aceite, pólvora y la promesa constante de la sopa del comedor. La tensión es palpable tras la alerta, con patrullas más frecuentes y miradas desconfiadas hacia el mar, pero la rutina de la base nunca se detiene.",
+  "history": "La Fortaleza Navarone fue construida aprovechando la geografía única de un anillo de acantilados, convirtiéndola en una prisión natural casi inexpugnable. Se ganó su temible reputación por la imposibilidad de escapar de sus mazmorras y su poder de fuego masivo. Bajo el mando del Comandante Jonathan, su eficiencia se combina con una extraña humanidad, haciendo de ella una de las bases más peculiares y efectivas de la Marina.",
   "customs": [
-   "La 'Comida de los 1000': Un ritual diario donde toda la guarnición, de rango alto a bajo, come junta en el comedor principal tras el sonido de un gong. Es un momento de cohesión forzosa.",
-   "Inspección de la Marea: Cada mañana, la pescadora Marea llega con su barca y su captura es inspeccionada personalmente por un oficial. Es tanto una tradición de suministro como un protocolo de segurid",
-   "El Silencio del Radar: En la torre de comunicaciones, se observa un estricto silencio de no más de tres palabras por informe. La eficiencia en las comunicaciones es un punto de orgullo y disciplina."
+   "La 'Sopa del Comandante': A la hora de la cena, es tradición que cualquier marine, independientemente de su rango, pueda probar un cazo de la sopa que el propio Jonathan supervisa en el gran comedor.",
+   "'La Marea de Provisiones': Cada amanecer, los pescadores locales como Marea atracan en el muelle designado; es el único momento donde civiles tienen acceso restringido al interior de la fortaleza para",
+   "El 'Aguardiente del Cobrador': En los barracones, después del toque de queda, es común que Tullio distribuya su aguardiente de contrabando, un pequeño acto de rebelión tolerado a cambio de favores o i"
   ],
   "places": [
    {
-    "name": "El Caldero de Lena",
-    "kind": "Cocina y Comedor Principal",
-    "description": "Un vasto hangar reconvertido en cocina industrial. Calderos del tamaño de casas humean con guisos, y regimientos de cocineros cortan verduras al unísono. Es el centro neurálgico no oficial de la base, donde fluyen todos los rumores.",
+    "name": "El Gran Comedor Principal",
+    "kind": "Comedor y Cocina",
+    "description": "Un vasto salón con mesas largas que retumban con el ruido de cubiertos, risas y órdenes. Los vapores de las enormes calderas de sopa empañan las ventanas. El corazón de la vida social de la base.",
     "regulars": [
-     "Lena Cocina Larga",
-     "Marea"
+     "Lena Cocina Larga"
     ]
    },
    {
-    "name": "El Portón de Hierro",
-    "kind": "Puerta Principal y Puesto de Guardia",
-    "description": "La única entrada marítima a la fortaleza, una enorme compuerta de acero entre los acantilados. Desde aquí, las cadenas para bloquear el canal y los cañones apostados en las murallas controlan quién entra y, sobre todo, quién sale.",
+    "name": "La Torre de Vigilancia y Comunicaciones",
+    "kind": "Puesto de Mando",
+    "description": "La torre más alta de la fortaleza, llena de paneles de radar parpadeantes, transceptores de Den Den Mushi y mapas de navegación. Desde aquí se ve toda la bahía y más allá.",
     "regulars": [
-     "Brock Muro",
+     "Morse",
+     "Runa"
+    ]
+   },
+   {
+    "name": "El Gran Portón de Entrada",
+    "kind": "Puerta Fortificada",
+    "description": "Una gigantesca puerta de acero y madera reforzada, el único acceso marítimo al interior del anillo de acantilados. Siempre custodiada por un pelotón y el sonido de las cadenas del rastrillo.",
+    "regulars": [
+     "Brock Muro"
+    ]
+   },
+   {
+    "name": "Astilleros Internos y Dársena",
+    "kind": "Astillero y Puerto",
+    "description": "Una gran piscina interior protegida donde se reparan los barcos de la Marina. El olor a madera nueva, brea y hierro fundido es constante, junto al martilleo incansable.",
+    "regulars": [
+     "Remo Gubia",
+     "Clavo"
+    ]
+   },
+   {
+    "name": "Los Almacenes Principales",
+    "kind": "Almacén y Logística",
+    "description": "Un laberinto de pasillos repletos de cajas, barriles y equipo militar clasificado con precisión maníaca. El silencio solo se rompe por el crujir de las ruedas de los carritos.",
+    "regulars": [
+     "Contador Finch",
+     "Brecca"
+    ]
+   },
+   {
+    "name": "Baterías del Acantilado Norte",
+    "kind": "Posición de Artillería",
+    "description": "Cañones de largo alcance anclados en la roca viva, apuntando al estrecho paso de entrada. La vista es espectacular y mortal. El suelo está salpicado de casquillos gastados.",
+    "regulars": [
      "Kane Pólvora"
     ]
    },
    {
-    "name": "Astilleros del Anillo Interior",
-    "kind": "Astillero y Taller de Carpintería",
-    "description": "Una dársena protegida dentro del anillo de acantilados, donde se reparan los barcos de la Marina. El constante martilleo y el olor a madera resinosa y brea llenan el aire. Es un lugar de trabajo meticuloso y ruidoso.",
-    "regulars": [
-     "Remo Gubia"
-    ]
-   },
-   {
-    "name": "Almacén Delta",
-    "kind": "Almacén y Oficina de Intendencia",
-    "description": "Un laberinto subterráneo de estanterías repletas de provisiones, munición y repuestos. Está meticulosamente organizado; cada clavo tiene su lugar contado. El aire es seco y huele a polvo y papel.",
-    "regulars": [
-     "Contador Finch"
-    ]
-   },
-   {
-    "name": "Batería Acantilado Sur",
-    "kind": "Puesto de Artillería",
-    "description": "Una plataforma de cañones excavada en la roca viva, con una vista panorámica y mortal de la bahía de entrada. Los cañones, siempre limpios, apuntan al estrecho canal. El viento silba constantemente entre los emplazamientos.",
-    "regulars": [
-     "Kane Pólvora"
-    ]
-   },
-   {
-    "name": "La Guarida del Cuervo",
-    "kind": "Oficina de Inteligencia",
-    "description": "Una sala sin ventanas en los niveles superiores, llena de mapas, informes apilados y tablones de corcho con hilos que conectan retratos. El desorden es solo aparente, cada papel está exactamente donde el Teniente Rook lo quiere.",
-    "regulars": [
-     "Teniente Rook"
-    ]
-   },
-   {
-    "name": "Foso Silencioso",
-    "kind": "Calabozos de Máxima Seguridad",
-    "description": "Un nivel de celdas excavado bajo el nivel del mar en la roca del acantilado. El frío es húmedo y penetrante, y el único sonido es el goteo constante del agua de condensación y el eco de los pasos del carcelero.",
+    "name": "Calabozos de Máxima Seguridad",
+    "kind": "Prisión",
+    "description": "Un nivel bajo, húmedo y frío, con celdas de barras gruesas. El eco de los pasos y el goteo del agua salada son los únicos sonidos. La desesperación impregna el aire.",
     "regulars": [
      "Barraco"
     ]
    },
    {
-    "name": "Torre del Ojo que Todo lo Ve",
-    "kind": "Torre de Vigilancia y Comunicaciones",
-    "description": "La estructura más alta de Navarone, coronada por radares giratorios y antenas. Desde aquí se ve millas mar adentro. El interior es un zumbido de equipos electrónicos y luces parpadeantes.",
+    "name": "Muelle de Pescadores",
+    "kind": "Puerto Civil",
+    "description": "Un pequeño embarcadero fuera del gran portón principal, pero dentro del anillo de acantilados. Lleno de botes de pesca, redes secándose y el griterío de las gaviotas. El punto más 'civil' de la fortaleza.",
     "regulars": [
-     "Morse"
+     "Marea",
+     "Sirena",
+     "Casco"
     ]
    },
    {
-    "name": "Muelle de Abastecimiento",
-    "kind": "Muelle y Puerto Interno",
-    "description": "Un pequeño embarcadero dentro de la seguridad del anillo, usado para la pesca y la descarga de suministros menores. Aquí es donde la rutina diaria de la fortaleza se conecta con el mundo exterior de forma controlada.",
+    "name": "Hospital y Jardín de Hierbas",
+    "kind": "Hospital",
+    "description": "Un edificio blanco y limpio, anexo a un pequeño jardín donde crecen plantas medicinales. Un oasis de calma y olor a antiséptico y tierra húmeda.",
     "regulars": [
-     "Marea",
-     "Brock Muro"
+     "Zafiro"
+    ]
+   },
+   {
+    "name": "La Armería y Forja",
+    "kind": "Taller",
+    "description": "Un lugar caluroso y ruidoso donde el hierro al rojo vivo chisporrotea en el agua. Filas de mosquetes, sables y piezas de artillería esperan mantenimiento o reparación.",
+    "regulars": [
+     "Lino"
     ]
    }
   ],
   "rumors": [
-   "El 'barco fantasma' avistado anoche no apareció en el radar de la torre principal, pero el operador Morse juró haber visto su silueta desde la ventana. ¿Es un error técnico o tiene equipamiento de sigilo?",
-   "En los almacenes, el Contador Finch ha reportado una discrepancia menor pero irritante: faltan varias libras de pólvora de calidad superior, las usadas para los fusiles de francotirador, no para los cañones.",
-   "Entre los marines de baja graduación se susurra que, en los calabozos del Foso Silencioso, se oyen golpes provenientes de una celda que lleva años vacía y sellada. El carcelero Barraco niega haber oído nada.",
-   "La pescadora Marea comenta en la cocina que, al faenar cerca del acantilado este (fuera de la vista de las baterías), las redes a veces se enredan en restos de metal moderno, como si algo hubiera naufragado allí recientemente en secreto."
+   "Un barco fantasma, sin bandera ni luces, fue visto deslizándose entre la niebla cerca del paso de entrada la última luna llena. Morse lo captó en el radar, pero desapareció.",
+   "Se dice que en los túneles de desagüe más antiguos de los calabozos hay marcas de garras gigantes y un olor a bestia podrida. Barraco se niega a patrullar allí solo.",
+   "Alguien está robando suministros médicos muy específicos del hospital. Zafiro ha notado la falta de analgésicos potentes y vendajes, pero no de comida o dinero.",
+   "Brecca, la mensajera, insiste en haber visto a una figura encapuchada merodeando por los Almacenes de Armas Especiales después del toque de queda. Nadie le cree.",
+   "Tullio, el cobrador, está ofreciendo un pago extra en aguardiente por cualquier información sobre 'barcos con cascos de madera oscura' que los marines hayan remolcado recientemente."
   ]
  },
  {
   "island": "Hachinosu",
-  "atmosphere": "Hachinosu es una isla sombría y caótica, donde la ley se impone a través de la fuerza y el miedo. El aire está impregnado de un olor a sal, pólvora y traición, mientras las sombras de los piratas se mueven por sus calles. La calavera de piedra que preside el puerto es un recordatorio constante del dominio de Barbanegra y del peligro que acecha a todos los que no pertenecen a su tripulación.",
-  "history": "Hachinosu, también conocida como la Isla Colmena, ha sido un refugio para los piratas desde tiempos inmemoriales. Tras la llegada de Barbanegra, la isla ha florecido como un centro de poder y comercio clandestino. Sin embargo, la llegada de un antiguo almirante de la Marina ha desatado tensiones y especulaciones sobre la lealtad de los piratas.",
+  "atmosphere": "Un infierno pirateado donde el miedo y la ambición se mezclan en el aire salado. La Calavera de Piedra del puerto observa cada movimiento, y la única ley es la fuerza bruta de Barbanegra. Los callejones apestan a pólvora, alcohol barato y el sudor de quienes viven al día.",
+  "history": "Una antigua colonia penal convertida en guarida pirata. Tras la Guerra de Marineford, Barbanegra la tomó como su base principal, expulsando a la debilitada Marina. Ahora, la Isla Colmena es un nido de traición, poder y conspiraciones, donde solo los más fuertes o astutos sobreviven. El recuerdo de su pasado penitenciario aún se siente en sus túneles.",
   "customs": [
-   "Los piratas suelen celebrar sus victorias con grandes banquetes en la taberna del Diente Roto.",
-   "Es común intercambiar chismes y rumores en el mercado negro, donde la información a menudo vale más que el oro.",
-   "Las peleas de calle son un pasatiempo habitual, y los ganadores ganan respeto instantáneo entre sus pares.",
-   "Los habitantes realizan rituales para ahuyentar a los espíritus de los caídos, especialmente aquellos que perdieron la vida en traiciones.",
-   "Cada mes, se lleva a cabo un gran evento donde se presentan las mejores armas y artefactos en un sorteo entre los piratas."
+   "Las deudas se pagan en sangre o fruta del diablo; el dinero a veces no es suficiente.",
+   "Nadie mira directamente a los ojos de un pirata de alto rango de Barbanegra; es una invitación a la muerte.",
+   "Cualquier riña se resuelve en los callejones; si llama la atención de los capitanes, ambos contendientes desaparecen.",
+   "El mercado negro opera a plena luz del día; preguntar por el origen de una mercancía es de mala educación y peligroso."
   ],
   "places": [
    {
     "name": "El Diente Roto",
     "kind": "taberna",
-    "description": "Este bar es el corazón palpitante de Hachinosu, donde los piratas se reúnen para beber y contar historias de hazañas pasadas. La atmósfera es ruidosa y llena de risas, aunque siempre hay un aire de tensión por posibles confrontaciones.",
+    "description": "Un antro ruinoso donde los vidrios rotos brillan más que las monedas. El aire es denso con humo de tabaco podrido y las canciones borrachas de marineros desesperados. Skull-Tusk McGregor vigila cada rincón con un ojo cínico.",
     "regulars": [
      "Skull-Tusk McGregor",
+     "Compass Jax",
+     "Lynx"
+    ]
+   },
+   {
+    "name": "El Mercado de las Sombras",
+    "kind": "mercado negro",
+    "description": "Una red de callejones cubiertos con lonas donde se vende de todo, desde armas oxidadas hasta rumores que valen más que el oro. Los tratos se hacen en susurros y con cuchillos a la vista.",
+    "regulars": [
+     "Mama Coral",
+     "Grinner Holt",
+     "Lin Grit"
+    ]
+   },
+   {
+    "name": "La Calavera del Puerto",
+    "kind": "puerto",
+    "description": "Dominado por la gigantesca calavera de piedra tallada en el acantilado, este puerto es un caos de barcos piratas de todo tipo. La entrada está vigilada por cañones y la mirada de los francotiradores desde las alturas.",
+    "regulars": [
+     "Garrim el Marino",
+     "Lynx",
+     "Dax el Cartógrafo"
+    ]
+   },
+   {
+    "name": "Los Calabozos Susurrantes",
+    "kind": "calabozos",
+    "description": "Túneles húmedos y fríos bajo la ciudad, restos de la antigua colonia penal. Los gritos se ahogan en la piedra, y solo Morse el Sordo conoce todos sus rincones y secretos.",
+    "regulars": [
+     "Morse el Sordo",
+     "Viper Silas"
+    ]
+   },
+   {
+    "name": "La Cocina de Marina",
+    "kind": "cocina / refugio",
+    "description": "Un pequeño y acogedor espacio alejado del caos, donde Marina Dulce ofrece sopa caliente y un raro momento de paz. Es uno de los pocos lugares donde no se permiten armas a la vista.",
+    "regulars": [
+     "Marina Dulce",
+     "Nina la Huérfana",
+     "Dorin el Curandero"
+    ]
+   },
+   {
+    "name": "La Guarida del Cartógrafo",
+    "kind": "taller / estudio",
+    "description": "Una habitación atestada de mapas, brújulas rotas y pergaminos. Dax el Cartógrafo traza aquí rutas hacia islas perdidas, siempre con la puerta entreabierta por si necesita huir.",
+    "regulars": [
+     "Dax el Cartógrafo",
      "Compass Jax"
     ]
    },
    {
-    "name": "Mercado Negro de Mama Coral",
-    "kind": "mercado",
-    "description": "Un laberinto de puestos y rincones oscuros, donde los piratas pueden encontrar desde recuerdos hasta información valiosa. Mama Coral es conocida por sus chismes afilados y su habilidad para obtener lo que otros no pueden.",
+    "name": "El Mirador del Vigía",
+    "kind": "torre de vigilancia",
+    "description": "Una torre de piedra en el punto más alto de la isla, con vista a todo el puerto y el mar. Desde aquí, Eldar el Vigilante observa el horizonte, cargado con un secreto que pesa más que sus años.",
     "regulars": [
-     "Mama Coral"
+     "Eldar el Vigilante",
+     "Garrim el Marino"
     ]
    },
    {
-    "name": "El Taller de Grinner",
-    "kind": "mercado",
-    "description": "Un lugar donde las armas de dudosa calidad se venden a precios variados. Grinner es famoso por sus tratos engañosos, y aunque muchos saben que deben tener cuidado, la necesidad a menudo supera la precaución.",
+    "name": "El Rincón del Cobrador",
+    "kind": "oficina de préstamos",
+    "description": "Una sala sin ventanas con una mesa de hierro. Cobb el Cobrador espera aquí a los morosos, contando monedas con una frialdad que hace que el aire sea más frío que en los calabozos.",
     "regulars": [
-     "Grinner Holt"
+     "Cobb el Cobrador",
+     "Viper Silas"
     ]
    },
    {
-    "name": "Los Calabozos Subterráneos",
-    "kind": "carcel",
-    "description": "Un sistema de prisiones oscuras donde los desafortunados piratas son encarcelados por traiciones o fallos. Morse el Sordo se encarga de mantener el orden, y pocos desean acabar entre rejas bajo su vigilancia.",
+    "name": "La Choza del Curandero",
+    "kind": "consultorio de curandero",
+    "description": "Una cabaña llena de hierbas secas y frascos de pociones de dudosa eficacia. Dorin el Curandero atiende a heridos que no quieren preguntas, mezclando remedios con supersticiones.",
     "regulars": [
-     "Morse el Sordo"
+     "Dorin el Curandero",
+     "Marina Dulce"
     ]
    },
    {
-    "name": "El Altar de los Caídos",
-    "kind": "templo",
-    "description": "Un lugar sombrío donde los piratas rinden homenaje a aquellos que han perdido la vida en la traición y el combate. Es un sitio de reflexión, donde se llevan a cabo rituales para exorcizar a los espíritus que acechan la isla.",
-    "regulars": []
-   },
-   {
-    "name": "El Puerto de la Calavera",
-    "kind": "puerto",
-    "description": "Dominado por una enorme estructura en forma de calavera, este puerto es el principal punto de entrada y salida de la isla. Los barcos de Barbanegra y otros piratas atracan aquí diariamente, mientras los vigilantes observan con recelo.",
+    "name": "El Almacén de Holt",
+    "kind": "almacén de armas",
+    "description": "Un cobertizo repleto de armas oxidadas, pólvora húmeda y promesas vacías. Grinner Holt jura que su mercancía es 'solo para clientes selectos', pero todos saben que fallará en el peor momento.",
     "regulars": [
-     "Lynx"
+     "Grinner Holt",
+     "Lin Grit"
     ]
-   },
-   {
-    "name": "El Observatorio de Lynx",
-    "kind": "torre",
-    "description": "Una torre construida en lo alto de un acantilado, desde donde Lynx vigila el horizonte en busca de barcos enemigos o de nuevas oportunidades. Es un lugar solitario, y su acceso está restringido a los de confianza de Barbanegra.",
-    "regulars": [
-     "Lynx"
-    ]
-   },
-   {
-    "name": "Barrio de los Piratas",
-    "kind": "barrio",
-    "description": "Un laberinto de calles angostas y edificios en ruinas donde viven muchos de los piratas de Barbanegra. La vida aquí es dura, y la supervivencia depende de la astucia y la fuerza.",
-    "regulars": []
    }
   ],
   "rumors": [
-   "Se dice que el antiguo almirante posee un mapa que lleva a un tesoro legendario escondido en la isla.",
-   "Hay rumores de que algunos piratas planean traicionar a Barbanegra y unir fuerzas con el almirante.",
-   "Se comenta en voz baja que un antiguo artefacto que otorga poderes inmensos se encuentra oculto en los calabozos subterráneos.",
-   "Algunos habitantes afirman haber visto espectros merodeando cerca del Altar de los Caídos en noches de luna llena.",
-   "Se murmura que Mama Coral tiene un trato secreto con un grupo de piratas para suministrar información a la Marina."
+   "Se dice que un antiguo almirante de la Marina duerme en una celda secreta bajo Los Calabozos Susurrantes, esperando una señal o un asesino.",
+   "Lynx, el francotirador, ha estado observando el mar con más intensidad que nunca; algunos dicen que espera un barco específico con una bandera olvidada.",
+   "Mama Coral vende un 'recuerdo' muy especial: un colgante que, según ella, abre una puerta oculta en la Calavera de Piedra del puerto.",
+   "Eldar el Vigilante bebe en El Diente Roto y murmura sobre 'el día en que la marea se vuelva roja de nuevo', pero se calla si alguien se acerca.",
+   "Una partida de cartas en El Diente Roto terminó con la muerte de tres hombres; se rumorea que las cartas estaban marcadas con un símbolo relacionado con el antiguo almirante dormido."
   ]
  },
  {
   "island": "Impel Down",
-  "atmosphere": "Una atmósfera de opresión absoluta, frío metálico y desesperación silenciosa. El aire huele a desinfectante, óxido y miedo. Los sollozos ahogados y los pasos resonantes de las botas son la única banda sonora. Cada centímetro está vigilado, y la amenaza del castigo más brutal cuelga como una nube tóxica.",
-  "history": "Impel Down fue construida hace siglos por el Gobierno Mundial como la máxima expresión de su poder punitivo. Diseñada para ser inexpugnable, se hunde en las profundidades del mar, con sus seis niveles escalonados en sufrimiento. Ha albergado a las mayores amenazas del mundo, y su fama de 'prisión de la que no se escapa' solo se vio desafiada por un puñado de incidentes legendarios que aún atormentan a sus guardianes.",
+  "atmosphere": "Impel Down es un lugar tenebroso y opresor, lleno de ecos de gritos lejanos y susurros de desesperación. Las paredes de la prisión, frías y húmedas, transmiten una sensación de claustrofobia, mientras que las luces parpadeantes crean sombras inquietantes. La vigilancia constante de los carceleros añade una tensión palpable, donde el miedo y la desesperanza son compañeros cotidianos de los prisioneros.",
+  "history": "Impel Down fue construido como la máxima fortaleza del Gobierno Mundial para albergar a los criminales más peligrosos del mundo. A lo largo de los años, ha sido escenario de numerosos intentos de fuga, y las medidas de seguridad se han endurecido cada vez más. La prisión ha sido testigo de historias de traición y valor, pero también de pérdida y sufrimiento, consolidándose como una leyenda aterradora en los mares.",
   "customs": [
-   "La 'Inspección de Medianoche': Un ritual nocturno donde los carceleros del turno revisan personalmente cada celda de su nivel, marcando con un golpe de porra en los barrotes a los presentes.",
-   "El 'Tributo del Silencio': Los nuevos presos aprenden rápidamente que hablar fuera de turno o quejarse en voz alta atrae castigos colectivos para toda su galería, fomentando una cultura de mudo terror",
-   "La 'Jerarquía del Azul': Los carceleros de mayor rango (niveles 4, 5 y 6) visten un azul más oscuro y son tratados con casi tanta cautela y respeto por los guardias de niveles inferiores como por los "
+   "Los guardias y carceleros suelen poner a prueba la lealtad de los nuevos reclutas con rituales de iniciación brutales.",
+   "Cada semana, se celebra una reunión entre los carceleros para discutir las estrategias de vigilancia y los métodos de control de los prisioneros.",
+   "Los prisioneros tienen la costumbre de murmurarse historias de fuga entre ellos, creando un ambiente de camaradería a pesar de la desesperación que los rodea."
   ],
   "places": [
    {
-    "name": "La Puerta de la Justicia",
-    "kind": "puerto/entrada principal",
-    "description": "La inmensa puerta de acero que se alza sobre la única entrada y salida de la prisión. Siempre iluminada por reflectores cegadores y custodiada por ballestas gigantes. El sonido de sus cerrojos hidráulicos al cerrarse es el último que oyen muchos.",
+    "name": "Nivel 1",
+    "kind": "zona de control",
+    "description": "La entrada de Impel Down, donde los carceleros están siempre alertas y los prisioneros son clasificados. Esta zona es la primera línea de defensa y está fuertemente custodiada.",
     "regulars": [
      "Grigori el Feroz",
      "Lina la Observadora"
     ]
    },
    {
-    "name": "El Foso Hirviente",
-    "kind": "zona de castigo",
-    "description": "Una vasta cámara en el Nivel 1 donde enormes calderos de sopa hirviendo burbujean perpetuamente. Aquí se aplican los castigos por delitos menores dentro de la prisión, como la inmersión de extremidades.",
-    "regulars": [
-     "Grigori el Feroz",
-     "Furgan el Rampante"
-    ]
-   },
-   {
-    "name": "La Bestia Salvaje",
-    "kind": "cuartel/guardia",
-    "description": "La sala de guardia principal del Nivel 2, repleta de armas en las paredes y el olor a sudor y miedo animal. Desde aquí se controlan las compuertas que liberan a las temibles bestias guardianas de ese nivel.",
+    "name": "Nivel 2",
+    "kind": "zona de aislamiento",
+    "description": "Un lugar oscuro y húmedo donde los prisioneros son mantenidos en condiciones extremas. Las celdas están diseñadas para dejar a los prisioneros en un estado constante de miedo y desesperación.",
     "regulars": [
      "Furgan el Rampante",
      "Jorvik el Silencioso"
     ]
    },
    {
-    "name": "Las Escaleras del Hambre",
-    "kind": "pasillo principal",
-    "description": "El empinado y eterno tramo de escaleras que conecta los Niveles 2 y 3. El aire se vuelve más denso y caluroso con cada peldaño. Restos de comida descompuesta y huesos pequeños a veces ruedan por los escalones.",
+    "name": "Nivel 3",
+    "kind": "sala de tortura",
+    "description": "Este nivel está reservado para los prisioneros más peligrosos, donde los carceleros utilizan métodos extremos para obtener información y controlar a los reclusos.",
     "regulars": [
      "Brutus el Implacable",
-     "Maya la Vigilante"
+     "Maya la Vigilante",
+     "El Murmullo"
     ]
    },
    {
-    "name": "La Forja de la Desesperación",
-    "kind": "taller/cocina",
-    "description": "El sofocante complejo del Nivel 4 donde los prisioneros trabajan forjando cadenas y herramientas bajo un calor infernal. El constante martilleo y los gritos de los capataces crean una cacofonía ensordecedora.",
+    "name": "Nivel 4",
+    "kind": "cocina",
+    "description": "Un espacio ruidoso donde los carceleros preparan las comidas para los prisioneros, a menudo con ingredientes escasos y en condiciones deplorables.",
     "regulars": [
-     "Torok el Coloso",
+     "Borgo el Nauseabundo",
      "Sabina la Intachable"
     ]
    },
    {
-    "name": "El Pabellón del Frío Eterno",
-    "kind": "bloque de celdas",
-    "description": "El corazón gélido del Nivel 5. Pasillos infinitos de celdas con barrotes escarchados, donde el aliento se congela al instante. El silencio aquí es aún más profundo, roto solo por el crujido de la nieve bajo las botas.",
+    "name": "Nivel 5",
+    "kind": "celdas de alta seguridad",
+    "description": "La habitación más temida de Impel Down, destinada a los criminales de más alto perfil. Las celdas están reforzadas y rodeadas de vigilancia constante.",
     "regulars": [
-     "Selene la Despiadada",
-     "Kron el Inquebrantable"
+     "Kron el Inquebrantable",
+     "Selene la Despiadada"
     ]
    },
    {
-    "name": "El Umbral del Olvido",
-    "kind": "vestíbulo/control",
-    "description": "La antecámara sellada que precede al Nivel 6. Una sala oscura y vacía, con solo un panel de control y un pesado portón de acero negro. Pocos carceleros tienen permiso para estar aquí.",
+    "name": "Nivel 6",
+    "kind": "cámaras de contención",
+    "description": "Conocido como el nivel de los olvidados, aquí se encuentran aquellos que han sido condenados a un encierro eterno. El aire está impregnado de desesperanza.",
     "regulars": [
-     "Kron el Inquebrantable",
+     "Tiberio el Sanguinario",
      "Aris la Enigmática"
     ]
    },
    {
-    "name": "Las Criptas Silenciosas",
-    "kind": "bloque de celdas de máxima seguridad",
-    "description": "El Nivel 6 propiamente dicho. Celdas individuales aisladas en completa oscuridad y silencio. No hay sonido, ni luz, ni contacto. Solo la presencia opresiva de guardianes que se mueven como sombras.",
+    "name": "Puerto Secreto",
+    "kind": "muelle",
+    "description": "Un área clandestina donde se realizan operaciones encubiertas, a menudo utilizada por contrabandistas y aquellos que buscan liberar a prisioneros.",
     "regulars": [
-     "Aris la Enigmática",
-     "Tiberio el Sanguinario"
+     "Scrap"
     ]
    },
    {
-    "name": "La Sala de Vigilancia Principal",
-    "kind": "centro de control",
-    "description": "El cerebro de la prisión, ubicado en la cúpula superior. Pantallas de Den Den Mushi muestran cada rincón, y los registros de cada prisionero y guardia se actualizan meticulosamente. El aire huele a tinta y tensión.",
+    "name": "Oficina de Suministros",
+    "kind": "administración",
+    "description": "El centro de operaciones logísticas de Impel Down, donde se gestionan los recursos y se archivan los movimientos de los prisioneros.",
     "regulars": [
-     "Lina la Observadora",
-     "Maya la Vigilante",
-     "Sabina la Intachable"
-    ]
-   },
-   {
-    "name": "El Muelle de los Suspiros",
-    "kind": "muelle de carga/submarino",
-    "description": "Un muelle oculto en las entrañas subacuáticas de la prisión, iluminado por luces tenues verdes. Por aquí entran los suministros, nuevos presos de alto perfil en secreto, y a veces, visitas muy indeseables.",
-    "regulars": [
-     "Jorvik el Silencioso",
-     "Torok el Coloso"
+     "Vellum"
     ]
    }
   ],
   "rumors": [
-   "Se rumorea que en los conductos de ventilación más profundos del Nivel 3 se han encontrado herramientas de metal pulido, demasiado precisas para haber sido hechas en la forja.",
-   "Un susurro entre los carceleros veteranos habla de una 'celda vacía' en el Nivel 6 que, según los registros, nunca ha estado ocupada, pero por la que Tiberio el Sanguinario realiza rondas especiales.",
-   "Los sistemas de drenaje de la prisión a veces devuelven restos de animales desconocidos, con marcas de dientes que no coinciden con ninguna bestia guardiana catalogada.",
-   "Algunos presos del Nivel 4 juran haber oído, en el más absoluto silencio de la noche de turnos, un leve zumbido eléctrico proveniente de detrás de los muros de la forja, como de maquinaria oculta.",
-   "Circula un rumor entre los guardias de menor rango de que una inspección de la Flota llegará pronto, y que Magellan ha ordenado 'limpiar' ciertos archivos de traslados fallidos ocurridos el año pasado."
+   "Se dice que hay un prisionero en el Nivel 6 que posee información sobre un tesoro oculto en el fondo del mar.",
+   "Algunos murmuran que un famoso capitán pirata está tramando una fuga masiva desde el Nivel 3.",
+   "Se comenta que uno de los carceleros está en contacto con una banda de piratas para facilitar la fuga de un prisionero valioso."
   ]
  },
  {
   "island": "Isla Abismo",
-  "atmosphere": "Una isla de tiempo prestado, donde el rugido de la marea que retrocede marca el inicio de una tregua efímera y su regreso el sonido de una sentencia. El aire es salobre, denso y lleno de presagios, con las estructuras de coral negro brillando bajo el sol fugaz. La sensación de prisa y de secreto a punto de ser devorado por el mar impregna cada rincón.",
-  "history": "La isla no se formó, sino que fue sumergida por un cataclismo antiguo para ocultar el Poneglifo que guarda. Durante siglos, el linaje de los Custodios de las Mareas aprendió a interpretar las corrientes para vivir en sus breves periodos de emersión. Su propósito, transmitido de generación en generación, es asegurar que la verdad del Poneglifo permanezca a salvo de quienes no estén dispuestos a arriesgarlo todo por alcanzarla.",
+  "atmosphere": "Un lugar de ciclos incesantes y belleza agreste, donde el rugido de la marea que se retira o avanza es la banda sonora constante. El aire siempre está impregnado de salitre y la luz, filtrada por el agua durante las sumersiones, tiene una cualidad verdosa y cambiante. La arquitectura es robusta, de coral y piedra tallada, preparada para resistir la presión del océano. La sensación dominante es de un secreto enorme, literalmente sumergido, custodiado por una comunidad que vive al ritmo caprichoso",
+  "history": "La Isla Abismo ha existido desde tiempos inmemoriales, emergiendo y hundiéndose en un ciclo perpetuo determinado por fuerzas marinas desconocidas. Hace siglos, los primeros Custodios de las Mareas se asentaron aquí, descubriendo el Poneglifo de coral negro en su corazón y dedicando sus vidas a protegerlo. Han sobrevivido adaptándose al ritmo de la marea, construyendo su sociedad en los breves periodos de respiro que les concede el mar. Su historia es la de una lucha constante por preservar un conocimiento que creen demasiado peligroso para el mundo de la superficie.",
   "customs": [
-   "Todo acuerdo o conversación importante comienza y termina con la frase 'Con la marea a favor', reconociendo la precariedad del tiempo.",
-   "Nunca se pregunta a nadie por su pasado anterior a llegar a la isla; lo que importa es lo que haces con el tiempo que el mar te concede ahora.",
-   "Ofrecer un trozo de coral negro pulido es un gesto de máxima confianza, casi un juramento, pues simboliza un fragmento del corazón de la isla."
+   "La 'Marcación de la Marea': Todo acto importante (reuniones, viajes, reparaciones) se programa y anuncia según el próximo ciclo de emersión o sumersión. Los relojes de arena que miden estos ciclos son",
+   "El 'Pacto del Silencio Sumergido': Hablar del Poneglifo o del corazón de coral negro fuera del círculo de los Custodios de alto rango está estrictamente prohibido y se considera la mayor traición.",
+   "La 'Fiesta de la Corriente Muerta': Una breve celebración que tiene lugar en el raro momento en que la marea está completamente quieta, justo antes de cambiar. Es un momento de descanso, música y comp",
+   "El 'Tributo a las Aguas Profundas': Antes de cada sumersión, se arrojan ofrendas talladas en coral al mar desde el Doca Seco, como gesto de respeto y súplica por una sumersión tranquila."
   ],
   "places": [
    {
     "name": "Posada del Ahogado Alegre",
     "kind": "taberna",
-    "description": "Un refugio de madera y coral seco, con las paredes cubiertas de mapas de mareas desactualizados y botellas con mensajes nunca enviados. El sonido constante de las goteras marca el ritmo.",
+    "description": "Un refugio de madera oscura y coral, con mesas ancladas al suelo y ventanas reforzadas. El olor a estofado de algas, cerveza salada y cuerpos cansados llena el aire. Es el único lugar donde forasteros y locales se mezclan con relativa calma durante la emersión.",
     "regulars": [
      "Coralie de la Sal",
-     "Sargo el Salado",
-     "Barrus el Ancla"
+     "Viri Ramasol",
+     "Argon Tormenta",
+     "Eili Marabunda",
+     "Casio Tormentoso"
     ]
    },
    {
-    "name": "El Doca Seco",
+    "name": "Doca Seco",
     "kind": "puerto",
-    "description": "Una plataforma de roca tallada y vigas reforzadas que solo es accesible durante la marea baja extrema. Amarar aquí requiere una precisión milimétrica y nervios de acero.",
+    "description": "No es un puerto convencional, sino una enorme plataforma de roca tallada que solo es accesible cuando la marea está en su punto más bajo. Grúas de madera y pilotes oxidados esperan para recibir o despedir barcos con una velocidad frenética. El tiempo aquí es oro líquido.",
     "regulars": [
      "Barrus el Ancla",
-     "Lem el Calafate"
+     "Lem el Calafate",
+     "Eili Marabunda"
     ]
    },
    {
     "name": "Archivo de las Sombrías Corrientes",
-    "kind": "archivo",
-    "description": "Una cámara excavada en el coral negro, donde rollos de pergamino tratados con sal y algas especiales guardan los registros de los ciclos de la isla y las genealogías de los Custodios.",
+    "kind": "archivo/biblioteca",
+    "description": "Una cámara excavada en la roca, con estantes de coral llenos de pergaminos tratados con sal y tablillas de cera. Mapas de corrientes y ciclos de marea cubren las paredes. El aire es seco y silencioso, un contraste absoluto con el exterior.",
     "regulars": [
      "Maris Salinas",
-     "Nerio el Fluido"
-    ]
-   },
-   {
-    "name": "Caleta Escondida",
-    "kind": "astillero_secreto",
-    "description": "Una grieta en el acantilado, apenas visible, donde se reparan embarcaciones pequeñas y rápidas, ideales para escapar antes de que la mía cubra todo.",
-    "regulars": [
-     "Lem el Calafate",
-     "Orin el Opaco"
-    ]
-   },
-   {
-    "name": "Arrecife Sur",
-    "kind": "puesto_de_vigilancia",
-    "description": "Un afloramiento de coral afilado como cuchillas, coronado por una atalaya de observación. Desde aquí se ve la aproximación de cualquier nave y el inicio del gran hundimiento.",
-    "regulars": [
-     "Liora Rompeolas",
-     "Kael Tidewalker"
-    ]
-   },
-   {
-    "name": "Comedor de Algas",
-    "kind": "cocina_comunal",
-    "description": "Una sala humeante donde se preparan guisos espesos con algas, peces de las profundidades y lo poco que se puede cultivar en los periodos secos. El lugar donde se comparten los rumores más frescos.",
-    "regulars": [
-     "Sargo el Salado",
-     "Coralie de la Sal",
-     "Liora Rompeolas"
-    ]
-   },
-   {
-    "name": "Camino del Corazón Sumergido",
-    "kind": "sendero",
-    "description": "Un tortuoso camino descendente, tallado en la roca viva, que serpentea hacia la cámara del Poneglifo. Está marcado por runas que brillan con una luz fosforescente azulada.",
-    "regulars": [
-     "Nerio el Fluido",
-     "Kael Tidewalker",
-     "Maris Salinas"
+     "Mirian Marejada",
+     "Oren Marea Verde"
     ]
    },
    {
     "name": "Muro Norte de Coral",
-    "kind": "fortificación",
-    "description": "Una barrera natural y artificial de coral negro impenetrable, reforzada con estructuras de madera petrificada. Es la primera línea de defensa contra el mar y contra intrusos.",
+    "kind": "fortificación/puesto de vigilancia",
+    "description": "Una imponente muralla natural de coral negro pulido que protege el acceso interior de la isla. Tiene pasadizos estrechos y plataformas de observación desde donde se domina la llanura que se inunda. Es el primer puesto de defensa.",
     "regulars": [
      "Kael Tidewalker",
+     "Liora Rompeolas"
+    ]
+   },
+   {
+    "name": "Caleta Escondida",
+    "kind": "astillero/refugio",
+    "description": "Una grieta natural en la costa, parcialmente cubierta por un dosel de roca, donde se realizan reparaciones urgentes o se esconden embarcaciones pequeñas. Está llena de herramientas, trozos de madera y el olor a brea y metal.",
+    "regulars": [
+     "Lem el Calafate",
      "Barrus el Ancla"
     ]
    },
    {
-    "name": "Los Campos de Perlas Abisales",
-    "kind": "zona_de_recolección",
-    "description": "Un lecho marino expuesto de poca profundidad, lleno de ostras gigantes que solo pueden ser cosechadas en la ventana de mía baja. Un trabajo de riesgo y recompensa.",
+    "name": "Comedor de Algas",
+    "kind": "cocina comunal/restaurante",
+    "description": "Una cocina grande y humeante adyacente a la posada, especializada en los productos del mar abisal. Calderos burbujean con guisos de criaturas de las profundidades y pan sin levadura cocido rápidamente. Es el lugar donde comen muchos de los trabajadores.",
     "regulars": [
-     "Orin el Opaco",
-     "Lem el Calafate"
+     "Sargo el Salado",
+     "Viri Ramasol",
+     "Casio Tormentoso"
     ]
    },
    {
-    "name": "La Corriente Principal",
-    "kind": "cuartel",
-    "description": "El centro de operaciones de los Custodios de las Mareas, una estructura austera y funcional desde donde se coordina la vigilancia y se toman las decisiones sobre los intrusos.",
+    "name": "Galería de las Perlas Abisales",
+    "kind": "mercado/mina",
+    "description": "Una cueva inundada parcialmente, a la que solo se puede acceder con equipo de buceo durante la sumersión. En sus paredes crecen las raras y luminiscentes Perlas Abisales. Durante la emersión, es un mercado donde se comercian estas joyas y otros hallazgos de las profundidades.",
+    "regulars": [
+     "Orin el Opaco",
+     "Oren Marea Verde",
+     "Roka Sombra"
+    ]
+   },
+   {
+    "name": "Cámara de las Aguas",
+    "kind": "templo/enfermería",
+    "description": "Una gruta natural con un manantial de agua dulce filtrada. Las paredes están cubiertas de musgos luminosos. Es un lugar de quietud utilizado tanto para la curación física con algas medicinales como para la meditación y los ritos de los Custodios.",
+    "regulars": [
+     "Dalia Coralina",
+     "Nerio el Fluido",
+     "Maris Salinas"
+    ]
+   },
+   {
+    "name": "Corriente Principal",
+    "kind": "cuartel/centro de mando",
+    "description": "El corazón operativo de los Custodios de las Mareas. Una sala espartana tallada en el coral, con una gran mesa de marea (un mapa de relieve que se inunda o seca según ciclos) en el centro. Aquí se planifican las defensas y se monitorizan los ciclos de la isla.",
     "regulars": [
      "Nerio el Fluido",
-     "Maris Salinas",
+     "Kael Tidewalker",
      "Liora Rompeolas"
+    ]
+   },
+   {
+    "name": "El Arrecife Sur",
+    "kind": "puesto de vigilancia avanzado",
+    "description": "Un afloramiento traicionero de coral afilado en el límite sur de la isla emergente. Solo accesible a nado o con botes pequeños. Desde aquí se tiene la primera vista de cualquier barco que se acerque. Es un puesto solitario y peligroso.",
+    "regulars": [
+     "Liora Rompeolas",
+     "Eili Marabunda"
     ]
    }
   ],
   "rumors": [
-   "Se dice que en el último ciclo, una de las grandes ostras del campo abisal se abrió para revelar una perla negra con un mapa interior que no coincide con ninguna carta conocida.",
-   "Un pasaje secreto, conocido como 'La Vena del Ahogado', permite acceder a la cámara del Poneglifo sin ser visto, pero nadie que haya hablado de él ha vuelto a aparecer.",
-   "Algunos de los rollos del Archivo predicen un 'Ciclo de Silencio', un periodo anormalmente largo en el que la isla no se hundirá, lo que podría atraer una atención catastrófica.",
-   "Entre los Custodios hay un desacuerdo silencioso: algunos, liderados por Nerio, creen que es hora de dejar que el Poneglifo vea la luz, mientras que otros, como Maris, juraron mantenerlo oculto para siempre.",
-   "Una criatura marina gigante, antigua y dormida, parece haberse anclado justo debajo del Doca Seco, y sus movimientos están alterando los ciclos de mía locales."
+   "La última sumersión duró tres horas más de lo previsto. Algunos dicen que fue un fenómeno natural, otros susurran que el Poneglifo 'rechazó' salir a la superficie esta vez.",
+   "Orin el Opaco encontró una perla abisal con un patrón interno que, según él, coincide con parte de los símbolos del Poneglifo. La tiene escondida y no sabe qué hacer con ella.",
+   "Un barco fantasma, con las velas hechas jirones y el casco cubierto de percebes, fue visto emergiendo junto a la isla durante la última niebla espesa. Desapareció cuando la marea subió.",
+   "Roka Sombra no está aquí solo para cobrar deudas de juego. Pregunta discretamente por mapas detallados de las cámaras interiores de la isla, y paga muy bien por la información.",
+   "Mirian Marejada cree haber detectado un patrón anómalo en las mareas recientes, como si algo enorme se estuviera moviendo en las profundidades alrededor de la isla, alterando los ciclos naturales."
   ]
  },
  {
   "island": "Isla Baltigo",
-  "atmosphere": "La atmósfera en Isla Baltigo es una tensa quietud llena de propósito. A pesar del clima tranquilo y las corrientes marinas que la ocultan, el aire vibra con la energía de un movimiento clandestino. Los caminos son polvorientos y las estructuras, aunque sólidas, están diseñadas para no destacar. Siempre hay alguien observando desde las sombras, y el silencio solo se rompe por órdenes susurradas o el sonido de herramientas en los talleres secretos.",
-  "history": "La Isla Baltigo fue durante siglos un pedazo de tierra olvidado, habitado solo por pescadores solitarios hasta que su geografía y corrientes traicioneras la convirtieron en el refugio perfecto. El Ejército Revolucionario descubrió su potencial y, tras evacuar discretamente a los pocos habitantes, la transformó en una base de operaciones clandestina. Ahora, es el corazón palpitante desde donde se planifica el cambio mundial, aunque el mar y el silencio siguen siendo sus principales guardianes.",
+  "atmosphere": "Una isla aparentemente desolada, donde los vientos cortan como cuchillos y la bruma marina oculta todo. Tras la fachada de rocas desnudas y bosques de pinos retorcidos, bulle la actividad clandestina de un cuartel revolucionario. El aire huele a salitre, pólvora y determinación.",
+  "history": "Baltigo fue durante siglos un peñón olvidado, habitado solo por algunos resistentes. El Ejército Revolucionario, buscando una base inexpugnable, descubrió sus corrientes engañosas y estableció aquí su cuartel secreto hace años. Desde entonces, ha sido el corazón desde donde se planea la insurrección.",
   "customs": [
-   "El 'cambio de guardia' nunca es público; los turnos se alternan en silencio y los movimientos se coordinan mediante señales de mano discretas para no delatar posiciones.",
-   "En la cantina, la primera taza de café de la mañana se ofrece siempre al compañero que acaba de terminar su vigilancia nocturna, un gesto de respeto tácito.",
-   "Está prohibido escribir o hablar en detalle sobre la ubicación de la isla; toda la navegación se hace de memoria o con mapas mentales entrenados, supervisados por el cartógrafo."
+   "Nunca se habla abiertamente de asuntos del Cuartel en espacios comunes; las conversaciones cruciales son en código o en lugares seguros.",
+   "Se celebra una reunión silenciosa al amanecer en el Mirador del Halcón para recordar a los caídos, con una taza de café amargo compartido.",
+   "Cualquier forastero es observado de inmediato; la regla no escrita es informar a Bram Ironside de cualquier presencia no autorizada."
   ],
   "places": [
    {
-    "name": "La Cantina del Silencio",
-    "kind": "cantina",
-    "description": "Un comedor bajo tierra con mesas largas y bancos de madera. El olor a estofado y café barato siempre llena el aire. Aquí se come rápido y se habla en susurros, es el centro social no oficial del cuartel.",
+    "name": "El Búnker",
+    "kind": "cuartel subterráneo",
+    "description": "Una red de túneles excavados en la roca, iluminados por lámparas de aceite y llenos de mapas, informes y equipo de comunicaciones. El aire es denso y huele a papel viejo y metal.",
     "regulars": [
-     "Marnie",
-     "Kaelen Reed",
-     "Bram Ironside"
-    ]
-   },
-   {
-    "name": "El Mapa Vivo",
-    "kind": "sala de cartografía",
-    "description": "Una sala abovedada cuyas paredes están cubiertas por mapas del mundo, marcados con tachuelas y líneas de cuerda. Un gran globo terráqueo, lleno de anotaciones, ocupa el centro. Es el cerebro estratégico de la base.",
-    "regulars": [
+     "Lyra",
      "Orin Vellum",
      "Galeon Rook"
     ]
    },
    {
-    "name": "Torre de la Escucha",
-    "kind": "puesto de comunicaciones",
-    "description": "Una torre de piedra camuflada entre formaciones rocosas. En su interior, lleno de chismes y paneles de transmisión, una única silla gira entre consolas que parpadean en la penumbra. Es el oído de Baltigo.",
+    "name": "La Cantina del Peñasco",
+    "kind": "cantina",
+    "description": "Una sala amplia tallada en una cueva, con mesas largas de madera desgastada. El humo de la cocina se mezcla con el sonido de conversaciones susurradas y cubiertos.",
     "regulars": [
-     "Lyra"
-    ]
-   },
-   {
-    "name": "Almacén Rook",
-    "kind": "almacén de suministros",
-    "description": "Un cobertizo grande y meticulosamente organizado cerca del muelle oculto. Cada caja, barril y rollo de cuerda tiene su lugar etiquetado. El aire huele a sal, madera y aceite.",
-    "regulars": [
-     "Galeon Rook",
+     "Marnie",
+     "Bram Ironside",
      "Kaelen Reed"
     ]
    },
    {
-    "name": "El Taller Resonante",
-    "kind": "taller mecánico",
-    "description": "Una caverna natural ampliada, iluminada por lámparas de queroseno. El sonido de martillos, sierras y chispas al soldar crea un constante zumbido. Herramientas y piezas de barcos y armas cubren cada superficie.",
+    "name": "Taller de Tinker",
+    "kind": "taller subterráneo",
+    "description": "Un caos organizado de piezas de metal, herramientas colgantes y bocetos de artefactos extraños. Chispas ocasionales iluminan la penumbra y el sonido del martilleo es constante.",
     "regulars": [
      "Tinker"
     ]
    },
    {
-    "name": "Cabaña del Viejo Mar",
-    "kind": "cabaña de habitante original",
-    "description": "Una pequeña y destartalada cabaña de pescador en una cala apartada, alejada del bullicio revolucionario. Huele a algas secas y humo de leña. Es el último vestigio de la Baltigo anterior.",
+    "name": "El Mercado Encubierto",
+    "kind": "mercado",
+    "description": "Un conjunto de puestos al aire libre, semiocultos entre rocas, donde se comercia con discreción. Se venden provisiones, herramientas y ocasionalmente información.",
+    "regulars": [
+     "Taron",
+     "Ruko",
+     "Dalia"
+    ]
+   },
+   {
+    "name": "Cabaña del Viejo Cicatriz de Sal",
+    "kind": "casa aislada",
+    "description": "Una choza de madera y lona en un acantilado, azotada por el viento. Huele a algas secas, pescado ahumado y recuerdos antiguos. El único habitante original la vigila con desconfianza.",
     "regulars": [
      "Viejo Cicatriz de Sal"
     ]
    },
    {
-    "name": "Muelle Fantasma",
-    "kind": "puerto secreto",
-    "description": "Un embarcadero corto y discreto escondido bajo un acantilado sobresaliente. Solo unas pocas boyas apenas visibles marcan el canal seguro. Las lanchas de aprovisionamiento atracan aquí de noche.",
+    "name": "Astillero de los Susurros",
+    "kind": "astillero",
+    "description": "Una cala escondida donde se construyen y reparan barcos ligeros y sigilosos. El sonido del cincel sobre la madera y el olor a brea son constantes.",
     "regulars": [
-     "Kaelen Reed",
-     "Bram Ironside",
-     "Galeon Rook"
+     "Lenya",
+     "Karlo"
     ]
    },
    {
-    "name": "Cuarto de Guardia del Acantilado",
+    "name": "La Guarida de las Sombras",
+    "kind": "lugar de reunión secreto",
+    "description": "Un claro oculto en el bosque de pinos, marcado solo por piedras dispuestas en un círculo. Aquí se intercambian mensajes y se realizan tratos lejos de miradas indiscretas.",
+    "regulars": [
+     "Talin",
+     "Vaskel"
+    ]
+   },
+   {
+    "name": "Puesto de Vigía Costero",
     "kind": "puesto de guardia",
-    "description": "Una garita de piedra con ranuras de observación, tallada en la roca del acantilado más alto. Ofrece una vista panorámica e impecable de todo el horizonte marino. El viento silba constantemente.",
-    "regulars": [
-     "Bram Ironside",
-     "Kaelen Reed"
-    ]
-   },
-   {
-    "name": "La Sala de Estrategias",
-    "kind": "sala de reuniones secreta",
-    "description": "Una sala sin ventanas en el subsuelo, con una gran mesa de roble y sillas. Las paredes están forradas con tablones de corcho llenos de informes, perfiles de oficiales marines y diagramas de flota. El ambiente es serio y concentrado.",
-    "regulars": [
-     "Bram Ironside",
-     "Orin Vellum",
-     "Lyra"
-    ]
-   },
-   {
-    "name": "Sendero de la Vigilancia",
-    "kind": "ruta de patrulla",
-    "description": "Un camino polvoriento y pedregoso que serpentea por el perímetro de la isla, bordeado por arbustos bajos. Ofrece cobertura y puntos de observación naturales hacia el interior y la costa. Es la arteria principal de las rondas.",
+    "description": "Una torreta de madera camuflada entre los árboles, con vista al mar brumoso. Desde aquí se escruta el horizonte en busca de velas sospechosas.",
     "regulars": [
      "Kaelen Reed",
-     "Bram Ironside"
+     "Malgo"
+    ]
+   },
+   {
+    "name": "Archivos de Vellum",
+    "kind": "sala de mapas y archivos",
+    "description": "Una habitación repleta de estanterías con rollos de cartografía y legajos. El silencio solo se rompe con el leve crujir del papel o el rasguño de una pluma.",
+    "regulars": [
+     "Orin Vellum"
+    ]
+   },
+   {
+    "name": "La Plaza del Suspiro",
+    "kind": "plaza",
+    "description": "Un espacio abierto y pedregoso en el centro del asentamiento encubierto. Aquí es donde Dalia pinta sus paisajes melancólicos y donde, a veces, se reúnen pequeños grupos para noticias no urgentes.",
+    "regulars": [
+     "Dalia",
+     "Taron"
     ]
    }
   ],
   "rumors": [
-   "Lyra interceptó una transmisión codificada de la Marina que mencionaba 'operaciones de limpieza' cerca de las coordenadas de la célula desaparecida, pero la señal se cortó antes de obtener detalles.",
-   "El Viejo Cicatriz de Sal jura haber visto luces extrañas, como señales, en la costa opuesta a la base la noche en que la célula dejó de reportar, pero nadie le hizo mucho caso.",
-   "Tinker encontró un rastreador Den Den Mushi miniaturizado y desactivado entre un cargamento reciente de repuestos, lo que sugiere que un envío pudo haber sido comprometido.",
-   "Orin Vellum cree que las corrientes anómalas que ocultan la isla podrían estar cambiando, creando ventanas temporales de vulnerabilidad que alguien podría haber explotado.",
-   "Entre los reclutas corre el susurro de que la célula desaparecida no fue capturada, sino que encontró algo tan valioso (o tan peligroso) que decidió actuar por su cuenta, rompiendo el protocolo."
+   "Se dice que la célula perdida estaba investigando una 'Sombra con Alas' que merodea las corrientes al norte de la isla.",
+   "Un cazador afirma haber visto luces intermitentes en una cueva de los acantilados orientales, donde no debería haber nadie.",
+   "Corre el rumor de que un barco de suministros fue abordado silenciosamente hace una semana, y su tripulación no era la habitual.",
+   "Algunos reclutas murmuran sobre un 'infiltrado con tinta azul' que hace preguntas demasiado específicas en el mercado.",
+   "El Viejo Cicatriz de Sal insiste en que la isla misma está despertando, y que los temblores recientes no son naturales."
   ]
  },
  {
   "island": "Isla Banaro",
-  "atmosphere": "Isla Banaro emana un aire de desolación, donde el eco del pasado se mezcla con el silencio pesado de la soledad. Las ruinas humeantes de antiguas viviendas contrastan con las cenizas que cubren el suelo, creando un paisaje macabro que parece contar historias de un duelo eterno. La niebla se asienta sobre la isla, amplificando la sensación de inquietud que acecha a quienes se atreven a explorar sus dominios.",
-  "history": "Isla Banaro fue una vez un próspero pueblo, famoso por su vibrante cultura y sus festivales de luz. Sin embargo, un enfrentamiento catastrófico entre fuerzas de fuego y oscuridad borró ese esplendor, dejando solo cenizas y ruinas. Hoy, las historias de su caída se susurran entre los pocos que pasan, mientras los ecos de su pasado resuenan en la memoria de los escasos habitantes que aún quedan.",
+  "atmosphere": "Una isla desierta y quemada, donde el silencio es denso y pesado. Las ruinas del antiguo pueblo son negras y frías, pero nuevas hogueras parpadean misteriosamente. El aire huele a ceniza vieja y a madera recién quemada, y la sensación de estar siendo observado es constante.",
+  "history": "Banaro fue una vez un pueblo próspero, conocido por sus artesanos y su puerto. Hace décadas, fue arrasado por una batalla legendaria entre dos titanes, conocida como 'el duelo entre el fuego y la oscuridad', que lo redujo a cenizas. La Marina estableció un puesto para estudiar el fenómeno, pero lo abandonó al no encontrar respuestas. Ahora, solo ruinas y secretos olvidados permanecen, junto a aquellos atraídos por ellos.",
   "customs": [
-   "Los habitantes mantienen la tradición de encender velas en las noches sin luna, en homenaje a aquellos que perdieron sus vidas en el conflicto.",
-   "Los comerciantes suelen intercambiar objetos que encuentran entre las cenizas, creyendo que cada artefacto tiene una historia que contar.",
-   "Cada año, en el aniversario de la destrucción, se realiza una ceremonia de silencio en recuerdo de los caídos."
+   "Encender pequeñas piras de ceniza como ofrenda a los que perecieron en el incendio.",
+   "Nunca silbar después del anochecer, se cree que atrae a las 'sombras ardientes' del pasado.",
+   "Los forasteros son recibidos en silencio, se les observa antes de dirigirles la palabra."
   ],
   "places": [
    {
     "name": "El Último Resuello",
     "kind": "taberna",
-    "description": "Este antro, ubicado entre las ruinas, es frecuentado por los pocos que se atreven a quedarse en la isla. Sus paredes están cubiertas de marcas de quemaduras, y el aire huele a humo viejo y a un futuro incierto. Ruso el Silencioso, su dueño, nunca habla mucho, pero siempre tiene un trago listo para quien lo necesite.",
+    "description": "Una choza de tablones quemados y lonas, la única taberna en kilómetros. El aire dentro es espeso por el humo de un fuego perpetuo y el olor a licor fuerte. Las conversaciones son susurros.",
     "regulars": [
-     "Ruso el Silencioso"
+     "Ruso el Silencioso",
+     "Mira",
+     "Thanos Leal",
+     "Helga Cicatriz"
     ]
    },
    {
-    "name": "Las Ruinas",
-    "kind": "lugar",
-    "description": "Un laberinto de piedras carbonizadas y escombros que antes fueron hogares. Se dice que en sus rincones se pueden encontrar artefactos únicos de la antigua civilización, pero el peligro de las hogueras misteriosas acecha en la oscuridad. Serena frecuenta este lugar en busca de tesoros olvidados.",
+    "name": "La Muralla Carbonizada",
+    "kind": "límite del pueblo",
+    "description": "Una larga pared de piedra negra y agrietada que marca el límite del antiguo pueblo. En algunas piedras, las marcas de quemaduras parecen formar rostros agonizantes. Es el puesto favorito de Brak.",
     "regulars": [
+     "Brak",
+     "Nilo Mateador"
+    ]
+   },
+   {
+    "name": "La Plaza del Silencio",
+    "kind": "plaza central en ruinas",
+    "description": "El corazón quemado del antiguo pueblo. Solo quedan los contornos de los cimientos y un gran círculo de piedra ennegrecido en el centro, donde a veces se encuentran nuevas hogueras recién apagadas.",
+    "regulars": [
+     "Cullen",
      "Serena",
-     "Gaff"
+     "Solenne Alma"
     ]
    },
    {
-    "name": "Puesto Abandonado de la Marina",
+    "name": "Puesto de la Marina Abandonado",
     "kind": "cuartel",
-    "description": "Una estructura deteriorada que una vez sirvió de defensa para la isla. Ahora, el viento y el silencio llenan sus pasillos desiertos. El Teniente Croft intenta mantener el orden, pero pocos le prestan atención en este lugar de sombras.",
+    "description": "Una estructura de madera y metal medio derrumbada, con el emblema de la Marina descolorido. Dentro, mapas polvorientos y equipo oxidado. Croft lo mantiene con orden obsesivo.",
     "regulars": [
      "Teniente Croft"
     ]
    },
    {
-    "name": "Mercado de Suministros",
+    "name": "El Mercado de las Cenizas",
     "kind": "mercado",
-    "description": "Un pequeño mercado al aire libre donde Mira vende lo que logra conseguir entre las cenizas. Es un lugar de intercambio, donde los pocos viajeros pueden encontrar lo necesario para sobrevivir en la isla, aunque cada transacción está llena de desconfianza.",
+    "description": "Un conjunto de puestos improvisados entre los escombros, donde se comercian artefactos rescatados, suministros escasos y rumores. Magdalena suele tener el puesto más llamativo.",
     "regulars": [
+     "Magdalena Burlas",
+     "Serena",
+     "Gaff",
      "Mira"
     ]
    },
    {
-    "name": "La Llama Perpetua",
-    "kind": "templo",
-    "description": "Las ruinas de un antiguo templo donde una llama nunca se apaga, simbolizando la memoria del pueblo perdido. Los pocos que llegan hasta aquí sienten una extraña conexión con el pasado, a pesar de la tristeza que inunda el lugar.",
+    "name": "La Choza de los Susurros",
+    "kind": "lugar de sanación",
+    "description": "Una cabaña apartada, casi enterrada bajo ceniza negra. Dentro, estanterías con frascos de polvos extraños y hierbas secas. Reina un silencio terapéutico.",
     "regulars": [
+     "Jaro el Mudo",
      "Vesto"
     ]
    },
    {
-    "name": "Calle de las Cenizas",
-    "kind": "lugar",
-    "description": "Una calle cubierta de cenizas donde se pueden ver sombras moverse entre las ruinas. Se dice que es hogar de espectros perdidos y donde Cullen suele aparecer en su misterioso caballo. Nadie se atreve a recorrerla de noche por miedo a lo que pueda surgir.",
+    "name": "El Bosque de Postes",
+    "kind": "bosque quemado",
+    "description": "En las afueras, un bosque de árboles reducidos a postes negros y retorcidos. El viento produce gemidos al pasar. Es un lugar de caza y encuentros clandestinos.",
     "regulars": [
-     "Cullen"
-    ]
-   },
-   {
-    "name": "La Esquina del Viento",
-    "kind": "lugar",
-    "description": "Un claro en medio de las ruinas donde el viento parece susurrar secretos olvidados. Aquí se suelen reunir los miembros de la banda 'Carroñeros de Banaro' para planear sus actividades y compartir historias sobre su vida en la isla.",
-    "regulars": [
+     "Ronan Sombra",
+     "Helga Cicatriz",
      "Gaff"
     ]
    },
    {
-    "name": "El Jardín de la Memoria",
-    "kind": "lugar",
-    "description": "Un pequeño espacio de tierra donde crecen plantas endurecidas por el fuego. Es un lugar donde los habitantes vienen a recordar y rendir homenaje a los que perdieron, un símbolo de esperanza entre la desolación.",
+    "name": "La Forja del Recuerdo",
+    "kind": "taller",
+    "description": "Los restos de una herrería, con el yunque y el fuelle milagrosamente intactos. Ariel a veces enciende el fuego aquí, creando objetos extraños con metal recuperado de las ruinas.",
     "regulars": [
-     "Vesto"
+     "Ariel Brazofuego"
     ]
    },
    {
-    "name": "Los Acantilados Silenciosos",
-    "kind": "lugar",
-    "description": "Altos acantilados que rodean la isla, desde donde la vista se extiende hacia el mar infinito. Se dice que aquellos que se asoman pueden escuchar los lamentos de los que murieron en el conflicto, y muchos aseguran haber visto a Cullen cabalgando por ahí.",
+    "name": "El Mirador del Naufragio",
+    "kind": "acantilado",
+    "description": "Un acantilado sobre el mar, con vistas a los restos de barcos quemados varados en la costa. Un lugar para pensar, observar y, según algunos, para comunicarse con lo perdido.",
     "regulars": [
-     "Cullen"
+     "Solenne Alma",
+     "Thanos Leal"
     ]
    }
   ],
   "rumors": [
-   "Se dice que el caballo flaco que ronda las ruinas es el espíritu de un antiguo protector del pueblo.",
-   "Algunos afirman haber visto a un misterioso jinete por las noches, que ofrece tesoros a quienes se atrevan a seguirle.",
-   "Se cuentan historias de un artefacto poderoso escondido entre las cenizas, capaz de revivir a los muertos.",
-   "Los habitantes susurran sobre un peligro inminente que se avecina, relacionado con las hogueras que han comenzado a arder de nuevo.",
-   "Hay quienes creen que el Teniente Croft esconde un oscuro secreto sobre el verdadero origen del fuego que destruyó el pueblo."
+   "El 'jinete que tose' no es un fantasma, sino alguien que busca algo específico enterrado bajo la Plaza del Silencio.",
+   "Las nuevas hogueras son una señal: alguien está intentando repetir el ritual que causó la destrucción original.",
+   "Entre los Carroñeros de Banaro hay un traidor que vende información a la Marina sobre lo que se encuentra en las ruinas.",
+   "El caballo flaco que acompaña al jinete aparece siempre cerca de donde va a ocurrir un nuevo incendio.",
+   "La 'oscuridad' del duelo legendario no era un poder, sino una entidad física que aún podría estar atrapada bajo la isla."
   ]
  },
  {
   "island": "Isla Cementerio",
-  "atmosphere": "Una fortaleza natural de rocas negras y niebla permanente que ahoga el sonido y la luz. Un silencio pesado, roto solo por el viento entre las agujas rocosas y los ecos lejanos de actividad en las entrañas de la isla. El dominio absoluto de Barbanegra impregna el aire con una sensación de peligro constante y vigilancia invisible.",
-  "history": "Antiguo bastión natural desconocido para los registros de la Marina, fue 'descubierto' y reclamado por Marshall D. Teach como su base de operaciones principal tras su ascenso. Se rumorea que la eligió por sus defensas naturales perfectas y por albergar algo más, oculto en sus profundidades, que solo él conoce. Su control ha transformado la isla en una guarida fortificada para los criminales más peligrosos.",
+  "atmosphere": "Niebla perenne que ahoga el sonido y limita la visibilidad a unos metros. Rocas negras y afiladas se alzan como dientes de un monstruo, creando un laberinto natural de pasadizos y callejones ciegos. El aire es frío, húmedo y huele a salitre, moho y un leve rastro de pólvora. Sensación constante de estar siendo observado desde la bruma. El silencio solo se rompe por el golpeteo del agua contra las rocas, algún grito lejano o una risotada siniestra que se pierde en la neblina. Es una prisión natur",
+  "history": "La Isla Cementerio siempre fue un lugar de mal agüero, evitado por los navegantes debido a sus traicioneros arrecifes y la niebla eterna. Barbanegra la descubrió tras su fuga de Impel Down y reconoció su valor estratégico como guarida inexpugnable. La convirtió en su principal base de operaciones, fortificando sus defensas naturales con artillería y utilizando sus cavernas para almacenar sus secretos y tesoros más preciados. Ahora, es el corazón de su imperio emergente, un lugar donde solo entran aquellos a los que Teach permite entrar, y del que pocos salen con vida.",
   "customs": [
-   "Hablar en voz baja; los gritos o ruidos fuertes atraen una atención no deseada de los guardias.",
-   "Nadie pregunta qué carga o a quién traen los barcos que atracan en el muelle oculto.",
-   "Las disputas se resuelven en los 'anillos' improvisados de las cuevas, lejos de la mirada directa de los capitanes.",
-   "Se evita mencionar los túneles más profundos; se considera de mala suerte o una provocación."
+   "Nadie pregunta por lo que no ve. La curiosidad es una sentencia de muerte.",
+   "Los 'impuestos' se pagan en especie o con información valiosa a los recaudadores de la tripulación.",
+   "Las disputas se resuelven en combates silenciosos y rápidos; los ruidos fuertes atraen la atención no deseada de los guardias o del propio Barbanegra."
   ],
   "places": [
    {
-    "name": "La Caldera de Guldo",
-    "kind": "cocina y almacén",
-    "description": "Una caverna amplia con un fogón central perpetuo y estantes repletos de provisiones robadas. Olores a grasa quemada, sal y algo podrido impregnan el aire denso. Las sombras se mueven entre los barriles.",
+    "name": "El Ojo del Cuervo",
+    "kind": "taberna",
+    "description": "Una caverna ahumada iluminada por lámparas de aceite de ballena. Los muebles están hechos de madera de naufragio y huesos tallados. El ambiente es tenso y las conversaciones son murmullos. Aquí es donde los miembros de menor rango de la tripulación beben su aguardiente rancio y trafican con rumores.",
     "regulars": [
-     "Guldo el Glotón"
+     "Kael el Susurro",
+     "Vex el Cobrador",
+     "Marnie la Zurcidora"
     ]
    },
    {
-    "name": "Los Ojos de Bronco",
-    "kind": "batería costera",
-    "description": "Una plataforma de roca tallada que sobresale del acantilado, armada con cañones pesados que apuntan a la niebla eterna. El suelo está cubierto de casquillos oxidados y barriles de pólvora vacíos.",
+    "name": "Muelle de las Sombras",
+    "kind": "puerto",
+    "description": "Un embarcadero oculto en una grieta de la roca, casi invisible desde el mar. Las cuerdas crujen y el agua negra chapotea contra los cascos de unos pocos barcos camuflados. Es el único punto de entrada y salida controlado.",
     "regulars": [
-     "Bronco el Sordo"
-    ]
-   },
-   {
-    "name": "El Receso de Kael",
-    "kind": "mercado clandestino",
-    "description": "Un nicho estrecho entre dos rocas gigantes, cubierto por una lona grasienta. Pequeños estantes exhiben herramientas, mapas incompletos, medicinas dudosas y información, todo por un precio.",
-    "regulars": [
-     "Kael el Susurro"
-    ]
-   },
-   {
-    "name": "La Costa de los Huesos",
-    "kind": "astillero secreto",
-    "description": "Una cueva oculta tras una cortina de agua salada, donde los cascos de barcos capturados o dañados yacen sobre la arena negra. El sonido de martillos y sierras resuena débilmente.",
-    "regulars": [
+     "Morgrim el Ciego",
+     "Pike el Atado",
      "Barlow el Desgastado"
     ]
    },
    {
-    "name": "El Umbral Interior",
-    "kind": "puesto de guardia",
-    "description": "Un arco natural de piedra que conduce a los túneles interiores de la fortaleza. Antorchas humeantes iluminan las caras sombrías de los guardias y las pesadas rejas que se pueden bajar en un instante.",
+    "name": "Almacenes del Hambre",
+    "kind": "almacenes",
+    "description": "Una serie de cuevas frías y húmedas cerca de las cocinas. Pilas de barriles y sacos se amontonan en la penumbra. El olor a comida salada y podredumbre se mezcla en el aire. Se rumorea que lo que no es comida, son prisioneros.",
     "regulars": [
+     "Guldo el Glotón",
+     "Corbin el Silencioso"
+    ]
+   },
+   {
+    "name": "Baterías del Trueno Sordo",
+    "kind": "cuartel",
+    "description": "Posiciones de cañones excavadas en la roca viva, con troneras que apuntan al mar de niebla. Siempre hay alguien de guardia, limpiando la pólvora o mirando a la nada a través de un catalejo.",
+    "regulars": [
+     "Bronco el Sordo",
      "Silas el Espectro"
     ]
    },
    {
-    "name": "El Muelle del Eco",
-    "kind": "puerto oculto",
-    "description": "Un pequeño embarcadero natural escondido en una grieta del acantilado, casi invisible desde el mar. Las aguas oscuras chapotean contra los pilotes podridos. Una soledad vigilante lo cubre todo.",
+    "name": "Celdas de la Roca Que Llora",
+    "kind": "prisión",
+    "description": "Mazmorras naturales donde el agua de condensación gotea constantemente de las paredes. Las celdas son nichos en la roca sellados con rejas de hierro oxidado. Los gemidos y canciones rotas hacen eco en los pasadizos.",
     "regulars": [
-     "Morgrim el Ciego"
+     "Finn el Cantor Roto",
+     "Silas el Espectro",
+     "Corbin el Silencioso"
     ]
    },
    {
-    "name": "Las Agujas de Lyra",
-    "kind": "observatorio natural",
-    "description": "Un conjunto de pináculos rocosos accesibles por pasarelas de cuerda y madera. Ofrece la única vista relativamente despejada (aunque brumosa) de los alrededores de la isla y de las formaciones geológicas únicas.",
+    "name": "Cementerio de los Sin Nombre",
+    "kind": "cementerio",
+    "description": "Una planicie rocosa y ventosa, más allá de la niebla principal. Las tumbas son montículos de piedras o simples hendiduras en el suelo. No hay lápidas, solo marcas toscas. Un lugar de absoluto silencio.",
     "regulars": [
+     "Gael el Sepulturero",
+     "Elias el Vacío"
+    ]
+   },
+   {
+    "name": "Capilla del Vacío",
+    "kind": "templo",
+    "description": "Una caverna alta con formaciones rocosas que se asemejan a un altar y bancos. No hay símbolos religiosos comunes, solo extrañas marcas de carbón en las paredes. El aire aquí es aún más frío y quieto.",
+    "regulars": [
+     "Elias el Vacío",
      "Lyra la Rastreadora"
     ]
    },
    {
-    "name": "Las Celdas Húmedas",
-    "kind": "prisión",
-    "description": "Una serie de nichos excavados en la roca a nivel del mar, donde el agua fría gotea constantemente desde el techo y lame el suelo. El aire es salobre y el silencio solo se rompe por toses o murmullos.",
+    "name": "Taller del Naufragio",
+    "kind": "astillero",
+    "description": "Una gran cueva con acceso a un canal de agua interior. Restos de barcos destrozados yacen como esqueletos, siendo canibalizados para reparar los navíos de Teach. El sonido de martillos y sierras es constante.",
     "regulars": [
-     "Finn el Cantor Roto"
+     "Barlow el Desgastado",
+     "Pike el Atado"
     ]
    },
    {
-    "name": "La Sala del Trono de Rocanegra",
-    "kind": "sala del capitán",
-    "description": "Una caverna monumental en el corazón de la isla, con un gran trono de piedra oscura y banderas piratas colgando de estalactitas. Aunque vacía la mayor parte del tiempo, su presencia impone una sombra sobre toda la isla.",
-    "regulars": []
+    "name": "Observatorio de la Aguja",
+    "kind": "puesto de observación",
+    "description": "El punto más alto accesible de la isla, una aguja de roca con una plataforma tallada. Desde aquí, Lyra estudia las formaciones y, ocasionalmente, vigila el horizonte a través de la niebra cambiante.",
+    "regulars": [
+     "Lyra la Rastreadora",
+     "Rook el Acechador"
+    ]
    },
    {
-    "name": "Los Pasajes del Suspiro",
-    "kind": "túneles de ventilación",
-    "description": "Corredores estrechos y bajos que atraviesan la roca, por donde corre un viento frío y constante que produce un sonido similar a un suspiro prolongado. Las paredes están marcadas con arañazos y símbolos borrosos.",
-    "regulars": []
+    "name": "La Guarida de las Bestias",
+    "kind": "cavernas",
+    "description": "Un sistema de túneles profundos y no cartografiados. Se escuchan gruñidos y arañazos. La fauna aquí ha mutado por la oscuridad y la energía peculiar de la isla. Solo los más temerarios o desesperados se adentran.",
+    "regulars": [
+     "Rook el Acechador",
+     "Tobin el Punto Final"
+    ]
    }
   ],
   "rumors": [
-   "En los túneles más profundos, bajo las celdas, Barbanegra guarda un 'trofeo' o un arma de un antiguo rival que no quiere que el mundo vea.",
-   "Kael, el mercader, a veces busca 'voluntarios' para probar mapas de salidas secretas de la isla... pero nadie ha regresado para cobrar la segunda parte del pago.",
-   "Finn, el prisionero, no canta por placer; sus canciones fragmentadas, dicen, contienen pistas sobre los movimientos de las mareas que rodean los arrecifes traicioneros de la isla.",
-   "Lyra, la geóloga, ha encontrado una veta de un mineral que no debería existir aquí, y que emite un leve calor incluso en la niebla fría.",
-   "Existe un barco, camuflado entre los naufragios en la costa de Barlow, que está casi listo para zarpar y que tiene un agujero de bala sin reparar en su casco, justo a la altura de la línea de flotación."
+   "En las cavernas más profundas, Barbanegra ha escondido un tesoro robado de Mary Geoise que no es oro ni joyas, sino algo que 'late'.",
+   "El mapa real de la isla, con todas sus salidas secretas submarinas, está siendo dibujado a la fuerza por un cartógrafo prisionero en las celdas de aislamiento.",
+   "Algunos de los prisioneros no están allí por castigo, sino como 'invitados' especiales cuyas habilidades únicas Barbanegra quiere controlar o extraer.",
+   "Existe un túnel que lleva desde la capilla hasta fuera de la niebla, usado por el sacerdote para sus 'comunicaciones' con el exterior.",
+   "Los suministros de la isla dependen de un contrabandista que puede hacer pasar mensajes y objetos pequeños a través de los bloqueos de la Marina."
   ]
  },
  {
   "island": "Isla Conomi",
-  "atmosphere": "Un archipiélago de aldeas pesqueras sumidas en el miedo y la opresión. El aire huele a sal y desesperación, con la sombra de Arlong Park planeando sobre cada rincón. Los aldeanos hablan en susurros, vigilando el mar por si aparecen los brutales soldados hombres-pez.",
-  "history": "La Isla Conomi fue una vez un tranquilo archipiélago de aldeas pesqueras que vivían en armonía. Todo cambió con la llegada de Arlong y su banda, que tomaron el control y establecieron un régimen de terror. Ahora, los aldeanos viven para servir a los hombres-pez, trabajando solo para pagar los impuestos exorbitantes que los mantienen en la pobreza.",
+  "atmosphere": "Un aire de opresión silenciosa envuelve las aldeas. El miedo es palpable en cada esquina, y los rostros de los habitantes reflejan desesperación y agotamiento. El olor a salitre y pescado fresco convive con el hedor de la pobreza forzada. En Arlong Park, en cambio, reina una arrogancia decadente y festiva, con lujo robado y risas estridentes que contrastan brutalmente con la miseria de los pueblos.",
+  "history": "Las aldeas de la Isla Conomi, como la Aldea de las Conchas y la Aldea del Atardecer, siempre vivieron de la pesca y el comercio modesto. Hace unos años, Arlong y su banda de hombres-pez llegaron y, tras derrotar a la Marina local, establecieron su tiranía. Desde entonces, gobiernan mediante extorsión, imponiendo 'impuestos' exorbitantes y destruyendo propiedades o familias de quienes no pagan.",
   "customs": [
-   "Los aldeanos entregan la mayor parte de su pesca diaria como 'tributo' en el muelle designado.",
-   "Nadie celebra fiestas grandes; las reuniones son pequeñas y discretas para no llamar la atención de los recaudadores.",
-   "Se considera una imprudencia pescar en ciertas zonas designadas exclusivamente para los hombres-pez."
+   "El 'Tributo del Atardecer': Cada tarde, los aldeanos dejan una pequeña ofrenda de pescado fresco o redes reparadas en los muelles, un acto de sumisión forzada para evitar provocaciones.",
+   "Silencio en el Agua: Los pescadores evitan hablar en alta mar, creyendo que los hombres-pez pueden escuchar sus conversaciones a través del agua.",
+   "La Canción del Puerto: Los niños, guiados por Mina, cantan viejas canciones de marineros en el muelle al anochecer, una tradición que ahora sirve para mantener alta la moral a escondidas."
   ],
   "places": [
    {
-    "name": "Taberna de la Aldea de las Conchas",
+    "name": "La Concha Quebrada",
     "kind": "taberna",
-    "description": "Un lugar modesto y sombrío donde el alcohol es barato y las conversaciones son aún más bajas. El olor a pescado ahumado y desaliento impregna el aire.",
+    "description": "Una taberna pobre y húmeda, con mesas desgastadas por el salitre. Es el único lugar donde los aldeanos se reúnen para compartir sus penas en voz baja, bajo la mirada comprensiva de Kiri. El olor a sopa de pescado barata llena el aire.",
     "regulars": [
      "Kiri",
-     "Maro"
+     "Maro",
+     "Marlon",
+     "Halcón"
     ]
    },
    {
-    "name": "Muelle de Tributos",
+    "name": "Muelle de la Aldea del Atardecer",
     "kind": "puerto",
-    "description": "Un muelle deteriorado donde cada atardecer, los pescadores depositan su pesca del día bajo la mirada vigilante de los recaudadores. El ambiente es de resignación silenciosa.",
+    "description": "Un muelle de madera carcomida donde amarran las barcas de pesca, muchas de ellas dañadas y sin reparar. Es el centro de la vida diaria y de la opresión, donde Chepo o Rask suelen aparecer para las cobranzas. Mina suele cantar aquí entre las redes.",
     "regulars": [
-     "Gill",
-     "Chepo"
+     "Mina",
+     "Maro",
+     "Kaito",
+     "Toma"
     ]
    },
    {
     "name": "Arlong Park",
     "kind": "cuartel",
-    "description": "El símbolo mismo del terror. Una ostentosa mansión-estilo asiático construida por trabajo forzado, rodeada por altos muros y una piscina central. Es la guarida de Arlong y su banda.",
+    "description": "Una grotesca mansión-palacio construida con materiales robados y dominando la costa. Tiene fuentes, jardines exuberantes y una torre alta desde donde Arlong vigila su dominio. Es la sede del poder tiránico.",
     "regulars": [
-     "Sharko"
+     "Sharko",
+     "Chepo",
+     "Rask",
+     "Gill"
     ]
    },
    {
-    "name": "Mercado Silencioso",
-    "kind": "mercado",
-    "description": "Un pequeño mercado donde apenas hay que comerciar. Toma despliega sus escasas provisiones, y los aldeanos intercambian lo poco que logran esconder de los recaudadores.",
-    "regulars": [
-     "Toma",
-     "Yumi"
-    ]
-   },
-   {
-    "name": "Cabaña de Yumi",
-    "kind": "casas importantes",
-    "description": "Una cabaña al borde del agua llena de redes en reparación. Es un lugar de reunión discreto donde Yumi escucha las penas de los aldeanos mientras sus hábiles manos trabajan.",
+    "name": "La Choza de las Redes",
+    "kind": "taller",
+    "description": "Una cabaña junto al mar donde Yumi repara y teje redes para toda la aldea. Está llena de cuerdas, agujas de madera y el constante sonido de la marea. Es un lugar de trabajo silencioso y resistencia pasiva.",
     "regulars": [
      "Yumi",
      "Kaito"
     ]
    },
    {
-    "name": "Cala de los Susurros",
-    "kind": "bosque",
-    "description": "Una pequeña cala rocosa escondida tras un bosque de manglares. Es el único lugar donde los aldeanos se sienten lo suficientemente seguros para hablar con cierta libertad.",
+    "name": "Mercado Silencioso",
+    "kind": "mercado",
+    "description": "Un conjunto de puestos miserables y temporales donde Toma y otros intentan vender lo poco que les queda tras pagar los impuestos. El comercio se hace casi en susurros, con miradas nerviosas hacia los caminos.",
     "regulars": [
-     "Maro",
-     "Kaito"
+     "Toma",
+     "Yumi"
     ]
    },
    {
-    "name": "Casa del Consejo",
-    "kind": "casas importantes",
-    "description": "Una casa comunal en la Aldea del Atardecer, ahora vacía y polvorienta. Simboliza la autonomía perdida; solo se usa para reuniones furtivas cuando la desesperación alcanza su punto máximo.",
+    "name": "La Cueva del Desertor",
+    "kind": "refugio",
+    "description": "Una cueva escondida entre los acantilados, accesible solo con marea baja. Halcón vive aquí, alejado de todos, y guarda mapas y recuerdos de su pasado. Es un lugar seco y frío, con olor a polvo y sal.",
     "regulars": [
-     "Kiri",
+     "Halcón",
+     "Selene"
+    ]
+   },
+   {
+    "name": "La Casa del Capitán",
+    "kind": "vivienda",
+    "description": "La deteriorada casa de Marlon, cerca del muelle. En su interior aún cuelgan viejos aparejos y una brújula rota. Es un lugar de reunión ocasional para los más veteranos que buscan consejo.",
+    "regulars": [
+     "Marlon",
      "Maro"
     ]
    },
    {
-    "name": "Puesto de Vigilancia de Gill",
-    "kind": "cuartel",
-    "description": "Una choza sucia junto al camino principal. Desde aquí, el capataz humano supervisa el trabajo forzado y asegura que ningún aldeano intente algo 'estúpido'.",
+    "name": "El Mirador de la Cartógrafa",
+    "kind": "observatorio",
+    "description": "Una pequeña colina arbolada con vista al archipiélago. Selene viene aquí a dibujar y cartografiar en secreto, anhelando documentar la tierra antes de que sea completamente destruida. Está lleno de pinos y el sonido del viento.",
     "regulars": [
-     "Gill"
+     "Selene"
+    ]
+   },
+   {
+    "name": "La Calle de los Susurros",
+    "kind": "calle principal",
+    "description": "El camino principal de tierra de la Aldea de las Conchas, flanqueado por casas humildes. Nadie habla alto aquí; las conversaciones son murmullos y las miradas se bajan cuando pasa alguien de Arlong Park.",
+    "regulars": [
+     "Kaito",
+     "Gill",
+     "Rask"
+    ]
+   },
+   {
+    "name": "La Pescadería Vacía",
+    "kind": "almacén",
+    "description": "Un cobertizo que antes almacenaba la pesca del día para su venta. Ahora está casi siempre vacío, con solo algunos barriles rotos y el olor rancio a pescado viejo. Simboliza la economía saqueada.",
+    "regulars": [
+     "Maro",
+     "Kaito"
     ]
    }
   ],
   "rumors": [
-   "Se rumorea que Chepo, el contable, lleva un 'libro negro' con las verdaderas cuentas de Arlong, que podría mostrar fraude incluso para los estándares de los hombres-pez.",
-   "Dicen que en la Cala de los Susurros, a veces aparecen barcos de pesca hundidos a propósito, saboteados por pescadores desesperados para que Arlong no se los lleve.",
-   "Corre el susurro de que Sharko, el soldado hombre-tiburón, tiene una debilidad secreta: un odio profundo por un tipo específico de alga marina que lo debilita, conocida solo por los pescadores más veteranos.",
-   "Un rumor persistente habla de un 'tesoro de la resistencia' enterrado por los aldeanos hace años, compuesto por las pocas joyas y berries que lograron esconder antes de la llegada de Arlong."
+   "Se dice que Arlong planea construir un 'parque de atracciones' aún más grande, para lo cual necesita demoler varias casas de la Aldea del Atardecer.",
+   "Corre el rumor de que Halcón, el ex-teniente, esconde un Den Den Mushi especial con el que podría contactar a la Marina, pero tiene demasiado miedo para usarlo.",
+   "Algunos pescadores juran haber visto un barco pirata desconocido rondando las aguas profundas, más allá de donde vigilan los hombres-pez.",
+   "Se murmura que Chepo, el contable, lleva un segundo libro de cuentas con números reales, escondido en algún lugar de Arlong Park.",
+   "Mina canta a veces una canción con letras extrañas que, según Yumi, podría ser un mapa sonoro de los arrecifes secretos donde esconderse."
   ]
  },
  {
   "island": "Isla del Toro Negro",
-  "atmosphere": "Una isla volcánica imponente y opresiva del Nuevo Mundo, dominada por el basalto negro y el aire caliente que emana de la roca. El puerto excavado en la roca y la fortaleza en el acantilado son una clara declaración de poder. El sonido del mar rompiendo contra la roca, los ecos de los martillos en la forja y la mirada constante de los vigías desde la torre más alta crean un ambiente de tensa sumisión y fuerza bruta. La bandera del toro negro ondea como único rey.",
-  "history": "Isla del Toro Negro fue una isla deshabitada y volcánica, considerada inhóspita. Fue conquistada y transformada por los Piratas Black Bulls bajo el mando del Yonko Kirito, que la convirtió en su bastión inexpugnable. Excavaron el puerto y construyeron la fortaleza de basalto con mano de obra forzada y una fuerza de voluntad férrea. Ahora sirve como base de operaciones, arsenal y símbolo del poder del Emperador en esta región del Nuevo Mundo.",
+  "atmosphere": "Una isla volcánica en el Nuevo Mundo, dominada por la amenaza constante de erupción y la férrea ley de los piratas. El aire huele a azufre y sal, y el sonido del mar chocando contra el puerto excavado en la roca se mezcla con el trajín del puerto controlado por los Black Bulls. La fortaleza de basalto negro, con la bandera del toro ondeando, domina el horizonte, recordatorio constante de que el permiso para estar aquí es una gracia concedida por el ojo vigilante del Yonko.",
+  "history": "La isla, antes un punto volcánico inhóspito, fue conquistada y transformada por los Black Bulls bajo el mando de Kirito. Excavaron el puerto en la roca viva y levantaron su fortaleza con basalto de las erupciones, estableciendo una base impenetrable en el Nuevo Mundo. Su dominio es absoluto, gobernando a través de la fuerza y un sistema de favores y audiencias. Todo lo que ocurre en la isla, desde la pesca hasta el comercio, fluye hacia o desde la fortaleza negra.",
   "customs": [
-   "Nadie pide permiso para atracar; se pide audiencia esperando la señal desde la Torre del Toro Negro. Acercarse sin ella es considerado un acto de guerra.",
-   "Todo trabajo o negocio se transa con respeto y sin titubeos; la debilidad o la indecisión se castigan con dureza.",
-   "Las disputas entre tripulantes de los Black Bulls se resuelven en el patio de la Fortaleza del Acantilado, bajo la atenta mirada de los capitanes o del propio Yonko."
+   "Nadie atraca sin ser visto y autorizado desde la Torre del Toro Negro. Acercarse sin permiso es un suicidio.",
+   "En el Vaso Fundido, se paga con berris, información o favores futuros. El oro corriente tiene poco valor frente a la lealtad o los secretos.",
+   "Las disputas se resuelven en el 'Yunque', frente a los herreros de la fortaleza, donde las palabras se forjan o se rompen como el metal."
   ],
   "places": [
    {
-    "name": "Puerto Negro",
-    "kind": "puerto",
-    "description": "Una gigantesca dársena excavada a martillo en la cara de la montaña volcánica. Los muelles son de roca sólida y las cadenas para amarrar son gruesas como troncos. La sombra del acantilado y la fortaleza cae sobre todos los barcos que atracan.",
-    "regulars": [
-     "Hogrun el Incansable"
-    ]
-   },
-   {
     "name": "El Vaso Fundido",
     "kind": "taberna",
-    "description": "Una caverna ahumada y caliente cerca del puerto, con mesas y barra de piedra volcánica pulida. El aire huele a cerveza fuerte, carne asada y azufre. Es el único lugar de esparcimiento 'tolerado' para la tripulación común.",
+    "description": "Una caverna natural con mesas de roca y un mostrador que parece lava solidificada. El calor del subsuelo mantiene el ambiente sofocante y las bebidas siempre calientes. Es el único lugar donde forasteros y piratas de baja graduación pueden mezclarse, bajo la atenta mirada de Magma Molly.",
     "regulars": [
      "Magma Molly",
-     "Boulder Grug",
-     "Ignis el Yunque"
+     "Ernesto el Marino",
+     "Seraphina la Susurradora"
     ]
    },
    {
-    "name": "Muralla de la Bahía",
-    "kind": "cuartel",
-    "description": "Una imponente muralla de basalto que protege el acceso terrestre a la fortaleza, coronada por cañones de largo alcance. Desde aquí se vigila toda la bahía y se controla el paso hacia el interior de la isla.",
+    "name": "Puerto Negro",
+    "kind": "puerto",
+    "description": "Una bahía artificial excavada en el acantilado volcánico, con muelles de hierro ennegrecido por el salitre. Los barcos autorizados atracan bajo la sombra de las cañoneras de la muralla. El ambiente es de actividad constante pero silenciosa, bajo las órdenes secas del capitán del puerto.",
     "regulars": [
-     "Boulder Grug"
-    ]
-   },
-   {
-    "name": "La Forja del Yunque",
-    "kind": "herrería",
-    "description": "Situada en una grieta volcánica natural dentro de la fortaleza, donde el calor de la tierra alimenta los hornos. Se forjan armas, reparan barcos y se crean los artilugios que necesitan los Black Bulls. El sonido del metal es constante.",
-    "regulars": [
-     "Ignis el Yunque"
-    ]
-   },
-   {
-    "name": "Archivo de los Libros Negros",
-    "kind": "archivo",
-    "description": "Una estancia fría y ordenada dentro de la fortaleza, llena de mapas, registros de botines, diarios de navegación y contratos. Es el centro nervioso de la logística y la información de la banda.",
-    "regulars": [
-     "Tally de los Libros Negros"
-    ]
-   },
-   {
-    "name": "Sendero del Pedregal",
-    "kind": "bosque/bosque petrificado",
-    "description": "Un peligroso camino entre formaciones de lava petrificada y fumarolas activas que lleva a los pocos recursos de la isla interior. Solo los más conocedores o temerarios se aventuran aquí.",
-    "regulars": [
-     "Solfa la Rastreadora"
-    ]
-   },
-   {
-    "name": "Cantera del Esclavo",
-    "kind": "minas/trabajos forzados",
-    "description": "Una profunda herida abierta en la ladera del volcán, donde prisioneros y trabajadores forzados extraen basalto bajo un sol abrasador y la vigilancia armada. Polvo, sudor y desesperación impregnan el aire.",
-    "regulars": [
+     "Hogrun el Incansable",
+     "Anita la Marejada",
      "Crag el Rompehuesos"
     ]
    },
    {
     "name": "Torre del Toro Negro",
-    "kind": "torre de vigía",
-    "description": "La torre más alta de la fortaleza, de piedra negra bruñida. Desde su mirador se domina todo el horizonte marino. La bandera de la banda ondea aquí, y es el puesto de mando para decidir el destino de los visitantes.",
+    "kind": "atalaya",
+    "description": "La estructura más alta de la fortaleza, de basalto pulido. Desde su mirador se domina toda la bahía y el mar a la redonda. Es el centro nervioso de la defensa y el punto de decisión para toda embarcación que se aproxime.",
     "regulars": [
-     "Ragnar Ojo de Halcón"
+     "Ragnar Ojo de Halcón",
+     "Boulder Grug"
     ]
    },
    {
-    "name": "Fortaleza del Acantilado",
-    "kind": "fortaleza",
-    "description": "La ciudadela principal, construida sobre el acantilado que domina el Puerto Negro. Sus muros son inexpugnables y albergan los aposentos del Yonko, sus oficiales, tesoros y los sistemas de defensa más letales.",
+    "name": "El Yunque del Fuego",
+    "kind": "herrería",
+    "description": "Forja principal de la fortaleza, ubicada cerca de una fisura volcánica que proporciona calor intenso. Aquí se forjan armas, reparan barcos y se funden metales para los Black Bulls. El sonido del martillo es constante.",
+    "regulars": [
+     "Ignis el Yunque",
+     "Valka la Forjadora"
+    ]
+   },
+   {
+    "name": "Archivos de los Libros Negros",
+    "kind": "archivo",
+    "description": "Una sala abovedada dentro de la fortaleza, repleta de estantes con registros, mapas, cuentas y diarios de navegación. Es el cerebro logístico y de inteligencia de la operación pirata, un lugar de silencio y precisión.",
     "regulars": [
      "Tally de los Libros Negros",
-     "Boulder Grug",
-     "Ignis el Yunque"
+     "Suelen el Cartógrafo"
     ]
    },
    {
-    "name": "Plaza de Audiencias",
-    "kind": "plaza",
-    "description": "Un patio desnudo y ventoso en el corazón de la fortaleza, pavimentado con losas negras. Aquí es donde los visitantes que han obtenido audiencia esperan, bajo la mirada de los guardias, la decisión del Emperador.",
+    "name": "Mercado de las Sombras",
+    "kind": "mercado",
+    "description": "Un conjunto de puestos y toldos en una plaza al abrigo del viento, al pie de la fortaleza. Se comercia con bienes exóticos, información, venenos, piezas de barcos y servicios especializados. Nadie pregunta el origen de la mercancía.",
     "regulars": [
-     "Hogrun el Incansable",
+     "Marisol la Vidente",
+     "Seraphina la Susurradora",
+     "Garnet el Persuasivo",
+     "Basilio Sombra Verde"
+    ]
+   },
+   {
+    "name": "Los Paredones",
+    "kind": "muralla",
+    "description": "La imponente muralla de basalto que protege el lado terrestre de la fortaleza y el puerto. Está salpicada de baterías de cañones y puestos de vigilancia. Desde aquí, la vista de la isla salvaje y el mar es aterradoramente clara.",
+    "regulars": [
+     "Boulder Grug"
+    ]
+   },
+   {
+    "name": "Las Fumarolas",
+    "kind": "terreno peligroso",
+    "description": "Una zona de géiseres y grietas humeantes en las laderas del volcán, alejada del puerto. Es una tierra peligrosa pero rica en minerales y hierbas extrañas que solo los locales conocen.",
+    "regulars": [
+     "Solfa la Rastreadora",
+     "Fendrick el Rastreor"
+    ]
+   },
+   {
+    "name": "La Cabaña del Claro",
+    "kind": "casa",
+    "description": "Una cabaña robusta en un claro cerca de la jungla, alejada del bullicio del puerto. Sirve de refugio para aquellos que prefieren la compañía de la naturaleza salvaje a la de los piratas.",
+    "regulars": [
+     "Basilio Sombra Verde",
+     "Solfa la Rastreadora"
+    ]
+   },
+   {
+    "name": "Las Canteras",
+    "kind": "lugar de trabajo",
+    "description": "Una herida abierta en la montaña, de donde se extrae basalto y otros minerales. El trabajo es duro y peligroso, realizado por prisioneros o trabajadores forzados bajo una vigilancia brutal.",
+    "regulars": [
      "Crag el Rompehuesos"
     ]
    }
   ],
   "rumors": [
-   "Los Black Bulls están buscando un artefacto específico, un 'Corazón de Volcán', que dicen aumenta el poder de los frutos del diablo relacionados con el fuego o la tierra. Tally tiene pistas pero necesita alguien que se interne en el Pedrega",
-   "Un grupo de trabajadores forzados, liderados en secreto, planea un motín durante la próxima tormenta eléctrica, cuando la vigilancia en la cantera sea menor. Crag sospecha pero no tiene pruebas.",
-   "Ragnar, el vigía, ha estado avistando un barco misterioso, sin bandera, que merodea justo fuera del alcance visual normal durante tres días seguidos. No se acerca, pero tampoco se va. ¿Espías de la Marina o de otro Yonko?",
-   "Ignis el herrero necesita un mineral muy raro, 'escoria estelar', que solo se encuentra en los flujos de lava más profundos y antiguos. Ofrece una recompensa en armas personalizadas a quien se atreva a bajarla de las fumarolas activas.",
-   "Se dice que en los Archivos de los Libros Negros, Tally guarda no solo cuentas, sino también un diario de navegación que señala la ubicación de una isla anterior de los Black Bulls, abandonada y llena de trampas, pero también de tesoros que"
+   "Se dice que en las profundidades de las fumarolas hay un depósito de un mineral volcánico que puede forjar armas capaces de dañar incluso al acero más resistente.",
+   "Los Archivos de los Libros Negros contienen no solo cuentas, sino la ubicación de un tesoro escondido por una tripulación rival aniquilada hace años. Tally lo sabe, pero no habla.",
+   "Una grieta nueva y activa cerca de la base del volcán amenaza con desestabilizar los cimientos mismos del Puerto Negro. Solo unos pocos lo saben.",
+   "Marisol la Vidente ha tenido un sueño recurrente: un barco fantasmal, con velas negras, que se acerca a la isla en una noche sin luna. Nadie le cree, pero ella insiste en que es un presagio.",
+   "Garnet el Persuasivo está buscando desesperadamente a un deudor que escapó de la isla con un mapa robado. Ofrece una recompensa considerable por su cabeza... o por el mapa."
   ]
  },
  {
   "island": "Isla Drum",
-  "atmosphere": "Un reino de nieve eterna sin rey desde que su tirano huyó. En lo alto de la montaña, una vieja doctora de risa temible cura lo que ningún hospital del mundo puede curar — y cobra a su manera. El invierno aquí no es solo frío: es hambre, enfermedad y un pueblo que aprendió a desconfiar de los piratas por la mala fama de uno solo. Ganarse a Drum es más difícil que sobrevivirle.",
-  "history": "Drum fue un reino gobernado por el tirano Rey Wapol, cuya opresión y codicia dejaron a la isla sumida en la pobreza y el miedo. Tras la huida de Wapol, el reino quedó sin un monarca y en un estado de abandono, con solo la legendaria doctora Kureha manteniendo viva la esperanza desde su castillo en la montaña. Los habitantes ahora luchan por sobrevivir al invierno eterno y reconstruir sus vidas sin la tiranía, pero con las cicatrices de la desconfianza.",
+  "atmosphere": "Un reino de nieve perpetua y vientos cortantes donde el frío se siente hasta en los huesos. El paisaje montañoso es deslumbrante y hostil, dominado por el pico del Castillo de Drum. El hambre y la enfermedad acechan, y el pueblo, curtido por la adversidad, desconfía de los extranjeros, especialmente de los piratas, debido al legado de su antiguo tirano. Solo los más resistentes sobreviven aquí, y la única esperanza reside en lo alto de la montaña.",
+  "history": "El antiguo reino de Drum fue gobernado durante generaciones por la familia real, hasta que el Rey Wapol, un tirano cobarde y glotón, huyó abandonando a su pueblo a merced del hambre y las enfermedades. Desde entonces, el reino carece de un monarca legítimo. La ley y el orden recaen en la capitana de la guardia y en la figura temida y respetada de la vieja doctora que vive en la montaña. La isla lucha por sobrevivir, recordando su pasado con amargura y desconfianza hacia los forasteros.",
   "customs": [
-   "El trueque es más común que el dinero, especialmente por suministros médicos o alimentos escasos.",
-   "Se venera a los animales de carga y compañía como aliados esenciales para la supervivencia en la nieve.",
-   "Cualquier forastero que mencione a los piratas es sometido a un escrutinio inmediato y desconfianza.",
-   "Las historias junto al fuego en las tabernas son un ritual nocturno para mantener alta la moral."
+   "Se ofrecen 'pagos en especie' a la doctora de la montaña: desde leña y carne de caza hasta historias o servicios, pocos pueden pagar en dinero.",
+   "Los cazadores y tramperos marcan sus territorios con señales de asta tallada para evitar conflictos y compartir advertencias sobre bestias peligrosas.",
+   "Antes de una tormenta de nieve, el pueblo entero se reúne en la taberna para compartir provisiones y noticias, una tradición de supervivencia llamada 'el Cerco del Hogar'."
   ],
   "places": [
    {
-    "name": "Hogar del Cazador",
+    "name": "El Hogar del Cazador",
     "kind": "taberna",
-    "description": "Una cabaña de troncos ahumada por el fuego perpetuo, donde el olor a estofado de caza se mezcla con el humo de las pipas. Es el refugio principal contra el frío y el centro de reunión del pueblo.",
+    "description": "Una taberna de troncos ahumados, el único refugio cálido y bullicioso del pueblo. El olor a guiso espeso, cerveza fuerte y cuero mojado llena el aire. Las paredes están adornadas con trofeos de caza y mapas rudimentarios.",
     "regulars": [
      "Masha",
      "Torben el Viejo Oso",
-     "Rurik el Desilusionado"
+     "Ragnar",
+     "Dante"
     ]
    },
    {
-    "name": "Muelle de la Bahía Helada",
+    "name": "Puerto del Exilio",
     "kind": "puerto",
-    "description": "Un embarcadero de madera carcomida por el hielo, donde los barcos se amarran con dificultad entre témpanos. Es el punto de entrada más común para forasteros y el lugar de los tratos más turbios.",
+    "description": "Un embarcadero de madera carcomida por el hielo, medio enterrado en la nieve. Solo unos pocos barcos balleneros o mercantes desesperados atracan aquí. Es un lugar de llegadas sombrías y partidas apresuradas.",
     "regulars": [
      "Gunnar y Halvar",
-     "Sigmund el Transeúnte"
+     "Sigmund el Transeúnte",
+     "Bruno"
     ]
    },
    {
-    "name": "La Choza de las Hierbas",
-    "kind": "casa importante",
-    "description": "Una pequeña cabaña apartada, con el techo cubierto de nieve y el aroma a plantas medicinales que impregna el aire incluso en plena ventisca. Frascos y manojos de hierbas cuelgan de las vigas.",
+    "name": "El Mercado de la Escarcha",
+    "kind": "mercado",
+    "description": "Un conjunto de puestos al aire libre y precarios donde se comercia con lo esencial: carne salada, pieles, hierbas medicinales y los escasos suministros que llegan del exterior. El regateo es duro y rápido, antes de que se congelen los dedos.",
+    "regulars": [
+     "Sigmund el Transeúnte",
+     "Ylva",
+     "Eliana",
+     "Thalos"
+    ]
+   },
+   {
+    "name": "El Cuartel de la Guardia",
+    "kind": "cuartel",
+    "description": "Una fortificación de piedra maciza, la más sólida del pueblo después del castillo abandonado. En su interior, armas oxidadas y un mapa grande de la isla cubierto de anotaciones. Es el centro de lo poco que queda de autoridad organizada.",
+    "regulars": [
+     "Borg el Leal",
+     "Rurik el Desilusionado",
+     "Ragnhild"
+    ]
+   },
+   {
+    "name": "La Cabaña de Ylva",
+    "kind": "casas importantes",
+    "description": "Una cabaña apartada en el límite del bosque, con el tejado cargado de nieve y el aroma a hierbas secas y ungüentos que se escapa por la chimenea. Es un lugar de conocimiento antiguo y remedios que la gente del pueblo prefiere antes que arriesgarse a subir la montaña.",
     "regulars": [
      "Ylva",
+     "Eliana",
      "Lumi"
     ]
    },
    {
-    "name": "Cuartel de la Guardia del Pueblo",
-    "kind": "cuartel",
-    "description": "Un antiguo almacén fortificado cerca de la entrada del pueblo, con ventanas tapiadas y una puerta reforzada con hierro. Dentro, el equipamiento es escaso pero bien cuidado.",
-    "regulars": [
-     "Borg el Leal",
-     "Rurik el Desilusionado"
-    ]
-   },
-   {
-    "name": "Almacén de Sigmund",
-    "kind": "mercado",
-    "description": "Más que un mercado, es un cobertó desordenado donde se apilan suministros escasos traídos por mar: desde sal y herramientas hasta telas y medicinas básicas. Los precios cambian con el humor del dueño.",
-    "regulars": [
-     "Sigmund el Transeúnte",
-     "Masha",
-     "Torben el Viejo Oso"
-    ]
-   },
-   {
-    "name": "El Sendero del Castigo",
+    "name": "Sendero de la Ascensión",
     "kind": "bosque",
-    "description": "Un peligroso camino forestal que serpentea por la ladera de la montaña, cubierto de nieve profunda y trampas naturales. Solo los cazadores más experimentados o los desesperados se aventuran aquí.",
+    "description": "El peligroso camino serpenteante que asciende hacia el Castillo de Drum. Atraviesa bosques de coníferas heladas y desfiladeros traicioneros. Está plagado de bestias de nieve y avalanchas impredecibles.",
     "regulars": [
      "Torben el Viejo Oso",
-     "Borg el Leal"
+     "Ragnar",
+     "Dante"
     ]
    },
    {
-    "name": "Ruinas del Antiguo Palacio",
+    "name": "Ruinas del Castillo Real",
     "kind": "ruinas",
-    "description": "Los restos carbonizados y saqueados del antiguo palacio de Wapol, en las afueras del pueblo. El viento silba a través de las ventanas rotas, llevándose recuerdos de opresión. Algunos aún buscan objetos de valor entre los escombros.",
+    "description": "El imponente castillo en la cima de la montaña, ahora hogar de la Doctora Kureha. Desde abajo solo se ven sus torres almenadas recortadas contra el cielo gélido. Es un símbolo de un pasado opresivo y, para algunos, de una esperanza remota.",
     "regulars": [
-     "Gunnar y Halvar",
-     "Rurik el Desilusionado"
+     "Lumi"
     ]
    },
    {
-    "name": "Cabaña de Torben",
+    "name": "El Refugio de los Olvidados",
     "kind": "casas importantes",
-    "description": "Una sólida cabaña de cazador en el límite del pueblo, adornada con pieles curtidas y trofeos de caza. El humo sale constantemente de su chimenea y el sonido del afilado de cuchillos es frecuente.",
+    "description": "Un viejo almacén rehabilitado donde los más desfavorecidos -huérfanos, ancianos sin familia, heridos- encuentran un techo. Está mal caldeado y húmedo, pero es mejor que morir congelado en la calle.",
     "regulars": [
-     "Torben el Viejo Oso",
-     "Borg el Leal"
+     "Milo",
+     "Rurik el Desilusionado",
+     "Eliana"
     ]
    },
    {
-    "name": "La Posta de Lumi",
-    "kind": "mensajería",
-    "description": "Una pequeña caseta junto al camino principal, desde donde parten los mensajes urgentes hacia el castillo de la montaña o entre aldeas. Está marcada por un banderín rojo que ondea con el viento.",
+    "name": "El Mirador del Naufragio",
+    "kind": "bosque",
+    "description": "Un acantilado alto en la costa norte, desde donde se ven los restos de barcos que no superaron las tormentas. La cartógrafa errante pasa aquí largas horas, trazando las peligrosas corrientes.",
     "regulars": [
-     "Lumi",
-     "Sigmund el Transeúnte"
+     "Hilda"
     ]
    },
    {
-    "name": "La Roca del Lamento",
-    "kind": "templo",
-    "description": "No es un templo formal, sino un promontorio rocoso fuera del pueblo donde la gente deja pequeñas ofrendas (hierbas, comida sencilla) pidiendo salud o protección contra el invierno. Un lugar de silencio y respeto.",
+    "name": "La Guarida de Bruno",
+    "kind": "casas importantes",
+    "description": "Una casa de piedra con las ventanas tapiadas con tablones, en un callejón sombrío cerca del muelle. Se rumorea que en su sótano se guardan 'garantías' por las deudas impagas. Nadie se acerca voluntariamente.",
     "regulars": [
-     "Ylva",
-     "Lumi",
-     "Rurik el Desilusionado"
+     "Bruno",
+     "Gunnar y Halvar"
     ]
    }
   ],
   "rumors": [
-   "Dicen que en lo más profundo del Sendero del Castigo hay una cueva con hierbas medicinales raras, pero está custodiada por una bestia de nieve que no se ve desde la época de Wapol.",
-   "Un cargamento muy necesario de medicinas y alimentos se hundió cerca de la Bahía Helada, y algunos creen que Gunnar y Halvar saben dónde están los restos pero los ocultan para venderlos al mejor postor.",
-   "Corre el rumor de que el antiguo tesoro real de Wapol no fue llevado por completo, sino que parte está escondida en las ruinas del palacio, protegido por trampas olvidadas.",
-   "Algunos habitantes más jóvenes hablan en secreto de escalar la montaña para pedirle ayuda directa a la doctora Kureha, desafiando la advertencia de Borg de no molestarla.",
-   "Se dice que Sigmund el Transeúnte, en su próximo viaje, podría no volver, dejando al pueblo sin su principal fuente de suministros externos, lo que ha generado ansiedad y planes de contingencia."
+   "Una manada de 'Lobos de Hielo' más grande y agresiva de lo normal ha bajado de las montañas y está arrasando con las trampas y atacando a los cazadores solitarios.",
+   "Se dice que en las profundidades de una cueva cerca del Sendero de la Ascensión crece una rara 'Flor del Calor', una planta medicinal legendaria que podría curar la fiebre gélida que afecta a varios niños del pueblo.",
+   "Un barco mercante que traía un cargamento vital de medicinas y grano naufragó en la costa este. Sus restos y la posible carga están siendo disputados por bandas de oportunistas del muelle y cazadores de recompensas sin escrúpulos."
   ]
  },
  {
   "island": "Isla Egghead",
-  "atmosphere": "Una sinfonía de precisión y paranoia. El aire vibra con el zumbido de maquinaria invisible y el roce silencioso de robots sobre polímeros reflectantes. Las torres de cristal captan la luz y la convierten en datos, proyectando anuncios holográficos sobre calles inmaculadas. La sensación de ser observado es constante, palpable, como si la propia isla respirara y te catalogara. Es el futuro, brillante, aséptico y estrictamente controlado.",
-  "history": "La Isla Egghead fue elegida por el Dr. Vegapunk como su laboratorio principal por su ubicación aislada y condiciones geológicas estables. El Gobierno Mundial invirtió recursos incalculables para transformarla en un bastión de la ciencia, erigiendo el complejo flotante y cubriendo la isla de infraestructura de vanguardia. Se convirtió en el lugar donde se desarrollan las armas, tecnologías y teorías que definirán la próxima era, atrayendo tanto la admiración como la codicia del mundo.",
+  "atmosphere": "Una jungla de titanio y cristal, donde el aire vibra con el zumbido de la energía, las luces parpadeantes de las máquinas y el constante tránsito de robots. La vigilancia es absoluta, con miradas de lente y pacificadores en cada esquina, creando una sensación de progreso asfixiante y paranoia controlada.",
+  "history": "Construida bajo la supervisión del Dr. Vegapunk como la isla-ciudad del futuro, alberga los laboratorios más avanzados del mundo, donde se desarrolla la tecnología que definirá la próxima era. Originalmente un proyecto utópico, su control total por parte del Gobierno Mundial la ha convertido en una fortaleza de innovación y secretos, donde los descubrimientos a menudo se ocultan o desvían con fines menos nobles. El reciente caos que siguió al incidente del laboratorio principal ha dejado una isla dividida y aún más tensa, con múltiples facciones intentando hacerse con el control de lo que queda.",
   "customs": [
-   "Todo intercambio, incluso de ideas en una cafetería, se considera potencialmente generador de 'Datos'. La gente habla en términos técnicos y evita la emocionalidad.",
-   "Existe un estricto 'Código de Vestimenta Tecnológica': la ropa suelta o con muchos bolsillos está mal vista por los sensores de seguridad. Se prefieren los uniformes ajustados o los monos de trabajo.",
-   "Se celebra el 'Ciclo de Purga de Datos', donde los sistemas menos eficientes o las teorías obsoletas son eliminadas simbólicamente de los servidores centrales en un espectáculo holográfico."
+   "Intercambio de 'bits' (información útil o chismes tecnológicos) como moneda social en los bajos fondos de la isla.",
+   "Respeto forzado por el 'Derecho de Vía' de los robots de servicio y los vehículos automatizados en las calles principales.",
+   "Estrictos cortes de acceso y controles biométricos que segmentan la población en 'Niveles de Autorización'.",
+   "Rondas de 'purga de datos' periódicas y anunciadas donde se borran registros antiguos, lo que provoca una carrera de archivistas y espías por recuperar lo que pueden."
   ],
   "places": [
    {
-    "name": "El Conmutador",
-    "kind": "taberna",
-    "description": "Un local de paredes translúcidas donde el menú se proyecta sobre las mesas. El ambiente es un murmullo controlado de técnicos y científicos de bajo rato que analizan datos en sus bebidas espumosas de colores brillantes. El único lugar con algo parecido a 'privacidad' regulada.",
-    "regulars": [
-     "Gizmo 'Chispas'",
-     "Crank",
-     "Slick 'Caradura'"
-    ]
-   },
-   {
-    "name": "Puerto de Carga Sigma",
-    "kind": "puerto",
-    "description": "No es un puerto marítimo convencional, sino una serie de plataformas magnéticas donde atracan enormes cargueros con forma de cápsula. Robots de carga serpentean por las grúas automatizadas en un ballet de precisión absoluta. El aire huele a ozono y aceite hidráulico.",
-    "regulars": [
-     "Funcionaria Mirelle",
-     "Bastion",
-     "Cadete Ivo"
-    ]
-   },
-   {
-    "name": "Mercado de Componentes 'La Chispa'",
+    "name": "El Cubo de Chatarra",
     "kind": "mercado",
-    "description": "Un caos controlado de puestos donde se venden desde chips obsoletos hasta cristales de energía semi-legales. Es la única zona de la isla donde el brillo futurista da paso a cables pelados, soldaduras improvisadas y el regateo rápido. Los sensores de vigilancia aquí tienen 'lagunas' convenientes.",
+    "description": "Un caótico mercado clandestino en un hangar de almacenamiento abandonado, lleno de componentes robóticos, prototipos defectuosos y tecnología 'recuperada' de la basura del laboratorio. El aire huele a aceite quemado y metal caliente.",
     "regulars": [
      "Gizmo 'Chispas'",
      "Crank",
-     "Dr. Anya Vex"
+     "Spark (Chispa)"
     ]
    },
    {
-    "name": "Cuartel de los Pacificadores 'Vigilancia Perpetua'",
-    "kind": "cuartel",
-    "description": "Un edificio bajo y macizo de metal oscuro, sin ventanas. Su interior es un panóptico de pantallas que muestran cada centímetro de la isla. El silencio solo se rompe por el tecleo de consolas y las órdenes secas emitidas a través de intercomunicadores.",
-    "regulars": [
-     "Sylus Karr",
-     "Bastion",
-     "Cadete Ivo"
-    ]
-   },
-   {
-    "name": "Satélite de Energía 'Hélix'",
-    "kind": "templo",
-    "description": "Una esfera gigante de cristal azul suspendida sobre un campo de antenas. Es el corazón energético de la isla y un lugar de casi reverencia para los ingenieros. En su interior, el zumbido constante es ensordecedor, y la luz parpadeante ilumina a los técnicos que realizan sus rituales de mantenimiento.",
+    "name": "Comedor 'Horno de Fusión'",
+    "kind": "comedor del laboratorio",
+    "description": "La cantina principal del Satélite de Energía, un vasto espacio con mesas de metal y pantallas que muestran datos de consumo energético. Sirve raciones eficientes y nutritivas diseñadas para maximizar el rendimiento de los trabajadores.",
     "regulars": [
      "Lyra Sol",
-     "Crank"
-    ]
-   },
-   {
-    "name": "El Bosque de Silicio",
-    "kind": "bosque",
-    "description": "No es un bosque orgánico, sino una densa plantación de torres de servidores y antenas de enfriamiento que se elevan como árboles metálicos. El 'suelo' está cubierto de una niebla fría procedente de los sistemas de refrigeración. Es un laberinto fácil para perderse y el lugar favorito para encuentros discretos.",
-    "regulars": [
-     "Dr. Anya Vex",
-     "Slick 'Caradura'"
-    ]
-   },
-   {
-    "name": "Laboratorio Flotante 'Cerebelo'",
-    "kind": "casas importantes",
-    "description": "La joya de la corona, una estructura imposible que flota sobre el centro de la isla, conectada por tubos de transporte de alta velocidad. Su superficie pulida refleja el cielo y las luces de la isla. Desde aquí, las decisiones del Dr. Vegapunk y sus satélites dictan el ritmo de todo lo que ocurre abajo.",
-    "regulars": [
-     "Sylus Karr",
-     "Lyra Sol",
-     "Dr. Anya Vex",
+     "Lena 'Cocina Larga'",
      "Funcionaria Mirelle"
     ]
    },
    {
-    "name": "Unidad de Mantenimiento Urbano 'Epsilon'",
-    "kind": "casas importantes",
-    "description": "Un hangar cavernoso lleno de robots de servicio en distintos estados de reparación. Herramientas cuelgan de brazos robóticos y el olor a lubricante es omnipresente. Es el centro nervioso que mantiene viva la ilusión de una ciudad perfecta.",
+    "name": "Centro de Comando 'Bóveda'",
+    "kind": "cuartel",
+    "description": "El núcleo fortificado de la seguridad de la isla, con paredes de pantallas táctiles que muestran cada rincón de Egghead. Un lugar de luces tenues, susurros de radio y la tensión constante de la vigilancia total.",
+    "regulars": [
+     "Sylus Karr",
+     "Bastion",
+     "Cadete Ivo"
+    ]
+   },
+   {
+    "name": "Archivos del Legado",
+    "kind": "archivos",
+    "description": "Una sala fría y silenciosa en los niveles inferiores, repleta de terminales antiguos y cintas de datos físicas que contienen proyectos obsoletos y registros de los primeros días de Vegapunk. El polvo se combate aquí con robots aspiradores silenciosos.",
+    "regulars": [
+     "Argus Parchment",
+     "Dr. Anya Vex"
+    ]
+   },
+   {
+    "name": "Muelle de Suministros E-7",
+    "kind": "puerto",
+    "description": "Una zona de carga fuertemente vigilada, pero con puntos ciegos en las pilares de soporte y entre los contenedores. Es el punto de entrada y salida no oficial para quienes quieren evitar los controles principales. El agua huele a productos químicos y aceite.",
+    "regulars": [
+     "Marea 'Silenciosa'",
+     "Slick 'Caradura'",
+     "Kane 'Pólvora'"
+    ]
+   },
+   {
+    "name": "Torre de Enfriamiento Lambda",
+    "kind": "instalación industrial",
+    "description": "Una gigantesca estructura en los límites de la isla, que emite un vapor constante y un zumbido profundo. Sus pasarelas exteriores y túneles de mantenimiento son lugares de encuentro discretos y puntos de acceso a sistemas periféricos.",
     "regulars": [
      "Crank",
-     "Gizmo 'Chispas'"
+     "Slick 'Caradura'",
+     "Marea 'Silenciosa'"
     ]
    },
    {
-    "name": "Los Dormitorios de la Eficiencia",
-    "kind": "casas importantes",
-    "description": "Bloques de viviendas idénticas, celda-like, con camas plegables y terminales de datos integrados en las paredes. No hay decoración personal permitida que interfiera con los escáneres de limpieza. El sueño aquí es un ciclo más a optimizar.",
+    "name": "Módulo Habitacional 'Nido Estático'",
+    "kind": "viviendas",
+    "description": "Bloques de viviendas modulares para personal de bajo y medio rango. Pasillos estériles, puertas que se abren con un pitido y el constante rumor de ventilación. Aquí es donde la vida personal se esconde tras paredes de metal.",
     "regulars": [
-     "Cadete Ivo",
      "Funcionaria Mirelle",
-     "Bastion"
+     "Cadete Ivo",
+     "Spark (Chispa)"
     ]
    },
    {
-    "name": "La Bóveda de Teorías Descartadas",
-    "kind": "ruinas",
-    "description": "Un subsuelo olvidado, lleno de prototipos rotos, cuadernos de investigación físicos prohibidos y equipos desactualizados. Es el 'cementerio' de las ideas que el Laboratorio consideró ineficientes o peligrosas. El polvo aquí es real, no holográfico.",
+    "name": "Sala de Proyectos 'Crisálida'",
+    "kind": "laboratorio",
+    "description": "Un laboratorio de alta seguridad dentro del complejo principal, ahora con acceso restringido incluso para muchos científicos. Las luces parpadean de forma errática y los monitores muestran datos encriptados. El aire está cargado de electricidad estática.",
     "regulars": [
      "Dr. Anya Vex",
-     "Gizmo 'Chispas'"
+     "Lyra Sol"
+    ]
+   },
+   {
+    "name": "La Red de Conductos Principales",
+    "kind": "sistema de túneles",
+    "description": "El sistema circulatorio de la isla, túneles abarrotados de cables, tuberías de refrigerante y vías para robots de carga. Es caluroso, ruidoso y el único lugar donde las cámaras no cubren cada centímetro.",
+    "regulars": [
+     "Crank",
+     "Gizmo 'Chispas'",
+     "Spark (Chispa)"
+    ]
+   },
+   {
+    "name": "Plataforma de Observación 'Ojo de Buey'",
+    "kind": "mirador",
+    "description": "Una cúpula de cristal en un punto alto, que ofrece una vista panorámica de las torres relucientes y el mar más allá de la barrera de vigilancia. Un lugar irónicamente tranquilo, a menudo vacío, donde se puede sentir el peso del aislamiento.",
+    "regulars": [
+     "Argus Parchment",
+     "Lyra Sol"
     ]
    }
   ],
   "rumors": [
-   "Se dice que el Sargento Bastion está desviando piezas de alta resistencia de los Pacificadores para un proyecto personal no autorizado en los almacenes de chatarra.",
-   "Corre el rumor de que una de las líneas de transporte de alta velocidad hacia el Laboratorio Flotante tiene un 'punto ciego' de vigilancia de exactamente 4.7 segundos durante su ciclo de recalibración.",
-   "Hay susurros sobre un 'protocolo de borrado' que el Director Sylus Karr puede activar de forma remota, diseñado para eliminar secciones enteras de la isla en caso de una brecha de seguridad masiva.",
-   "Algunos técnicos hablan de una anomalía recurrente en el Satélite 'Hélix': picos de energía que no figuran en los registros oficiales y que la Ingeniera Jefa Lyra Sol parece estar investigando en secreto.",
-   "Se comenta que el Dr. Anya Vex frecuenta la Bóveda de Teorías Descartadas no por nostalgia, sino para recuperar los planos de un arma psicotrónica que Vegapunk archivó hace años."
+   "Un 'Proyecto Sombría' almacenado en los Archivos del Legado activó sus protocolos de autodefensa, y ahora una sección entera de túneles está sellada y emite extrañas frecuencias.",
+   "Alguien está vendiendo códigos de acceso de bajo nivel robados en El Cubo de Chatarra, y la seguridad está barriendo los módulos habitacionales para encontrar al responsable.",
+   "Una flota de contrabandistas conocida está haciendo movimientos cerca de las aguas restringidas, posiblemente coordinándose con alguien dentro para un gran golpe.",
+   "Un fallo en el sistema de refrigeración de la Torre Lambda podría causar un apagón parcial, dejando varias zonas críticas sin vigilancia electrónica durante unos minutos.",
+   "Se rumorea que uno de los robots de servicio urbano ha desarrollado un patrón de comportamiento errático, entregando paquetes en lugares incorrectos y repitiendo un mensaje encriptado."
   ]
  },
  {
   "island": "Isla Gecko",
-  "atmosphere": "Un puerto polvoriento y áspero, dominado por la presencia obsesiva de los carteles de búsqueda y el constante murmullo de los cazarrecompensas que comparan cicatrices, exageran sus capturas y vigilan con recelo a cualquier recién llegado, oliendo una nueva oportunidad de dinero.",
-  "history": "Fundada como un simple apostadero de reparación, la Isla Gecko evolucionó naturalmente hacia un mercado neutral para cazarrecompensas gracias a su ubicación discreta y a la ausencia de gobierno fuerte. La Oficina de Recompensas local, con su tablón oficial, es la única ley que importa aquí, atrayendo a cazadores de todas las calañas.",
+  "atmosphere": "Un puerto polvoriento donde el olor a sal, cerveza rancia y mentiras se mezcla con el sonido del mar y las discusiones de los cazarrecompensas. La moneda más común es la promesa de un botín, y el lugar más transitado es el tablón de recompensas, cubierto de papeles con rostros y números.",
+  "history": "La Isla Gecko fue durante siglos un pequeño asentamiento pesquero. Hace unas décadas, la Marina estableció un puesto de vigilancia, pero fue abandonado. Los cazarrecompensas vieron la oportunidad y la convirtieron en su puerto neutral, atrayendo a contrabandistas, cartógrafos y todo tipo de personajes que buscan ganancias fáciles o pasar desapercibidos.",
   "customs": [
-   "Nunca tocar el tablón de recompensas oficial sin permiso de Silas; es considerado una grave falta de respeto y una provocación.",
-   "Las disputas entre cazarrecompensas se resuelven fuera del puerto, en las dunas o en el mar, para no dañar el 'negocio'.",
-   "La primera ronda de la noche en la taberna corre a cuenta del cazarrecompensas con la captura más valiosa de la semana, una tradición que fomenta la jactancia y la rivalidad."
+   "Nadie pregunta de dónde viene el dinero, siempre que puedas pagar tu ronda.",
+   "Se considera de mal gusto interrumpir a alguien que está contando su 'gran captura', por improbable que suene.",
+   "Cualquier disputa se resuelve fuera del puerto; dentro, reina una tregua tensa pero respetada."
   ],
   "places": [
    {
-    "name": "La Mordida del Tiburón",
-    "kind": "taberna",
-    "description": "El principal lugar de reunión, lleno de humo, con las paredes cubiertas de armas 'trofeo' y carteles de búsqueda desgastados clavados en las vigas. El sonido de los dados y las exageradas historias de captura son constantes.",
+    "name": "El Fogón Dorado",
+    "kind": "Taberna",
+    "description": "El humo de pipas baratas y carne a la parrilla llena la estancia. Las paredes están decoradas con armas oxidadas y carteles de recompensas viejos, considerados trofeos por los clientes habituales. Aquí es donde se venden las mejores mentiras y la peor cerveza.",
     "regulars": [
-     "Bruto Kael"
+     "Milo Chispas",
+     "Elena Rivales",
+     "Thor Martillo"
     ]
    },
    {
-    "name": "Oficina del Tablón Oficial",
-    "kind": "cuartel",
-    "description": "Un edificio de piedra severo y pequeño junto al muelle principal. En su exterior, el enorme tablón de corcho está abarrotado de carteles nuevos y viejos. El interior es burocrático y ordenado, en marcado contraste con el caos del puerto.",
+    "name": "La Oficina del Tablón",
+    "kind": "Cuartel/Administrativo",
+    "description": "Una casucha de madera junto al muelle principal, con un gran tablón de corcho en su exterior lleno de carteles nuevos y rasgados. Dentro, el funcionario mantiene registros polvorientos y paga las recompensas, siempre bajo la atenta mirada de la guardia.",
     "regulars": [
      "Silas el Precavido",
      "Rocco Barrik"
     ]
    },
    {
-    "name": "El Muelle del Suspiro",
-    "kind": "puerto",
-    "description": "El muelle más antiguo y menos concurrido, con tablones crujientes y pilotes cubiertos de algas. Aquí atracan las barcas de pesca y los navíos que no buscan llamar la atención.",
+    "name": "Muelle Este",
+    "kind": "Puerto/Pescadería",
+    "description": "Más tranquilo y deteriorado que el muelle principal. Aquí atracan las barcas de pescadores y algunas embarcaciones que prefieren no llamar la atención. El olor a pescado fresco y redes viejas es constante.",
     "regulars": [
-     "Anson Red"
+     "Anson Red",
+     "Kira Niebla"
     ]
    },
    {
-    "name": "La Lonja del Acero",
-    "kind": "mercado",
-    "description": "Un cobertizo abierto donde se comercia con armas, munición, esposas de marino y suministros de largo alcance. El regateo es rápido y silencioso, y todos vigilan sus espaldas.",
+    "name": "El Rincón de Flora",
+    "kind": "Mercado/Tienda de Curandería",
+    "description": "Un pequeño tenderete en el mercado cubierto, lleno de hierbas, pociones de dudosa eficacia y vendas limpias. Es el único lugar donde se puede encontrar algo de alivio para las heridas sin hacer demasiadas preguntas.",
     "regulars": [
-     "Bruto Kael"
+     "Flora Destello",
+     "Laria Estrella"
     ]
    },
    {
-    "name": "Cabaña de Anson",
-    "kind": "casa importante",
-    "description": "Una pequeña y resistente cabaña de madera en el extremo del Muelle del Suspiro, con redes secándose y el olor a sal y pescado ahumado. Desde su ventana se tiene la vista más clara de la entrada a la bahía.",
+    "name": "El Almacén de Darin",
+    "kind": "Cartografía/Taller",
+    "description": "Una habitación atestada de mapas, brújulas y herramientas de navegación. Los mapas cubren desde rutas comerciales comunes hasta trazados poco conocidos que solo interesan a cierta clientela.",
     "regulars": [
-     "Anson Red"
+     "Darin Krom",
+     "Osta Lobo-Dos"
     ]
    },
    {
-    "name": "El Mirador del Cuervo",
-    "kind": "bosque",
-    "description": "Un acantilado escarpado y boscoso en el lado norte de la isla, accesible por un sendero poco transitado. Desde lo alto se domina toda la rada y las rutas de aproximación, un lugar perfecto para vigilar.",
-    "regulars": []
+    "name": "La Guarida de Bruto",
+    "kind": "Casas importantes (Sede de negocios turb",
+    "description": "Un almacén cerrado en una callejuela trasera del puerto. No hay letrero, pero todos saben qué tipo de 'negocios' se traman dentro y quién los supervisa. El silencio a su alrededor es más elocuente que cualquier ruido.",
+    "regulars": [
+     "Bruto Kael",
+     "Tobias Deuda"
+    ]
+   },
+   {
+    "name": "La Cabaña de Osta",
+    "kind": "Casas importantes (Vivienda)",
+    "description": "Una cabaña apartada en las colinas rocosas que rodean el puerto. Desde aquí se tiene una vista perfecta de quien entra y sale. Es el hogar de un viejo cazarrecompensas que prefiere la compañía de sus recuerdos.",
+    "regulars": [
+     "Osta Lobo-Dos"
+    ]
+   },
+   {
+    "name": "El Mercado Cubierto",
+    "kind": "Mercado",
+    "description": "Una estructura de madera y lona que protege del sol y la llovizna a los puestos que venden desde víveres hasta objetos robados o de procedencia dudosa. Es un hervidero de tratos rápidos y miradas furtivas.",
+    "regulars": [
+     "Flora Destello",
+     "Kira Niebla",
+     "Tobias Deuda"
+    ]
    },
    {
     "name": "Cuartel de la Guardia del Puerto",
-    "kind": "cuartel",
-    "description": "Más un almacén fortificado que un cuartel propiamente dicho. Alberga un par de celdas rudimentarias y sirve como base de operaciones para la mínima fuerza de orden que Rocco Barrik comanda.",
+    "kind": "Cuartel",
+    "description": "Un edificio de piedra, el más sólido de la isla, que una vez albergó a la Marina. Ahora está ocupado por una guardia local poco numerosa cuyo principal trabajo es evitar que los cazarrecompensas se maten entre ellos dentro del pueblo.",
     "regulars": [
      "Rocco Barrik"
     ]
    },
    {
-    "name": "Los Muelles Rojos",
-    "kind": "puerto",
-    "description": "La zona de atraque principal, siempre abarrotada de goletas y bergantines de aspecto dudoso. El nombre proviene de la herrumbre de los viejos cañones que se usan como norays. El centro del ajetreo del puerto.",
+    "name": "Los Muelles Principales",
+    "kind": "Puerto",
+    "description": "El corazón bullicioso de la isla. Goletas, bergantines y barcos más pequeños atracan y zarpan constantemente. Los muelles crujen bajo el peso de mercancías y botines, y siempre hay alguien observando las llegadas.",
     "regulars": [
-     "Silas el Precavido",
-     "Bruto Kael"
+     "Rocco Barrik",
+     "Thor Martillo",
+     "Elena Rivales"
     ]
-   },
-   {
-    "name": "El Almacén del Capitán Barrik",
-    "kind": "casas importantes",
-    "description": "Un gran almacén de ladrillo cerca de los Muelles Rojos, donde se guardan 'impuestos' portuarios y mercancías en disputa. Su puerta reforzada es una clara declaración de autoridad.",
-    "regulars": [
-     "Rocco Barrik"
-    ]
-   },
-   {
-    "name": "La Cueva de los Susurros",
-    "kind": "ruinas",
-    "description": "Una formación rocosa cerca de la playa, con una entrada parcialmente sumergida en la marea baja. Se rumorea que fue usada por contrabandistas en el pasado y ahora sirve para encuentros clandestinos o esconder botín.",
-    "regulars": []
    }
   ],
   "rumors": [
-   "Un barco fantasma, con las velas desgarradas y sin tripulación, fue visto a la deriva cerca de los arrecifes del este. Algunos dicen que su bodega aún está llena.",
-   "Silas ha recibido un sobre lacrado con un nuevo cartel de búsqueda de una recompensa astronómica, pero se niega a publicarlo aún, provocando conjeturas y ansiedad.",
-   "Alguien está pagando buen dinero por mapas antiguos de las islas del cielo, y Bruto Kael está preguntando discretamente por ellos en las tabernas.",
-   "Anson, el viejo pescador, jura haber visto luces extrañas y oído cánticos procedentes de La Cueva de los Susurros durante la luna llena.",
-   "Rocco Barrik está reclutando a puñados de cazarrecompensas 'de confianza' para una patrulla marítima no oficial, ofreciendo un pago por adelantado."
+   "Silas ha recibido un cargamento especial de carteles de recompensa con cifras exorbitantes, todos de la misma persona, un pirata novato.",
+   "Anson, el viejo pescador, jura haber visto un barco fantasma cerca de los arrecifes del norte, cargado de un tesoro que brilla con luz propia.",
+   "Bruto Kael está buscando a un grupo de personas 'fiables' para un trabajo que requiere discreción y no muchas preguntas; el pago se dice que es en gemas.",
+   "Alguien ha estado preguntando por Osta Lobo-Dos, usando su antiguo alias de cazarrecompensas, y no parece traer buenas intenciones.",
+   "Flora la curandera necesita ingredientes raros que solo se encuentran en los acantilados infestados de aves agresivas al oeste de la isla."
   ]
  },
  {
   "island": "Isla Gyojin",
-  "atmosphere": "Una ciudad de cristal sumergida en las profundidades abisales, donde la luz del Árbol Eve se filtra en destellos azulados y verdosos a través de las estructuras de coral y vidrio marino. Un aire de tensión silenciosa recorre las calles burbujeantes, entre la belleza etérea del reino y el resentimiento feroz que bulle en los barrios más oscuros. El peligro es tangible, como la presión del océano que rodea la burbuja protectora.",
-  "history": "Fundada por la Familia Real Gyojin como un refugio tras siglos de persecución y esclavitud por parte de humanos de la superficie. El Árbol Eve, un prodigio milenario, fue descubierto y su sombra permitió crear la gran burbuja de aire que sostiene la ciudad. Durante generaciones, fue un reino pacífico y aislado, pero el recuerdo del dolor nunca se borró. Ahora, ese odio ancestral ha sido avivado y convertido en una causa de guerra por los Nuevos Piratas Gyojin.",
+  "atmosphere": "Una ciudad de cristal a diez mil metros bajo el mar, envuelta en la luz iridiscente de su propia burbuja y la sombra protectora del Árbol Eve. El resplandor de las estructuras de coral y los edificios de cristal contrasta con la oscuridad de las profundidades circundantes. El aire está cargado de tensión entre la ancestral belleza del reino gyojin y la sombra del odio y el resentimiento que amenaza con desgarrarlo, bajo el control tiránico de los Nuevos Piratas Gyojin.",
+  "history": "La Isla Gyojin, corazón del Reino Submarino, fue construida bajo la protección del Árbol Eve, cuya sombra creó una burbuja habitable en las profundidades. Durante siglos, el reino de gyojin y sirenas mantuvo una precaria paz con la superficie, a pesar de un pasado doloroso marcado por la esclavitud. Un odio antiguo, mantenido vivo por algunos, ha sido ahora reavivado y convertido en un llamado a la guerra por Hody Jones y sus Nuevos Piratas Gyojin, quienes amenazan con cerrar para siempre las puertas entre los dos mundos.",
   "customs": [
-   "El 'Cambio de Corriente', una ceremonia diaria donde los gyojin más jóvenes nadan hasta los límites de la burbuja para reforzarla simbólicamente con su voluntad.",
-   "Tejer ofrendas de algas luminiscentes para colgarlas en las raíces visibles del Árbol Eve, pidiendo protección y abundancia.",
-   "Evitar mencionar la 'Superficie' en conversaciones públicas, un tema tabú que puede desatar acaloradas discusiones o miradas de desconfianza."
+   "El 'Canto del Árbol': Al amanecer y al atardecer, muchos habitantes se reúnen cerca del Árbol Eve para ofrecer respeto o realizar pequeños rituales silenciosos, dirigidos por la sacerdotisa Alba del N",
+   "El 'Mercado de la Burbuja': En el principal mercado, las transacciones se realizan intercambiando bienes manufacturados o comida, rara vez usando monedas de la superficie, con una clara preferencia po",
+   "La 'Vigilia de las Puertas': Una antigua tradición de mantener guardias en las entradas históricas al reino, aunque ahora esta costumbre ha sido cooptada o rechazada por los Nuevos Piratas Gyojin, gen"
   ],
   "places": [
    {
-    "name": "El Palacio de Corrientes Armoniosas",
-    "kind": "Palacio Real",
-    "description": "La imponente estructura central, tallada en coral blanco y madreperla, desde donde la Familia Real intenta mantener la frágil paz. Sus torres se pierden en la penumbra superior de la burbuja.",
+    "name": "El Palacio de Cristal",
+    "kind": "palacio",
+    "description": "La majestuosa residencia de la familia real, construida con cristales de las profundidades y coral luminiscente. Sus torres brillan con una luz propia, símbolo del reino, pero ahora su perímetro está vigilado por guardias con mirada hostil.",
     "regulars": [
      "Rorik del Hacha de Coral",
-     "Burbu"
+     "Burbu",
+     "Golfo el Marcado"
     ]
    },
    {
     "name": "Mercado de la Burbuja",
-    "kind": "Mercado",
-    "description": "Una plaza abierta donde los puestos, hechos de conchas gigantes, ofrecen telas de algas, herramientas de hueso marino y criaturas bioluminiscentes como iluminación. El corazón comercial de la ciudad.",
+    "kind": "mercado",
+    "description": "El bullicioso centro comercial de la isla, lleno de puestos que venden desde telas de algas iridiscentes hasta herramientas de hueso de monstruo marino. El aire está lleno de susurros y miradas furtivas.",
     "regulars": [
-     "Maris la Tejedora"
+     "Maris la Tejedora",
+     "Pólipo",
+     "Krag el Apretador"
     ]
    },
    {
-    "name": "Cuartel de los Colmillos Rotos",
-    "kind": "Cuartel",
-    "description": "Una guarida fortificada en un barrio de estructuras de cristal más oscuro y maltrecho. El sonido de armas siendo afiladas y consignas de odio resuena entre sus muros.",
+    "name": "Taberna 'Fondo de Olla'",
+    "kind": "taberna",
+    "description": "Un establecimiento bajo y acogedor, iluminado por medusas encerradas en frascos. Huele a sopa de algas espesa y pescado fermentado, y es un lugar donde se intercambian rumores junto a la comida.",
     "regulars": [
-     "Finn el Colmillo Roto",
-     "Kraken el Atador"
+     "Salina la Salada",
+     "Torrin Rompeolas",
+     "Burbon el Esquivo"
     ]
    },
    {
     "name": "Distrito de la Sombra del Árbol Eve",
-    "kind": "Barrio residencial/administrativo",
-    "description": "El área más cercana al inmenso tronco del Árbol. Las casas aquí son más humildes, construidas entre sus raíces superficiales. Un lugar de quietud reverencial y también de gestión cotidiana.",
-    "regulars": [
-     "Coralius"
-    ]
-   },
-   {
-    "name": "El Núcleo del Árbol",
-    "kind": "Templo natural/santuario",
-    "description": "Una caverna natural en la base misma del Árbol Eve, donde sus raíces más profundas emiten una pulsación cálida y antigua. El aire es denso y cargado de energía vital.",
-    "regulars": [
-     "Abisal el Ciego"
-    ]
-   },
-   {
-    "name": "La Forja Abisal",
-    "kind": "Herrería/Taller",
-    "description": "Situada en el Barrio Industrial, cerca de los respiraderos térmicos. Aquí se trabaja el metal traído de naufragios y se forjan las temidas Perlas Negras, armas de cerámica marina endurecida.",
-    "regulars": [
-     "Forjador de Perlas Negras"
-    ]
-   },
-   {
-    "name": "El Arrecife Exterior",
-    "kind": "Zona de pesca/fronteriza",
-    "description": "Los límites de la burbuja protectora, donde el cristal se funde con el océano abierto. Un lugar de gran belleza pero también de vigilancia constante, poblado de peces y corales luminiscentes.",
-    "regulars": [
-     "Lumina"
-    ]
-   },
-   {
-    "name": "La Taberna del Remanso Amargo",
-    "kind": "Taberna",
-    "description": "Un local pequeño y mal iluminado, frecuentado por gyojin de mirada dura. Las conversaciones son susurradas y el licor de medusa es fuerte. Un semillero del resentimiento.",
-    "regulars": [
-     "Finn el Colmillo Roto",
-     "Kraken el Atador"
-    ]
-   },
-   {
-    "name": "Atalayas de la Muralla de Cristal",
-    "kind": "Puesto de guardia",
-    "description": "Puestos de observación repartidos a lo largo del perímetro de la burbuja de la ciudad. Desde aquí, los guardias vigilan el océano oscuro y a cualquier intruso que se acerque.",
-    "regulars": [
-     "Rorik del Hacha de Coral"
-    ]
-   },
-   {
-    "name": "Los Archivos de Espuma",
-    "kind": "Biblioteca/Archivo",
-    "description": "Una estructura silenciosa donde se conservan, en tabletas de piedra y piel de tiburón tratada, la historia del reino gyojin. Un lugar polvoriento y lleno de recuerdos dolorosos.",
+    "kind": "distrito residencial/administrativo",
+    "description": "Un barrio sereno y venerable, situado directamente bajo la gran sombra del Árbol Eve. Las casas aquí son más antiguas y están intrincadamente talladas. La atmósfera es de paz forzada y vigilancia.",
     "regulars": [
      "Coralius",
+     "Abisal el Ciego",
+     "Alba del Núcleo"
+    ]
+   },
+   {
+    "name": "Cuarteles de los Nuevos Piratas Gyojin",
+    "kind": "cuartel",
+    "description": "Una fortaleza improvisada y agresiva, construida junto a los antiguos barracones de la Guardia Real. Está decorada con trofeos de batalla y herramientas de guerra, emanando una sensación de violencia contenida.",
+    "regulars": [
+     "Finn el Colmillo Roto",
+     "Kraken el Atador",
+     "Dagon el Vigía"
+    ]
+   },
+   {
+    "name": "Forja de Perlas Negras",
+    "kind": "herrería/barrio industrial",
+    "description": "Un taller caliente y lleno de chispas donde se forjan armas y herramientas con metales recuperados de naufragios y perlas endurecidas. El sonido del martilleo es constante.",
+    "regulars": [
+     "Forjador de Perlas Negras",
+     "Escama"
+    ]
+   },
+   {
+    "name": "Arrecife Exterior",
+    "kind": "zona de pesca/fronteriza",
+    "description": "El límite exterior de la burbuja de la ciudad, donde los corales se mezclan con la oscuridad del océano abierto. Es una zona de pesca pero también de vigilancia constante contra amenazas externas e internas.",
+    "regulars": [
+     "Lumina",
+     "Torrin Rompeolas",
+     "Dagon el Vigía"
+    ]
+   },
+   {
+    "name": "Archivos de las Mareas",
+    "kind": "cartografía/biblioteca",
+    "description": "Una cámara llena de mapas antiguos grabados en piel de raya, conchas talladas y cartas de navegación. Es un lugar de conocimiento y, potencialmente, de secretos peligrosos.",
+    "regulars": [
+     "Marea Cartógrafa",
      "Abisal el Ciego"
+    ]
+   },
+   {
+    "name": "El Núcleo del Árbol Eve",
+    "kind": "templo/santuario",
+    "description": "La base sagrada del gigantesco árbol que sostiene el reino. Su corteza emite una luz tenue y pulsante. Es un lugar de peregrinación y reflexión, pero ahora también de temor por su futuro.",
+    "regulars": [
+     "Alba del Núcleo",
+     "Abisal el Ciego",
+     "Coralius"
     ]
    }
   ],
   "rumors": [
-   "Se dice que los Nuevos Piratas Gyojin están buscando un modo de dañar o controlar el Árbol Eve para cortar el suministro de aire a los distritos leales a la realeza.",
-   "Un cargamento de armas humanas, recuperado de un naufragio reciente, ha desaparecido del Barrio Industrial y se rumorea que está en manos de los rebeldes.",
-   "Abisal el Ciego, el anciano sabio, ha tenido una visión sobre una 'grieta en la promesa' que podría significar la llegada de humanos a la ciudad en un momento crucial.",
-   "Algunos pescadores del Arrecife Exterior juran haber visto sombras enormes y no identificadas merodeando más allá del alcance de la luz del Árbol, como si algo o alguien estuviera observando.",
-   "Corre el rumor de que existe un pasaje secreto, una 'corriente oculta', que conecta el Núcleo del Árbol con el exterior de la burbuja, y que los rebeldes podrían usarlo para un ataque sorpresa."
+   "Se dice que los Nuevos Piratas Gyojin están buscando un artefacto antiguo, una 'Lágrima del Sol', capaz de dañar o incluso destruir el Árbol Eve desde dentro para justificar su guerra total.",
+   "Circula el rumor de que Dagon el Vigía, el ex-guardia deshonrado, conoce un pasaje secreto hacia el palacio que no está vigilado por los piratas, pero nadie sabe de qué lado está realmente.",
+   "Los contrabandistas hablan de un aumento en la demanda de armas de la superficie, financiado por alguien dentro del mercado, para equipar a simpatizantes clandestinos de la vieja guardia.",
+   "Entre los pescadores del arrecife se susurra sobre criaturas marinas agitadas y agresivas, como si algo estuviera envenenando o alterando las aguas más allá de la burbuja protectora.",
+   "Un rumor persistente afirma que el anciano Abisal el Ciego posee un registro histórico completo de los tratos con humanos, que podría desacreditar las narrativas de odio de Hody Jones, y por eso los piratas lo vigilan."
   ]
  },
  {
   "island": "Isla Kuraigana",
-  "atmosphere": "Una densa niebla perenne envuelve la isla, silenciosa y opresiva, rota solo por los graznidos de innumerables cuervos y el sonido del metal en el castillo en ruinas. El aire es frío y húmedo, cargado con la promesa de un duelo o la amenaza de perderse para siempre.",
-  "history": "Kuraigana fue una vez una próspera isla-fortaleza, pero una guerra antigua la redujo a ruinas y la cubrió de una niebla eterna. Ahora, solo sirve de guarida para un maestro espadachín solitario y aquellos pocos, desesperados o decididos, que logran encontrar sus costas. Su pasado está enterrado bajo piedras y cuentos de espadas rotas.",
+  "atmosphere": "Una isla eternamente envuelta en una densa niebla gris, donde el silencio solo es roto por el graznido de los cuervos y el susurro del viento entre las ruinas. El aire es húmedo y frío, cargado de una sensación de abandono y de una vigilancia invisible. La presencia del misterioso espadachín impregna cada rincón, convirtiendo cada sombra y cada sonido en una posible amenaza o invitación.",
+  "history": "Kuraigana fue una vez una isla fortaleza, conocida por sus maestros de la espada y su castillo imponente. Una guerra olvidada o un desastre no registrado la dejó en ruinas y sumida en la niebla perpetua. Ahora, solo es conocida por los que buscan duelos legendarios o un refugio desesperado, pues el actual habitante del castillo ha convertido la isla en su dominio personal y en una trampa para los incautos.",
   "customs": [
-   "No se habla en voz alta en la niebla; se susurra, por respeto y por no atraer lo que no se debe.",
-   "Una espada clavada en la puerta de alguien es el mayor honor y la mayor condena: una invitación al castillo.",
-   "Nunca se da la espalda a un cuervo; se cree que son los ojos del espadachín o las almas de duelistas pasados."
+   "Dejar una ofrenda de metal brillante (una moneda, una vaina) a los cuervos en los cruces de caminos para pedir paso seguro.",
+   "Nunca pronunciar el nombre del espadachín del castillo en voz alta; se le refiere como 'el Anfitrión' o 'el Vigilante'.",
+   "Considerar una espada clavada en la puerta de uno como el mayor honor y la mayor condena posibles, una invitación irrevocable al duelo."
   ],
   "places": [
    {
-    "name": "El Castillo de las Sombras",
-    "kind": "castillo en ruinas",
-    "description": "La enorme estructura de piedra negra se alza, desmoronada y silenciosa, en el corazón de la isla. En su patio interior, siempre limpio de escombros, es donde se libran los duelos.",
+    "name": "La Niebla Acogedora",
+    "kind": "taberna",
+    "description": "Una cabaña de troncos con ventanas empañadas y un fuego siempre encendido. El humo de la chimenea se confunde con la niebla exterior. Aquí se negocian pasajes, información y se escuchan los rumores de los recién llegados.",
     "regulars": [
-     "Varno",
-     "Baran"
+     "Lira Moonshine",
+     "Corbin",
+     "Tyra Mistcloak",
+     "Milton Debtor"
     ]
    },
    {
-    "name": "El Bosque de los Susurros",
-    "kind": "bosque",
-    "description": "Un anillo de árboles retorcidos y sin hojas que rodea el castillo. La niebla es más espesa aquí, y los cuervos observan desde las ramas como estatuas vivientes.",
-    "regulars": [
-     "Morwen",
-     "Rook"
-    ]
-   },
-   {
-    "name": "La Forja del Errante",
-    "kind": "herrería",
-    "description": "Más un refugio con yunque que una herrería propiamente dicha, ubicada en una cueva al pie del castillo. El fuego siempre está encendido, iluminando herramientas y metal semitrabajado.",
-    "regulars": [
-     "Kaelen"
-    ]
-   },
-   {
-    "name": "El Refugio del Navegante",
-    "kind": "cabaña",
-    "description": "Una cabaña hecha con los restos de un barco pirata varado, escondida en una cala rocosa. Dentro huele a sal, madera vieja y desesperanza contenida.",
+    "name": "Puerto de los Suspiros",
+    "kind": "puerto",
+    "description": "Un muelle de madera podrida que emerge de la niebla como los huesos de un monstruo. Solo unas pocas barcazas fantasmas permanecen atadas. El sonido del agua golpeando los pilotes es melancólico y constante.",
     "regulars": [
      "Corbin",
-     "Silas"
+     "Tyra Mistcloak",
+     "Nestel Mapmaker"
     ]
    },
    {
-    "name": "El Mercado del Silencio",
-    "kind": "mercado",
-    "description": "No es un mercado real, sino un claro donde, en días sin luna, los habitantes dejan lo que tienen (hierbas, herramientas, ropa remendada) y toman lo que necesitan, sin intercambiar palabra.",
-    "regulars": [
-     "Silas",
-     "Rook",
-     "Morwen"
-    ]
-   },
-   {
-    "name": "El Patio de los Duelos",
+    "name": "El Patio de los Recuerdos",
     "kind": "patio del castillo",
-    "description": "El único lugar de la isla libre de maleza y escombros. El suelo de piedra está marcado por miles de cicatrices de filos. Aquí todo se decide.",
+    "description": "El patio principal del castillo en ruinas, lleno de estatuas decapitadas, maleza y losas rotas. Baran duerme apoyado contra una columna, custodiando un camino que nadie toma.",
     "regulars": [
-     "Varno",
-     "Baran"
-    ]
-   },
-   {
-    "name": "La Torre de los Cuervos",
-    "kind": "torre en ruinas",
-    "description": "La única torre del castillo que se mantiene en pie. Desde su cima, Morwen atiende a las aves. Es el punto más alto y el mejor lugar para observar la niebla (cuando se levanta).",
-    "regulars": [
-     "Morwen"
-    ]
-   },
-   {
-    "name": "La Puerta de la Invitación",
-    "kind": "entrada principal del castillo",
-    "description": "Las enormes puertas de madera y hierro están siempre entreabiertas. En ellas o en los postes cercanos, a veces, aparece una espada clavada, esperando a su destinatario.",
-    "regulars": [
+     "Baran",
      "Varno"
     ]
    },
    {
-    "name": "El Sendero de los Perdidos",
-    "kind": "sendero",
-    "description": "Un camino apenas visible que serpentea desde la costa hasta el bosque. Está marcado por piedras apiladas y trozos de tela negra, una guía para los que llegan con propósito.",
+    "name": "La Fragua del Errante",
+    "kind": "herrería",
+    "description": "Un carromato destartalado con un yunque y una forja portátil, que Kaelen mueve por la isla. El sonido de su martillo es un latido irregular en la niebla.",
     "regulars": [
-     "Rook",
-     "Corbin"
+     "Kaelen",
+     "Harlan Sharpblade",
+     "Silas"
     ]
    },
    {
-    "name": "La Cueva del Herrero",
-    "kind": "cueva-taller",
-    "description": "La entrada a la forja de Kaelen. El calor del hogar contrasta con la humedad exterior, y el sonido del martillo resuena como un latido metálico en la roca.",
+    "name": "El Bosque de Plumas Susurrantes",
+    "kind": "bosque",
+    "description": "Un bosque de árboles retorcidos y negros donde anidan miles de cuervos. Morwen camina entre ellos, hablando en susurros. Las ramas gotean condensación de la niebla.",
     "regulars": [
-     "Kaelen",
-     "Silas"
+     "Morwen",
+     "Socorro Windwhisper",
+     "Rook"
+    ]
+   },
+   {
+    "name": "La Capilla de la Bruma",
+    "kind": "templo",
+    "description": "Una pequeña estructura de piedra semiderruida, donde la niebla entra libremente. Elen realiza rituales silenciosos con humo y agua, venerando la niebla como una entidad sagrada.",
+    "regulars": [
+     "Elen Moonlit",
+     "Fennel Greenroot"
+    ]
+   },
+   {
+    "name": "La Guarida del Cartógrafo",
+    "kind": "refugio",
+    "description": "Una cueva seca cerca del acantilado, llena de mapas incompletos clavados en las paredes y brújulas descompuestas. Nestel intenta, en vano, cartografiar los cambios de la niebla.",
+    "regulars": [
+     "Nestel Mapmaker",
+     "Rook"
+    ]
+   },
+   {
+    "name": "La Puerta de la Espada",
+    "kind": "entrada al castillo",
+    "description": "Las enormes puertas de madera y hierro del castillo, siempre entreabiertas. El suelo frente a ellas suele tener marcas de rozaduras y, a veces, una espada clavada en la tierra, esperando a su destinatario.",
+    "regulars": [
+     "Varno",
+     "Harlan Sharpblade"
+    ]
+   },
+   {
+    "name": "La Choza del Remendón",
+    "kind": "taller",
+    "description": "Una cabaña ordenada y sorprendentemente seca donde Silas repara ropas y equipo. Es un oasis de normalidad y calidez en medio de la isla hostil.",
+    "regulars": [
+     "Silas",
+     "Fennel Greenroot",
+     "Lira Moonshine"
+    ]
+   },
+   {
+    "name": "Los Acantilados del Navegante",
+    "kind": "lugar de vigía",
+    "description": "Un precipicio escarpado sobre el mar de niebla. Desde aquí, Corbin mira al horizonte inexistente, recordando su barco perdido. El viento aúlla con fuerza.",
+    "regulars": [
+     "Corbin",
+     "Socorro Windwhisper"
     ]
    }
   ],
   "rumors": [
-   "Dicen que en lo más profundo del castillo hay una cámara con las espadas de todos los que han perdido sus duelos, y que algunas aún susurran los nombres de sus dueños.",
-   "Se rumorea que la niebla no es natural, sino la respiración de algo antiguo que duerme bajo la isla, y que el espadachín la vigila.",
-   "Algunos creen que Morwen no solo cuida a los cuervos, sino que puede hablar con ellos y conocer todos los secretos que han visto desde el cielo.",
-   "Corbin, el ex-pirata, guarda un mapa que no muestra tesoro, sino la única ruta segura para salir de la niebla de Kuraigana, pero no se lo enseñará a cualquiera.",
-   "Una espada particular, forjada por Kaelen con un metal extraño de la isla, podría ser lo suficientemente resistente como para no romperse en el patio de duelos."
+   "Se dice que la niebla espesa de la isla esconde los restos de un barco pirata cargado de tesoro, pero solo los cuervos conocen su ubicación.",
+   "Una espada particularmente antigua y adornada ha aparecido clavada en la puerta de la taberna. Nadie sabe a quién está destinada, pero todos evitan tocarla.",
+   "Rook habla de una criatura que se mueve en la niebla más profunda del bosque, más grande que un hombre y silenciosa como la muerte. No es un cuervo.",
+   "Milton Debtor busca desesperadamente a alguien que recoja una 'deuda de honor' con el espadachín del castillo, ofreciendo una recompensa imposible de rechazar.",
+   "Fennel Greenroot necesita un ingrediente raro que solo crece en lo más alto de la torre principal del castillo, un lugar al que nadie con sentido común se atrevería a entrar."
   ]
  },
  {
   "island": "Isla Rusukaina",
-  "atmosphere": "Una isla inhóspita y en perpetuo cambio, donde el clima azota con una violencia predecible: cada diez días gira la rueda de las estaciones. El aire vibra con los rugidos de bestias colosales, especialmente temibles durante el gélido invierno. El paisaje es una mezcla de cráteres de entrenamiento, bosques primaverales efímeros y playas cubiertas de restos de naufragios, todo impregnado de un aura de prueba extrema.",
-  "history": "Rusukaina fue descubierta por accidente por navegantes que cruzaban el Calm Belt, pero su ciclo estacional único y su fauna brutal la convirtieron en un lugar de leyenda, no de asentamiento. Con los años, se ganó reputación como el campo de entrenamiento definitivo, atrayendo a locos, exiliados y soldados buscando trascender sus límites. La Marina estableció un pequeño puesto de observación para estudiar su extraño ecosistema, pero la verdadera historia de la isla la escriben quienes intentan conquistar su cima.",
+  "atmosphere": "Un infierno de supervivencia donde el aire cambia de gélido a tórrido en un ciclo implacable. La isla es un yunque que forja o rompe a quienes se atreven a desembarcar, con el rugido constante de bestias monstruosas y el viento que aúla entre cañones y bosques primitivos. La tensión es palpable entre los pocos habitantes, todos endurecidos, cada uno con un objetivo o una cicatriz que los trajo hasta este lugar olvidado del Calm Belt.",
+  "history": "Isla Rusukaina fue descubierta por accidente, un cementerio de barcos en el Calm Belt cuya fama creció entre los más temerarios. La Marina estableció un precario puesto de observación para estudiar su fauna única y sus ciclos climáticos extremos. Con los años, se convirtió en un destino de leyenda para entrenamiento extremo y caza de trofeos, atrayendo a piratas, cazadores y locos que buscan probarse contra la cima imposible.",
   "customs": [
-   "El 'Cambio de la Rueda': Cuando cambia la estación, los habitantes activos en ese ciclo se reúnen brevemente para intercambiar advertencias y suministros antes de retirarse a sus refugios.",
-   "Honrar la Cicatriz: Las marcas de batalla contra las bestias de Rusukaina son muestra de honor; mentir sobre su origen es el mayor insulto.",
-   "Ley de la Playa: Todo lo que el mar arrastra a la playa es de quien lo encuentre primero, pero se espera compartir herramientas o suministros útiles con los necesitados."
+   "Ofrenda al Cambio: Al inicio de cada nueva estación, algunos dejan pequeñas ofrendas (comida, herramientas rotas) en los cruces de caminos para apaciguar el espíritu de la isla, una práctica fomentada",
+   "La Regla del Hueso: Si caes en combate contra una bestia, tu equipo es presa común. Otros pueden tomar lo que necesiten, pero deben dejar un hueso marcado con tu nombre como señal de respeto.",
+   "Silencio en la Garita: Nadie molesta a Goran el Helado durante su vigilancia invernal; es una tregua tácita donde incluso enemigos comparten un fuego sin hablar, sabiendo que el invierno es el verdade"
   ],
   "places": [
    {
     "name": "La Choza del Superviviente",
-    "kind": "taberna y curtiduría",
-    "description": "Una estructura tosca de madera y huesos de bestia, caliente y llena del olor a cuero y sopa espesa. Es el único refugio social de la isla, donde se comparten historias de encuentros con bestias.",
+    "kind": "taberna",
+    "description": "Una construcción tosca de troncos y pieles curtidas, con olor a humo, cerveza fuerte y sudor. Las paredes están decoradas con colmillos, garras y mapas rasgados. Es el único refugio social real de la isla.",
     "regulars": [
      "Yara la Inquebrantable",
-     "Boris el Chatarrero",
-     "Silas el Deriva"
+     "Mika la Fugitiva",
+     "Rorke el Quebrantado",
+     "Elara la Implacable",
+     "Finn el Ojeador"
     ]
    },
    {
-    "name": "Playa de los Naufragios",
-    "kind": "playa y mercado improvisado",
-    "description": "Una ensenada de arena oscura siempre cubierta de restos de barcos destrozados. Entre los esqueletos de madera, Boris ha montado su puesto de chatarra y suministros recuperados.",
+    "name": "La Playa de los Naufragios",
+    "kind": "puerto",
+    "description": "Una costa salvaje sembrada de restos de barcos medio devorados por la maleza y las bestias. Aquí es donde llegan (o encallan) los nuevos, y donde Boris monta su negocio entre la chatarra.",
     "regulars": [
      "Boris el Chatarrero",
-     "Silas el Deriva"
-    ]
-   },
-   {
-    "name": "Garita del Puerto Invernal",
-    "kind": "puesto de guardia",
-    "description": "Una torreta de vigilancia helada y solitaria, solo operativa durante los diez días de invierno. Desde aquí se observa un mar extrañamente agitado para el Calm Belt.",
-    "regulars": [
-     "Goran el Helado"
-    ]
-   },
-   {
-    "name": "Campamento del Rastreador",
-    "kind": "campamento de caza",
-    "description": "Un campamento móvil y bien camuflado entre la frondosidad primaveral o el calor del verano. Hay trampas, herramientas de rastreo y pieles secándose.",
-    "regulars": [
-     "Kael el Rastreador"
-    ]
-   },
-   {
-    "name": "Laderas Susurrantes",
-    "kind": "sendero de montaña y refugio",
-    "description": "Un camino rocoso y traicionero que sube hacia la cima, flanqueado por cuevas y extrañas formaciones que parecen susurrar con el viento. Es el dominio del ermitaño.",
-    "regulars": [
-     "Voss el Susurrador",
-     "Rorke el Quebrantado"
-    ]
-   },
-   {
-    "name": "Cuartel de Observación de la Marina",
-    "kind": "cuartel y laboratorio",
-    "description": "Un módulo prefabricado y fuertemente blindado, lleno de instrumentos científicos y jaulas de muestras vacías. Es un oasis de orden en el caos de la isla.",
-    "regulars": [
+     "Silas el Deriva",
+     "Briggs el Férreo",
      "Teniente Anya Frost"
     ]
    },
    {
-    "name": "La Cala del Reparador",
-    "kind": "astillero improvisado",
-    "description": "Una caleta protegida donde Silas acumula restos navegables y trabaja incansablemente en su 'obra maestra', un barco hecho totalmente de piezas de otros.",
+    "name": "La Garita Helada",
+    "kind": "cuartel",
+    "description": "Una torreta de observación de la Marina, metálica y oxidada, que solo está operativa y habitada durante el invierno brutal. Desde aquí se monitorizan las migraciones de fauna.",
     "regulars": [
-     "Silas el Deriva",
-     "Boris el Chatarrero"
+     "Goran el Helado",
+     "Teniente Anya Frost",
+     "Lyra la Trazadora"
     ]
    },
    {
-    "name": "El Valle de los Quebrantados",
-    "kind": "campo de entrenamiento y duelo",
-    "description": "Un terreno lleno de cráteres, troncos partidos y rocas marcadas por golpes. Es donde los aspirantes prueban su fuerza y donde Rorke merodea, desafiando a cualquiera.",
+    "name": "Las Cuevas del Sur",
+    "kind": "casas importantes",
+    "description": "Un sistema de cavernas cálidas y húmedas, llenas de musgos bioluminiscentes y plantas medicinales extrañas. Sirve de refugio natural y farmacia.",
     "regulars": [
-     "Rorke el Quebrantado"
+     "Felix el Anciano"
     ]
    },
    {
-    "name": "La Cima de la Prueba",
-    "kind": "cumbre de la montaña",
-    "description": "La zona más alta de la isla, envuelta en niebla o azotada por elementos extremos. El aire es denso y cargado, y desde aquí se domina todo el infierno cambiante de Rusukaina. Es el lugar de la bestia legendaria.",
-    "regulars": []
+    "name": "Los Acantilados del Silencio",
+    "kind": "casas importantes",
+    "description": "Altos farallones que dan al mar, azotados por vientos perpetuos. Aquí las cabañas son precarias, colgando del abismo, ideales para quien busca aislamiento total.",
+    "regulars": [
+     "Corvus el Cicatriz",
+     "Voss el Susurrador"
+    ]
+   },
+   {
+    "name": "El Mercado Flotante de Boris",
+    "kind": "mercado",
+    "description": "No es más que unas lonas extendidas entre los cascos de barcos naufragados, donde se apilan piezas oxidadas, suministros rancios y 'trofeos' dudosos de bestias. El trueque es la única moneda.",
+    "regulars": [
+     "Boris el Chatarrero",
+     "Briggs el Férreo",
+     "Thane el Arponeador",
+     "Jax el Fantasma"
+    ]
+   },
+   {
+    "name": "La Caleta del Contrabandista",
+    "kind": "puerto",
+    "description": "Una grieta escondida entre rocas, accesible solo con marea baja y conocimiento preciso. Dentro, un pequeño muelle natural esconde un bote rápido y cajas selladas.",
+    "regulars": [
+     "Jax el Fantasma",
+     "Finn el Ojeador"
+    ]
+   },
+   {
+    "name": "El Camino de las Lamentaciones",
+    "kind": "bosque",
+    "description": "Un sendero que serpentea desde la playa hacia el interior, bordeado de árboles retorcidos y huesos blanqueados colgando de las ramas. Es la ruta principal hacia las laderas de la cima.",
+    "regulars": [
+     "Kael el Rastreador",
+     "Elara la Implacable",
+     "Rorke el Quebrantado",
+     "Orion el Cantor"
+    ]
+   },
+   {
+    "name": "La Cabaña del Rastreador",
+    "kind": "casas importantes",
+    "description": "Una cabaña camuflada en el límite del bosque y la tundra, repleta de trampas, mapas con anotaciones y pieles en secado. Solo está ocupada en las estaciones templadas.",
+    "regulars": [
+     "Kael el Rastreador",
+     "Lyra la Trazadora"
+    ]
+   },
+   {
+    "name": "El Templo de las Estaciones",
+    "kind": "templo",
+    "description": "En realidad, son cuatro piedras runicas dispuestas en un claro, cada una orientada a un punto cardinal y marcada con símbolos de una estación. Un lugar de reunión esporádico y reflexión.",
+    "regulars": [
+     "Orion el Cantor",
+     "Voss el Susurrador",
+     "Felix el Anciano"
+    ]
    }
   ],
   "rumors": [
-   "La bestia de la cima no es un animal, sino la propia isla manifestando su voluntad a través de un depredador perfecto que cambia de forma con cada estación.",
-   "El Teniente Frost no solo estudia la fauna, sino que busca un organismo en las bestias que podría permitir a los barcos de la Marina navegar el Calm Belt sin problemas.",
-   "Voss, el ermitaño, sabe un camino secreto a la cima que evita a las bestias más mortales, pero solo lo revelará si le llevas un 'susurro' específico del mar capturado en una botella en la Playa de los Naufragios.",
-   "El barco que Silas construye no es para escapar, sino para llegar a un arrecife cercano invisible donde, según él, naufragó un barco lleno de un metal que anula los sentidos de las bestias.",
-   "Rorke no perdió contra la bestia de la cima; huyó. Ahora busca 'reemplazos' lo suficientemente fuertes para distraerla mientras él intenta de nuevo el ascenso final."
+   "La bestia de la cima no es un animal, sino algo más antiguo y consciente que cambia de forma con cada estación, y solo puede ser herida con un material específico que se encuentra en las profundidades de la isla.",
+   "Boris el Chatarrero no solo vende suministros; en su playa hay enterrado el tesoro de un capitán pirata cuyo barco se hundió hace décadas, y sus mapas están repartidos entre los restos de naufragios.",
+   "El Teniente Anya Frost no solo observa la fauna; la Marina está criando en secreto una bestia híbrida en una cueva sellada, y un escape inminente podría desatar un desastre.",
+   "Voss el Susurrador conoce un camino secreto a la cima que evita las zonas más peligrosas, pero solo guía a quien le lleve una ofrenda imposible: el sonido de una bestia específica capturado en una botella.",
+   "El cambio rápido de estaciones no es natural, sino causado por un artefacto antiguo enterrado en el corazón de la isla. Quien lo controle podría convertir a Rusukaina en un arma o en un paraíso."
   ]
  },
  {
   "island": "Jaya",
-  "atmosphere": "Una isla de contrastes violentos donde la ley y el caos se miran con desconfianza desde dos orillas. En Ciudad Mock reina el olor a ron rancio, cuerpos sudorosos y la amenaza de una pelea por cualquier motivo. Ciudad Ley huele a madera barnizada, tinta y un orden frágil y aburrido. La selva interior es densa, húmeda y llena de historias antiguas, donde el sueño del oro se mezcla con el susurro de las lianas. Un mapa es el objeto más valioso y peligroso de la isla.",
-  "history": "Jaya fue una isla entera hasta que una tormenta o un cataclismo desconocido la partió en dos, separando a los habitantes en dos comunidades opuestas. La leyenda de la Ciudad de Oro, Shandora, ha atraído durante siglos a buscadores de fortuna y lunáticos a sus selvas. Con el tiempo, los más violentos y libres formaron Ciudad Mock, mientras que la Marina estableció un precario bastión de orden en Ciudad Ley. El conflicto por el territorio y los recursos es eterno, pero la verdadera fiebre siempre vuelve a encenderse con cada nuevo rumor sobre el mapa.",
+  "atmosphere": "Una isla salvaje partida en dos: Ciudad Mock, un antro de piratas ruidosos donde el caos, la cerveza barata y los robos son moneda corriente; y Ciudad Ley, un enclave marino tenso y formal que sueña con imponer un orden imposible. Entre ambas, la densa y húmeda selva oculta secretos y atrae a buscadores de oro que escuchan el eco de una ciudad perdida.",
+  "history": "Jaya fue una isla entera, pero una gran catástroge hundió su mitad occidental. Los supervivientes se adaptaron: los más rebeldes fundaron Ciudad Mock, mientras que la Marina estableció Ciudad Ley en un intento de control. Durante siglos, las leyendas de una Ciudad de Oro que supuestamente fue 'golpeada hacia el cielo' han atraído a aventureros y locos a sus selvas.",
   "customs": [
-   "El 'Tributo del Puerto': En Ciudad Mock, todo forastero que atraque debe pagar una 'tasa de bienvenida' (en licor, beríes o información) al primer matón que se lo pida. Negarse es declarar la guerra.",
-   "La 'Copa del Grifo': En la taberna de Mara, el primer sorbo de cada nueva botella de ron se vierte al suelo como ofrenda a los antiguos piratas de la isla. Quien no lo hace trae mala suerte.",
-   "El 'Relato del Anochecer': En Ciudad Ley, el Abuelo Marlow cuenta historias del pasado de la isla a los niños y marinos al caer el sol. Es la única hora en que ambos bandos guardan silencio por respet"
+   "En Ciudad Mock, el trueque es tan válido como el beri, y un apretón de manos ante testigos sella cualquier trato (o promesa de venganza).",
+   "En Ciudad Ley, es costumbre quitarse el sombrero al pasar frente al puesto de la Marina, un gesto de respeto forzado que pocos en Mock cumplen.",
+   "Los buscadores de oro en la selva suelen dejar ofrendas (monedas, botellas de ron) en árboles marcados para 'apaciguar a los antiguos' y tener suerte."
   ],
   "places": [
    {
     "name": "El Grifo Mojado",
-    "kind": "Taberna",
-    "description": "El corazón hediondo y ruidoso de Ciudad Mock. Las mesas están marcadas por cuchillos, el suelo está pegajoso y el aire es una neblina de humo de tabaco y aliento agrio. Mara sirve con una sonrisa dura y una escopeta bajo la barra.",
+    "kind": "taberna",
+    "description": "El corazón rugiente de Ciudad Mock. El aire espeso a humo y cerveza rancia nunca se disipa. Las mesas están marcadas por navajazos y las risotadas ahogan cualquier conversación seria.",
     "regulars": [
      "Mara",
      "Hueso",
-     "Roca"
+     "Brianna",
+     "Renar",
+     "Taz"
     ]
    },
    {
     "name": "Puesto de la Marina de Ciudad Ley",
-    "kind": "Cuartel",
-    "description": "Un edificio de madera blanqueada, impecable y deprimentemente ordenado. Banderas ondean con rigidez. Dentro, los informes se apilan en escritorios pulcros, un recordatorio constante de lo poco que se controla realmente.",
+    "kind": "cuartel",
+    "description": "Un edificio de madera pálida y banderas limpias que parece fuera de lugar. Los soldados patrullan nerviosos, vigilando la línea invisible que separa su orden del caos de Mock.",
     "regulars": [
-     "Teniente Brant"
+     "Teniente Brant",
+     "Marlo"
     ]
    },
    {
-    "name": "El Rincón del Cartógrafo",
-    "kind": "Tienda de mapas y curiosidades",
-    "description": "Una cueva polvorienta en Ciudad Mock, llena de rollos de pergamino, brújulas oxidadas y artefactos extraños. Silas el Pálido observa desde las sombras, evaluando el valor de cada visitante.",
+    "name": "La Tienda de Silas",
+    "kind": "mercado",
+    "description": "Una covacha atestada de pergaminos, instrumentos náuticos oxidados y curiosidades de dudosa procedencia. El olor a polvo y tinta vieja es omnipresente.",
     "regulars": [
-     "Silas el Pálido"
-    ]
-   },
-   {
-    "name": "Campamento de 'La Veta Soñada'",
-    "kind": "Campamento en la selva",
-    "description": "Una claro desordenado junto a un riachuelo, lleno de picos, cribas y mapas garabateados en cortezas. Fogatas humeantes iluminan diagramas de locos sobre la Ciudad de Oro clavados en los árboles.",
-    "regulars": [
+     "Silas el Pálido",
+     "Fiorella",
      "Gull"
     ]
    },
    {
-    "name": "Muelle de los Susurros",
-    "kind": "Puerto",
-    "description": "El muelle principal de Ciudad Mock, un amasijo de tablas podridas y barcos piratas de aspecto desagradable. Aquí se negocian mercancías robadas, se pagan deudas con sangre y los mapas cambian de manos en la oscuridad.",
+    "name": "El Campamento del Buscador",
+    "kind": "campamento",
+    "description": "Un claro en la espesura selvática, lleno de herramientas de excavación, tiendas rotas y mapas garabateados clavados en los árboles. El sonido de los insectos es ensordecedor.",
     "regulars": [
-     "Hueso",
-     "Roca"
+     "Gull",
+     "Jorvik"
     ]
    },
    {
-    "name": "La Atalaya del Abuelo",
-    "kind": "Cabaña de pescador",
-    "description": "Una cabaña sencilla y acogedora en los acantilados de Ciudad Ley, con redes secándose al sol y olor a sal y té. La vista abarca toda la bahía y la boca de la selva.",
+    "name": "La Cabaña del Abuelo",
+    "kind": "casa importante",
+    "description": "Una cabaña de pescador en los muelles de Ciudad Ley, con redes secándose y el olor a sal. En su interior, estantes repletos de diarios y objetos hallados en el mar cuentan la historia no oficial de la isla.",
     "regulars": [
      "Abuelo Marlow"
     ]
    },
    {
-    "name": "La Garganta del Diablo",
-    "kind": "Desfiladero en la selva",
-    "description": "Un paso estrecho y sombrío entre altísimos acantilados de piedra negra, cubierto de musgo y enredaderas. El viento silba de forma inquietante. Muchos dicen que es la entrada a las partes más antiguas y peligrosas de la isla, y donde algunos mapas marcan el inicio del camino.",
-    "regulars": []
+    "name": "La Enramada de la Curandera",
+    "kind": "templo",
+    "description": "Una choza apartada en Ciudad Ley, rodeada de hierbas aromáticas. Iliana atiende tanto a marinos heridos como a piratas discretos, sin hacer preguntas.",
+    "regulars": [
+     "Iliana"
+    ]
    },
    {
-    "name": "Mercado de la Ley",
-    "kind": "Mercado",
-    "description": "Un conjunto ordenado de puestos en Ciudad Ley donde se venden provisiones legales, repuestos para barcos y recuerdos inocentes. Los marinos patrullan, pero las miradas hacia Ciudad Mock están llenas de tensión.",
+    "name": "El Muelle de los Susurros",
+    "kind": "puerto",
+    "description": "El principal embarcadero de Ciudad Mock, una estructura de madera podrida y tambaleante. Aquí atracan barcos piratas de toda clase y se negocian cargamentos robados a la luz de antorchas.",
     "regulars": [
-     "Teniente Brant",
-     "Abuelo Marlow"
+     "Roca",
+     "Renar"
+    ]
+   },
+   {
+    "name": "El Bosque de los Suspiros",
+    "kind": "bosque",
+    "description": "La densa selva que separa Ciudad Mock de Ciudad Ley. La vegetación es tan espesa que apenas pasa la luz, y extrañas formaciones de piedra sobresalen entre las raíces, alimentando las leyendas.",
+    "regulars": [
+     "Jorvik",
+     "Gull"
+    ]
+   },
+   {
+    "name": "La Cocina de Brianna",
+    "kind": "casas importantes",
+    "description": "Tras la taberna, un pequeño patio donde Brianna ahuma carne y prepara estofados especiados. Es un lugar relativamente tranquilo donde a veces se resuelven disputas lejos de las miradas.",
+    "regulars": [
+     "Brianna",
+     "Hueso"
+    ]
+   },
+   {
+    "name": "El Mirador del Navegante",
+    "kind": "casas importantes",
+    "description": "Una colina rocosa en Ciudad Ley con una vista clara del mar y, de refilón, de la anarquía de Ciudad Mock. Marlo suele venir aquí a trazar cartas y reflexionar.",
+    "regulars": [
+     "Marlo"
     ]
    }
   ],
   "rumors": [
-   "El último mapa auténtico de Jaya no está en papel, sino tatuado en la espalda de un hombre que murió hace una semana. Su cuerpo desapareció de la morgue de Ciudad Ley.",
-   "Dicen que en noches de luna llena, desde La Garganta del Diablo se puede ver un tenue resplandor dorado que sube hacia las nubes, como un eco de la ciudad perdida.",
-   "Alguien ha estado robando las herramientas de los buscadores de oro en la selva, pero no el oro que encuentran. Solo picos y cribas, como si quisiera que dejaran de cavar.",
-   "El Teniente Brant ha ofrecido una recompensa enorme y discreta por el mapa definitivo, no para destruirlo, sino para 'estudiarlo'. Algunos en Ciudad Mock creen que la Marina busca la Ciudad de Oro para sí.",
-   "Una extraña niebla azul ha comenzado a aparecer en la costa norte, justo donde los mapas antiguos marcan un arrecife hundido. Los barcos que entran no vuelven, pero a veces se oyen cantos en la bruma."
+   "El famoso mapa que cambia de manos en Mock no señala un tesoro en tierra, sino una ruta vertical: apunta a un lugar en el cielo sobre la selva.",
+   "Dicen que Silas el Pálido no vende mapas, sino que los colecciona, y tiene una copia oculta del que todo el mundo busca en un compartimento secreto de su tienda.",
+   "Algunos pescadores veteranos juran haber visto, en noches de luna llena, los contornos fantasmales de torres y campanarios reflejados en la niebla marina, justo donde la leyenda sitúa la Ciudad de Oro perdida.",
+   "El Teniente Brant no solo sueña con calmar Ciudad Mock; hay quien dice que busca el mapa para destruirlo y acabar con la fiebre del oro de una vez por todas.",
+   "Una criatura enorme y antigua, mitad piedra mitad raíz, habita en lo más profundo del Bosque de los Suspiros, y los árboles donde se la ha visto son los que Gull marca con sus ofrendas."
   ]
  },
  {
   "island": "Laugh Tale",
-  "atmosphere": "Un silencio cargado de ecos del pasado, donde el aire mismo parece contener susurros de una historia olvidada. El paisaje, a la vez majestuoso y melancólico, se ríe en formas imposibles, con risas congeladas en roca y luz. Es un lugar de culminación y comienzo, donde el peso de ochocientos años de secretos se siente en cada respiración.",
-  "history": "Laugh Tale no es una isla en el sentido común, sino el destino final fijado por el Rey de los Piratas, Gol D. Roger. Es el repositorio final de la Verdadera Historia, el lugar donde se enterró el One Piece y se selló el conocimiento que el Gobierno Mundial intentó borrar. Su existencia es el premio final de la Era de los Piratas. Aquí, Roger y su tripulación se rieron a carcajadas al descubrir el significado de todo. Desde entonces, espera en silencio a quien vuelva a descifrar el camino.",
+  "atmosphere": "Un lugar donde el aire mismo parece contener secretos ancestrales y un eco de risa ahogada. La isla vibra con una energía antigua, donde la naturaleza, desde las rocas hasta los árboles, parece tener conciencia y susurra verdades olvidadas. La tensión entre el conocimiento último y la inmensa soledad de haberlo alcangado lo impregna todo.",
+  "history": "Laugh Tale es el destino final del Viaje de Roger, el lugar donde él y su tripulación descubrieron la verdad del Siglo Vacío y el One Piece. Fue bautizada así por su alegre reacción ante la verdad. Durante ochocientos años, su ubicación y contenido han sido el secreto mejor guardado, protegido por la necesidad de descifrar los Poneglifos de Ruta. Ahora, solo aquellos que han reunido el conocimiento de los cuatro Poneglifos pueden llegar a sus costas, donde el pasado del mundo espera ser revelado.",
   "customs": [
-   "No se habla del pasado; el lugar ya lo cuenta todo a quien sabe escuchar.",
-   "Los recién llegados son recibidos por el eco de una risa antigua que parece venir de todas partes.",
-   "Se considera de mala educación alterar las formaciones rocosas o las inscripciones naturales; son las páginas de la historia de la isla."
+   "No se menciona el One Piece o la verdad hallada directamente; se alude con metáforas o gestos.",
+   "Se escucha el 'eco' de la isla antes de hablar; las formaciones rocosas y la brisa a veces responden.",
+   "Dejar una ofrenda (una flor, una palabra escrita en corteza) en el Cementerio de Naves por aquellos que no llegaron.",
+   "Recolectar la 'savia risueña' solo al amanecer, cuando los árboles susurran más fuerte.",
+   "Transcribir cualquier marca o runa encontrada; se considera un deber preservar cada señal."
   ],
   "places": [
    {
-    "name": "El Umbral del Valle de la Risa",
+    "name": "El Umbral de Taurus",
     "kind": "entrada al valle central",
-    "description": "Una enorme formación de roca pálida que se curva como una sonrisa gigantesca, custodiando el paso al corazón de la isla. El viento, al pasar, produce un sonido similar a una risa ahogada y distante.",
+    "description": "Una inmensa puerta natural formada por rocas que parecen latir. Aquí, el aire cambia y el sonido de la isla se intensifica. Es el punto de no retorno.",
     "regulars": [
      "Taurus el Inquebrantable"
     ]
    },
    {
-    "name": "La Laguna del Olvido Negro",
-    "kind": "laguna",
-    "description": "Un cuerpo de agua quieta y oscura como la obsidiana, que refleja el cielo pero no a quien se asoma. En su centro, una bruma perpetua oculta el otro extremo.",
-    "regulars": [
-     "Kael el Desvanecido"
-    ]
-   },
-   {
-    "name": "Las Cataratas de los Susurros",
-    "kind": "cataratas",
-    "description": "Torrentes de agua cristalina que caen desde alturas imposibles sobre pilares de roca cubiertos de musgo brillante. El sonido del agua parece formar palabras en un idioma antiguo.",
+    "name": "Cataratas del Silencio",
+    "kind": "cascadas sagradas",
+    "description": "Aguas que caen sin hacer ruido, deslizándose como mercurio sobre piedras cubiertas de musgo fosforescente. El fondo parece llevar a la nada.",
     "regulars": [
      "Arion el Silencioso"
     ]
    },
    {
-    "name": "El Corredor de los Ecos Parlantes",
-    "kind": "formaciones rocosas",
-    "description": "Un cañón estrecho y sinuoso donde cada paso, cada suspiro, es repetido y transformado en frases completas por las extrañas propiedades acústicas de sus paredes.",
+    "name": "Laguna Negra",
+    "kind": "cuerpo de agua",
+    "description": "Una extensión de agua oscura y perfectamente quieta que refleja el cielo pero no a quien se asoma. Los peces que se pescan aquí son transparentes.",
     "regulars": [
-     "Eco"
+     "Kael el Desvanecido"
     ]
    },
    {
-    "name": "El Bosque de Corteza Escrita",
+    "name": "Bosque de los Árboles Risueños",
     "kind": "bosque",
-    "description": "Un bosque de árboles petrificados y antiguos, cuyos troncos están cubiertos de marcas, runas y símbolos que aparecen y desaparecen con la luz del día.",
+    "description": "Árboles cuyas cortezas tienen formas que recuerdan sonrisas y cuyas hojas, al caer, producen un sonido semejante a una risa leve. Las sombras aquí son profundas y movedizas.",
     "regulars": [
+     "Cormac",
+     "Anya",
      "Lyra de las Runas"
     ]
    },
    {
-    "name": "La Cima del Vacío",
-    "kind": "cima",
-    "description": "El punto más alto de la isla, una meseta desnuda y ventosa desde donde el mar se ve infinito. Un lugar de absoluta quietud, donde los pensamientos parecen disolverse.",
+    "name": "Grutas del Eco Interior",
+    "kind": "sistema de cavernas",
+    "description": "Túneles que repiten y distorsionan cada palabra hasta convertirla en un nuevo mensaje. Las paredes están cubiertas de mapas obsesivos y teorías superpuestas.",
     "regulars": [
-     "Elron el Vacío"
+     "Orion",
+     "Eco",
+     "Gale"
     ]
    },
    {
-    "name": "Las Praderas de la Brisa Cantarina",
-    "kind": "pradera",
-    "description": "Vastas extensiones de hierba plateada que ondean al compás de corrientes de aire que producen melodías simples y etéreas. El aire aquí es dulce y ligero.",
+    "name": "Cementerio de Naves",
+    "kind": "cementerio de barcos",
+    "description": "Una cala oculta donde los cascos de barcos que casi llegaron descansan, cubiertos de enredaderas y flores de ceniza. Un lugar de respeto y melancolía.",
     "regulars": [
+     "Brann",
+     "Phoebe"
+    ]
+   },
+   {
+    "name": "Costa del Silencio",
+    "kind": "playa",
+    "description": "Una orilla de arena negra donde las olas rompen sin sonido. Los corales en el agua cercana tienen formas de runas y parecen latir sutilmente.",
+    "regulars": [
+     "Callista"
+    ]
+   },
+   {
+    "name": "Claro del Vacío",
+    "kind": "lugar de reunión",
+    "description": "Un círculo perfecto de hierba donde no crecen árboles. Aquí, los que han perdido algo (memoria, propósito) a veces se reúnen, atraídos por la nada del lugar.",
+    "regulars": [
+     "Elron el Vacío",
      "Sylph"
     ]
    },
    {
-    "name": "La Bóveda del Secreto",
-    "kind": "lugar histórico",
-    "description": "No es una construcción, sino un claro natural en el centro del valle, donde la luz cae de una manera especial. El suelo está cubierto de guijarros lisos que parecen contar una historia bajo los pies. Aquí es donde Roger encontró el One Piece.",
-    "regulars": []
+    "name": "Arca de las Sombras",
+    "kind": "templo",
+    "description": "Una estructura semiderruida, no hecha por manos humanas, donde las sombras de los árboles risueños se proyectan en patrones curativos sobre el interior.",
+    "regulars": [
+     "Valerio",
+     "Anya"
+    ]
+   },
+   {
+    "name": "La Atalaya de los Susurros",
+    "kind": "punto de observación",
+    "description": "Una formación rocosa alta desde donde se ve gran parte de la isla. El viento aquí lleva claramente las voces de Eco y Sylph, mezcladas en un canto constante.",
+    "regulars": [
+     "Sylph",
+     "Eco"
+    ]
    }
   ],
   "rumors": [
-   "Las Brisas Cantarinas de las praderas a veces tararean una melodía que coincide con la última canción que escuchó un visitante antes de zarpar hacia la Grand Line.",
-   "Mirar demasiado tiempo al reflejo de uno mismo en la Laguna Negra puede hacer que los recuerdos más preciados se desvanezcan, flotando hacia Kael, el pescador de sombras.",
-   "En noches específicas, las runas del bosque se reorganizan para mostrar no la historia del mundo, sino la historia personal y el destino posible de quien las lee.",
-   "Si alguien logra hacer que Arion el Silencioso hable, este contará no el secreto del One Piece, sino el verdadero nombre que la isla tenía antes de que Roger se riera.",
-   "Se dice que el One Piece no es un tesoro físico, sino una condición: el momento en que el mundo entero pueda volver a reírse sin miedo, y la isla misma dejará de existir."
+   "El 'One Piece' no es un tesoro material, sino algo que, una vez conocido, te obliga a actuar. ¿Es un deber, una maldición o una liberación?",
+   "Las 'Flores de Ceniza' que cultiva Phoebe solo crecen donde hubo una gran ambición extinguida. Algunos dicen que si florecen todas a la vez, algo se recordará.",
+   "Soren, el cobrador, no busca dinero. Busca 'fragmentos de historia' personales como pago por deudas oscuras. ¿A quién sirve realmente?",
+   "En la Laguna Negra, a veces aparece reflejado no el cielo, sino un barco fantasma. Kael dice que es el barco de aquellos que lo sabían todo pero eligieron no salir.",
+   "Si logras descifrar el canto coordinado de las Brisas Cantarinas y las formaciones de Eco, las grutas revelarán una cámara final que ni siquiera Orion ha cartografiado."
   ]
  },
  {
   "island": "Little Garden",
-  "atmosphere": "Un rugido primigenio y húmedo envuelve la isla. El aire es espeso y cálido, cargado con el olor de vegetación descomunal y bestias ancestrales. El suelo tiembla con duelos distantes y pisadas colosales. Un lugar donde el tiempo se detuvo, lleno de peligro y majestuosidad prehistórica.",
-  "history": "Little Garden es una isla preservada desde tiempos antediluvianos. Hace un siglo, dos gigantes, Dorry y Broggy, iniciaron un duelo para dirimir cuál de sus culturas guerreras era superior, una lucha que aún perdura. El resto de la isla continuó su curso primitivo, habitada por dinosaurios y flora gigante, prácticamente inalterada por el mundo exterior.",
+  "atmosphere": "Un horno húmedo y primitivo donde el aire vibra con los rugidos de bestias antediluvianas y el eco de golpes de armas que han resonado durante un siglo. La vegetación es una pared densa y gigantesca, y el suelo tiembla con cada paso de los titanes que la habitan.",
+  "history": "Little Garden es un pedazo del mundo perdido, preservado por una anomalía temporal y climática. Hace más de un siglo, los gigantes Dorry y Broggy llegaron a ella y comenzaron su legendario duelo. El resto del mundo la olvidó, convirtiéndose en refugio para exiliados, estudiosos y cazadores que aprendieron a sobrevivir entre sus colosos.",
   "customs": [
-   "El \"Honor del Rugido\": Cualquier disputa entre cazadores o exploradores se resuelve con un combate a puñetazos, imitando a los gigantes, pero deteniéndose tras el primer golpe.",
-   "Ofrendas a los Antiguos: Es costumbre dejar la mejor pieza de una cacería o un fósil especialmente bello en las bases de las estatuas de los gigantes como signo de respeto.",
-   "La Ley del Silencio del Cazador: En las profundidades de la jungla, se habla en susurros y se evitan sonidos metálicos fuertes para no atraer a los depredadores más grandes."
+   "Respetar el 'Tiempo del Trueno': se evita el claro central a ciertas horas, cuando los gigantes luchan y el suelo es más peligroso.",
+   "Ofrendas de Carne Fresca: dejar parte de una caza grande cerca de los senderos principales es visto como un gesto de respeto a la isla y sus guardianes gigantes.",
+   "Historias Talladas: los visitantes dejan marcas o pequeños tallados en los árboles petrificados para registrar su paso, una tradición iniciada por los primeros náufragos."
   ],
   "places": [
    {
-    "name": "La Fosa de los Huesos",
-    "kind": "cueva",
-    "description": "Una caverna natural repleta de pilas de huesos de dinosaurio y fósiles brillantes. El aire aquí es fresco y huele a tierra y piedra antigua. Los muros están marcados con extraños símbolos antiguos.",
+    "name": "La Guarida del Hueso Seco",
+    "kind": "campamento base",
+    "description": "Un refugio excavado bajo las raíces colosales de un árbol muerto, lleno de pieles secas, mapas rudimentarios y el constante olor a humo de leña verde. Es el punto de reunión más conocido para quienes no pertenecen a ninguna tribu.",
     "regulars": [
-     "Dra. Lyra Petram"
+     "Ghor",
+     "Tamal Siruel",
+     "Vorak Hosca"
     ]
    },
    {
-    "name": "El Astillero del Viejo Tronco",
-    "kind": "astillero improvisado",
-    "description": "Un claro junto a un río donde un barco mercante medio desguazado sirve de taller. Herramientas oxidadas y tablones de madera petrificada se apilan de forma caótica bajo un toldo de lona rasgada.",
-    "regulars": [
-     "Kael"
-    ]
-   },
-   {
-    "name": "La Huella de Broggy",
-    "kind": "campamento gigante",
-    "description": "Una vasta zona despejada alrededor de un cráter gigantesco que sirve de hogar. Hay un fogos de piedra del tamaño de una casa, armas colosales apoyadas y montones de bestias cazadas recientemente.",
-    "regulars": [
-     "Brog"
-    ]
-   },
-   {
-    "name": "La Huella de Dorry",
-    "kind": "campamento gigante",
-    "description": "Similar al de su rival, pero decorado con trofeos de caza diferentes y con el casco de un barco de guerra usado como refugio. El aire huele a pólvora antigua y cuero curtido.",
-    "regulars": [
-     "Brog"
-    ]
-   },
-   {
-    "name": "El Bosque de los Helechos Gigantes",
-    "kind": "bosque",
-    "description": "Una zona donde los helechos alcanzan la altura de robles, creando un dosel verde pálido que filtra la luz en haces fantasmales. El silencio aquí es denso y vigilante, roto solo por el goteo del rocío.",
-    "regulars": [
-     "Torin"
-    ]
-   },
-   {
-    "name": "La Senda del Cazador Solitario",
-    "kind": "sendero de la jungla",
-    "description": "Un angosto camino casi invisible entre la maleza gigante, marcado por marcas de cuchillo en los troncos y trampas ingeniosas hechas con lianas y espinas. Es la ruta más segura para cruzar ciertas zonas peligrosas.",
-    "regulars": [
-     "Ghor"
-    ]
-   },
-   {
-    "name": "El Mirador de los Colosos",
-    "kind": "acantilado",
-    "description": "Un risco alto que ofrece una vista panorámica de la llanura central donde suelen luchar los gigantes. El suelo está sembrado de restos de antiguas hogueras y observadores.",
+    "name": "El Estudio de los Ecos",
+    "kind": "laboratorio improvisado",
+    "description": "Una carpa espaciosa y varias jaulas de observación hechas con lianas y troncos, instalada en un claro relativamente seguro. Está abarrotada de fósiles, especímenes en frascos y anotaciones meticulosas sobre la fauna local.",
     "regulars": [
      "Dra. Lyra Petram",
-     "Kael"
+     "Mikalos Grimlore"
     ]
    },
    {
-    "name": "El Charco de Resina",
-    "kind": "trampa natural",
-    "description": "Una extensión amplia y brillante de resina prehistórica pegajosa que atrapa insectos y pequeños animales para la eternidad. Pequeños fósiles perfectos sobresalen de su superficie ámbar.",
+    "name": "El Mercado del Colmillo",
+    "kind": "mercado",
+    "description": "Un conjunto de puestos precarios al pie de un colmillo fósil gigante. Se comercian dientes de sable, hierbas medicinales raras, carne ahumada de bestias prehistóricas y herramientas reparadas con hueso y piedra.",
+    "regulars": [
+     "Emilia Fruteza",
+     "Kael Vega",
+     "Kira Ordel"
+    ]
+   },
+   {
+    "name": "El Bosque de Helechos Gigantes",
+    "kind": "bosque",
+    "description": "Una zona donde los helechos alcanzan el tamaño de robles, creando un dosaje espeso y un silencio inquietante, solo roto por el goteo de la humedad. La luz se filra en haces verdes y difusos.",
     "regulars": [
      "Torin",
+     "Lira Abradal"
+    ]
+   },
+   {
+    "name": "La Arena de los Cien Años",
+    "kind": "campo de batalla",
+    "description": "El vasto claro central, marcado por cráteres, árboles partidos y armas rotas del tamaño de barcos. El aire aquí siempre huele a ozono y tierra removida. Es el sagrado terreno del duelo eterno.",
+    "regulars": [
+     "Brog"
+    ]
+   },
+   {
+    "name": "La Choza del Aprendiz",
+    "kind": "vivienda importante",
+    "description": "Una cabaña robusta hecha con huesos y pieles, construida en los límites de la Arena. En su interior hay herramientas de forja primitivas y tablillas de arcilla con registros del duelo.",
+    "regulars": [
+     "Brog",
+     "Rizo Kilowog"
+    ]
+   },
+   {
+    "name": "La Enredadera del Cartógrafo",
+    "kind": "taller",
+    "description": "Una plataforma elevada entre las ramas de un árbol gigante, accesible por escaleras de cuerda. Está cubierta de pergaminos, pigmentos hechos de bayas y minerales, y mapas incompletos de la isla.",
+    "regulars": [
+     "Nadir Tejedor"
+    ]
+   },
+   {
+    "name": "La Cueva de los Susurros",
+    "kind": "lugar de sanación",
+    "description": "Una caverna cálida con un manantial de aguas termales, donde crecen hongos bioluminiscentes. Las paredes están marcadas con símbolos de sanación hechos con arcilla. Es un santuario de paz en la isla violenta.",
+    "regulars": [
+     "Lira Abradal",
      "Dra. Lyra Petram"
+    ]
+   },
+   {
+    "name": "El Astillero Improvisado",
+    "kind": "astillero",
+    "description": "Una cala protegida donde yace el casco semireparado de un barco mercante. Herramientas oxidadas, tablones de madera petrificada y remiendos de piel seca se apilan alrededor. El sonido del martilleo es constante.",
+    "regulars": [
+     "Kael Vega",
+     "Vorak Hosca"
     ]
    }
   ],
   "rumors": [
-   "Algo en la jungla profunda está cazando dinosaurios adultos de forma demasiado limpia y silenciosa, dejando solo el esqueleto perfectamente limpiado.",
-   "Se dice que en la \"Fosa de los Huesos\" hay un fósil que muestra una criatura que no coincide con ningún registro conocido, ni siquiera de esta isla.",
-   "Algunas de las trampas en la \"Senda del Cazador Solitario\" han sido desarmadas o vueltas a armar por alguien que no es Ghor.",
-   "Kael, en el astillero, está desesperado por conseguir ciertas piezas metálicas, y ofrece reparaciones a cambio de que le traigan partes de los restos de naufragios más peligrosos.",
-   "Torin habla de una zona del \"Bosque de los Helechos Gigantes\" donde la vegetación muere de repente, como si algo la hubiera envenenado desde las raíces."
+   "Algo en la jungla profunda está cazando criaturas prehistóricas y dejando solo esqueletos perfectamente limpios en cuestión de horas. Ni siquiera los gigantes se aventuran allí ya.",
+   "Se dice que uno de los gigantes ha sufrido una herida reciente que no sana como debería, una herida punzante y limpia nada parecida a las causadas por su rival.",
+   "La Dra. Petram busca desesperadamente un espécimen vivo de una criatura que solo aparece en los estratos fósiles más antiguos. Ofrece una gran recompensa en fósiles raros.",
+   "Un cazador de recompensas, Rizo Kilowog, pregunta discretamente sobre cualquier \"visitante nuevo\" que haya llegado en los últimos meses y muestre un interés inusual en los gigantes."
   ]
  },
  {
   "island": "Loguetown",
-  "atmosphere": "Una ciudad portuaria bulliciosa y cargada de historia, donde el peso del pasado se mezcla con la tensa vigilancia del presente. El aire huele a mar, a pescado fresco y a la electricidad de las historias de piratas. La plataforma de ejecución de Gol D. Roger se alza como un recordatorio silencioso pero omnipresente, observada tanto por turistas emocionados como por marineros ceñudos. Los agentes de la Marina patrullan con una rigidez inusual, escrutando cada rostro en los muelles.",
-  "history": "Loguetown alcanzó la inmortalidad el día en que el Rey de los Piratas, Gol D. Roger, fue ejecutado públicamente en su plaza central. Sus últimas palabras, que desencadenaron la Gran Era de los Piratas, resonaron desde aquí hacia todos los mares. Desde entonces, la ciudad se convirtió en un símbolo: el lugar donde terminó una leyenda y comenzó una era. Muchos piratas, incluido el futuro Rey, la visitan como un rito de paso.",
+  "atmosphere": "Una ciudad portuaria abarrotada y bulliciosa, donde el peso de la historia se siente en cada esquina. El fantasma de la ejecución de Gol D. Roger planea sobre la icónica plataforma, creando un aire de fatalismo y ambición. La presencia de la Marina es omnipresente y opresiva, con patrullas constantes y miradas desconfiadas, contrastando con el espíritu indómito de sus ciudadanos y los secretos que bullen en sus callejones.",
+  "history": "Loguetown pasó a la historia como el lugar donde el Rey de los Piratas, Gol D. Roger, fue ejecutado públicamente. Sus últimas palabras desencadenaron la Gran Era de los Piratas. Desde entonces, la ciudad se convirtió en un símbolo del comienzo y el final de los sueños, atrayendo a marineros, aventureros y forajidos. La Marina mantiene una fuerte presencia para intentar controlar su leyenda y el flujo constante de aspirantes a piratas que llegan buscando emular a Roger.",
   "customs": [
-   "Muchos visitantes y aspirantes a piratas realizan una 'peregrinación' silenciosa a la plataforma de ejecución, tocando sus maderas como si pudieran absorber algo del legado de Roger.",
-   "Es común que los marineros y lugareños brinden en las tabernas 'por el que empezó todo', en un ambiguo tributo a Roger que puede tomarse como respeto o como simple tradición.",
-   "Los pescadores evitan una zona específica de la bahía cerca del acantilado, considerándola un lugar de mal agüero por su asociación con la muerte del Rey Pirata."
+   "Los nuevos visitantes, especialmente piratas, a menudo realizan una peregrinación silenciosa a la plataforma de ejecución para tocar sus maderas, buscando suerte o desafiando al destino.",
+   "Es costumbre en los muelles no preguntar nunca sobre el destino o la carga de un barco; la discreción se paga en silencio.",
+   "En el aniversario de la ejecución de Roger, algunos lugareños cuelgan farolillos rojos en sus ventanas, un gesto ambiguo que puede significar luto, celebración o un simple recordatorio."
   ],
   "places": [
    {
     "name": "La Última Botella",
     "kind": "taberna",
-    "description": "Una taberna acogedora de madera oscura, con mapas antiguos y réplicas de banderas piratas en las paredes. El ambiente es ruidoso pero familiar, un refugio del escrutinio de la Marina. Rafael sirve bebidas con calma, escuchando más de lo que habla.",
+    "description": "Una taberna sombría y acogedora llena de recuerdos náuticos y el olor a cerveza rancia y tabaco. Sus paredes están cubiertas de carteles de búsqueda ajados y graffiti de marineros. El ambiente es de conversaciones susurradas y miradas furtivas.",
     "regulars": [
      "Rafael el Templado",
+     "Bruno el Fuerte",
      "Rocco el Descarado",
-     "Sofia la Curiosa"
+     "Barthus el Cicatriz"
     ]
    },
    {
     "name": "Plaza de la Ejecución",
-    "kind": "plaza histórica",
-    "description": "El corazón histórico de la ciudad. La enorme plataforma de madera, con su poste y su hoja de acero, domina el espacio. Multitudes de turistas se congregan a su alrededor, mientras agentes de la Marina observan desde las sombras de los edificios circundantes.",
+    "kind": "plaza",
+    "description": "El corazón histórico de la ciudad, dominado por la enorme y ominosa plataforma de madera donde Roger encontró su fin. La plaza está siempre llena de turistas, predicadores callejeros y marines patrullando. El aire aquí es tenso y cargado de simbolismo.",
     "regulars": [
+     "Padre Silvano",
      "Sofia la Curiosa",
-     "Teniente Aris",
-     "Oficial Carla"
+     "Novato Finn",
+     "Teniente Aris"
     ]
    },
    {
-    "name": "Muelles del Amanecer",
+    "name": "Muelle Principal",
     "kind": "puerto",
-    "description": "El principal puerto de Loguetown, siempre atestado de barcos mercantes, pesqueros y los imponentes buques de guerra de la Marina. El movimiento es frenético, pero la vigilancia es extrema; los uniformes blancos son una presencia constante, revisando papeles y caras.",
+    "description": "Un caos organizado de grúas, cargadores y barcos de todo tipo. Los marines revisan meticulosamente cada embarque y desembarco desde sus garitas. El olor a sal, pescado y aceite de máquinas es abrumador.",
     "regulars": [
      "Teniente Aris",
      "Oficial Carla",
+     "Willy el Pescador",
+     "Kaito el Quilla",
+     "Elara del Mapamundi"
+    ]
+   },
+   {
+    "name": "Archivo del Puerto y Mapamundi",
+    "kind": "archivo",
+    "description": "Una antigua biblioteca y taller de cartografía cerca del muelle, repleta de mapas enrollados, brújulas antiguas y libros de bitácoras. El polvo del papel se mezcla con el olor a tinta y madera vieja.",
+    "regulars": [
+     "Elara del Mapamundi",
+     "Sofia la Curiosa"
+    ]
+   },
+   {
+    "name": "Astillero de Río",
+    "kind": "astillero",
+    "description": "Un lugar ruidoso y lleno de actividad donde el sonido de martillazos y sierras es constante. Se reparan barcos de pesca y, discretamente, algunas embarcaciones más cuestionables. Las virutas de madera cubren el suelo.",
+    "regulars": [
+     "Kaito el Quilla",
      "Willy el Pescador"
     ]
    },
    {
-    "name": "Mercado del Bazar",
-    "kind": "mercado",
-    "description": "Un laberinto de puestos coloridos que ofrecen desde especias exóticas y productos del mar hasta mapas dudosos y recuerdos de la ejecución. El regateo es un arte, y el aire está lleno de gritos de vendedores y el olor a comida callejera.",
+    "name": "Bahía Este",
+    "kind": "cala",
+    "description": "Una pequeña cala rocosa y aparentemente abandonada, alejada de los muelles principales. Es un lugar popular para encuentros discretos y operaciones de contrabando. Solo se accede por senderos traicioneros o por mar de noche.",
     "regulars": [
-     "Mira la Vendedora",
-     "Sofia la Curiosa",
-     "Willy el Pescador"
-    ]
-   },
-   {
-    "name": "Cuartel de la Marina de Loguetown",
-    "kind": "cuartel",
-    "description": "Una fortaleza de piedra blanca con el emblema de la Marina a la entrada. Su presencia es intimidante, y la actividad en sus puertas es constante, con soldados entrando y saliendo. Las ventanas reflejan la luz del mar con un brillo frío.",
-    "regulars": [
-     "Teniente Aris",
-     "Oficial Carla"
-    ]
-   },
-   {
-    "name": "Callejón del Susurro",
-    "kind": "callejón",
-    "description": "Un pasaje estrecho y mal iluminado entre los edificios del mercado, lejos de la vista de la Marina. Es el lugar donde se realizan tratos turbios, intercambio de información y donde los elementos menos legales de la ciudad respiran con algo más de libertad.",
-    "regulars": [
-     "Bruno el Fuerte",
+     "Seraphina la Sirena",
      "Rocco el Descarado",
-     "Mira la Vendedora"
+     "Dorian 'Sombrero'"
     ]
    },
    {
-    "name": "Casa de los Viejos Navegantes",
-    "kind": "casa importante",
-    "description": "Una mansión de aspecto antiguo y algo decrépito cerca del puerto, que funciona como club social informal para marineros retirados. En su interior, lleno de recuerdos marinos, se cuentan las historias más verídicas (y exageradas) de los mares.",
-    "regulars": [
-     "Willy el Pescador",
-     "Rafael el Templado"
-    ]
-   },
-   {
-    "name": "Bahía del Acantilado",
-    "kind": "litoral natural",
-    "description": "Una cala rocosa al pie de un acantilado escarpado, alejada de los muelles principales. Es un lugar solitario, con un pequeño embarcadero de madera podrida. Las olas rompen con fuerza contra las rocas, creando un sonido constante y melancólico.",
-    "regulars": [
-     "Willy el Pescador",
-     "Rocco el Descarado"
-    ]
-   },
-   {
-    "name": "Torre del Vigía del Este",
-    "kind": "puesto de vigilancia",
-    "description": "Una torre de piedra en un promontorio que domina la entrada al puerto. Desde aquí, los vigías de la Marina tienen una vista panorámica de todos los barcos que se aproximan. La bandera de la Marina ondea con fuerza en lo alto.",
-    "regulars": [
-     "Teniente Aris",
-     "Oficial Carla"
-    ]
-   },
-   {
-    "name": "Taller de Artículos Diversos de Mira",
-    "kind": "tienda",
-    "description": "Un pequeño local abarrotado hasta el techo con todo tipo de objetos: brújulas, catalejos, herramientas, botellas extrañas y baratijas. Todo parece tener una capa de polvo, pero Mira conoce la ubicación y la historia de cada artículo.",
+    "name": "Mercado de los Susurros",
+    "kind": "mercado",
+    "description": "Un laberinto de puestos callejeros y tiendas de campaña que venden desde especias hasta artefactos dudossos. Los vendedores anuncian sus productos en voz baja, y los clientes regatean con gestos más que con palabras.",
     "regulars": [
      "Mira la Vendedora",
-     "Sofia la Curiosa",
+     "Pip el Rastreador",
+     "Bruno el Fuerte"
+    ]
+   },
+   {
+    "name": "Templo de la Plataforma",
+    "kind": "templo",
+    "description": "Un pequeño templo de piedra con vistas a la plaza. Es un lugar de recogimiento y reflexión sobre la muerte, la justicia y el destino. El interior es austero y tranquilo, un refugio del bullicio exterior.",
+    "regulars": [
+     "Padre Silvano",
+     "Barthus el Cicatriz"
+    ]
+   },
+   {
+    "name": "Puesto de Sopa del Muelle Oeste",
+    "kind": "puesto de comida",
+    "description": "Un puesto callejero humeante que sirve un guiso salado y reconfortante las 24 horas. Es el favorito de los trabajadores portuarios nocturnos, los marines cansados y cualquiera que necesite un plato caliente y anonimato.",
+    "regulars": [
+     "Marnie la Sal",
+     "Novato Finn",
+     "Pip el Rastreador"
+    ]
+   },
+   {
+    "name": "Las Alcantarillas de la Ciudad Vieja",
+    "kind": "alcantarillas",
+    "description": "Una red oscura y húmeda bajo la ciudad, donde el agua salada se mezcla con los desechos. Usada como escondite, ruta de escape y hogar para los desposeídos. El eco de los pasos y los susurros viaja lejos por sus túneles.",
+    "regulars": [
+     "Pip el Rastreador",
      "Rocco el Descarado"
     ]
    }
   ],
   "rumors": [
-   "Se dice que el Teniente Aris tiene órdenes directas de Almirantes para arrestar a cualquier pirata con recompensa superior a cierta cifra, pero nadie sabe cuál es el monto exacto, creando paranoia.",
-   "Corre el rumor entre los pescadores de que un barco fantasma, que se asemeja al Oro Jackson, fue avistado cerca de la Bahía del Acantilado en noches de luna llena.",
-   "Alguien está vendiendo mapas falsos de 'El último tesoro de Roger' a turistas incautos en el mercado, lo que ha atraído la atención no deseada de cazadores de tesoros peligrosos.",
-   "Bruno el Fuerte está buscando 'trabajo' para alguien dispuesto a distraer a la guardia del muelle principal durante una hora específica, sin dar más explicaciones.",
-   "Un paquete misterioso fue entregado en 'La Última Botella' para un tal 'R.D.', y Rafael lo guarda bajo llave esperando a que alguien dé la contraseña correcta."
+   "Se dice que la plataforma de ejecución original no es de madera, sino de un metal especial que no se oxida, y que debajo de ella hay una cámara secreta donde Roger dejó un último mensaje.",
+   "Un barco fantasma, supuestamente el antiguo navío de un rival de Roger, ha sido avistado cerca de la Bahía Este en noches de luna nueva.",
+   "La Oficial Carla está buscando desesperadamente un informante dentro de la base de la Marina que está filtrando horarios de patrulla a los contrabandistas.",
+   "Dorian 'Sombrero' está recaudando deudas con extrema violencia; se rumorea que su próximo objetivo es alguien muy cercano a un marine de alto rango.",
+   "Un mapa que muestra una ruta secreta para sortear los puestos de control de la Marina en el puerto está circulando en el submundo, pero es una trampa tendida por los marines para atrapar a los contrabandistas."
   ]
  },
  {
   "island": "Long Ring Long Land",
-  "atmosphere": "Una isla de horizontes interminables y duelos de honor, donde cada encuentro en sus llanuras y bosques eternos puede terminar en una apuesta por lo que más se valora. Reina la tensión del desafío y el regusto a engaño, con una camaradería forjada en la rivalidad y la desconfianza hacia los recién llegados.",
-  "history": "Long Ring Long Land siempre fue una tierra de horizontes infinitos, que en tiempos remotos sirvió de refugio para nómadas. Con los siglos, su geografía única y la afluencia de marineros la convirtieron en el escenario perfecto para resolver disputas de manera ritualizada a través de duelos. La tradición se ha mantenido, aunque en las últimas décadas ha sido corrompida por piratas sin escrúpulos que manipulan las normas para su beneficio.",
+  "atmosphere": "Una isla de extensas praderas ondulantes y bosques interminables donde el aire huele a tierra húmeda y hierba salvaje. El ambiente está cargado de una tensión competitiva y juguetona, donde el honor y el engaño bailan en un peligroso equilibrio. Los caminos largos y rectos invitan tanto a la carrera como a la emboscada, y en cada claro puede estar ocurriendo un duelo por algo más valioso que el oro.",
+  "history": "Long Ring Long Land ha sido desde tiempos inmemoriales un enclave neutral y sin gobierno, donde los marineros y piratas acudían a resolver disputas mediante duelos rituales. Su geografía única, con formaciones alargadas, hizo que se popularizaran pruebas de velocidad y habilidad. Con el tiempo, la tradición degeneró en un lucrativo negocio de apuestas y trampas, atrayendo a estafadores y buscadores de gloria por igual.",
   "customs": [
-   "Cualquier disputa importante, desde una deuda hasta una ofensa, se resuelve oficialmente mediante un duelo pactado.",
-   "Antes de un duelo, ambas partes acuerdan y proclaman públicamente la apuesta, que puede ser desde un simple objeto hasta la propia libertad.",
-   "Está mal visto rechazar un duelo de un capitán establecido sin una razón de peso, aunque todos saben que muchos son trampas."
+   "El Desafío del Orgullo: Cualquier desacuerdo, por pequeño que sea, puede resolverse con un duelo formal. Perder significa ceder lo apostado, que a menudo incluye pertenencias, miembros de la tripulaci",
+   "La Palabra Larga: Los acuerdos verbales son sagrados, pero solo si se pronuncian ante un testigo reconocido, como el juez Anel el Justo. Fuera de eso, todo vale.",
+   "El Festival de las Carreras Largas: Una vez al año, se celebra una gran carrera a lo largo de la isla. El ganador obtiene un año de inmunidad en los duelos y el derecho a nombrar una nueva regla para "
   ],
   "places": [
    {
     "name": "Taberna Larga",
     "kind": "taberna",
-    "description": "Un edificio alargado y bajo de madera, lleno de mesas rayadas por cuchillos y paredes decoradas con banderas y tesoros perdidos en duelos. El aire huele a cerveza rancia y humo de pipa.",
+    "description": "Un edificio alargado y bajo, con un mostrador que parece no tener fin. Las paredes están tachonadas con banderas pirateadas y trofeos de duelos dudosos. El aire espeso a cerveza rancia y humo de pipa.",
     "regulars": [
      "Gordito Tono",
-     "Marcelo el Labioso",
-     "Micra el Sinvergüenza"
-    ]
-   },
-   {
-    "name": "Puerto de las Apuestas",
-    "kind": "puerto",
-    "description": "Un muelle de madera desgastada que se adentra en el mar como un dedo largo. Siempre hay al menos un barco nuevo amarrado, y grupos de curiosos evalúan a los recién llegados.",
-    "regulars": [
-     "Turro el Feroz",
-     "Banda el Mercader"
-    ]
-   },
-   {
-    "name": "La Llanura del Juicio",
-    "kind": "campo de duelos",
-    "description": "Una extensión de hierba perfectamente plana y alargada, delimitada por postes de madera. Es el escenario principal y más honorable para los duelos, donde la multitud se agolpa en los límites.",
-    "regulars": [
-     "Anel el Justo",
+     "Jorvik el Informante",
      "Marcelo el Labioso"
     ]
    },
    {
-    "name": "La Choza de la Sanadora",
-    "kind": "hogar de curandera",
-    "description": "Una cabaña redonda y acogedora al borde del bosque, con hierbas colgando del techo y el olor permanente a ungüentos medicinales. Es un refugio de calma en la isla.",
-    "regulars": [
-     "Gala la Sanadora"
-    ]
-   },
-   {
-    "name": "Mercado del Trocador",
-    "kind": "mercado",
-    "description": "Una hilera de puestos móviles y carpas en un claro, donde se venden desde provisiones hasta los objetos más excéntricos obtenidos en duelos. El regateo es feroz y rápido.",
-    "regulars": [
-     "Banda el Mercader",
-     "Turro el Feroz"
-    ]
-   },
-   {
-    "name": "El Bosque Sin Fin",
-    "kind": "bosque",
-    "description": "Un mar de árboles altos y delgados cuyos troncos parecen columnas infinitas. La luz se filra entre las hojas creando un ambiente enigmático, ideal para duelos no oficiales o emboscadas.",
-    "regulars": [
-     "Micra el Sinvergüenza"
-    ]
-   },
-   {
-    "name": "La Cabaña del Juez",
-    "kind": "residencia oficial",
-    "description": "Una casa ordenada y austera cerca de la Llanura, con un porche donde Anel revisa y archiva los pactos de duelo. Transmite una seriedad que contrasta con el caos circundante.",
-    "regulars": [
-     "Anel el Justo"
-    ]
-   },
-   {
-    "name": "La Guardia Larga",
-    "kind": "cuartel",
-    "description": "Una construcción de troncos que sirve de base para los pocos guardias. En su interior hay mapas de la isla y armas básicas, pero suele estar casi vacía.",
-    "regulars": [
-     "Turro el Feroz"
-    ]
-   },
-   {
-    "name": "El Escondite del Labioso",
-    "kind": "guarida pirata",
-    "description": "Una cueva natural disimulada entre rocas cerca de la costa, llena de barriles, cofres y mapas. Es donde Marcelo planea sus próximas jugadas y guarda sus botines más sucios.",
-    "regulars": [
-     "Marcelo el Labioso",
-     "Micra el Sinvergüenza"
-    ]
-   },
-   {
-    "name": "La Piedra del Juramento",
-    "kind": "monumento",
-    "description": "Una roca alta y plana en el centro de la isla, con runas antiguas y modernas grabadas por duelistas. Aquí se sellan públicamente los términos de los duelos más importantes.",
+    "name": "El Círculo de los Desafíos",
+    "kind": "arena de duelos",
+    "description": "Una llanura circular perfecta, cortada en la hierba alta. Marcas de quemaduras y cicatrices en la tierra cuentan historias de peleas pasadas. Un poste de madera en el centro sostiene las banderas de los retadores.",
     "regulars": [
      "Anel el Justo",
-     "Gordito Tono"
+     "Micra el Sinvergüenza",
+     "Turro el Feroz"
+    ]
+   },
+   {
+    "name": "Mercado de la Curva Larga",
+    "kind": "mercado",
+    "description": "Puestos de tela y madera que siguen la sinuosa curva de un arroyo. Se vende de todo, desde provisiones para el viaje hasta artefactos robados de barcos perdidos en apuestas.",
+    "regulars": [
+     "Krog el Cobrador",
+     "Iris la Cazadora de Recompensas"
+    ]
+   },
+   {
+    "name": "Cabaña de Gala",
+    "kind": "clínica",
+    "description": "Una cabaña acogedora al borde del bosque, con hierbas colgando del techo y el olor calmante de las infusiones. Es el lugar donde van a parar los perdedores (y algunos ganadores) de los duelos.",
+    "regulars": [
+     "Gala la Sanadora",
+     "Reza la Dama Verde"
+    ]
+   },
+   {
+    "name": "Playa Larga",
+    "kind": "playa y puerto",
+    "description": "Una franja de arena interminable donde varan los barcos ganados en apuestas. Los cascos oxidados y las embarcaciones medio desguazadas son un monumento a la avaricia y la mala suerte.",
+    "regulars": [
+     "Tiberio el Gordo",
+     "Falk el Veterano"
+    ]
+   },
+   {
+    "name": "Torre de Navegación",
+    "kind": "torre de vigilancia",
+    "description": "Una torre de piedra solitaria en un promontorio, desde donde se domina toda la costa. En su interior, mapas cubren cada superficie plana.",
+    "regulars": [
+     "Arla la Cartógrafa"
+    ]
+   },
+   {
+    "name": "La Enramada del Cuentacuentos",
+    "kind": "lugar de reunión",
+    "description": "Un claro en el bosque con un anillo de piedras musgosas alrededor de un fuego central. Aquí se comparten historias, no duelos.",
+    "regulars": [
+     "Morrigan la Poeta",
+     "Falk el Veterano"
+    ]
+   },
+   {
+    "name": "Escondrijo de Marcelo",
+    "kind": "guarida",
+    "description": "Una caverna natural disimulada entre las raíces de un bosque especialmente denso. Desde aquí se orquestan las estafas y se guardan los 'botines' más valiosos.",
+    "regulars": [
+     "Marcelo el Labioso",
+     "Micra el Sinvergüenza",
+     "Krog el Cobrador"
+    ]
+   },
+   {
+    "name": "El Mirador del Acantilado Largo",
+    "kind": "mirador",
+    "description": "Un risco que se adentra en el mar, ofreciendo una vista imponente de las olas rompiendo contra las rocas. Lugar de reflexión (y ocasionalmente, de arrepentimiento).",
+    "regulars": [
+     "Iris la Cazadora de Recompensas",
+     "Morrigan la Poeta"
+    ]
+   },
+   {
+    "name": "La Charca de los Suspiros",
+    "kind": "lugar natural",
+    "description": "Un estanque de aguas cristalinas y profundas, rodeado de juncos. Se dice que sus aguas reflejan el verdadero deseo del que mira, no su apariencia.",
+    "regulars": [
+     "Reza la Dama Verde",
+     "Anel el Justo"
     ]
    }
   ],
   "rumors": [
-   "Se dice que Banda el Mercader tiene a la venta un Diario de Navegación de un antiguo duelista que desapareció, el cual podría señalar la ubicación de un tesoro escondido en la isla.",
-   "Corre el rumor de que Marcelo el Labioso ha estado sobornando sistemáticamente a Anel el Justo para que declare a su favor en los duelos más jugosos.",
-   "Algunos hablan de una antigua regla de duelo olvidada, la 'Apuesta Final', que obliga a los contendientes a jugarse la vida si ambos la invocan, y que estaría tallada en la base de la Piedra del Juramento.",
-   "Se murmura que en lo más profundo del Bosque Sin Fin hay una zona donde los árboles forman un círculo perfecto, y que duelar allí bajo la luna llena concede invencibilidad temporal.",
-   "Un rumor persistente afirma que el barco de Marcelo, anclado discretamente, no es realmente suyo, sino que lo ganó en un duelo tan sucio que el antiguo capitán desapareció misteriosamente en el bosque."
+   "Se rumorea que Banda el Mercader tiene a la venta un 'Pomo de la Victoria', un artefacto que garantiza ganar cualquier duelo... por un precio exorbitante y con efectos secundados desconocidos.",
+   "Una de las naves varadas en la Playa Larga, la 'Gaviota Quebrada', esconde en sus bodegas inundadas un tesoro que su anterior capitán no quiso apostar, pero ahora está maldito.",
+   "Anel el Justo, el juez, está acumulando una deuda de juego con Krog el Cobrador, lo que podría explicar por qué sus veredictos últimamente siempre favorecen a Marcelo el Labioso.",
+   "La Torre de Navegación no solo tiene mapas: Arla la Cartógrafa guarda un diario con las rutas secretas y los puntos ciegos de los barcos que frecuentan la isla, información invaluable.",
+   "En lo más profundo del Bosque Largo, donde ni los duelistas se aventuran, hay una antigua piedra rúnica que, según Reza la Dama Verde, muestra las verdaderas y originales reglas de honor de la isla, ahora olvidadas."
   ]
  },
  {
   "island": "Marineford",
-  "atmosphere": "Una atmósfera de disciplina militar absoluta, tensa y silenciosa, donde el peso de la historia y la autoridad se siente en cada paso. El aire huele a salitre, aceite de máquina y pulido de metal. Los movimientos son precisos, las miradas están alerta y cualquier sonido fuera de lugar es motivo de sospecha.",
-  "history": "Marineford fue construida como el bastión definitivo de la Marina frente a la Era de los Piratas. Su plaza central fue testigo de la Guerra de la Cumbre, un conflicto masivo que marcó el fin de una era y el nacimiento de una nueva. Tras la batalla, la fortaleza fue reconstruida y reforzada, convirtiéndose en un símbolo aún más poderoso de la determinación de la Marina de erradicar la piratería.",
+  "atmosphere": "Una fortaleza militar de mármol blanco impecable donde reina una disciplina férrea y un silencio pesado, roto solo por el retumbar de las botas y las órdenes secas. Cada centímetro está vigilado y cada rostro es una máscara de seriedad profesional o cautelosa sumisión. El aire huele a salitre, acero pulido y tensión contenida.",
+  "history": "Marineford se convirtió en el Cuartel General de la Marina tras la conclusión de la Gran Era de los Piratas, simbolizando la ley y el orden definitivos. Su fama eterna llegó con la Guerra de la Cumbre, una batalla titánica que devastó la plaza principal y cambió el equilibrio del mundo. Desde entonces, ha sido reconstruida y reforzada, convirtiéndose en el bastión inquebrantable de la justicia mundial.",
   "customs": [
-   "El silencio en las zonas de mando es sagrado; hablar por encima de un murmuro está mal visto.",
-   "Cada cambio de guardia en la plaza central incluye un breve momento de silencio en memoria de la guerra.",
-   "Nadie cuestiona una orden de un oficial de mayor rango en público, la cadena de mando es inquebrantable."
+   "El 'silencio del muelle': Nadie habla en voz alta al atracar; las órdenes se dan con gestos o susurros para no perturbar la disciplina.",
+   "La 'ofrenda de los nombres': Algunos guardias veteranos dejan una flor anónima en la Plaza de la Guerra, en memoria de los caídos en la gran batalla.",
+   "La 'hora del té de los Almirantes': Un rumor persistente dice que a una hora exacta, los altos mandos toman té en la azotea; nadie de bajo rango se atreve a acercarse entonces."
   ],
   "places": [
    {
     "name": "El Último Fuerte",
     "kind": "taberna",
-    "description": "Un bar oscuro y austero dentro de los límites permitidos de la base, con paredes de piedra sin adornos y mesas de madera desgastada. Es el único lugar donde el personal puede bajar ligeramente la guardia, pero nunca del todo.",
+    "description": "Un antro bajo y ahumado en un callejón trasero del complejo logístico, donde el ambiente militar se relaja entre jarras de cerveza tibia. Es el único lugar donde se permite cierto murmullo de quejas.",
     "regulars": [
      "Goran el Sosegado",
-     "Bruno 'La Olla'",
-     "Rigel 'Tornillo' Vance"
-    ]
-   },
-   {
-    "name": "Plaza de la Justicia",
-    "kind": "plaza",
-    "description": "La vasta plaza central de piedra blanca, flanqueada por altísimos mástiles con la bandera de la Marina. El suelo muestra las marcas y reparaciones de la batalla pasada. Es el lugar de formaciones, ejecuciones y discursos del Almirante.",
-    "regulars": [
-     "Tobias 'Armadillo' Garr"
-    ]
-   },
-   {
-    "name": "Astillero y Fundición",
-    "kind": "astillero",
-    "description": "Una zona ruidosa y llena de actividad, con grúas que balancean placas de metal y el sonido constante de martillos sobre yunque. Aquí se reparan y construyen los buques de guerra de la Marina.",
-    "regulars": [
-     "Rigel 'Tornillo' Vance",
+     "Solan 'El Susurro'",
      "Hector Forge"
     ]
    },
    {
-    "name": "El Ala de Logística",
-    "kind": "archivo",
-    "description": "Un laberinto de estanterías metálicas repletas de carpetas y pergamos, iluminado por lámparas frías. El aire es seco y huele a papel viejo y tinta. Aquí se guarda cada movimiento de flotas y cada informe de inteligencia.",
+    "name": "El Muelle de la Justicia",
+    "kind": "puerto",
+    "description": "Una enorme estructura de piedra blanca con grúas y cadenas que rechinan. Solo atracan aquí buques de guerra de la Marina; los civiles deben usar un muelle lateral mucho más pequeño y vigilado.",
     "regulars": [
-     "Elara Vex"
+     "Tobias 'Armadillo' Garr",
+     "Garrick 'El Mirador'",
+     "Tyra 'La Navegante'"
     ]
    },
    {
-    "name": "Enfermería Auxiliar",
-    "kind": "hospital",
-    "description": "Una sala blanca, limpia y funcional, con filas de camas y armarios llenos de suministros médicos. Es más tranquila que las zonas principales, pero la eficiencia es igual de rigurosa.",
-    "regulars": [
-     "Lin Mei"
-    ]
-   },
-   {
-    "name": "Muro Exterior del Puerto",
-    "kind": "muralla",
-    "description": "Una imponente muralla blanca que domina la línea costera, con puestos de vigilancia y cañones cada pocos metros. La vista al mar es despejada y vigilante.",
+    "name": "La Plaza de la Guerra",
+    "kind": "plaza",
+    "description": "El corazón simbólico y cicatrizado de Marineford. Un vasto espacio de piedra con marcas de batalla apenas reparadas, dominado por la plataforma del ejecutor. Un silencio sepulcral la impregna.",
     "regulars": [
      "Kael el Atisbador"
     ]
    },
    {
-    "name": "Puerta del Muelle",
-    "kind": "puesto de guardia",
-    "description": "El punto de control principal para acceder a los muelles desde el mar. Una estructura fortificada con rejas de acero y múltiples puntos de inspección. Todo lo que entra y sale se registra aquí.",
+    "name": "La Forja del Bastión",
+    "kind": "herrería",
+    "description": "Un taller ruidoso y lleno de calor cerca del astillero, donde el metal chisporrotea y los martillos no cesan. Aquí se reparan armaduras, espadas y grilletes de la prisión.",
     "regulars": [
-     "Tobias 'Armadillo' Garr"
+     "Hector Forge",
+     "Rigel 'Tornillo' Vance"
     ]
    },
    {
-    "name": "Cantina de Suboficiales",
-    "kind": "comedor",
-    "description": "Un comedor grande y ruidoso, con largas mesas compartidas y el olor a comida simple pero abundante. Es el centro de la vida social de la tropa, lleno de conversaciones apresuradas.",
+    "name": "Archivos del Ala de Logística",
+    "kind": "archivo",
+    "description": "Un laberinto de estanterías metálicas repletas de pergaminos y den-den mushis en reposo. El aire es seco y huele a papel viejo y tinta. Reina un orden absoluto y un silencio de biblioteca.",
     "regulars": [
-     "Bruno 'La Olla'"
+     "Elara Vex",
+     "Fintan 'El Cartógrafo'"
+    ]
+   },
+   {
+    "name": "La Cantina de Suboficiales",
+    "kind": "cantina",
+    "description": "Un comedor vasto y funcional con largas mesas de madera. El olor a guiso, pan duro y café barato llena el aire. El ruido de cubiertos y conversaciones bajas es constante.",
+    "regulars": [
+     "Bruno 'La Olla'",
+     "Naomi 'La Chef'",
+     "Lin Mei"
+    ]
+   },
+   {
+    "name": "La Enfermería Auxiliar",
+    "kind": "enfermería",
+    "description": "Una sala blanca e impersonal con varias camas alineadas. El olor a antiséptico es fuerte. Es para lesiones menores y soldados rasos; los heridos graves van a la enfermería principal, fuera de los límites.",
+    "regulars": [
+     "Lin Mei",
+     "Mara la Sanadora"
+    ]
+   },
+   {
+    "name": "Los Muros Exteriores",
+    "kind": "muralla",
+    "description": "Imponentes murallas blancas que se alzan sobre el mar, coronadas por puestos de vigilancia y cañones. La vista del horizonte es despejada y ventosa, ideal para la vigilancia constante.",
+    "regulars": [
+     "Kael el Atisbador",
+     "Garrick 'El Mirador'"
+    ]
+   },
+   {
+    "name": "La Guarida de las Bestias",
+    "kind": "tienda de animales",
+    "description": "Un pequeño cobertizo maloliente cerca del muelle civil, lleno de jaulas con palomas mensajeras, ratas para entrenamiento y algún perro guardián. Un lugar caótico y vivo.",
+    "regulars": [
+     "Paco 'El Mascotero'",
+     "Falko 'El Recaudador'"
+    ]
+   },
+   {
+    "name": "La Capilla del Silencio",
+    "kind": "templo",
+    "description": "Una pequeña y austera capilla de piedra gris, casi desnuda, dedicada a los marinos caídos. Solo se escucha el crujir de las tablas del suelo y, a veces, un susurro de oración.",
+    "regulars": [
+     "Orlen 'El Iluminado'",
+     "Solan 'El Susurro'"
     ]
    }
   ],
   "rumors": [
-   "Se dice que en los archivos más profundos hay un plano detallado de los niveles inferiores de la fortaleza, incluidos túneles que ni siquiera todos los almirantes conocen.",
-   "Corre el rumor de que el metal utilizado para reparar la plaza tras la guerra fue tratado con un mineral especial, haciéndolo casi indestructible a ciertos tipos de ataques.",
-   "Algunos susurran que, durante las guardias nocturnas más silenciosas, se pueden oír ecos de la batalla en la plaza, como si la piedla guardara el recuerdo del conflicto.",
-   "Hay quien cree que el proveedor Hector Forge ocasionalmente 'pierde' pequeñas partidas de metal de alta calidad que terminan en mercados negros cercanos.",
-   "Se rumorea que la taberna 'El Último Fuerte' tiene un sótano secreto donde, muy de vez en cuando, se reúnen informantes de dudosa lealtad."
+   "Se dice que en los túneles de mantenimiento bajo la plaza hay una celda olvidada con grafitis de un prisionero de la Guerra de la Cumbre que nunca fue trasladado.",
+   "Un barco mercante fantasma, con las velas desgarradas y sin tripulación, aparece algunos amaneces cerca del muelle civil y desaparece antes del cambio de guardia.",
+   "Los archivos de logística guardan un expediente sellado sobre un 'Proyecto Pilar' que implica envíos masivos de un metal especial a una isla no registrada.",
+   "Algunos vigías nocturnos juran haber visto luces parpadeantes en código desde una isla lejana, dirigidas a los aposentos de un Almirante.",
+   "En 'El Último Fuerte', se puede contratar, por un precio exorbitante, un mapa que muestra un punto ciego de diez minutos en la rotación de las patrullas de los muros."
   ]
  },
  {
   "island": "Mary Geoise",
-  "atmosphere": "Una opulencia asfixiante y una quietud de mausoleo, donde cada susurro parece una blasfemia y cada paso fuera de lugar un terremoto. La pureza arquitectónica blanca enmascara la podredumbre moral más absoluta, y la omnipresencia de la ley se siente como un peso en el aire. Es el corazón del poder mundial, palpitante con una calma mortal.",
-  "history": "Mary Geoise fue construida en la cima de la Línea Roja como el símbolo definitivo del poder de los veinte reyes fundadores, quienes tras la guerra pasaron a ser los Dragones Celestiales. Durante siglos ha sido la fuente de todo decreto y la sede del Gobierno Mundial, un lugar aislado donde el poder y la decadencia se han consolidado. Su existencia misma es el pilar del orden mundial actual, un orden impuesto desde estas alturas sagradas.",
+  "atmosphere": "Una opresión silenciosa y pulcra. El aire huele a jardines podados con precisión, a mármol pulido y a un miedo ancestral que todos respiran pero nadie menciona. Cada paso está vigilado, cada susurro puede ser traición. Es el pináculo del mundo, pero está muerto por dentro, un paraíso construido sobre el sufrimiento de todos los mares.",
+  "history": "Mary Geoise fue erigida como la cúspide del mundo tras el Vacío del Siglo, la capital de los vencedores. Desde su fundación, los Dragones Celestiales y el Gobierno Mundial han gobernado desde aquí, reescribiendo la historia a su conveniencia. El Castillo de Pangea, su corazón, es más antiguo que la propia ciudad y guarda secretos que solo los Cinco Ancianos conocen.",
   "customs": [
-   "El Saludo Sagrado: Cualquiera que no sea un Dragón Celestial debe arrodillarse y bajar la mirada ante su presencia so pena de muerte inmediata.",
-   "La Procesión del Silencio: Al caer la noche, los sirvientes de alto rango recorren los pasillos principales en completo silencio para asegurar que ningún sonido mundano perturbe el descanso de la nobl",
-   "El Mercado de la Virtud: En la Plaza Sagrada, la mercancía no se regatea; su precio fijo es una declaración de sumisión al orden establecido y una prueba de lealtad."
+   "Todos, excepto los Dragones Celestiales, deben apartarse y bajar la mirada al paso de uno de ellos.",
+   "El 'Templo Vacío' se mantiene impecable, pero nunca se celebra ningún rito público; es un símbolo de un culto olvidado.",
+   "En los 'Barrios de Servicio', se habla en susurros y se usa un lenguaje de signos rudimentario para comunicar información delicada fuera del alcance de los guardias.",
+   "El 'Puerto Sagrado' tiene dos niveles: uno inmaculado para las naves oficiales y otro subterráneo y sucio, el 'Puerto de Desechos', donde llegan los suministros reales.",
+   "Cualquier objeto tocado por un 'intruso' (cualquiera que no sea de la élite o su servidumbre autorizada) es considerado contaminado y debe ser destruido o 'purificado'."
   ],
   "places": [
    {
-    "name": "Castillo de Pangea",
-    "kind": "sede del gobierno",
-    "description": "La gigantesca estructura blanca en el centro de la isla, de cuyas torres se gobierna el mundo. Sus pasillos son infinitos y laberínticos, y su sala más interna es un misterio incluso para los altos mandos navales.",
-    "regulars": [
-     "Galdar",
-     "Feldor"
-    ]
-   },
-   {
     "name": "La Posada Sagrada",
     "kind": "taberna",
-    "description": "Un establecimiento austero y silencioso para el personal de servicio y guardias de bajo rango. Aquí no se bebe para celebrar, sino para soportar el peso de trabajar en la Tierra Sagrada.",
+    "description": "Un establecimiento frío y demasiado limpio, reservado para funcionarios de bajo rango y guardias fuera de servicio. El silencio es más ruidoso que cualquier conversación. Lirone, el tabernero, sirve sin hacer contacto visual.",
     "regulars": [
      "Lirone",
+     "Kleona",
      "Vernon"
     ]
    },
    {
     "name": "Puerto de Mary Geoise",
     "kind": "puerto",
-    "description": "Un muelle inmaculado y geométrico, solo accesible para los barcos oficiales del Gobierno Mundial. La carga y descarga se realiza con una precisión y un silencio militares.",
+    "description": "Una dársena de mármol blanco donde atracan los barcos oficiales del Gobierno y los extravagantes yates de los Dragones Celestiales. Todo huele a sal y desinfectante. En sus muelles inferiores, oculto a la vista, está el acceso al Puerto de Desechos.",
     "regulars": [
-     "Vernon"
-    ]
-   },
-   {
-    "name": "Calle del Mercado",
-    "kind": "mercado",
-    "description": "Una amplia avenida flanqueada por puestos que venden bienes de lujo para los sirvientes de los Dragones. También es un lugar de tensiones soterradas y pequeños robos.",
-    "regulars": [
-     "Brullo"
-    ]
-   },
-   {
-    "name": "Oficinas del Gobierno Mundial",
-    "kind": "oficinas administrativas",
-    "description": "Un complejo de edificios grises y funcionales adyacente al Castillo, donde miles de funcionarios procesan el papeleo que mueve al mundo. El ambiente es de estrés contenido.",
-    "regulars": [
-     "Kleona"
-    ]
-   },
-   {
-    "name": "Jardines del Este Celestial",
-    "kind": "jardines",
-    "description": "Un parque perfectamente manicurado, con setos simétricos y fuentes que nunca dejan de fluir. Es el único lugar donde el personal autorizado puede respirar algo de aire libre, siempre bajo vigilancia.",
-    "regulars": [
-     "Kleona",
-     "Dulcia"
+     "Vernon",
+     "Crispín"
     ]
    },
    {
     "name": "Plaza Sagrada",
-    "kind": "plaza",
-    "description": "El corazón ceremonial de Mary Geoise, una explanada de mármol blanco frente al Castillo de Pangea. Aquí es donde se realizan las proclamaciones y desfiles más importantes, y donde la jerarquía es más visible.",
+    "kind": "mercado",
+    "description": "Un espacio abierto y geométrico donde los comerciantes autorizados venden bienes de lujo a la servidumbre de palacio. No hay regateo, solo transacciones discretas. Las risas están prohibidas.",
     "regulars": [
      "Dulcia",
-     "Galdar"
+     "Brullo",
+     "Lys"
     ]
    },
    {
-    "name": "Los Cuarteles de la Guardia",
-    "kind": "cuartel",
-    "description": "Un edificio fortificado cerca del castillo, de líneas severas y sin decoración. Aquí descansan y entrenan los guardianes encargados de la seguridad interna de la Tierra Sagrada.",
+    "name": "Calle del Mercado",
+    "kind": "calle comercial",
+    "description": "Una vía trasera de la Plaza, más estrecha y menos vigilada, donde ocurren los tratos reales. El ambiente es tenso, y la sombra de la extorsión siempre está presente.",
+    "regulars": [
+     "Brullo",
+     "Dulcia",
+     "Lys"
+    ]
+   },
+   {
+    "name": "Castillo de Pangea",
+    "kind": "cuartel/palacio",
+    "description": "La estructura central, masiva e imponente, de donde emana todo el poder. Sus pasillos son laberínticos y sus salones, inaccesibles. La Guardia Real patrulla cada centímetro con rostros inexpresivos.",
     "regulars": [
      "Galdar",
      "Feldor",
-     "Brullo"
+     "Kleona"
+    ]
+   },
+   {
+    "name": "Templo Vacío",
+    "kind": "templo",
+    "description": "Un edificio circular con columnas, desprovisto de iconos o altares. Se mantiene limpio por decreto, pero el aire dentro es gélido y huele a polvo viejo. Nadie reza aquí.",
+    "regulars": [
+     "Anselm"
+    ]
+   },
+   {
+    "name": "Los Registros Perdidos",
+    "kind": "archivos",
+    "description": "Un anexo subterráneo del Castillo de Pangea, una biblioteca de pasillos interminables llena de documentos censurados, historias borradas y mapas con islas tachadas. El silencio es absoluto.",
+    "regulars": [
+     "Seraphine",
+     "Kleona"
+    ]
+   },
+   {
+    "name": "Barrios de Servicio",
+    "kind": "viviendas",
+    "description": "Un laberinto de cuartos modestos y pasadizos estrechos, oculto a la vista desde los palacios. Es el único lugar donde sus habitantes se quitan la máscara de servilismo por un instante. Los muros tienen oídos.",
+    "regulars": [
+     "Lys",
+     "Bartholomeus",
+     "Torvald",
+     "Crispín"
+    ]
+   },
+   {
+    "name": "Palacio Menor de los Vientos del Este",
+    "kind": "residencia",
+    "description": "Una de las muchas residencias secundarias de Dragones Celestiales. Menos ostentosa que las principales, pero igual de opresiva. Su cocina es un hervidero de tensión silenciosa.",
+    "regulars": [
+     "Bartholomeus"
+    ]
+   },
+   {
+    "name": "Mirador del Silencio",
+    "kind": "jardín/terraza",
+    "description": "Un balcón ajardinado en un ala remota del Castillo, con una vista imponente del mundo inferior. Es un lugar de reflexión amarga para los guardias veteranos y los funcionarios desencantados.",
+    "regulars": [
+     "Torvald",
+     "Galdar",
+     "Feldor"
     ]
    }
   ],
   "rumors": [
-   "Se dice que bajo el Castillo de Pangea existen mazmorras donde encierran a los que han visto \"demasiado\", y de las que nadie sale.",
-   "Corre el rumor entre los funcionarios de que ciertos documentos antiguos, que hablan del \"Siglo Perdido\", están guardados en una bóveda secreta a la que ni los Ancianos acceden con frecuencia.",
-   "Algunos marineros del puerto juran haber visto, en noches de niebla espesa, sombras enormes y silenciosas moverse por los jardines, como si custodiasen algo más que flores.",
-   "Hay un murmullo persistente de que la ley más sagrada de Mary Geoise —no nombrar a quien está por encima de los Ancianos— pronto será quebrantada por un evento catastrófico.",
-   "Los mercaderes más veteranos susurran que en la Plaza Sagrada, bajo ciertas losas, hay túneles olvidados que podrían llevar fuera de la isla... o hacia sus secretos más profundos."
+   "Dicen que en lo más profundo del Castillo de Pangea hay una cámara donde los Cinco Ancianos se postran ante una sombra inmóvil. Nadie que haya visto esa sombra ha salido para contarlo.",
+   "Corre el susurro de que 'Los Registros Perdidos' esconden un plano secreto de los túneles de servicio que llevan directamente a las bóvedas privadas de los Dragones Celestiales. Seraphine parece nerviosa últimamente.",
+   "En el 'Puerto de Desechos', Crispín a veces encuentra objetos extraños entre la basura de los palacios: juguetes rotos de un material desconocido o fragmentos de mapas con escritura antigua. Los vende al mejor postor en la Calle del Mercado",
+   "El 'Templo Vacío' no siempre estuvo vacío. Los rumores más antiguos, que solo Torvald se atreve a insinuar, hablan de un ídolo que fue retirado y arrojado al mar hace siglos. Anselm pasa horas mirando el pedestal vacío.",
+   "Lys, la niña mensajera, conoce todos los atajos y huecos en los muros de los Barrios de Servicio. Se rumorea que, por el precio adecuado, puede hacer llegar un mensaje a cualquier rincón de Mary Geoise... o sacar a alguien que ya no quiere "
   ]
  },
  {
   "island": "Nuevo Marineford",
-  "atmosphere": "Una fortaleza militar imponente y opresiva, donde el orden y la disciplina marcial son absolutos. Cada centímetro irradia poder y vigilancia, desde los destellos de los prismáticos en las torres hasta los pasos marciales que resuenan en los muelles. Sin embargo, bajo la superficie de acero pulido, la incertidumbre y las conspiraciones susurran en los pasillos más oscuros y en los bares clandestinos, especialmente con la reunión secreta de SWORD.",
-  "history": "Originalmente la base G-1, fue renombrada y ascendida a Nuevo Marineford tras la devastación de la antigua sede en la guerra. Se reconstruyó y amplió para ser el bastión inexpugnable de la Marina en el Nuevo Mundo, un símbolo de su determinación de imponer la justicia absoluta. Su proximidad a Mary Geoise le otorga un valor estratégico y político incalculable.",
+  "atmosphere": "Una fortaleza imponente de acero y piedra, impregnada del olor a salitre y aceite de los barcos. El sonido constante de órdenes, marchas y reparaciones nunca cesa. Un aire de tensa eficiencia y lealtad absoluta se mezcla con la sombra de las conspiraciones que se traman entre sus muros. La justicia naval lo observa todo con ojos vigilantes.",
+  "history": "Antiguamente conocido como el puesto de avanzada G-1, fue reconstruido y ampliado masivamente tras la destrucción de Marineford original. Se erigió como el nuevo bastión de la justicia absoluta en el Nuevo Mundo, diseñado para intimidar y proyectar poder directamente hacia la Tierra Sagrada y los territorios de los Emperadores. Su ubicación estratégica lo convierte en el centro nervioso de todas las operaciones navales de alto nivel.",
   "customs": [
-   "El 'Saludo al Almirante' es obligatorio cuando se avista su insignia personal o su barco, incluso a distancia.",
-   "Está prohibido hacer preguntas sobre movimientos de tropas o misiones clasificadas; la curiosidad se considera sospechosa.",
-   "En los muelles bajos, se paga en efectivo y no se miran las caras, es la ley no escrita del comercio no oficial."
+   "Se observa un minuto de silencio al amanecer en memoria de los caídos en Marineford.",
+   "Está prohibido cuestionar órdenes o rumores en público; la lealtad es la moneda más valiosa.",
+   "En el puerto, los marineros veteranos intercambian tabaco y licor fuerte por las mejores historias de mar."
   ],
   "places": [
    {
     "name": "El Ancla Silenciosa",
     "kind": "taberna",
-    "description": "Un bar tenuemente iluminado cerca de los muelles, con paredes de madera ahumada y un letrero de ancla oxidada. Es el único lugar donde los marines de baja graduación pueden hablar sin ser escuchados oficialmente, aunque todos susurran. El aire huele a cerveza rancia y secretos.",
+    "description": "Un local discreto con ventanas empañadas y mesas de madera gastada. Es el refugio de quienes no quieren ser vistos ni oídos. Aquí los susurros valen más que los gritos.",
     "regulars": [
      "Miyako Sato",
-     "Goro 'El Rodillo'",
-     "Kaito Ishida"
+     "Haru Ryuu",
+     "Raiden Shimizu"
     ]
    },
    {
-    "name": "Muelles Bajos de Silas",
-    "kind": "puerto",
-    "description": "Una sección olvidada del enorme puerto militar, con grías oxidadas y barcazas destartaladas. Es la zona gris de la base, donde llegan cargamentos sin preguntas y donde los 'comerciantes especiales' operan entre sombras y el olor a salitre podrido.",
-    "regulars": [
-     "Silas Reed",
-     "Goro 'El Rodillo'"
-    ]
-   },
-   {
-    "name": "Astillero de Reparaciones Principal",
+    "name": "Astillero de Reparaciones 'Hiei'",
     "kind": "astillero",
-    "description": "Una catedral de acero y ruido, donde los buques de guerra dañados son devueltos a la vida entre chispas y martillazos ensordecedores. Los gritos de los capataces se mezclan con el chirrido del metal. Es el corazón logístico de la flota del Nuevo Mundo.",
+    "description": "Un caos organizado de grúas, fraguas y cascos de barcos en dique seco. El sonido metálico de los martillos es el latido del corazón de la base. Aquí los barcos heridos vuelven a la vida.",
     "regulars": [
      "Hiroshi Tanaka",
-     "Teniente Kenji Watanabe"
+     "David Netsu"
     ]
    },
    {
-    "name": "Archivos Clasificados del Búnker Delta",
+    "name": "Archivos del Fénix",
     "kind": "archivo",
-    "description": "Una sala subterránea fría y seca, iluminada por luces tenues, repleta de interminables filas de estantes metálicos que contienen los secretos más oscuros de la Marina. El silencio aquí es absoluto, roto solo por el leve crujir del papel y el suspiro de la historia.",
+    "description": "Una sala subterránea fría y seca, repleta de estanterías metálicas que guardan expedientes sellados con cera roja. El aire huele a papel viejo y secretos.",
     "regulars": [
-     "Haruka Natsume"
+     "Haruka Natsume",
+     "Mira Tatsumi"
     ]
    },
    {
-    "name": "Campo de Entrenamiento 'Piedra de Sangre'",
-    "kind": "cuartel",
-    "description": "Una extensión de tierra apisonada y obstáculos brutales bajo un sol implacable. Aquí, los reclutas del Nuevo Mundo son forjados (o quebrados) a gritos y sudor. El aire siempre lleva el polvo de la actividad y el eco de las órdenes.",
+    "name": "Campo de Entrenamiento 'Hierro Nuevo'",
+    "kind": "campo de entrenamiento",
+    "description": "Una extensión de tierra apisonada y obstáculos, siempre llena del jadeo de reclutas y el grito seco de los instructores. El polvo y el sudor son la esencia del lugar.",
     "regulars": [
-     "Sargento Ryouma Kobayashi"
-    ]
-   },
-   {
-    "name": "Centro de Comunicaciones Estratosférico",
-    "kind": "cuartel",
-    "description": "Una torre blindada llena del zumbido constante de los Den Den Mushi y el parpadeo de luces de estado. Cables y tubos recubren las paredes. Es el nervio central de todas las órdenes e inteligencia, donde una palabra mal transmitida puede costar vidas.",
-    "regulars": [
-     "Akari Fujimoto"
-    ]
-   },
-   {
-    "name": "Oficina de Logística y Suministros",
-    "kind": "cuartel",
-    "description": "Un caos organizado de papeleo, estanterías y cajas apiladas hasta el techo. El teniente Watanabe navega este laberinto con eficiencia burocrática, sabiendo que cada tornillo y ración cuenta para mantener a la máquina de guerra en movimiento.",
-    "regulars": [
-     "Teniente Kenji Watanabe"
-    ]
-   },
-   {
-    "name": "Puerta Occidental",
-    "kind": "puesto de guardia",
-    "description": "Una entrada masiva de acero reforzado y hormigón, constantemente vigilada. Desde aquí se tiene una vista despejada del mar y de los acantilados. Los guardias escanean el horizonte sin pausa, sabiendo que son la primera y última línea de defensa formal.",
-    "regulars": [
+     "Sargento Ryouma Kobayashi",
      "Kaito Ishida"
     ]
    },
    {
-    "name": "Los Barracones del Distrito de Servicios",
-    "kind": "viviendas",
-    "description": "Un conjunto de edificios grises y austeros donde viven los trabajadores civiles y marines de menor rango. La ropa cuelga de las ventanas y se escuchan conversaciones apagadas. Es un lugar de descanso cansado y rumores que vuelan por los patios.",
+    "name": "Muelles Bajos",
+    "kind": "puerto",
+    "description": "La parte más antigua y menos vigilada del puerto. Pilotes podridos, barcazas destartaladas y sombras largas. Es la puerta trasera no oficial de la fortaleza.",
     "regulars": [
+     "Silas Reed",
      "Goro 'El Rodillo'",
-     "Miyako Sato"
+     "Yumi Horikawa"
     ]
    },
    {
-    "name": "La Sala de Conferencias Estratégicas (Nivel Alfa)",
-    "kind": "cuartel",
-    "description": "Una sala circular y hermética en el núcleo de la fortaleza, con una mesa de obsidiana pulida y pantallas táctiles que muestran mapas del mundo. Es aquí donde, en este momento, se celebra la reunión secreta que podría cambiar el equilibrio de poder.",
-    "regulars": []
+    "name": "Torre de Comunicaciones",
+    "kind": "torre",
+    "description": "Una aguja de metal que se alza sobre los edificios, coronada por antenas y pararrayos. En su interior, un zumbido constante de Den Den Mushi y luces parpadeantes.",
+    "regulars": [
+     "Akari Fujimoto",
+     "Teniente Kenji Watanabe"
+    ]
+   },
+   {
+    "name": "Plaza Central del Estandarte",
+    "kind": "plaza",
+    "description": "Un amplio espacio pavimentado frente al edificio principal del mando. Un gran mástil con la bandera de la Marina domina la vista. Lugar de formaciones y proclamas.",
+    "regulars": [
+     "Kanji Teguchi",
+     "Sumi Kawasaki"
+    ]
+   },
+   {
+    "name": "Distrito de Servicios",
+    "kind": "barrio",
+    "description": "Un laberinto de calles estrechas con talleres, lavanderías y pensiones baratas. La parte 'viva' y a veces sórdida donde la disciplina oficial se relaja.",
+    "regulars": [
+     "Hideo Kuroi",
+     "Goro 'El Rodillo'",
+     "Yumi Horikawa"
+    ]
    }
   ],
   "rumors": [
-   "Se dice que SWORD está siendo convocada para una operación de 'negación plausible' contra un Emperador, sin el respaldo oficial del Gobierno Mundial.",
-   "Los marineros hablan de un cargamento perdido de 'armas especiales' de Vegapunk que llegó a los muelles bajos y desapareció sin dejar rastro en los registros.",
-   "Un rumor persistente afirma que hay un espía de alto nivel entre el personal de comunicaciones, filtrando movimientos de flota a un pirata desconocido.",
-   "Algunos técnicos del astillero juran haber visto reparaciones urgentes y secretas en el barco personal del Almirante de Flota, como si se preparara para un combate masivo.",
-   "Se susurra que la archivista, Haruka, tiene acceso a un expediente sellado sobre los verdaderos eventos del 'Incidente de la Isla God Valley' que alguien quiere destruir."
+   "Los agentes de SWORD han sido vistos entrando en la sala de guerra superior, y no han salido en horas.",
+   "Silas Reed consiguió una partida de Poneglyphs falsos increíblemente precisos; alguien del interior los filtró.",
+   "El Almirante de Flota tiene un 'as en la manga' contra un Emperador en particular, y no es una operación convencional.",
+   "Haruka Natsume, la archivista, busca desesperadamente un expediente específico de la guerra pasada que ha desaparecido.",
+   "En los Muelles Bajos se ofrece una recompensa exorbitante por información sobre los movimientos de ciertos vicealmirantes."
   ]
  },
  {
   "island": "Ohara",
-  "atmosphere": "Lo que queda de la isla de los arqueólogos: un árbol enorme carbonizado, una biblioteca convertida en cenizas y un silencio que pesa. Un manto de ceniza cubre todo, y el olor a madera quemada aún persiste. La sombra del Árbol del Conocimiento carbonizado domina el paisaje, creando una sensación de pérdida y desolación absolutas. El peligro acecha tanto en los escombros como en las sombras, proveniente de cazadores de reliquias y agentes secretos.",
-  "history": "Ohara fue una vez el centro del conocimiento mundial, hogar de los arqueólogos más brillantes que estudiaban los Poneglyphs. Hace años, el Gobierno Mundial lanzó un Buster Call sobre la isla, incinerando la biblioteca y a sus habitantes para silenciar su investigación sobre el Siglo Vacío. Solo unas pocas estructuras quedaron en pie, y la isla fue oficialmente borrada de los mapas. Ahora, es una tierra de ruinas y secretos enterrados, donde los ecos del pasado aún susurran.",
+  "atmosphere": "Lo que queda de la isla de los arqueólogos: un árbol enorme carbonizado, una biblioteca convertida en cenizas y un silencio que pesa. Se dice que el Gobierno arrasó la isla por estudiar lo que no debía.",
+  "history": "Ohara fue una isla de eruditos, famosa por su Gran Árbol de la Conocimiento y la biblioteca que albergaba. El Gobierno Mundial la arrasó con un Buster Call por investigar los Poneglyphs y la Historia Perdida. Ahora solo quedan ruinas, cenizas y el peso de un crimen contra la sabiduría.",
   "customs": [
-   "Se evita mencionar el pasado glorioso de Ohara en voz alta, por miedo a que los 'oidos del Gobierno' escuchen.",
-   "Los pocos residentes se comunican con señas y susurros cerca de las ruinas principales, para no atraer atención.",
-   "Se dejan pequeñas ofrendas de piedras o flores secas en la base del Árbol del Conocimiento carbonizado, en memoria de lo perdido."
+   "Hablar en susurros, como si un ruido alto pudiera despertar al fantasma de la justicia del Gobierno.",
+   "Solo comer pescado y marisco, la agricultura murió con el árbol.",
+   "Dejar ofrendas de fragmentos de papel o tinta seca en las grietas del Árbol Carbonizado.",
+   "No preguntar nunca de dónde viene alguien ni por qué está aquí."
   ],
   "places": [
    {
-    "name": "El Árbol del Conocimiento Carbonizado",
-    "kind": "monumento natural/ruinas",
-    "description": "El esqueleto gigante y negro del antiguo árbol-biblioteca. Sus ramas, como garras carbonizadas, se alzan contra el cielo. Entre sus raíces expuestas hay túneles y grietas que llevan a lo que queda de sus cimientos.",
+    "name": "El Árbol Carbonizado",
+    "kind": "monumento natural",
+    "description": "El enorme y ennegrecido tronco del Gran Árbol de la Conocimiento, que se eleva como un espectro sobre la isla. Sus ramas quemadas se extienden sobre las ruinas. A sus pies hay grietas donde la gente deja ofrendas.",
     "regulars": [
-     "Ember (Ascua)"
+     "Elias Ceniza",
+     "Ember (Ascua)",
+     "Ishka la Sabia"
     ]
    },
    {
-    "name": "Cenizas del Saber",
-    "kind": "ruinas de la biblioteca",
-    "description": "La base circular de la gran biblioteca, ahora un anillo de piedra negra y escombros calcinados. Fragmentos de páginas y lomos de libros se fundieron con la piedra. Un silencio reverencial y opresivo lo impregna todo.",
+    "name": "Ruinas de la Gran Biblioteca",
+    "kind": "ruinas",
+    "description": "Una montaña de escombros, cenizas y fragmentos de estanterías. El aire huele a papel quemado. Aquí es donde se concentra la búsqueda desesperada de cualquier resto del saber.",
     "regulars": [
-     "Elias Ceniza",
+     "Soren el Araña",
+     "Vera la Ilustradora",
      "Agente"
     ]
    },
    {
-    "name": "La Garita del Remordimiento",
+    "name": "Túneles del Subsuelo",
+    "kind": "refugio subterráneo",
+    "description": "Una red de pasadizos y cámaras excavados bajo las raíces del árbol. Son fríos, húmedos y están iluminados por antorchas improvisadas. Sirven de refugio y escondite.",
+    "regulars": [
+     "Ember (Ascua)",
+     "Neko el Huérfano",
+     "Selka la Contrabandista"
+    ]
+   },
+   {
+    "name": "El Muelle Susurrante",
+    "kind": "puerto",
+    "description": "Un embarcadero medio derruido en la costa norte. Solo atraca la barca destartalada de Mira. Las tablas crujen con un sonido que parece un lamento.",
+    "regulars": [
+     "Mira la Susurrante",
+     "Milo el Faro",
+     "Taro el Errante"
+    ]
+   },
+   {
+    "name": "La Garita del Remordido",
     "kind": "puesto de vigilancia abandonado",
-    "description": "Una pequeña garita de piedra en un acantilado, con vista a la bahía donde atracaron los buques de guerra. Está medio derrumbada y llena de grafitis borrosos y muescas en la madera. Desde aquí se ve toda la costa norte.",
+    "description": "Una pequeña torre de vigilancia de la marina, oxidada y con la ventana rota. Desde aquí se ve toda la costa sur. Kael la habita, atormentado por lo que vio.",
     "regulars": [
-     "Kael el Remordido"
+     "Kael el Remordido",
+     "Karma el Veterano"
     ]
    },
    {
-    "name": "La Cueva de las Arañas",
-    "kind": "escondite/guarida",
-    "description": "Una cueva natural cerca de la costa, su entrada oculta por maleza. En su interior, paredes llenas de mapas rudimentarios, fragmentos de papel salvados y cuerdas que cuelgan como telarañas. Huele a sal, moho y tinta antigua.",
+    "name": "El Campamento del Craneo",
+    "kind": "campamento fortificado",
+    "description": "Un conjunto de tiendas y barricadas levantadas cerca de las ruinas más prometedoras. Está patrullado por matones y marca el 'territorio' de caza de reliquias de Craneo.",
     "regulars": [
-     "Soren el Araña"
+     "Craneo",
+     "Taro el Errante"
     ]
    },
    {
-    "name": "Cala del Susurro",
-    "kind": "costa/pequeño embarcadero",
-    "description": "Una pequeña y rocosa cala en la costa norte, con un viejo muelle de madera podrida. Aquí las olas rompen con suavidad. Una única barca de pesca, desgastada, está amarrada a una roca.",
+    "name": "La Cabaña del Cartógrafo",
+    "kind": "casa de estudio",
+    "description": "Una cabaña atestada de mapas, planos y bocetos de las ruinas clavados en las paredes. Rolan intenta cartografiar lo perdido antes de que el olvido lo consuma todo.",
     "regulars": [
+     "Rolan el Vidente",
+     "Vera la Ilustradora"
+    ]
+   },
+   {
+    "name": "La Cueva de Ishka",
+    "kind": "refugio y consulta",
+    "description": "Una cueva cálida y seca cerca de un manantial. En su interior, hierve una olla con brebajes. Ishka atiende aquí a los heridos y enfermos de la isla.",
+    "regulars": [
+     "Ishka la Sabia",
+     "Neko el Huérfano",
      "Mira la Susurrante"
     ]
    },
    {
-    "name": "El Campamento del Saqueador",
-    "kind": "campamento base",
-    "description": "Un claro entre los árboles quemados, lleno de tiendas rotas, fogatas apagadas y cajas de herramientas para excavar. Marcas territoriales toscas y trampas simples rodean el perímetro. Es un lugar ruidoso y desordenado.",
+    "name": "El Faro Apagado",
+    "kind": "estructura costera",
+    "description": "Una torre de piedra cuyo fuego se apagó para siempre. Milo la usa como puesto de observación, mirando el horizonte con un catalejo viejo.",
     "regulars": [
-     "Craneo"
-    ]
-   },
-   {
-    "name": "Los Túneles de la Raíz",
-    "kind": "túneles subterráneos",
-    "description": "Una red de pasadizos estrechos y bajos que serpentean bajo las raíces del árbol gigante. Están húmedos y oscuros, iluminados solo por hongos bioluminiscentes o velas improvisadas. Se escucha el goteo constante de agua.",
-    "regulars": [
-     "Ember (Ascua)",
-     "Soren el Araña"
-    ]
-   },
-   {
-    "name": "El Mirador del Buster Call",
-    "kind": "acantilado/memorial informal",
-    "description": "Un alto acantilado con la mejor vista de la bahía y las ruinas. En el borde, piedras apiladas y objetos rotos (una taza, un lente de aumento) marcan un memorial no oficial. El viento silba constantemente.",
-    "regulars": [
-     "Kael el Remordido",
-     "Elias Ceniza"
+     "Milo el Faro",
+     "Karma el Veterano"
     ]
    }
   ],
   "rumors": [
-   "Se dice que una página crucial de la investigación de los arqueólogos, hecha de un material indestructible, está escondida dentro del tronco hueco del Árbol del Conocimiento.",
-   "Un agente de Cipher Pol se hace pasar por un estudioso para localizar y eliminar a cualquiera que encuentre fragmentos de los textos prohibidos.",
-   "Hay una bóveda secreta bajo la biblioteca, sellada y llena de libros que se salvaron del fuego, pero la entrada está bloqueada por escombros y trampas.",
-   "La niña que vive en los túneles, Ember, ha visto 'fantasmas de papel' que le susurran historias en las noches de luna llena.",
-   "Craneo y su banda no solo cazan reliquias; también capturan a intrusos para venderlos como esclavos a barcos piratas que pasan por la isla de noche."
+   "Dicen que bajo las raíces más profundas del árbol hay una cámara secreta que el Buster Call no alcanzó.",
+   "Se rumorea que el Agente no está solo; otros de Cipher Pol llegan en barcos fantasmas por la noche.",
+   "Una página completa de un Poneglyph, salvada por un niño, está escondida en algún túnel y todos la buscan.",
+   "Craneo encontró algo más que reliquias: un diario de un arqueólogo que nombra a un cómplice fuera de la isla.",
+   "El remordimiento de Kael lo lleva a buscar una forma de enviar un mensaje al mundo, a riesgo de ser descubierto."
   ]
  },
  {
   "island": "Orange Town",
-  "atmosphere": "Orange Town es un lugar vibrante pero cargado de tensión, donde las casas de tonos anaranjados se alinean junto a las calles polvorientas. Los colores brillantes de las fachadas contrastan con el temor palpable de los habitantes, que viven bajo la opresión de la Banda del Risa Falsa. A medida que el sol comienza a ponerse, las sonrisas se desvanecen y las puertas se cierran rápidamente, creando un ambiente de inquietud.",
-  "history": "Orange Town ha sido un pueblo próspero conocido por sus cultivos de frutas y su puerto vibrante, hasta que la Banda del Risa Falsa llegó y comenzó a imponer tributos. La llegada de estos piratas cómicos ha transformado la vida diaria de los lugareños, quienes ahora viven con miedo de sus caprichos. A pesar de la tiranía, la comunidad todavía intenta mantener la esperanza y la solidaridad entre ellos.",
+  "atmosphere": "Un pueblo de casas color naranja, donde la alegría aparente convive con el miedo. La gente sonríe en público, pero cierra puertas y ventanas al atardecer. El puerto, controlado por piratas disfrazados de artistas, es un foco de tensión que contrasta con el encanto tranquilo de las calles laterales y el muelle pesquero.",
+  "history": "Orange Town fue fundada como un asentamiento agrario y portuario próspero. Su relativa paz se rompió con la llegada de la Banda del Risa Falsa, que, bajo la fachada de un circo, se adueñó del puerto y del comercio. El antiguo sistema de gobierno local colapsó, dejando a los ciudadanos a merced de los tributos y el miedo.",
   "customs": [
-   "Cada tarde, los habitantes se reúnen para compartir historias y rumores en el mercado, a pesar del peligro que representa el caer de la noche.",
-   "Los vecinos suelen dejar fruta en sus puertas como ofrenda a la Banda del Risa Falsa, esperando así evitar problemas con ellos.",
-   "A pesar del miedo, los niños del pueblo, liderados por Pepita, juegan en las calles durante el día, creando un ambiente de alegría temporal."
+   "Poner una naranja en la ventana al atardecer como señal de que la casa está 'en orden' y no hay problemas.",
+   "Reunirse en la taberna para compartir noticias en voz baja, fingiendo celebrar.",
+   "Los pescadores ofrecen parte de su captura del día a los vecinos más necesitados, en silencio y antes del amanecer."
   ],
   "places": [
    {
     "name": "El Gajo Feliz",
     "kind": "taberna",
-    "description": "Un lugar animado durante el día, donde Tilo Azúcar sirve aperitivos y bebidas a los pocos valientes que se aventuran a entrar. Por la noche, se convierte en un refugio donde los lugareños comparten historias sobre sus encuentros con los piratas.",
+    "description": "La única taberna abierta, con olor a cítricos y comida sencilla. Es un refugio donde la gente susurra. Su barra de madera está llena de muescas de ansiedad.",
     "regulars": [
      "Tilo Azúcar",
+     "Sal",
      "Abuelo Tic-Tac"
     ]
    },
    {
-    "name": "Muelle Este",
+    "name": "Puerto de la Risa",
     "kind": "puerto",
-    "description": "Un puerto que solía ser bullicioso, ahora dominado por la presencia de la Banda del Risa Falsa. Silvano, el pescador, intenta ganarse la vida entre las tensiones, a menudo lidiando con las exigencias de los piratas.",
+    "description": "Dominado por el barco-circo de la banda. Carpas coloridas y cañones oxidados crean una vista grotesca. El ambiente es de vigilancia forzada y comercio coaccionado.",
     "regulars": [
+     "Gorgorito",
+     "Trompeta",
      "Silvano"
     ]
    },
    {
-    "name": "Mercado de Orange Town",
+    "name": "Mercado del Atardecer",
     "kind": "mercado",
-    "description": "Un espacio vibrante donde los comerciantes, como Lirio Pálido, ofrecen sus productos. Sin embargo, el miedo a los cobradores de tributos ha hecho que las transacciones sean más cautelosas.",
+    "description": "Un conjunto apresurado de puestos que solo opera unas horas antes del ocaso. Se vende fruta, pescado y telas, siempre con miradas nerviosas hacia el puerto.",
+    "regulars": [
+     "Mora",
+     "Lirio Pálido",
+     "Pepita"
+    ]
+   },
+   {
+    "name": "Casa del Reloj",
+    "kind": "casas importantes",
+    "description": "La vivienda y taller del relojero jubilado. Docenas de relojes marcan la hora en un tictac constante, un recordatorio simbólico del tiempo perdido bajo la opresión.",
+    "regulars": [
+     "Abuelo Tic-Tac",
+     "Ruedas"
+    ]
+   },
+   {
+    "name": "Muelle Este (El Tranquilo)",
+    "kind": "puerto",
+    "description": "Un pequeño muelle de madera alejado del puerto principal. Los pescadores locales lo usan para evitar a la banda. Las redes secas y los barriles viejos pintan una escena de resistencia silenciosa.",
+    "regulars": [
+     "Silvano",
+     "Sereno",
+     "Vela"
+    ]
+   },
+   {
+    "name": "Cabaña de Remiendo",
+    "kind": "casas importantes",
+    "description": "Una cabaña en las afueras, rodeada de hierbas medicinales. El interior huele a tierra y infusiones. Es un lugar de curación física y consejo reservado para los que se oponen a la banda.",
+    "regulars": [
+     "Remiendo",
+     "Ronda"
+    ]
+   },
+   {
+    "name": "Torreón del Vigía",
+    "kind": "cuartel",
+    "description": "La antigua sede de la guardia del pueblo, ahora abandonada y polvorienta. Simboliza la seguridad perdida. Ruedas a veces viene aquí a recordar.",
+    "regulars": [
+     "Ruedas",
+     "Sereno"
+    ]
+   },
+   {
+    "name": "Plaza de la Fuente Seca",
+    "kind": "plaza",
+    "description": "El corazón teórico del pueblo, con una fuente que ya no mana agua. Aquí es donde Gorgorito y Trompeta hacen sus anuncios y cobran tributos a plena luz del día.",
+    "regulars": [
+     "Gorgorito",
+     "Trompeta",
+     "Pepita",
+     "Cáliz"
+    ]
+   },
+   {
+    "name": "La Tienda de Lirio",
+    "kind": "mercado",
+    "description": "Una pequeña tienda de telas y mercería, siempre ordenada. Detrás del mostrador, Lirio Pálido guarda un registro secreto de los abusos de la banda.",
     "regulars": [
      "Lirio Pálido",
      "Mora"
     ]
    },
    {
-    "name": "Casa de Mora",
-    "kind": "casa importante",
-    "description": "La casa de Mora es un refugio para los vecinos en problemas. Como guardiana, siempre está dispuesta a ayudar a quienes lo necesitan, ofreciendo frutas y un consejo sabio.",
+    "name": "El Refugio de Vela",
+    "kind": "casas importantes",
+    "description": "La modesta casa del ex timonel, llena de cartas náuticas y recuerdos del mar. Es un punto de encuentro para quienes anhelan la libertad y planean en secreto.",
     "regulars": [
-     "Mora"
-    ]
-   },
-   {
-    "name": "Callejón de la Risa",
-    "kind": "lugar peligroso",
-    "description": "Un callejón que evitan los lugareños, lleno de graffiti y ecos de risas siniestras. Aquí es donde Trompeta y otros matones de la banda se reúnen para planear sus fechorías.",
-    "regulars": [
-     "Trompeta"
-    ]
-   },
-   {
-    "name": "Taller de Relojes",
-    "kind": "taller",
-    "description": "El hogar de Abuelo Tic-Tac, donde los relojes antiguos marcan el tiempo con tranquilidad, en contraste con el caos exterior. Muchos vienen a buscar consuelo y consejos sabios entre las manecillas de los relojes.",
-    "regulars": [
-     "Abuelo Tic-Tac"
-    ]
-   },
-   {
-    "name": "Calle del Pescador",
-    "kind": "calle",
-    "description": "Una vía que conecta el puerto con el centro del pueblo, muchas veces patrullada por los matones de la banda. Silvano a menudo se encuentra aquí, lidiando con los peligros del agua y los piratas.",
-    "regulars": [
-     "Silvano"
-    ]
-   },
-   {
-    "name": "Plaza del Pueblo",
-    "kind": "plaza",
-    "description": "El corazón de Orange Town, aunque ahora la plaza está marcada por la opresión, aún se pueden ver reuniones donde los vecinos intentan organizarse en contra de la banda. Aquí se comparten rumores y se planean estrategias.",
-    "regulars": [
-     "Ruedas",
-     "Mora"
+     "Vela",
+     "Silvano",
+     "Remiendo"
     ]
    }
   ],
   "rumors": [
-   "Se dice que la Banda del Risa Falsa oculta un botín enorme en el viejo faro del puerto.",
-   "Algunos afirman que un antiguo capitán de la marina se esconde entre los habitantes, buscando una forma de liberar la isla.",
-   "Se rumorea que hay un grupo de lugareños que planean una revuelta contra la banda durante la próxima fiesta del pueblo."
+   "Se dice que Gorgorito guarda el libro de tributos en un lugar secreto del barco-circo; quien lo destruya podría sembrar el caos en la banda.",
+   "Corre el rumor de que Ruedas esconde las armas de la antigua guardia en algún lugar del Torreón o en el bosque cercano.",
+   "Algunos hablan de que Cáliz, el cobrador independiente, está dispuesto a cambiar de bando si alguien le ofrece un trato mejor que el de la Banda del Risa Falsa.",
+   "Se rumorea que la fruta que vende Mora a veces contiene mensajes ocultos o pequeños mapas para coordinar la resistencia.",
+   "Dicen que el Abuelo Tic-Tac, con sus relojes, puede predecir los horarios de las rondas de los matones, información valiosa para moverse de noche."
   ]
  },
  {
   "island": "País de Wano",
-  "atmosphere": "Un país cerrado por montañas y cascadas, donde el aire huele a sakura, hierro forjado y la ceniza de un pasado reciente. El honor y la tradición gobiernan cada gesto, y la sombra de la guerra reciente se disipa lentamente entre los andamios de la reconstrucción. La tensión entre el aislamiento milenario y el nuevo mundo exterior es palpable en cada mirada.",
-  "history": "Wano, la legendaria tierra de los samuráis y las mejores espadas, se mantuvo aislada del mundo durante siglos tras sus murallas naturales. Cayó bajo el yugo del tirano Kaido y su aliado, el shogun Kurozumi Orochi, que la sumieron en la decadencia y la opresión. Tras una gran guerra que liberó el país, los samuráis y ninjas luchan ahora por reconstruir su hogar, sabiendo que su frágil paz es vigilada por antiguos y nuevos enemigos.",
+  "atmosphere": "Un país cerrado por montañas y cascadas eternas, donde el honor samurái y las sombras ninja dan forma a una paz tensa y reconstruida. El aire huele a forja, té amargo y sakura. El peso de la historia reciente se siente en cada mirada y en cada espada bien guardada.",
+  "history": "Wano fue un reino aislado y próspero durante siglos, famoso por sus legendarias espadas. Cayó bajo la tiranía de Kaido y Orochi, sumiéndose en la opresión y la contaminación. Tras una gran guerra liderada por los Minks, los samuráis y los Piratas de Sombrero de Paja, el tirano fue derrocado. Ahora, el país se esfuerza por reconstruirse, guiado por el shogun Kozuki Momonosuke, mientras los samuráis y ninjas vigilan, sabiendo que su paz es frágil y que enemigos internos y externos acechan.",
   "customs": [
-   "El intercambio de sake marca el inicio de una alianza solemne o una amistad inquebrantable.",
-   "La fabricación y el cuidado de una espada es un ritual sagrado que refleja el alma de su portador.",
-   "Los festivales con máscaras elaboradas conmemoran a los ancestros y celebran la liberación del país.",
-   "Hablar con franqueza y respetar el honor propio y ajeno es la base de toda interacción social.",
-   "Cualquier promesa o juramento, una vez hecho, se cumple a cualquier costo, incluso a costa de la vida."
+   "Ofrecer una copa de sake al enemigo antes de un duelo a muerte es un signo de respeto supremo.",
+   "Los festivales con máscaras elaboradas celebran cada victoria o cambio de estación, honrando a los ancestros.",
+   "Nunca se da la espalda a la cascada principal (la que aísla el país), se considera un insulto a la protección de Wano."
   ],
   "places": [
    {
-    "name": "El Aguardiente de la Cascada",
+    "name": "Aguardiente de la Cascada",
     "kind": "taberna",
-    "description": "Una taberna bulliciosa junto a una cascada menor, donde el sonido del agua ahoga los secretos. El aire está cargado con el olor del sake caliente y la parrilla. Es el lugar donde los samuráis descansan y los forasteros son puestos a prueba.",
+    "description": "Una taberna ruidosa junto a una cascada menor, donde el sonido del agua ahoga los secretos. Las paredes están decoradas con viejas armaduras samuráis y mapas desgastados.",
     "regulars": [
      "Miyu Shochu",
-     "Kenji Kizuato"
+     "Renji Kurogawa",
+     "Genji Atsuhiro"
     ]
    },
    {
-    "name": "La Aldea del Valle",
-    "kind": "forja",
-    "description": "Un conjunto de talleres enclavado en un valle humeante, donde el sonido constante de los martillos sobre el acero es la banda sonora del lugar. Las forjas arden día y noche, produciendo las famosas espadas de Wano.",
+    "name": "Aldea del Valle",
+    "kind": "aldea de herreros",
+    "description": "Un conjunto de fraguas humeantes enclavado en un valle profundo. El sonido constante del martillo sobre el acero resuena contra las paredes de roca. El aire está cargado de calor y ceniza.",
     "regulars": [
-     "Takeo Kotobuki"
+     "Takeo Kotobuki",
+     "Kairo Yamato"
     ]
    },
    {
     "name": "Puente Roto",
-    "kind": "puesto de guardia",
-    "description": "Un antiguo puente de piedra parcialmente derrumbado que cruza un barranco profundo. Sirve como punto de control solitario y frontera no oficial. Su guardián vigila el paso con mirada desafiante.",
+    "kind": "lugar estratégico/ruina",
+    "description": "Un antiguo puente de piedra destruido durante la guerra, ahora solo un tramo colgante sobre un abismo. Simboliza la fractura pasada del país y un punto de vigilancia crucial.",
     "regulars": [
      "Kenji Kizuato"
     ]
    },
    {
-    "name": "La Ciudad de las Luces",
-    "kind": "barrio comercial",
-    "description": "El distrito más animado de la capital en reconstrucción, lleno de puestos callejeros, teatros y talleres de artesanos. Por la noche, se ilumina con farolillos de colores, recordando la antigua gloria del país.",
+    "name": "Mercado del Té Extranjero",
+    "kind": "mercado",
+    "description": "Un bullicioso mercado en la Ciudad de las Luces donde, por primera vez en siglos, se ven productos del mundo exterior. Aromas a especias extrañas y té exótico llenan los callejones.",
     "regulars": [
-     "Sakiko Kamen",
-     "Ren Hachiman"
+     "Ren Hachiman",
+     "Sakiko Kamen"
     ]
    },
    {
-    "name": "El Monte de la Flor de Cerezo",
-    "kind": "puesto de patrulla",
-    "description": "Una colina cubierta de cerezos, ahora base de operaciones de la patrulla que vigila los accesos a las zonas residenciales. Desde aquí la vista de los valles y las cascadas es imponente.",
+    "name": "Santuario del Amanecer",
+    "kind": "templo",
+    "description": "Un santuario silencioso en lo alto de un acantilado, orientado al este. Es el primer lugar en recibir el sol de Wano. Un lugar de meditación y juramentos solemnes.",
     "regulars": [
+     "Hikari Ishi",
      "Sora Hanakaze"
     ]
    },
    {
-    "name": "Aldería de la Caída",
-    "kind": "aldea",
-    "description": "Una aldea tranquila y algo remota, construida cerca de una gran cascada. Es un lugar de retiro y memoria, donde los ancianos preservan la historia oral del país.",
+    "name": "Barrio Bajo de la Ciudad de la Noche",
+    "kind": "barrio urbano",
+    "description": "Un laberinto de callejones sucios y edificios apiñados, donde la reconstrucción aún no ha llegado. Las sombras son profundas y el orden lo imponen hombres como Renji.",
     "regulars": [
+     "Renji Kurogawa",
+     "Kaito Karappo",
+     "Kazuhiro Hizashi"
+    ]
+   },
+   {
+    "name": "Aldea del Susurro",
+    "kind": "aldea remota",
+    "description": "Una aldea escondida en un bosque de bambú, conocida por sus curanderos y remedios tradicionales. Un lugar de paz y recuperación, alejado del bullicio.",
+    "regulars": [
+     "Sakura Tanaka",
      "Haruto Ochi"
     ]
    },
    {
-    "name": "El Muro en Reconstrucción",
-    "kind": "obra",
-    "description": "Una extensa obra de ingeniería para reparar y fortalecer las defensas naturales de Wano. Andamios de bambú y plataformas de madera se extienden a lo largo de la roca. Aquí trabajan tanto ninjas como obreros.",
+    "name": "Puesto de Reclutamiento del Muro",
+    "kind": "cuartel/campamento",
+    "description": "Un campamento militar activo al pie de las enormes murallas de Wano. Samuráis y ninjas se entrenan y organizan para reparar las defensas del país.",
     "regulars": [
-     "Tsubaki Kabe"
+     "Tsubaki Kabe",
+     "Rin Uchiwa"
     ]
    },
    {
-    "name": "El Mercado del Té Extranjero",
-    "kind": "mercado",
-    "description": "Un rincón exótico en un callejón de la Ciudad de las Luces, donde los aromas de especias y tés raros se mezclan. Es uno de los pocos lugares donde se puede encontrar, con discreción, mercancía del mundo exterior.",
+    "name": "Playa de las Mareas",
+    "kind": "puerto/playa",
+    "description": "Una playa rocosa y aislada, donde las mareas altas y bajas revelan y ocultan peligrosos arrecifes. Es un punto de acceso difícil pero posible para barcos pequeños.",
     "regulars": [
-     "Ren Hachiman"
+     "Yumi Hoshino",
+     "Toru Nakamura"
     ]
    },
    {
-    "name": "Territorio del Clan del Vacío",
-    "kind": "guarida",
-    "description": "Un distrito abandonado y decadente en las afueras, lleno de casas vacías y callejones sombríos. Aquí anidan los elementos más desesperados y violentos que surgieron tras el vacío de poder.",
+    "name": "Aldea del Eco",
+    "kind": "aldea de artistas",
+    "description": "Una aldea en un cañón donde los sonidos resuenan de forma mágica. Es el hogar de trovadores, poetas y músicos que preservan la historia oral de Wano.",
     "regulars": [
-     "Kaito Karappo"
+     "Genji Atsuhiro",
+     "Haruto Ochi"
     ]
    }
   ],
   "rumors": [
-   "Una nueva y poderosa espada maldita, forjada con la ira del antiguo régimen, ha aparecido y varios clanes menores compiten por ella.",
-   "Un ninja desertor, experto en explosivos, está vendiendo sus servicios y secretos de las defensas de Wano al mejor postor.",
-   "Se dice que en los túneles secretos bajo el Muro en Reconstrucción se esconde un tesoro del shogun depuesto, pero están plagados de trampas y guardianes olvidados.",
-   "Un misterioso brote de enfermedad está afectando a los artesanos de la Aldea del Valle, haciendo que el metal se vuelva quebradizo. Algunos susurran que es un sabotaje.",
-   "Un barco extranjero, con bandera desconocida, fue avistado intentando remontar las cascadas. No se supo más de él, pero cerca de la costa aparecieron restos de un naufragio con símbolos extraños."
+   "Se dice que en las profundidades del Valle de la Tempestad, el hierro para forjar una espada capaz de cortar la misma justicia ha empezado a sangrar.",
+   "Alguien está profanando los santuarios del amanecer, dejando máscaras rotas como marca, y los guardianes no hablan por miedo o por lealtad.",
+   "Un mapa que muestra un pasaje secreto a través de las cascadas protectoras de Wano ha aparecido en el mercado negro, y varios bandos lo buscan.",
+   "El Clan del Vacío, creyendo que la reconstrucción debilita el honor samurái, planea un golpe durante el próximo festival de máscaras.",
+   "Los peces cerca de la Playa de las Mareas nacen con escamas de oro, pero tocarlos trae una maldición de silencio eterno, según las pescadoras más viejas."
   ]
  },
  {
   "island": "Pueblo Foosha",
-  "atmosphere": "Un pueblo costero tranquilo de tejados rojos, donde el aire huele a sal y pescado fresco. Los barcos pesqueros zarpan con el amanecer y el ritmo de vida es pausado, solo interrumpido por el bullicio del muelle y las risas de los niños que juegan soñando con el mar. Un lugar idílico que oculta bajo su calma la inquietud sembrada por la reciente visita.",
-  "history": "Pueblo Foosha ha sido durante generaciones un asentamiento de pescadores y carpinteros de ribera, viviendo del mar y para el mar. Su fama, sin embargo, trascendió sus costas cuando, hace unos años, un joven llamado Monkey D. Luffy partió desde aquí para convertirse en pirata. Hoy, aunque su nombre se susurra con cariño y orgullo, también atrae miradas curiosas y a veces incómodas.",
+  "atmosphere": "Un pueblo costero tranquilo, de tejados rojos y calles sinuosas, donde el olor a sal y pescado fresco se mezcla con el sonido de las gaviotas y las risas de los niños que juegan junto al muelle. El ritmo de vida está marcado por las mareas y las redes de los pescadores, pero hay una tensión soterrada tras la visita del mensajero de la Marina.",
+  "history": "Pueblo Foosha ha sido durante generaciones un refugio de pescadores y marineros honestos. Hace más de una década, el pueblo ganó fama no deseada cuando uno de sus jóvenes se convirtió en el famoso pirata 'Sombrero de Paja', aunque pocos hablan abiertamente de ello. Su economía se ha basado siempre en la pesca y la construcción de barcos pequeños.",
   "customs": [
-   "La 'Primera Redada': Cada amanecer, todos los pescadores se reúnen en el muelle para zarpar juntos en un gesto simbólico de comunidad y buen augurio.",
-   "La 'Fiesta de la Lancha Vieja': Una vez al año, se repara y decora colectivamente la barca más antigua del pueblo para honrar a los ancestros que poblaron la isla.",
-   "Se considera de muy mala educación hablar en voz alta de los 'asuntos del mar abierto' en la plaza principal, reservando esas conversaciones para el puerto o la taberna."
+   "Las 'Redes del Alba': Cada mañana, las familias de pescadores salen juntas a lanzar sus redes, considerando que trae buena suerte para el día.",
+   "El 'Faro de los Recuerdos': En la colina, al atardecer, es común que los ancianos cuenten historias del mar a los niños, instándolos a seguir sus sueños.",
+   "El 'Pacto del Silencio': Muchos habitantes evitan hablar de piratería o de ciertos vecinos con el forastero, protegiendo la tranquilidad del pueblo."
   ],
   "places": [
    {
     "name": "El Ancla Oxidada",
     "kind": "taberna",
-    "description": "Un local acogedor de madera oscura, con olor a cerveza de malta y a estofado de pescado. Las paredes están decoradas con aparejos de pesca antiguos y mapas marinos desgastados. Es el corazón social del pueblo, donde se comparten noticias y se calientan los ánimos con ron barato.",
+    "description": "La taberna del pueblo, con mesas de madera gastada y un olor a cerveza y humo de pipa. Los mapas náuticos y recuerdos de marineros decoran las paredes.",
     "regulars": [
      "Maya",
-     "Viejo Gorbo",
-     "Boris"
+     "Ulmo",
+     "Kelp"
     ]
    },
    {
     "name": "Muelle de los Suspiros",
     "kind": "puerto",
-    "description": "Un muelle de madera que cruje bajo los pasos, atestado de botes pesqueros y redes extendidas para secar. Es el lugar de trabajo y de partida, donde el horizonte parece estar al alcance de la mano. Por las tardes, los pescadores remiendan sus redes y charlan.",
+    "description": "Un muelle de madera chirriante, lleno de barcas de pesca, redes extendidas para secar y cajas de pescado. Es el corazón del trabajo del pueblo.",
     "regulars": [
      "Viejo Gorbo",
-     "Dirk"
+     "Reta",
+     "Dirk",
+     "Finn"
     ]
    },
    {
-    "name": "Mercado del Puerto",
+    "name": "Mercado de la Plaza del Pueblo",
     "kind": "mercado",
-    "description": "Una hilera de puestos de madera junto al muelle, donde el día comienza con el grito de los pregoneros y el ajetreo de las primeras ventas. El olor a pescado recién capturado y algas es intenso. El suelo está siempre ligeramente húmedo.",
+    "description": "Una plaza empedrada donde cada mañana se montan puestos de pescado fresco, verduras y algunos productos básicos. El centro social del día a día.",
     "regulars": [
      "Salma",
+     "Boris",
      "Lina"
     ]
    },
    {
-    "name": "Plaza del Sauce Llorón",
-    "kind": "plaza del pueblo",
-    "description": "La plaza central, empedrada y sombreada por un gran sauce centenario. Hay un pozo y algunos bancos de madera. Es el lugar de los encuentros casuales, donde los niños juegan y los mayores se sientan a observar la vida pasar. Aquí la conversación es más discreta.",
+    "name": "Astillero de Kenta",
+    "kind": "casas importantes",
+    "description": "Un cobertizo junto al agua, lleno de virutas de madera, herramientas y el casco de un pequeño barco en construcción. Huele a resina y madera nueva.",
     "regulars": [
-     "Boris",
-     "Lina",
-     "Anciano Kenta"
+     "Anciano Kenta",
+     "Cala"
+    ]
+   },
+   {
+    "name": "Cabaña de Yaro",
+    "kind": "templo",
+    "description": "Una pequeña cabaña en la ladera de la colina, rodeada de un jardín de hierbas medicinales. El interior es acogedor y huele a plantas secas y ungüentos.",
+    "regulars": [
+     "Yaro"
     ]
    },
    {
     "name": "Monte Corvo",
-    "kind": "colina/bosque",
-    "description": "La colina boscosa que domina el pueblo, con senderos empinados que conducen a un claro en la cima. Desde allí se tiene una vista panorámica del mar infinito. Es un lugar de reflexión, de juegos infantiles y, según se dice, donde algunos jóvenes juran hacerse piratas.",
+    "kind": "bosque",
+    "description": "La empinada colina boscosa que domina el pueblo. Un sendero serpentea entre árboles hasta un claro con vistas al mar, donde a menudo se hacen pícnic.",
     "regulars": [
-     "Lina"
+     "Lina",
+     "Finn"
     ]
    },
    {
-    "name": "Taller del Carpintero Olvidado",
-    "kind": "taller/casa importante",
-    "description": "Un cobertizo junto al agua, lleno de virutas de madera, herramientas oxidadas y el olor a brea y madera vieja. Fue el astillero del pueblo y ahora es más un refugio lleno de recuerdos y proyectos abandonados.",
+    "name": "Puerta Este",
+    "kind": "cuartel",
+    "description": "Una simple estructura de vigilancia de madera junto al camino de entrada al pueblo. Es más un punto de control simbólico que una fortificación.",
     "regulars": [
-     "Anciano Kenta"
-    ]
-   },
-   {
-    "name": "Casa de la Alcaldía",
-    "kind": "casas importantes",
-    "description": "Un edificio de dos plantas, el más grande del pueblo, con la bandera del Gobierno Mundial descolorida colgando de su balcón. Normalmente está cerrado y en silencio, pero últimamente su puerta se ha abierto para recibir visitas oficiales.",
-    "regulars": [
+     "Nova",
      "Boris"
     ]
    },
    {
-    "name": "Cabaña de Gorbo",
+    "name": "La Guarida de Kelp",
     "kind": "casas importantes",
-    "description": "Una pequeña cabaña de pescador al final del muelle, con redes apiladas en la puerta y un farol que siempre está encendido por la noche. Es un lugar de historias, donde el veterano comparte sus relatos del mar con quien quiera escuchar.",
+    "description": "Un almacén semiabandonado cerca del muelle trasero, con olor a humedad y especias. Se usa para 'transacciones discretas' después del anochecer.",
     "regulars": [
-     "Viejo Gorbo"
+     "Kelp",
+     "Grom"
     ]
    }
   ],
   "rumors": [
-   "El mensajero de la Marina no solo preguntaba, también inspeccionó discretamente el muelle y el Monte Corvo, como si buscara algo o alguien específico que no es un simple 'joven ambicioso'.",
-   "Se dice que entre los aparejos viejos de 'El Ancla Oxidada' hay un mapa o una nota escondida por un pirata que pasó por aquí hace tiempo, algo que la Marina ahora podría estar buscando.",
-   "Algunos pescadores juran haber visto una silueta observando el pueblo desde el Monte Corvo al atardecer, justo después de la partida del mensajero. No era ningún vecino.",
-   "El Anciano Kenta, en sus momentos de lucidez, murmura sobre un 'viejo pacto' que el pueblo hizo para mantenerse a salvo, y que las preguntas de la Marina podrían romperlo.",
-   "Dirk, el matón, parece más nervioso de lo habitual y ha estado haciendo preguntas extrañas sobre si alguien 'sin papeles' ha intentado comprar pasaje en algún barco mercante."
+   "El mensajero de la Marina no solo preguntaba por jóvenes; también revisó discretamente los registros del astillero de Kenta sobre barcos construidos hace años.",
+   "Algunos dicen que Grom, el cobrador, está trabajando para alguien fuera de la isla que quiere comprar propiedades cerca del muelle a bajo precio.",
+   "Finn, el niño huérfano, jura haber visto una luz parpadeante en una cueva oculta en el acantilado del Monte Corvo durante las noches de luna llena."
   ]
  },
  {
   "island": "Punk Hazard",
-  "atmosphere": "Una pesadilla medioambiental donde el aire siempre está impregnado por el olor a azufre ardiente o el frío cortante del hielo puro. Silbidos extraños de las llamas y crujidos del glaciar se mezclan con los gritos distantes, reales o imaginarios, que resuenan desde el laboratorio central. La nieve negra y los remolinos de ceniza caliente crean una perpetua penumbra asfixiante y letal.",
-  "history": "Antiguamente una isla próspera, fue convertida en un campo de batalla de Almirantes, quedando partida en dos y envenenada para siempre. Tras el desastre, Caesar Clown reclamó el lugar como su laboratorio privado, sellando la zona central para sus experimentos. La isla es ahora un páramo desolado que oculta un centro de fabricación de armas prohibidas.",
+  "atmosphere": "Punk Hazard es un lugar de extremos, donde el calor abrasador y el frío gélido conviven en un conflicto perpetuo. El aire está impregnado de un extraño aroma químico, resultado de las experimentaciones del laboratorio en el centro de la isla. Las frecuentes explosiones y gritos de los niños que lloran de noche añaden un aura de desasosiego y peligro constante.",
+  "history": "Antiguamente, Punk Hazard era un paraíso natural, pero la batalla entre dos poderosos Almirantes transformó la isla en un escenario cataclísmico. Como resultado, la isla se dividió en dos mitades: una cubierta de llamas eternas y otra de hielo perpetuo. En su centro, un laboratorio oscuro y sellado está dedicado a crear armas y venenos, controlado por el infame Caesar Clown.",
   "customs": [
-   "Nadie se aventura a cruzar la línea central donde el fuego y el hielo se encuentran; es territorio de monstruos y fenómenos mortales.",
-   "Los pocos que viven aquí evitan hablar de los 'niños que lloran', considerándolo una maldición o un presagio de locura.",
-   "Todo intercambio de bienes o información se realiza en silencio o con gestos; la desconfianza hacia los extraños es absoluta."
+   "Los habitantes suelen intercambiar entre las dos mitades de la isla, usando trajes especiales para no verse afectados por los extremos climáticos.",
+   "Las reuniones nocturnas en la taberna del Tío del Fuego son momentos de camaradería, donde las historias de las batallas y experimentos se comparten entre tragos.",
+   "Los cazadores de esclavos hacen un ritual de ofrenda a los espíritus de los niños perdidos en el páramo, buscando alguna señal de paz.",
+   "Los comerciantes de armas y venenos suelen seguir un código de conducta estricto, donde la lealtad es primordial para mantener el flujo de negocios.",
+   "Las expediciones al laboratorio sellado son vistas como un rito de paso para los jóvenes de la isla, a pesar de los riesgos de locura."
   ],
   "places": [
    {
-    "name": "El Refugio Ardiente",
+    "name": "Laboratorio Sellado",
+    "kind": "laboratorio",
+    "description": "Un ominoso edificio en el centro de Punk Hazard, lleno de experimentos peligrosos y oscuros secretos. Las puertas están selladas, y solo aquellos con el permiso de Caesar Clown pueden entrar.",
+    "regulars": []
+   },
+   {
+    "name": "Taberna del Tío del Fuego",
     "kind": "taberna",
-    "description": "Una estructura hecha de metal retorcido y piedra volcánica, siempre cálida por el calor del subsuelo. En su interior, el humo es denso y el olor a alcohol rancio y carne chamuscada llena el aire. Los clientes se agrupan lejos de las ventanas, como si temieran ser observados desde el hielo.",
+    "description": "Un lugar caliente y acogedor donde se reúnen los habitantes de la mitad ardiente. Las llamas iluminan el ambiente mientras se cuentan historias de aventuras y peligros.",
     "regulars": [
      "Tío del Fuego",
-     "Dama Llama"
+     "Dama Llama",
+     "Fuego Helado"
     ]
    },
    {
-    "name": "El Muelle de la Escarcha",
-    "kind": "puerto",
-    "description": "Un embarcadero de madera ennegrecida y metal, perpetuamente cubierto por una capa de hielo resbaladizo. Algunos barcos medio hundidos yace atrapados en el glaciar como advertencia. Es el punto de entrada para los valientes o desesperados, y el lugar donde se vigila a los recién llegados.",
+    "name": "La Fría",
+    "kind": "taberna",
+    "description": "Un bar helado donde los habitantes de la mitad de hielo se reúnen para intercambiar historias y mercancías. Las bebidas son frías como el hielo, y las conversaciones a menudo son sombrías.",
     "regulars": [
-     "Cabo Chispas",
-     "Mascarita Fría"
+     "Bruma Vaivén",
+     "Luz Cristalina",
+     "Salvador Chispas"
     ]
    },
    {
-    "name": "El Mercado del Veneno",
+    "name": "Páramo de los Lamentos",
+    "kind": "páramo",
+    "description": "Un vasto y desolado terreno entre las dos mitades de la isla, donde se pueden escuchar los llantos de los niños perdidos. Nadie se atreve a cruzar este lugar a solas.",
+    "regulars": []
+   },
+   {
+    "name": "Cueva de los Cazadores",
+    "kind": "cueva",
+    "description": "Un refugio para los cazadores de esclavos, lleno de trampas y secretos. Aquí se planean emboscadas y se almacenan las mercancías capturadas.",
+    "regulars": [
+     "Mascarita Fría",
+     "Alba Nieve"
+    ]
+   },
+   {
+    "name": "Mercado del Caos",
     "kind": "mercado",
-    "description": "No es más que una plaza abierta en la zona neutral de roca fundida, donde los toldos rasgados protegen de la nieve tóxica. Se intercambian armas, antídotos dudosos y fragmentos de tecnología del laboratorio. El regateo es tenso y rápido, todos quieren desaparecer lo antes posible.",
+    "description": "Un bullicioso mercado donde se comercian armas, venenos y tecnología avanzada. Los gritos de los vendedores resuenan en el aire, ofreciendo productos extraordinarios.",
     "regulars": [
-     "Abi del Laberinto"
+     "Abi del Laberinto",
+     "Don Nieve"
     ]
    },
    {
-    "name": "El Puesto de la Guardia de Caos",
+    "name": "Ruinas de la Batalla",
+    "kind": "ruinas",
+    "description": "Restos de la batalla que dividió la isla, cubiertos de ceniza y hielo. Son un recordatorio del cataclismo que transformó el lugar y atraen a exploradores y curiosos.",
+    "regulars": []
+   },
+   {
+    "name": "Base de la Guardia de Caos",
     "kind": "cuartel",
-    "description": "Una fortificación improvisada con contenedores y chatarra, situada en una colina que domina el acceso al laboratorio. Banderas desgarradas de Joker ondean. Desde aquí se patrulla la periferia y se intercepta a los intrusos con una violencia despiadada.",
+    "description": "El cuartel general de Cabo Chispas, donde se organizan las patrullas y estrategias para controlar la isla. Un lugar tenso, lleno de incertidumbre.",
     "regulars": [
      "Cabo Chispas"
     ]
    },
    {
-    "name": "El Templo del Hielo Eterno",
-    "kind": "templo",
-    "description": "Una formación natural de hielo azul puro que se asemeja a una catedral gélida. Extraños símbolos, tal vez hechos por la erosión o por manos humanas, cubren las paredes. Es un lugar de silencio absoluto y frío penetrante, donde algunos vienen a rezar por cordura o a esconderse.",
+    "name": "Antro del Hielo",
+    "kind": "antro",
+    "description": "Un lugar clandestino donde se comercializan datos sobre el laboratorio y se planean las intrigas locales. Solo los más audaces se atreven a entrar.",
     "regulars": [
-     "Señor Hielo",
-     "Luz Cristalina"
-    ]
-   },
-   {
-    "name": "El Bosque de Cristal Ardiente",
-    "kind": "bosque",
-    "description": "Un horror de árboles petrificados y columnas de hielo que atrapan llamas perpetuas en su interior, creando un brillo fantasmagórico. El suelo cruje con cristales rotos y ceniza. Los ecos aquí se distorsionan, y muchas personas desaparecen al adentrarse.",
-    "regulars": [
-     "Luz Cristalina",
-     "Don Nieve"
-    ]
-   },
-   {
-    "name": "Las Ruinas del Asentamiento Norte",
-    "kind": "ruinas",
-    "description": "Los restos carbonizados y congelados de lo que fue un pueblo. Casas derrumbadas muestran signos de vida interrumpida brutalmente. Es un recordatorio mudo del poder de los Almirantes y un lugar donde los cazadores de esclavos suelen tender emboscadas.",
-    "regulars": [
-     "Mascarita Fría"
-    ]
-   },
-   {
-    "name": "La Guarida del Exiliado",
-    "kind": "casas importantes",
-    "description": "Una cueva excavada en la pared de hielo, calentada por un generador parpadeante. Está llena de mapas, instrumentos de medición dañados y anotaciones frenéticas en las paredes. Es el refugio de un científico que huyó del laboratorio principal.",
-    "regulars": [
-     "Don Nieve"
-    ]
-   },
-   {
-    "name": "La Grieta del Centinela",
-    "kind": "bosque",
-    "description": "Una profunda fisura en la tierra que marca la frontera más evidente entre el fuego y el hielo. Vapores tóxicos y chorros de llama emergen de un lado, mientras del otro cuelgan estalactitas de hielo mortal. Se dice que aquí se apostaba un guardián para evitar que algo escapara.",
-    "regulars": [
-     "Señor Hielo"
-    ]
-   },
-   {
-    "name": "La Antigua Torre de Observación",
-    "kind": "ruinas",
-    "description": "Una estructura metálica retorcida y medio fundida que se eleva como un diente roto en el paisaje. Ofrece una vista panorámica aterradora de toda la isla partida y, con suerte, del laboratorio sellado. Es un punto de observación estratégico y peligroso.",
-    "regulars": [
-     "Dama Llama",
-     "Abi del Laberinto"
+     "Mapache Glacial",
+     "Tiro Certero"
     ]
    }
   ],
   "rumors": [
-   "Se oyen llantos de niños provenientes de los conductos de ventilación del laboratorio durante la 'hora silenciosa' de Caesar.",
-   "Un cargamento de un nuevo gas venenoso, más letal que el Shinokuni, será enviado desde el laboratorio en la próxima luna llena.",
-   "Existe un túnel secreto, no vigilado, que lleva desde las ruinas del asentamiento hasta los niveles inferiores del laboratorio.",
-   "Algunas de las bestias modificadas de Caesar han escapado y ahora acechan en el Bosque de Cristal Ardiente, mutando aún más.",
-   "El 'Señor Hielo' no es un simple guardián; antes del desastre, era el jefe de seguridad de la isla y sabe dónde está la sala de control principal."
+   "Se dice que en lo profundo del laboratorio de Caesar Clown, hay un experimento que puede cambiar el destino de la isla y de sus moradores.",
+   "Algunos murmuran que la mitad ardiente oculta un tesoro que solo puede ser descubierto por aquellos que desafían la locura.",
+   "Se habla de un antiguo espíritu que protege el Páramo de los Lamentos, y que puede ofrecer sabiduría a quienes se atrevan a escuchar.",
+   "Cuentan que hay un pasadizo secreto entre el hielo y el fuego, que puede ser la clave para desentrañar los secretos del laboratorio.",
+   "Rumores de una posible alianza entre los cazadores de esclavos y los piratas han comenzado a surgir, lo que podría desestabilizar el frágil equilibrio de la isla."
   ]
  },
  {
   "island": "Reino Kamabakka",
-  "atmosphere": "Un paraíso rosa vibrante y excéntrico, donde la libertad de expresión es la norma. El aire huele a dulce maquillaje, tierra húmeda de los huertos y el tufo ocasional de pólvora extravagante. Un lugar de entrenamiento intenso y camaradería estridente, donde todo exagera y el peligro se esconde bajo capas de brillantina y volantes.",
-  "history": "Antiguamente un reino humano más, fue transformado radicalmente por Emporio Ivankov en un santuario y base de operaciones para los okama y el Ejército Revolucionario. Bajo su liderazgo, se convirtió en un centro de entrenamiento único en las artes de combate okama y en un escondite crucial para fugitivos. Su arquitectura y cultura fueron remodeladas por completo para reflejar la filosofía de la 'Nueva Vida Okama', fusionándose con las necesidades logísticas de la revolución.",
+  "atmosphere": "El Reino Kamabakka es un torbellino de color rosa y festividad desbordante, donde la extravagancia se mezcla con un entrenamiento militar riguroso. El aire vibra con risas estruendosas, música alegre y el sonido de combates practicados con un estilo único. Bajo su apariencia de carnaval perpetuo, late la seriedad de una base secreta del Ejército Revolucionario, creando una tensión entre la celebración y la preparación para una misión inminente.",
+  "history": "El reino, otrora una isla común, fue transformado en un bastión okama y una base secreta por Emporio Ivankov. Se convirtió en un refugio para los rechazados por el mundo y un centro de entrenamiento para los revolucionarios. Su ubicación es un secreto celosamente guardado, y su historia se escribe a través de las transformaciones físicas y espirituales de quienes lo habitan.",
   "customs": [
-   "El 'Saludo del Corazón': un gesto exagerado y afectuoso al conocerse, que puede variar desde un abrazo apretado hasta un elaborado juego de manos.",
-   "La 'Transformación Diaria': se espera que cada uno exprese su personalidad a través de su atuendo y maquillaje, cambiándolo a menudo. Lo repetitivo está mal visto.",
-   "El 'Festín Extravagante': las comidas son eventos ruidosos donde se prueban los cultivos más extraños de los huertos, acompañados de cócteles del 'Coctelero Revolucionario'."
+   "Todo nuevo visitante es recibido con una 'Fiesta de Bienvenida Extravagante' que puede incluir baile, maquillaje y un cóctel sorpresa.",
+   "Los duelos de 'Artes Okama' son comunes y sirven tanto como espectáculo como método de resolución de disputas, premiando la creatividad y el estilo.",
+   "Se considera de pésimo gusto vestir con colores apagados; la expresión personal a través de la ropa y el maquillaje es una forma de respeto.",
+   "Las conversaciones serias sobre los planes del Ejército Revolucionario solo tienen lugar en espacios designados y con las contraseñas adecuadas."
   ],
   "places": [
    {
+    "name": "Cuartel Rosa",
+    "kind": "cuartel y academia",
+    "description": "El corazón palpitante del reino, un edificio rosa brillante con torretas. En su interior, los reclutas practican las extravagantes y letales artes okama bajo la atenta mirada de los instructores. El olor a sudor y polvos de talco llena los salones de entrenamiento.",
+    "regulars": [
+     "Camellia",
+     "Carmesí",
+     "Limoncillo"
+    ]
+   },
+   {
     "name": "El Coctelero Revolucionario",
     "kind": "taberna",
-    "description": "Un bar de colores neón y luces parpadeantes, donde los cócteles tienen nombres subversivos y efectos sorprendentes. El centro de la vida social después del entrenamiento.",
+    "description": "La taberna principal, donde los cócteles son tan coloridos y explosivos como sus clientes. Es el centro de la vida social, donde se intercambian rumores entre risas y donde Bombón siempre tiene un oído atento y un trago reconfortante.",
     "regulars": [
      "Bombón",
-     "Carmesí",
+     "Cortante Viento",
+     "Rabia"
+    ]
+   },
+   {
+    "name": "Almacén de Disfraces y Disimulos",
+    "kind": "almacén",
+    "description": "Un laberinto de telas, pelucas, accesorios y disfraces de todo tipo. Satín y sus ayudantes trabajan sin descanso creando identidades falsas y uniformes para las misiones secretas del Ejército.",
+    "regulars": [
+     "Satín",
+     "Arco Iris"
+    ]
+   },
+   {
+    "name": "La Puerta de la Transformación",
+    "kind": "entrada fortificada",
+    "description": "La única entrada oficial al complejo del Cuartel Rosa, vigilada las 24 horas. Más que un puesto de guardia, es un punto de control donde Dahlia evalúa a todo aquel que quiere pasar, con una sonrisa amable pero una mirada de acero.",
+    "regulars": [
+     "Dahlia"
+    ]
+   },
+   {
+    "name": "Huertos de la Extravagancia",
+    "kind": "granja",
+    "description": "Un campo de cultivo donde crecen frutas y verduras de formas y colores imposibles, perfectas para los banquetes del cuartel. Rábano supervisa cada planta con un cariño maternal, asegurando que la comida sea tan espectacular como el resto del reino.",
+    "regulars": [
+     "Rábano"
+    ]
+   },
+   {
+    "name": "Taller de Inventos Extravagantes",
+    "kind": "taller",
+    "description": "Un lugar lleno de chispas, humo de colores y sonidos metálicos. Aquí, Chispa y sus aprendices crean y modifican armamento y gadgets que son tan funcionales como teatrales, siempre buscando el 'factor sorpresa'.",
+    "regulars": [
      "Chispa"
     ]
    },
    {
-    "name": "Cuartel Rosa",
-    "kind": "cuartel",
-    "description": "El edificio principal de entrenamiento, una estructura rosada fortificada con formas curvas. En su interior resuenan los gritos de esfuerzo y los golpes de los ejercicios okama.",
-    "regulars": [
-     "Camellia",
-     "Dahlia",
-     "Voluta"
-    ]
-   },
-   {
-    "name": "Almacén de Disfraces 'Satín y Seda'",
-    "kind": "almacén de disfraces",
-    "description": "Un caos organizado de telas, pelucas, accesorios y armaduras disfrazadas de moda. El lugar donde todo revolucionario okama obtiene su 'uniforme' personalizado.",
-    "regulars": [
-     "Satín",
-     "Carrillo"
-    ]
-   },
-   {
-    "name": "Huertos de Alimentos Extravagantes",
-    "kind": "granja/huerto",
-    "description": "Campos donde crecen frutas y verduras de colores imposibles y formas caprichosas. El aire tiene un olor dulzón y terroso, a veces picante.",
-    "regulars": [
-     "Rábano",
-     "Carmesí"
-    ]
-   },
-   {
-    "name": "Taller de Inventos 'Chispa y Voluta'",
-    "kind": "taller",
-    "description": "Un garaje lleno de artefactos a medio construir, herramientas y diagramas de armamento 'especial'. Olores a metal caliente, aceite y productos químicos.",
-    "regulars": [
-     "Chispa",
-     "Voluta"
-    ]
-   },
-   {
-    "name": "Entrada Principal del Cuartel",
-    "kind": "puesto de guardia",
-    "description": "Una puerta arqueada rosa pastel, vigilada las 24 horas. Parece inocente, pero es el punto de control más seguro de la isla.",
-    "regulars": [
-     "Dahlia",
-     "Carrillo"
-    ]
-   },
-   {
-    "name": "Archivos del Plan Secreto",
-    "kind": "archivo/biblioteca",
-    "description": "Una habitación tranquila y ordenada, en marcado contraste con el resto de la isla. Estanterías repletas de carpetas y mapas. El aire huele a papel viejo.",
+    "name": "Sala de los Planes Susurrantes",
+    "kind": "archivo y sala de reuniones",
+    "description": "Una habitación silenciosa y ordenada dentro del Cuartel Rosa, llena de mapas, documentos y mensajes cifrados. Voluta mantiene un registro impecable de cada movimiento, mientras Horizonte Sombrío entrega sus informes en voz baja.",
     "regulars": [
      "Voluta",
-     "Camellia"
+     "Horizonte Sombrío",
+     "Carrillo"
     ]
    },
    {
-    "name": "Senda del Recluta",
-    "kind": "camino de entrenamiento",
-    "description": "Un sendero boscoso que serpentea por la periferia del cuartel, lleno de obstáculos naturales y trampas de entrenamiento. Marcado por huellas de pies de todos los tamaños.",
+    "name": "La Enramada del Sabio Verde",
+    "kind": "clínica y herbolario",
+    "description": "Una cabaña tranquila rodeada de plantas medicinales, alejada del bullicio. Verde Sabio atiende a los heridos con infusiones y ungüentos, ofreciendo un refugio de calma. A veces, Blancura visita el lugar para 'negociaciones discretas'.",
     "regulars": [
-     "Carmesí"
+     "Verde Sabio",
+     "Blancura"
     ]
    },
    {
-    "name": "Plaza del Corazón Libre",
-    "kind": "plaza central",
-    "description": "El corazón geográfico de la comunidad, con una fuente rosa y bancos ornamentados. Lugar de reuniones espontáneas, demostraciones de baile-combate y discursos.",
+    "name": "Claro del Aprendiz",
+    "kind": "área de entrenamiento al aire libre",
+    "description": "Un claro en los límites del reino, donde los novatos más verdes, como Ruido, practican los fundamentos lejos de las miradas críticas de los veteranos. Es un lugar de esfuerzo, caídas y determinación.",
     "regulars": [
-     "Bombón",
-     "Satín"
+     "Ruido"
     ]
    }
   ],
   "rumors": [
-   "Se rumorea que Ivankov está preparando una 'Invasión de la Moda' a una base de la Marina, donde el combate y el sabotaje se mezclarán con desfiles y cambios de look forzados.",
-   "Hay quien dice que en los Huertos Extravagantes ha crecido una 'Rábano del Cambio de Lealtad', una verdura tan poderosa que podría alterar la mente de quien la consume.",
-   "Corre el rumor de que un espía de la Marina, maestro del disfraz, se ha infiltrado en la isla y está intentando robar los planos del próximo gran movimiento revolucionario desde los Archivos.",
-   "Algunos susurran que el 'Coctelero Revolucionario' sirve una bebida secreta, el 'Éxtasis de la Nuevakama', que otorga poderes okama temporales incluso a los no iniciados.",
-   "Se dice que el Taller de Inventos está probando un nuevo 'Cañón de Confeti de Alto Impacto', que dispara metralla camuflada como fiesta, listo para la próxima operación."
+   "Se dice que Ivankov está reclutando un equipo especial para una misión que involucra infiltrarse en una prisión de máxima seguridad del Gobierno Mundial.",
+   "Un cargamento de armamento experimental 'muy especial' llegó al taller de Chispa anoche, y todo el mundo habla de las extrañas cajas selladas.",
+   "Carrillo ha estado haciendo viajes más frecuentes de lo normal, y siempre regresa con mensajes que solo Ivankov puede leer. Algo se está cociendo en los niveles más altos.",
+   "Una figura encapuchada fue vista merodeando cerca de los Huertos. Algunos piensan que es un espía de la Marina, otros que es un revolucionario de alto rango probando las defensas.",
+   "Bombón está mezclando un 'cóctel de la verdad' especial por encargo del Cuartel, lo que sugiere que pronto habrá que interrogar a alguien importante."
   ]
  },
  {
   "island": "Restaurante Baratie",
-  "atmosphere": "Un galeón de guerra reconvertido en un bullicioso templo gastronómico flotante. El olor a ajo, marisco fresco y pan caliente se mezcla con el salitre. Mientras en la cocina hierve el estrés del servicio, en la cubierta comedor reina la alegría de los comensales, salpicada por algún ocasional puñetazo que resuelve disputas siguiendo la 'tradición del Baratie'.",
-  "history": "Construido sobre el casco de un antiguo galeón, el Baratie fue fundado por el célebre 'Pie Rojo' Zeff como un refugio donde ningún hambriento, marino o pirata, se fuera sin comer. Su reputación por la excelente comida y las peleas de su personal se extendió por todo East Blue. Hoy, bajo nueva dirección, mantiene su esencia como un restaurante flotante neutral y legendario.",
+  "atmosphere": "Un galeón inmenso y reluciente, con el olor irresistible de la buena cocina mezclado con la brisa marina. El ambiente es de tensión contenida bajo una fachada de eficiencia impecable; los camareros mueven los pies rápido y los cocineros miran nerviosos por las ventanas.",
+  "history": "Un famoso galeón fue reconvertido hace décadas en este restaurante flotante. Se hizo legendario por su comida excepcional y por su política de nunca negar comida a alguien con hambre, sin importar su bando. Recientemente, su fama también ha atraído a clientes mucho más peligrosos.",
   "customs": [
-   "La 'Tradición del Baratie': las disputas entre el personal o con clientes maleducados se resuelven a puñetazos en la cubierta, pero nunca durante el servicio ni cerca de la comida.",
-   "Nadie se va con hambre: cualquiera que no pueda pagar puede trabajar lavando platos para cubrir su cuenta.",
-   "Respeto total a la cocina: entrar sin permiso o interrumpir a un chef durante el servicio es la ofensa más grave que se puede cometer a bordo."
+   "Nadie con hambre es rechazado, aunque solo pueda pagar con trabajo o una historia. Las deudas de comida se saldan en la cocina.",
+   "Los cocineros son también la seguridad. Cualquier altercado se resuelve con los puños (y a veces sartenes) antes que con armas.",
+   "Cada noche, el chef a cargo tira un panecillo al mar desde la popa como ofrenda a los marineros perdidos."
   ],
   "places": [
    {
-    "name": "El Gran Comedor de Proa",
-    "kind": "comedor",
-    "description": "La cubierta principal, con mesas de madera noble y vistas al mar a través de los amplios ojos de buey. El centro neurálgico donde los clientes disfrutan de los famosos platos.",
+    "name": "Cubierta Restaurante",
+    "kind": "restaurante",
+    "description": "La cubierta principal, llena de mesas con manteles impecables y vistas panorámicas al mar. El centro de todo, donde los camareros bailan entre los comensales.",
     "regulars": [
      "Marina Sal",
-     "Sra. Delphine",
-     "Teniente Brannigan"
-    ]
-   },
-   {
-    "name": "La Cocina Infernal",
-    "kind": "cocina",
-    "description": "Un espacio de acero y llamas donde reinan el caos controlado y el calor intenso. Cuchillos vuelan, sartenes chisporrotean y las voces de los chefs son la única música.",
-    "regulars": [
-     "Boris el Picante",
-     "Remi el Silencioso"
-    ]
-   },
-   {
-    "name": "La Bodega del Tesoro",
-    "kind": "bodega",
-    "description": "Una sentina fresca y oscura reconvertida en cava. Filas de botellas y barriles descansan en estantes, vigilados celosamente por su guardián.",
-    "regulars": [
-     "Giles de la Bodega"
-    ]
-   },
-   {
-    "name": "Puente de Mando - Oficina del Jefe",
-    "kind": "oficina",
-    "description": "El antiguo puente del galeón, ahora una oficina con papeles de pedidos, mapas de rutas de suministro y una pesada caja fuerte empotrada en la pared.",
-    "regulars": [
-     "Marina Sal",
-     "Rico Brazo de Hierro"
-    ]
-   },
-   {
-    "name": "El Muelle de los Proveedores",
-    "kind": "puerto",
-    "description": "Una pasarela flotante en el costado de babor donde atracan las barcas de pescadores y mercantes. Siempre hay cajas de verduras y cubos con pescado fresco.",
-    "regulars": [
-     "Viejo Sal",
+     "Teniente Brannigan",
      "Sra. Delphine"
     ]
    },
    {
-    "name": "La Cubierta de Lavado",
-    "kind": "lavadero",
-    "description": "Una zona al aire libre en popa, con pilas de fregadero industriales y montañas de platos sucios. El lugar de trabajo y reflexión para quienes pagan su comida con esfuerzo.",
+    "name": "Cocina de Fuego",
+    "kind": "cocina",
+    "description": "Un infierno controlado de acero, fuego y vapor. Los cuchillos vuelan y las órdenes se gritan a todo pulmón. El corazón del Baratie.",
     "regulars": [
-     "Remi el Silencioso"
+     "Boris el Picante",
+     "Remi el Silencioso",
+     "Pip el Tembloroso"
     ]
    },
    {
-    "name": "El Puesto de Vigía",
-    "kind": "puesto de vigilancia",
-    "description": "Lo alto del mástil mayor, convertido en un mirador con un telescopio fijo. Ofrece una vista panorámica del mar y es el primer punto de avistamiento.",
-    "regulars": [
-     "Rico Brazo de Hierro",
-     "Teniente Brannigan"
-    ]
-   },
-   {
-    "name": "La Taberna del Marinero (Bar de Popa)",
-    "kind": "taberna",
-    "description": "Un rincón acogedor en la cubierta de popa, con barril de cerveza de la casa y taburetes. Lugar para una copa tranquila después de comer o para conversaciones discretas.",
+    "name": "Bodega del Galeón",
+    "kind": "bodega",
+    "description": "Una caverna oscura y fresca bajo la línea de flotación, repleta de barriles de vino, estantes de licores y provisiones. Tiene un silencio sepulcral.",
     "regulars": [
      "Giles de la Bodega",
-     "Teniente Brannigan",
-     "Viejo Sal"
+     "Corvus el Ancla"
+    ]
+   },
+   {
+    "name": "Puente de Mando-Bar",
+    "kind": "bar",
+    "description": "El antiguo puente de mando, ahora un bar íntimo con ventanales de cristal grueso. El lugar perfecto para una copia tranquila... o una conversación privada.",
+    "regulars": [
+     "Huck el Amargo",
+     "Hermano Salmuera",
+     "Morse el Taciturno"
+    ]
+   },
+   {
+    "name": "Proa de la Seguridad",
+    "kind": "puesto de vigilancia",
+    "description": "La proa del barco, reforzada. Desde aquí se vigila el horizonte y el muelle de acceso. Es el territorio de Rico Brazo de Hierro.",
+    "regulars": [
+     "Rico Brazo de Hierro"
+    ]
+   },
+   {
+    "name": "Muelle del Proveedor",
+    "kind": "puerto",
+    "description": "Un pequeño y resistente muelle en el costado del barco. Por aquí llegan los pescados frescos y las entregas, manejadas con rapidez y sigilo.",
+    "regulars": [
+     "Viejo Sal",
+     "Pip el Tembloroso"
+    ]
+   },
+   {
+    "name": "Sala de los Hornos",
+    "kind": "zona de servicio",
+    "description": "Un compartimento ruidoso y caliente junto a la cocina, donde rugen los hornos y las lavanderías. Es el dominio de los ayudantes y limpiadores.",
+    "regulars": [
+     "Remi el Silencioso",
+     "Corvus el Ancla"
     ]
    }
   ],
   "rumors": [
-   "Se rumorea que un infame pirata gourmet, conocido por arrasar restaurantes que no cumplen sus exigencias, ha puesto su mira en el Baratie.",
-   "Alguien ha estado intentando acceder por la noche a la caja fuerte de la oficina del jefe, pero solo ha logrado dejar marcas de garras extrañas en el metal.",
-   "Un cargamento crucial de una especia rara y muy cara, esencial para el plato estrella, ha desaparecido misteriosamente de la bodega.",
-   "Varios pescadores proveedores, incluido el Viejo Sal, reportan haber visto una silueta enorme y oscura merodeando bajo las aguas cerca del restaurante al anochecer.",
-   "Corre el rumor de que la Marina tiene un interés 'particular' en un comensal habitual del Baratie, y su presencia no es tan casual como parece."
+   "Un prestamista muy poderoso de la Ciudad Acuática ha enviado a su cobrador más temido para reclamar una deuda vieja del Baratie, y no aceptará un 'no' por respuesta.",
+   "Alguien ha estado robando pequeñas pero valiosas piezas de cobre y latón de la cocina y la sala de máquinas, y nadie sabe cómo o por qué.",
+   "Un cliente misterioso ha reservado toda la cubierta restaurante para una cena privada esta semana, y ha exigido que no haya ningún marine a menos de una milla.",
+   "Se dice que en la bodega más profunda hay una escotilla sellada que lleva a los antiguos camarotes de los oficiales del galeón, llenos de recuerdos... y tal vez de cosas que no deberían despertarse."
   ]
  },
  {
   "island": "Reverse Mountain",
-  "atmosphere": "Un rugido perpetuo de aguas que desafían la gravedad, un aire cargado de salitre y la tensión palpable de marineros al borde de lo desconocido. La niebla es frecuente, mezclada con el rocío de los cuatro torrentes ascendentes, y el suelo tiembla levemente por el poder de las corrientes.",
-  "history": "Reverse Mountain es un monstruo geográfico y una leyenda náutica, la única entrada segura (aunque terrorífica) al Grand Line desde los cuatro mares. Durante siglos, ha sido el primer filtro natural para los aspirantes a piratas y aventureros, marcando el punto de no retorno. La Marina estableció un pequeño puesto de avanzada para observar y, en ocasiones, obstaculizar el paso, pero la montaña y sus corrientes son fuerzas que nadie puede controlar.",
+  "atmosphere": "Un rugido perpetuo de aguas furiosas ascendiendo contra la roca, envuelto en la niebla salina. Es un lugar liminal, donde la euforia del comienzo de una gran aventura choca con el temor a lo desconocido y el peso de las malas decisiones tomadas en el pasado. El aire huele a salitre, madera mojada y desesperación tardía.",
+  "history": "Reverse Mountain ha sido durante siglos la única entrada segura conocida al Grand Line. Fue cartografiada por valientes (o temerarios) exploradores, y con los años se establecieron pequeños puestos de avanzada para asistir, reparar y, a veces, despedir a quienes se aventuraban. La Marina estableció un puesto de observación para monitorear el tráfico, pero su influencia es limitada en este territorio salvaje y caótico.",
   "customs": [
-   "Los marineros que se preparan para el ascenso suelen dejar una pequeña ofrenda (una moneda, una botella vacía) en la base del faro como tributo a la montaña, pidiendo un paso seguro.",
-   "Está mal visto hablar en voz alta sobre el miedo o la posibilidad de fracasar mientras se preparan los barcos; se considera que atrae mala suerte sobre la tripulación.",
-   "El vigía del puesto de observación tiene la tradición de tocar un cuerno de bruma cada vez que un barco inicia el ascenso exitosamente, aunque el sonido a menudo se pierde entre el estruendo del agua."
+   "Ofrecer una moneda o una ofrenda a la montaña antes de embarcarse, lanzándola a las aguas ascendentes para aplacar su furia.",
+   "Contar la historia del viaje más memorable que se ha presenciado o vivido a quien esté a punto de cruzar, como advertencia o inspiración.",
+   "La 'Reparación de Último Aliento': un acuerdo no escrito donde los carpinteros del astillero trabajan hasta caer rendidos en reparaciones de emergencia, a cambio de lo que el capitán pueda pagar, incl"
   ],
   "places": [
    {
-    "name": "El Embudo",
-    "kind": "puerto natural",
-    "description": "La convergencia caótica y rugiente de los cuatro ríos ascendentes. Aquí, los barcos deben alinearse con precisión mortal para ser arrastrados por la corriente correcta hacia la cima. Las rocas están cubiertas de cicatrices de impactos y restos oxidados de naufragios.",
+    "name": "Puesto de Observación de la Montaña",
+    "kind": "puesto de vigilancia",
+    "description": "Una torre de piedra y vigas de madera encaramada en un saliente rocoso, con telescopios que barren constantemente las cuatro corrientes. El rugido aquí es un zumbido constante en los huesos.",
     "regulars": [
+     "Boris Rumblebeard",
      "Capitán Ansel Riggs",
-     "Boris Rumblebeard"
+     "Kiro Viento Norte"
     ]
    },
    {
     "name": "Astillero de Reparación Express de Tara",
     "kind": "astillero",
-    "description": "Un dique seco improvisado con madera de deriva y piezas de repuesto de cien naciones. Humo de forja y el martilleo constante llenan el aire. Los barcos llegan con daños de última hora o salen destrozados del intento de ascenso, necesitando reparaciones urgentes.",
+    "description": "Un caos organizado de dique seco improvisado, herramientas oxidadas y madera de repuesto. Los barcos llegan con daños desesperados y, a menudo, salen apenas flotando, pero salen.",
     "regulars": [
-     "Tara Rivet"
+     "Tara Rivet",
+     "Milo Viento Rápido"
     ]
    },
    {
-    "name": "El Puesto de la Montaña",
-    "kind": "cuartel de la Marina",
-    "description": "Una fortificación de piedra gris y vigas reforzadas, construida en un saliente rocoso con vista al Embudo. Banderas de la Marina ondean, desgastadas por la humedad. Es más un puesto de observación y disuasión que una base de operaciones ofensiva.",
+    "name": "El Rincón del Sabor de Fiera",
+    "kind": "cocina improvisada",
+    "description": "Más una hoguera grande con un techo de lona que un restaurante. El humo de las especias y la carne a la parrilla lucha contra la niebla. Es el último lugar para una comida caliente antes del Grand Line.",
     "regulars": [
-     "Capitán Ansel Riggs"
+     "Fiera Albahaca",
+     "Marlow Tidepool",
+     "Rufus Trampa Fiera"
     ]
    },
    {
-    "name": "El Puesto de Observación de Rumblebeard",
-    "kind": "torre de vigía",
-    "description": "Una torre de madera y metal encaramada en el punto más alto accesible, con telescopios potentes siempre enfocados hacia el Embudo y la cima de la montaña. Mapas antiguos y cuadernos de bitácora llenos de anotaciones cubren las paredes.",
+    "name": "Cavernas de los Susurros",
+    "kind": "cavernas",
+    "description": "Una red de túneles naturales detrás de la cortina de agua de una de las corrientes menores. El ruido exterior se transforma aquí en extraños susurros y ecos que parecen hablar.",
     "regulars": [
-     "Boris Rumblebeard",
-     "Liana Beacon"
+     "Cyrus Whispers",
+     "Drax Sombra"
     ]
    },
    {
     "name": "La Tienda de Última Oportunidad",
-    "kind": "mercado/tienda",
-    "description": "Una carpa abarrotada y desordenada junto al astillero. Pilas de brújulas defectuosas, barriles de agua dulce dudosa, mapas sospechosos y toda clase de 'artículos esenciales' para el Grand Line se venden a precios exorbitantes a marineros desesperados.",
+    "kind": "mercado",
+    "description": "Una carpa abarrotada de suministros de dudosa procedencia y calidad variable: log poses, cartas náuticas borrosas, armas oxidadas y 'artefactos de la suerte'.",
     "regulars": [
-     "Marlow Tidepool"
+     "Marlow Tidepool",
+     "Talon Hojanava",
+     "Nara Ternura"
     ]
    },
    {
-    "name": "La Guarida del Ermitaño",
-    "kind": "cavernas",
-    "description": "Una red de túneles y cuevas húmedas en la base de la montaña, alejada del rugido principal. Aquí, el sonido de las corrientes se transforma en un susurro constante y extraño. Está lleno de inscripciones en las paredes y extraños artefactos recogidos del mar.",
-    "regulars": [
-     "Cyrus Whispers"
-    ]
-   },
-   {
-    "name": "La Base del Faro",
-    "kind": "faro y vivienda",
-    "description": "Una estructura robusta de piedra con una potente luz que corta la niebla. La parte inferior sirve de vivienda y refugio. Es un punto de encuentro para escuchar historias y advertencias mientras se espera el momento de partir.",
-    "regulars": [
-     "Liana Beacon"
-    ]
-   },
-   {
-    "name": "La Placa de los Caídos",
-    "kind": "monumento/mirador",
-    "description": "Una losa de piedra plana con los nombres de barcos y capitanes conocidos que desaparecieron en el ascenso. No es oficial, sino un monumento espontáneo creado por los visitantes. Ofrece una vista imponente y aterradora del Embudo.",
+    "name": "Faro de la Despedida",
+    "kind": "faro",
+    "description": "Una estructura solitaria y pintada de blanco, cuya luz no guía hacia la seguridad, sino que marca el punto de no retorno hacia la gran corriente ascendente.",
     "regulars": [
      "Liana Beacon",
-     "Cyrus Whispers"
+     "Milo Viento Rápido"
+    ]
+   },
+   {
+    "name": "La Choza del Cartógrafo",
+    "kind": "cabaña",
+    "description": "Pequeña y llena de mapas enrollados, instrumentos de medición y anotaciones sobre los caprichos de las corrientes. El aire huele a papel viejo y tinta.",
+    "regulars": [
+     "Kiro Viento Norte",
+     "Nara Ternura"
+    ]
+   },
+   {
+    "name": "La Guarida de los Olvidados",
+    "kind": "cueva escondida",
+    "description": "Un refugio secreto entre las rocas, usado por quienes no quieren ser vistos por la Marina o por antiguos compañeros. Marcado con símbolos discretos.",
+    "regulars": [
+     "Drax Sombra",
+     "Rufus Trampa Fiera",
+     "Talon Hojanava"
+    ]
+   },
+   {
+    "name": "El Refugio de la Curandera",
+    "kind": "cueva-hogar",
+    "description": "Una caverna cálida y seca, llena de hierbas colgantes y ollas con ungüentos. Es el único lugar donde el rugido del agua se convierte en un lejano rumor.",
+    "regulars": [
+     "Xila Gélida",
+     "Brom Zancada Larga"
+    ]
+   },
+   {
+    "name": "Puesto de la Marina",
+    "kind": "cuartel",
+    "description": "Un edificio fortificado de aspecto austero y funcional. Más un puesto de registro y disuasión que una base operativa real en este entorno hostil.",
+    "regulars": [
+     "Capitán Ansel Riggs",
+     "Boris Rumblebeard"
     ]
    }
   ],
   "rumors": [
-   "Cyrus Whispers jura haber escuchado nuevos patrones en los susurros de las cavernas, como si la propia montaña estuviera advirtiendo de una tormenta magnética sin precedentes en el Grand Line.",
-   "Marlow Tidepool está vendiendo discretamente 'brújulas de la suerte' que, según él, pueden 'calmar' las corrientes, pero algunos dicen que son imanes robados de barcos naufragados que en realidad atraen el peligro.",
-   "Boris Rumblebeard ha avistado restos de un barco de la Marina, irreconocible y carbonizado, bajando por una de las corrientes, algo que se creía imposible. El Capitán Riggs ha prohibido hablar del asunto.",
-   "Liana Beacon cuenta una vieja leyenda de que, cuando las corrientes rugen con fuerza inusual, es porque algo grande y antiguo está a punto de despertar en la cima de la montaña o al otro lado, en el Grand Line.",
-   "Tara Rivet comenta entre dientes que los últimos barcos que ha reparado tenían daños no solo por impactos, sino por arañazos profundos y extrañas quemaduras por frío en sus cascos."
+   "Las corrientes más fuertes no son un augurio, sino que algo enorme y antiguo duerme bajo la montaña y se está despertando.",
+   "Cyrus Whispers ha trazado un mapa de atajos secretos *dentro* de la montaña, que evitan la corriente principal, pero conducen a lugares olvidados.",
+   "El último barco que desapareció en la corriente este llevaba un cargamento de Piedras Poneglyph falsas, y alguien está buscando los restos.",
+   "Marlow Tidepool vendió recientemente un lote de 'brújulas eternas' defectuosas a una tripulación novata. Es probable que estén perdidos en el Grand Line ahora.",
+   "Hay una bestia legendaria, un 'Rey de las Corrientes', que se dice aparece cuando las aguas rugen con más fuerza, buscando un desafío digno."
   ]
  },
  {
   "island": "Skypiea",
-  "atmosphere": "Una isla flotante entre nubes eternas, donde el aire huele a ozono y antiguo oro. El silencio solo se rompe por el crujido de las ruinas y el zumbido amenazador de la electrocución. Cada mirada contiene miedo o fanatismo, y el cielo es una jaula dorada vigilada por el ojo omnisciente de un dios tirano.",
-  "history": "Skypiea fue antaño una tierra de paz entre sus habitantes celestes y los shandia que la habitaban. Tras la llegada de Eneru, se declaró dios, sometió a la población con su poder del Goro Goro no Mi, y esclavizó a los shandia sobrevivientes para extraer el oro de las ruinas ancestrales. La fe se pervirtió en un culto al miedo.",
+  "atmosphere": "Un velo etéreo y dorado cubre una civilización suspendida en el cielo, donde las nubes son suelo y transporte. El aire vibra con la electricidad del poder divino y el temor reverencial es palpable. La arrogancia dorada del santuario contrasta con la humildad y las ruinas de las nubes más bajas, mientras que el omnipresente sonido del Urouge y la amenaza del rayo mantienen a todos en un silencio expectante.",
+  "history": "Skypiea fue descubierta por ángeles que descendieron sobre una tierra de nubes y oro. Con el tiempo, el Dios Eneru llegó con su poder del Goro Goro no Mi y sometió a los antiguos habitantes, proclamándose la divinidad suprema. Ha reconstruido parte de las ruinas doradas en su santuario y somete a los Shandia y a cualquier disidente a su 'juicio', usando su fe y su poder como herramientas de control absoluto.",
   "customs": [
-   "Nunca pronunciar el nombre de 'Eneru' sin el título de 'Dios', bajo pena de castigo divino instantáneo.",
-   "Ofrecer una pequeña pieza de oro o una nube tejida en los altares dispersos para aplacar la ira del cielo.",
-   "Quedarse inmóvil y en silencio cuando retumba el gran tambor del santuario, señal de que el Dios está escuchando.",
-   "Los 'juicios' son espectáculos públicos donde los acusados son puestos a prueba por los Sacerdotes para entretenimiento y advertencia."
+   "Ofrendar 'impuestos' en forma de oro o bienes al Santuario es un deber sagrado para evitar el 'juicio' divino.",
+   "Los viajes en nube veloces son comunes, pero se requiere un permiso sagrado para acceder a las nubes superiores cercanas al Santuario.",
+   "Antes de pronunciar cualquier crítica o plan, muchos susurran una breve plegaria al 'Dios que todo lo oye', por si acaso."
   ],
   "places": [
    {
     "name": "El Refugio del Vago",
     "kind": "taberna",
-    "description": "Una taberna excavada en una nube densa, con muebles de madera pálida traída de Dios. El aire es cálido y huele a sopa de algodón y miedo contenido. Susurros sobre supervivencia llenan cada rincón.",
+    "description": "Un establecimiento acogedor y modesto, construido sobre una nube esponjosa y estable. Es uno de los pocos lugares donde se puede hablar en voz baja, protegido por gruesas paredes de algodón de nube. El olor a sopa caliente y fruta de nube flota en el aire.",
     "regulars": [
      "Nuba",
-     "Silas el Evasivo",
-     "Cisco el Raudal"
+     "Cisco el Raudal",
+     "Eiron Nubloso"
     ]
    },
    {
     "name": "Mercado de la Bruma",
     "kind": "mercado",
-    "description": "Una plaza flotante de nubes entretejidas donde se comercia con objetos terrestres robados, nubes comestibles y chatarra dorada. La vigilancia es constante pero disimulada.",
+    "description": "Un bullicioso bazar flotante donde se comercian bienes terrenales raros, artefactos de la Ruinas de Oro, y productos hechos de nube. Los puestos están hechos de nubes teñidas y el regateo es rápido y susurrado.",
     "regulars": [
      "Abuelo Cirro",
      "Silas el Evasivo",
-     "Cisco el Raudal"
+     "Carmen la Navegante"
     ]
    },
    {
-    "name": "Santuario Inferior",
-    "kind": "templo/guarnición",
-    "description": "La base de operaciones más baja del régimen de Eneru. Una estructura de oro y mármol blanco donde los guardias descansan y se preparan para las rondas. Crujen las armaduras y el aire está cargado de obediencia.",
+    "name": "Santuario Inferior (Base de la Columna)",
+    "kind": "cuartel / puesto de guardia",
+    "description": "La base fortificada del gran pilón que sostiene el Santuario en las alturas. Es un lugar de paso obligatorio, frío y severo, vigilado constantemente por guerreros fanáticos. El sonido de los pasos sobre las losas de oro resuena hueco.",
     "regulars": [
      "Relámpago Gris",
+     "Volt",
      "Milos de la Bruma"
     ]
    },
    {
     "name": "Barrio del Alba",
-    "kind": "barrio artesanal",
-    "description": "Un conjunto de casas-nube apiñadas donde los artesanos leales trabajan el oro extraído. El sonido del martilleo es constante, y el brillo dorado ciega a los no acostumbrados.",
+    "kind": "barrio de artesanos / casas importantes",
+    "description": "Un distrito de nubes más estables, donde las casas tienen delicados adornos dorados. Aquí trabajan los artesanos al servicio directo del Santuario, en un silencio tenso y productivo.",
     "regulars": [
      "Aura del Resplandor",
-     "Volt"
+     "Tolva Tormentoso"
     ]
    },
    {
     "name": "Las Obras del Dios",
-    "kind": "sitio de obras/minas",
-    "description": "Un vasto campo de ruinas antiguas donde equipos de obreros, principalmente shandia cautivos, extraen oro bajo vigilancia. El polvo dorado y el sudor se mezclan en el aire.",
+    "kind": "sitio de construcción / ruinas en restau",
+    "description": "Una extensa zona de ruinas doradas antiguas donde equipos de obreros, muchos de ellos cautivos, excavan y reconstruyen bajo una vigilancia feroz. El aire está lleno del sonido de picos y órdenes secas.",
     "regulars": [
      "Kael el Cicatriz",
      "Volt",
@@ -3756,792 +4195,877 @@ export const ISLAND_LORE_DATA: IslandLore[] = [
     ]
    },
    {
-    "name": "Bosque de las Susurros",
-    "kind": "bosque",
-    "description": "Un área densa de árboles nubosos y vegetación celeste donde el eco distorsiona los sonidos. Lugar de encuentros furtivos y refugio temporal para quienes evaden la ley. Se dice que aquí el 'oído' de Eneru se debilita.",
+    "name": "La Enramada Susurrante",
+    "kind": "bosque / jardín de nubes",
+    "description": "Un jardín natural de nubes espesas y formaciones de vapor que se asemejan a árboles. Es un lugar relativamente apartado donde algunos acuden a pensar o a tener conversaciones privadas, aunque siempre con la paranoia de ser escuchados.",
     "regulars": [
-     "Cisco el Raudal",
-     "Silas el Evasivo"
+     "Zephyra la Curandera",
+     "Drako el Estratega",
+     "Galen el Sombra"
     ]
    },
    {
-    "name": "Plaza del Juicio",
-    "kind": "plaza pública",
-    "description": "Un espacio abierto frente a las grandes escalinatas del Santuario. Aquí se realizan los juicios públicos, marcados por los anillos quemados en el suelo de nubes y el ambiente de terror expectante.",
-    "regulars": []
-   },
-   {
-    "name": "Puerto de la Llegada",
-    "kind": "puerto",
-    "description": "Una plataforma de nubes sólida donde amarran los barcos que llegan por el Knock Up Stream. Vigilado día y noche, es el primer filtro para los 'invitados' que luego serán juzgados. Marcas de rayos adornan sus columnas.",
+    "name": "El Mirador del Velo",
+    "kind": "lugar de observación / acantilado",
+    "description": "Un risco al borde de Skypiea, desde donde se ve el Mar Blanco y el infinito cielo azul. Un lugar de belleza sobrecogedora y melancolía, frecuentado por soñadores y aquellos que añoran la libertad.",
     "regulars": [
-     "Relámpago Gris"
+     "Carmen la Navegante",
+     "Nimbus la Mensajera",
+     "Eiron Nubloso"
     ]
    },
    {
-    "name": "Telar del Abuelo",
-    "kind": "taller/tienda",
-    "description": "Una pequeña tienda adosada al mercado donde Abuelo Cirro teje y repara nubes. El olor a algodón vaporizado es intenso, y montones de nubes de colores esperan ser moldeadas.",
+    "name": "Cámara de los Susurros",
+    "kind": "templo / lugar de culto secundario",
+    "description": "Una pequeña cámara en una ruina aislada, con paredes que absorben el sonido. Oficialmente es un lugar de meditación sobre la voluntad de Dios, pero en la práctica es donde los más valientes intercambian información sin palabras, usando sólo gestos y miradas.",
     "regulars": [
-     "Abuelo Cirro"
-    ]
-   },
-   {
-    "name": "Ruinas del Sol Poniente",
-    "kind": "ruinas",
-    "description": "Restos de una ciudad shandia especialmente antigua, ahora semiabandonada y fuertemente vigilada por su valor en oro. Símbolo de la conquista y la pérdida.",
-    "regulars": [
-     "Kael el Cicatriz"
+     "Soli Brillante",
+     "Drako el Estratega",
+     "Galen el Sombra"
     ]
    }
   ],
   "rumors": [
-   "Se dice que 'El Refugio del Vago' tiene un escondite secreto bajo el mostrador, una nube hueca donde Nuba esconde a fugitivos por una noche.",
-   "Corre el rumor de que Silas el Evasivo tiene un mapa de los túneles olvidados bajo las ruinas, que llevan a una cámara sellada con más oro del que se ha extraído nunca.",
-   "Algunos susurran que Kael el Cicatriz está organizando una revuelta entre los obreros shandia, esperando el momento en que la atención del Dios se desvíe.",
-   "Un mensaje cifrado circula: 'Cuando el gran tambor suene tres veces seguidas al amanecer, será la señal para correr hacia el Bosque de los Susurros'.",
-   "Se rumorea que Cisco el Raudal robó un 'Dial del Trueno' de las reservas personales de un Sacerdote y lo escondió en el mercado, un artefacto que podría igualar el campo de juego contra el poder de Eneru."
+   "Se dice que en las profundidades de las Ruinas de Oro, más allá de las zonas en obras, hay una cámara sellada que ni siquiera Eneru ha podido abrir, y que contiene un secreto anterior a los propios ángeles.",
+   "Un grupo de mensajeros y cazadores de nubes habla en clave de una 'ruta de la bruma', una secuencia de nubes veloces ocultas que podría permitir escapar de Skypiea sin ser detectado por los Sacerdotes.",
+   "Corre el rumor de que el Sacerdote de la Luz, Soli Brillante, cuestiona en privado algunos de los 'juicios' más crueles de Eneru, lo que lo coloca en una posición peligrosísima.",
+   "Algunos obreros murmuran que Kael el Cicatriz, el guerrero Shandia, no solo trabaja: está cartografiando en secreto cada túnel y cada punto débil de las obras para un posible levantamiento.",
+   "Un comerciante, Silas el Evasivo, busca desesperadamente un comprador para un pequeño artefacto de oro robado de las obras, que parece resonar y calentarse cerca de ciertas nubes antiguas."
   ]
  },
  {
   "island": "Tequila Wolf",
-  "atmosphere": "Un gris perenne envuelve Tequila Wolf, donde el sonido del mar chocando contra los pilares se mezcla con el eco metálico de martillos y órdenes susurradas. El aire huele a sal, óxido y disciplina férrea, bajo la mirada constante de andamios que se pierden en el horizonte.",
-  "history": "El Gobierno Mundial inició la construcción del puente de Tequila Wolf hace setecientos años, un proyecto faraónico cuyo verdadero propósito se desconoce. Durante siglos, ha servido como campo de trabajo forzado y, en secreto, como centro de entrenamiento de Cipher Pol. La obra avanza lento, alimentada por presos, obreros y la ambición sin fin del Gobierno.",
+  "atmosphere": "Un lugar gris, húmedo y opresivo donde el sonido del mar se mezcla con el metálico de los martillos y los pasos sigilosos. Los barracones y andamios se extienden hasta donde alcanza la vista, bajo la constante vigilancia de agentes silenciosos. El aire huele a salitre, aceite de máquina y miedo reprimido.",
+  "history": "El Gobierno Mundial inició la construcción del Puente Tequila Wolf hace setecientos años como un proyecto de infraestructura titánico. Con los siglos, su propósito original se ha desdibujado, transformándose en una gigantesca obra forzada y un campo de entrenamiento secreto para Cipher Pol. Miles de trabajadores, voluntarios y prisioneros han perecido en sus pilares sin fin.",
   "customs": [
-   "El silencio es ley; las conversaciones se limitan a lo estrictamente necesario y en voz baja.",
-   "Nadie mira a los ojos a los agentes de CP; la mirada baja es señal de respeto y supervivencia.",
-   "Al caer la noche, se escucha un único toque de campana que marca el inicio del 'silencio absoluto'."
+   "Nunca se mira directamente a los ojos a un instructor o agente de CP; se baja la mirada o se mira a un punto fijo por encima del hombro.",
+   "Las conversaciones entre trabajadores son en susurros y solo en las zonas designadas para el descanso.",
+   "Al amanecer y al anochecer, todo el mundo se detiene por un minuto de silencio obligatorio para escuchar las instrucciones del día o el recuento de bajas."
   ],
   "places": [
    {
-    "name": "La Puerta de los Susurros",
-    "kind": "Puerta",
-    "description": "La entrada principal a los barracones de Cipher Pol, una estructura de acero negro sin marcas. Dos guardias inmóviles flanquean el umbral.",
+    "name": "Puerta Este de los Barracones CP",
+    "kind": "puesto de guardia",
+    "description": "Una pesada puerta de metal siempre entreabierta, vigilada las 24 horas. Desde aquí se controla el acceso a las instalaciones restringidas de Cipher Pol. El ambiente es tenso y disciplinado.",
     "regulars": [
      "Croft"
     ]
    },
    {
-    "name": "El Andamio del Fin del Mundo",
-    "kind": "Punto de la obra",
-    "description": "El extremo más avanzado del puente, donde los nuevos pilares se hunden en el mar. Aquí el viento aúlla y la sensación de aislamiento es total.",
-    "regulars": []
+    "name": "Cantina del Puente, Tramo 112",
+    "kind": "cantina de obreros",
+    "description": "Un barracón largo y ruidoso lleno de mesas largas, donde los obreros devoran raciones insípidas. El olor a repollo hervido y sudor es omnipresente. Es el único lugar donde se permite un murmullo de conversación.",
+    "regulars": [
+     "Galeon",
+     "Viejo Grift"
+    ]
    },
    {
-    "name": "Archivo del Progreso",
-    "kind": "Archivo",
-    "description": "Una barraca atestada de planos enrollados y libros de contabilidad polvorientos. El aire es denso y quieto.",
+    "name": "Torre de Grúas del Sector 7",
+    "kind": "puesto de control y mantenimiento",
+    "description": "Una estructura metálica alta desde donde se coordina el movimiento de materiales. Está llena de poleas oxidadas y cuadernos de bitácora llenos de anotaciones técnicas. Las vistas del interminable puente son desoladoras.",
+    "regulars": [
+     "Rourke",
+     "Bram"
+    ]
+   },
+   {
+    "name": "Archivo de Planos del Sector Central",
+    "kind": "archivo",
+    "description": "Una habitación estrecha y polvorienta, iluminada por una sola bombilla. Estantes abarrotados contienen rollos de planos arquitectónicos centenarios. El aire es quieto y cargado de polvo de papel.",
     "regulars": [
      "Lysander"
     ]
    },
    {
-    "name": "La Celda de Observación",
-    "kind": "Torre de vigilancia",
-    "description": "Una torre de hierro desde donde Máscara de Hierro observa cada movimiento en el Sector 7. No hay sombras donde esconderse de su mirada.",
+    "name": "Barracón de Enfermería",
+    "kind": "enfermería",
+    "description": "Un espacio blanco y desinfectado que contrasta brutalmente con la suciedad exterior. Hileras de camas metálicas, a menudo vacías, pero a veces ocupadas por cuerpos vendados que no emiten un sonido. El silencio aquí duele.",
     "regulars": [
-     "Máscara de Hierro"
+     "Sylvia Lastimada"
     ]
    },
    {
-    "name": "Barracón del Sector 7",
-    "kind": "Barracón",
-    "description": "Un galpón largo y frío donde duermen los obreros. Huele a sudor y madera húmeda. Las literas son tablones desnudos.",
+    "name": "Andamios del Tramo 303",
+    "kind": "zona de obra",
+    "description": "Una sección antigua y especialmente inestable del puente. Las tablas crujen, el viento silba entre los postes de metal y el mar golpea con fuerza los pilares centenarios abajo. Es un lugar de castigo y encuentros clandestinos.",
     "regulars": [
-     "Bram",
-     "Viejo Grift"
+     "Viejo Grift",
+     "Silas el Susurro"
     ]
    },
    {
-    "name": "El Nido del Cuervo",
-    "kind": "Taller de mantenimiento",
-    "description": "Una plataforma elevada llena de herramientas y piezas de grúas oxidadas. El sonido de las llaves inglesas es constante.",
+    "name": "Mercado Negro de los Conductos",
+    "kind": "mercado negro",
+    "description": "Una red de conductos de ventilación y desagüe detrás de la cantina, donde a la luz de velas se intercambian raciones extra, herramientas pequeñas y pedazos de información. El aire es viciado y cada sombra parece moverse.",
     "regulars": [
-     "Rourke"
+     "Vorin",
+     "Elara",
+     "Silas el Susurro"
     ]
    },
    {
-    "name": "El Tramo 303",
-    "kind": "Sección del puente",
-    "description": "Una sección antigua y desgastada del puente, con tablones que crujen. El Viejo Grift la vigila como si fuera suya, limpiando óxido sin parar.",
-    "regulars": [
-     "Viejo Grift"
-    ]
-   },
-   {
-    "name": "La Sala del Instructor",
-    "kind": "Cuartel",
-    "description": "Una habitación espartana y sin ventanas dentro de los barracones CP. Solo hay una mesa, una silla y el olor a aceite para armas.",
+    "name": "Sala de Instrucción del Instructor Principal",
+    "kind": "sala de entrenamiento",
+    "description": "Un cubo de hormigón sin ventanas, frío y con un eco perturbador. Solo hay una silla en el centro y marcas de impactos en las paredes. Aquí se aprenden las lecciones más duras de obediencia.",
     "regulars": [
      "Máscara de Hierro"
     ]
    }
   ],
   "rumors": [
-   "Alguien está filtrando los planos estructurales del puente a los Revolucionarios. El culpable podría ser cualquiera, incluso un agente de CP.",
-   "Se dice que bajo el Tramo 303 hay una grieta que lleva a una caverna natural, un lugar donde el Gobierno no puede ver.",
-   "Un cargamento especial de 'material de construcción' llegará en la próxima luna llena. Los rumores dicen que son celdas de contención de alta seguridad."
+   "Se dice que en los planos antiguos del archivo hay marcada una cámara secreta sellada, construida hace doscientos años, cuyo contenido ni siquiera CP conoce.",
+   "Un cargamento de suministros que llegó la semana pasada olía a pólvora y hierba fresca, algo imposible de conseguir en el mar.",
+   "Alguien ha estado dejando pequeñas marcas, como señales de rescate, en los andamios más altos y peligrosos, visibles solo desde el mar.",
+   "La 'Sylvia Lastimada' no es solo una curandera; se murmura que recuerda los nombres de todos los que han 'desaparecido' en su enfermería y los anota en algún lugar.",
+   "El contrabandista Vorin ofrece un precio muy alto por cualquier boceto o anotación que muestre los puntos estructurales débiles del puente, especialmente cerca de las bases de los pilares."
   ]
  },
  {
   "island": "Thriller Bark",
-  "atmosphere": "Niebla perenne, frío húmedo y un silencio roto solo por gemidos y crujidos. El olor a tierra húmeda y podredumbre antigua lo impregna todo. Una sensación de ser observado por algo inmenso e inhumano pesa en el aire.",
-  "history": "Thriller Bark es un barco pirata colosal, una reliquia de una era pasada, que fue apropiado por Gecko Moria y convertido en su reino flotante. Desde entonces, es una tramba de niebla donde Moria roba sombras para animar a los muertos y crear su ejército zombie. Su dominio ha transformado el lugar en una pesadilla perpetua.",
+  "atmosphere": "Una niebla perpetua envuelve este barco-isla, donde el aire huele a tierra húmeda y sal marina podrida. Las sombras se mueven de forma antinatural, los susurros provienen de tumbas abiertas y una sensación de vigilancia constante emana de la torre más alta. El silencio se rompe solo por gemidos lejanos, pasos arrastrados y el crujido de maderas viejas.",
+  "history": "Thriller Bark fue una vez el orgulloso buque insignia de Gecko Moria, ahora encallado y convertido en su fortaleza flotante. Moria lo llenó de tumbas robadas de otras islas y pobló sus salones con zombies creados a partir de sombras robadas. Su poder ha decaído, pero la niebla y el terror que sembró persisten, atrayendo a desafortunados marineros y buscadores de lo macabro.",
   "customs": [
-   "Nunca caminar solo por la niebla densa; se cree que las sombras cazan mejor a los solitarios.",
-   "Los intercambios en el Mercado Silente se realizan en completo silencio o mediante gestos, para no atraer atención no deseada.",
-   "Enterrar a los muertos (o lo que quede de ellos) con una moneda sobre los ojos, un ritual que se espera evite que su sombra regrese a reclamar el cuerpo."
+   "Nunca se camina sobre las propias sombras proyectadas por las antorchas; se cree que atrae la atención de los cazadores.",
+   "En el Mercado Silente, el trueque se realiza con gestos y objetos, evitando palabras para no delatar la propia sombra.",
+   "Ofrecer un 'Sorbo Final' a los recién llegados sin sombra es un gesto macabro de bienvenida y despedida a la vez."
   ],
   "places": [
    {
     "name": "El Último Sorbo",
     "kind": "taberna",
-    "description": "Una taberna oscura y lúgubre dentro del casco del barco, iluminada por velas que nunca parpadean. El aire huele a licor rancio y desesperación. Mara Lamentos sirve bebidas amargas a quienes aún tienen ánimo (o sombra) para beber.",
+    "description": "Una taberna oscura iluminada por velas que no proyectan sombras claras. El olor a licor rancio y madera mojada impregna el aire. Las mesas tienen muescas de dedos nerviosos.",
     "regulars": [
      "Mara Lamentos",
      "Corso Bruma",
-     "Stamets el Pálido"
+     "Payador Cobros"
     ]
    },
    {
     "name": "Cementerio Mayor",
     "kind": "cementerio",
-    "description": "Un vasto campo de tumbas y lápidas torcidas que cubre una cubierta entera. La tierra parece removerse sola a veces. Buban Grunt trabaja incansablemente, cavando hoyos para nuevos inquilinos o para esconder 'restos problemáticos'.",
+    "description": "Una extensión de tumbas desordenadas y fosas recién abiertas, donde la tierra siempre está removida. Estatuas rotas observan con ojos vacíos. El sonido de una pala trabajando es constante.",
     "regulars": [
      "Buban Grunt",
-     "Grisón el Rígido"
+     "Cerca de Fósiles"
     ]
    },
    {
     "name": "Torre del Reloj",
     "kind": "torre de vigilancia",
-    "description": "La estructura más alta de Thriller Bark, coronada por un reloj cuyas manecillas nunca se mueven. Desde aquí, Nublo Sombralarga vigila la niebla, aunque más que avistar amenazas, anuncia su inevitable llegada.",
+    "description": "La estructura más alta de Thriller Bark, con un reloj cuyas manillas nunca se mueven. Desde aquí, la vista abarca la niebla y los confines del barco-isla. Hace un frío que cala los huesos.",
     "regulars": [
      "Nublo Sombralarga"
-    ]
-   },
-   {
-    "name": "Cuartel de la Guardia Zombie",
-    "kind": "cuartel",
-    "description": "Un antigua sala de armas convertida en guaranta para los zombies más organizados. Huele a moho y aceite rancio. Grisón el Rígido intenta imponer una disciplina marchita entre sus tropas no muertas.",
-    "regulars": [
-     "Grisón el Rígido",
-     "Sisca el Esfumado"
     ]
    },
    {
     "name": "Mercado Silente",
     "kind": "mercado",
-    "description": "Un pasillo abarrotado de puestos que venden 'componentes' macabros: huesos, frascos con niebla, trozos de sombra atrapados. El comerciante Óseo Vendetta regatea en susurros con clientes que evitan mirarse a los ojos.",
+    "description": "Un conjunto de puestos decadentes donde se comercian objetos robados, ingredientes extraños y 'recuerdos' de sombras. Los tratos se hacen con señas y monedas que no hacen ruido.",
     "regulars": [
      "Óseo Vendetta",
+     "Sombra Secreta",
      "Sisca el Esfumado"
     ]
    },
    {
-    "name": "Muelle de los Perdidos",
-    "kind": "puerto",
-    "description": "El punto de acceso principal, una plataforma de madera podrida que se adentra en la niebla. Atraca aquí quien se atreve, o quien ya no tiene sombra que perder. Corso Bruma suele merodear, mirando fijamente al mar.",
+    "name": "Cuartel de la Guardia Zombie",
+    "kind": "cuartel",
+    "description": "Un almacén reconvertido donde zombies mal ensamblados esperan órdenes en desorden. Huele a podredumbre y óxido. Las armas están oxidadas pero afiladas.",
     "regulars": [
-     "Corso Bruma",
-     "Nublo Sombralarga"
+     "Grisón el Rígido",
+     "Antrax Rápido"
     ]
    },
    {
     "name": "Cocina de los Susurros",
-    "kind": "cocina",
-    "description": "Una cocina gélida donde extrañas criaturas cuelgan de ganchos. Stamets el Pálido prepara 'platos' para los que no necesitan comer, pero que aprecian el teatro de la presentación. Sus ollas siempre hierven a fuego lento.",
+    "kind": "cocina / comedor",
+    "description": "Una cocina vasta y lúgubre donde siempre hierve una olla con un guiso de aspecto indeterminado. Los cuchillos cuelgan en silencio y se escuchan murmullos desde las paredes.",
     "regulars": [
      "Stamets el Pálido",
-     "Grisón el Rígido"
+     "Gorro Remendado"
     ]
    },
    {
-    "name": "Pajarera de los Augurios",
-    "kind": "aviario",
-    "description": "Una jaula enorme y oxidada que alberga cuervos y aves de mal agüero. Croac el Callado las alimenta en silencio, interpretando sus graznidos como presagios para los pocos que se atreven a preguntar.",
+    "name": "Puerto de las Sombras",
+    "kind": "puerto",
+    "description": "La zona donde el casco del barco-isla se abre como un muelle. Las aguas son oscuras y quietas. Botes fantasma se mecen suavemente, vacíos.",
     "regulars": [
-     "Croac el Callado",
-     "Buban Grunt"
+     "Marea Fina",
+     "Dossie Atrapado"
     ]
    },
    {
-    "name": "Sala de las Sombras Robadas",
-    "kind": "lugar de almacenamiento",
-    "description": "Una cámara oculta y fría donde Moria guarda sus botines más preciados. No es un lugar público, pero Sisca el Esfumado conoce sus accesos para depositar o recuperar sombras recién capturadas.",
+    "name": "Aviario de Mal Agüero",
+    "kind": "aviario / corral",
+    "description": "Una jaula grande y destartalada donde cuervos y aves de aspecto enfermizo observan en silencio. El suelo está cubierto de plumas oscuras y huesos pequeños.",
     "regulars": [
-     "Sisca el Esfumado"
+     "Croac el Callado"
+    ]
+   },
+   {
+    "name": "El Rincón del Cartógrafo",
+    "kind": "estudio / taller",
+    "description": "Un cuarto abarrotado de mapas incompletos, brújulas rotas y notas sobre la niebla. La única luz proviene de una lámpara de aceite tenue.",
+    "regulars": [
+     "Docil Loquillo"
     ]
    }
   ],
   "rumors": [
-   "La niebla persistente es más espesa de lo normal porque algo enorme y hambriento duerme en sus profundidades y su aliento la espesa.",
-   "Algunas de las sombras robadas han comenzado a 'recordar' fragmentos de sus vidas pasadas y susurran desde las paredes, buscando venganza o su cuerpo original.",
-   "Existe un mapa, oculto en el mecanismo del reloj de la torre, que señala la localización de un tesoro enterrado en el barco antes de que Moria lo tomara. Un tesoro que no es oro.",
-   "El Cabo Grisón está reuniendo en secreto a los zombies más 'conscientes' para una rebelión, cansado de ser un sirviente de segunda en su propio reino de muertos."
+   "Dicen que la sombra gigante en la torre no es la de Moria, sino algo más antiguo que él despertó y que ahora controla la niebla.",
+   "En el Cementerio Mayor, una tumba sin nombre emite un latido sordo. Buban Grunt se niega a cavar cerca de ella.",
+   "Hay un barco 'fantasma' real atrapado dentro de la niebla, con su tripulación intacta pero sin sombras, que navega en círculos buscando salir.",
+   "Algunas sombras robadas han empezado a 'recordar' a sus dueños originales y deambulan buscándolos, causando fallos en los zombies.",
+   "El 'Mercado Silente' ofrece un mapa que señala un punto en la niebla donde las sombras robadas pueden ser recuperadas... por un precio terrible."
   ]
  },
  {
   "island": "Villa Shimotsuki",
-  "atmosphere": "Famosa por su dojo centenario y sus herreros que aún forjan katanas siguiendo tradiciones perdidas. El acero que sale de aquí puede cortar el destino.",
-  "history": "Fundada siglos atrás por la familia Shimotsuki, cuya tradición samurái y de forja de espadas llegó desde Wano. El dojo se estableció como el corazón de la villa, transmitiendo el arte del sable a generaciones de estudiantes.",
+  "atmosphere": "Una villa costera de arquitectura tradicional Wano, dominada por el sonido constante de los martillos en la fragua y el viento cortante que baja de las montañas. El aire huele a salitre, a carbón vegetal y a azahar de los pocos cerezos que sobreviven. Hay una tensión contenida, como el filo de una katana recién templada, entre la dedicación artesanal y la sensación de que un pasado violento está a punto de reaparecer.",
+  "history": "Fundada hace siglos por un samurái exiliado de Wano llamado Shimotsuki, la villa se convirtió en un refugio para artesanos que preservaron el arte de la forja de katanas. Durante la Era de los Piratas, su posición aislada y su reputación de pueblo de pacíficos herreros la mantuvieron a salvo de grandes conflictos, aunque siempre hubo quien codició sus hojas. Actualmente, el legado de los Shimotsuki pesa sobre el actual maestro, cuyo silencio amenaza con romper siglos de paz.",
   "customs": [
-   "El saludo con una leve inclinación de cabeza es común en todos los encuentros, respetando las raíces samurái.",
-   "Cada nueva espada terminada es presentada en una breve ceremonia silenciosa en el forjado.",
-   "Se considera de mala educación discutir o alzar la voz dentro del perímetro del dojo principal."
+   "La 'Primera Forja' del día se ofrece al espíritu del fundador Shimotsuki, golpeando el yunque tres veces al amanecer.",
+   "Está mal visto rechazar un duelo de entrenamiento si se es alumno de un dojo; se considera una falta de respeto al esfuerzo del oponente.",
+   "Nunca se toca la hoja de la katana de otro sin su permiso explícito; es una ofensa tan grave como tocar a su familia."
   ],
   "places": [
    {
     "name": "Dojo Shimotsuki",
     "kind": "dojo",
-    "description": "Un edificio de madera oscura y tejas, impecable y silencioso. El aroma a madera pulida y paja de tatami impregna el aire. Las puertas principales permanecen cerradas.",
+    "description": "Un edificio de madera oscura y tejado de paja, impecablemente mantenido. El suelo de tatami está marcado por décadas de pies descalzos y el aire guarda el eco de mil 'kiais'. Las puertas principales, cerradas con un pesado cerrojo, proyectan una sombra de inquietud sobre la plaza.",
     "regulars": [
-     "Fumio Shimotsuki"
+     "Fumio Shimotsuki",
+     "Ren"
     ]
    },
    {
-    "name": "La Forja del Destino",
-    "kind": "herrería",
-    "description": "El sonido rítmico del martillo sobre el yunque resuena desde el amanecer. El calor del horno es palpable desde la calle, y se ven espadas en diferentes etapas de creación.",
+    "name": "Fragua del Río de la Montaña",
+    "kind": "herreria",
+    "description": "Junto a un río de aguas cristalinas y frías, ideales para el templado del acero, se alinean varias fraguas con techos de paja. El sonido del martilleo es constante, y el aire brilla con las chispas del metal al rojo vivo. Pilas de carbón y lingotes de acero especial esperan su turno.",
+    "regulars": []
+   },
+   {
+    "name": "Posada 'Flor de Ciruelo'",
+    "kind": "posada_taberna",
+    "description": "El corazón social de la villa, siempre cálido y lleno del olor a guiso y sake barato. Los clientes beben en voz baja, intercambiando miradas cuando alguien menciona el dojo cerrado. Hay un tablón de anuncios desgastado junto a la entrada.",
     "regulars": [
-     "Fumio Shimotsuki"
+     "Haru",
+     "Daichi",
+     "Bunta",
+     "Ryo"
     ]
    },
    {
-    "name": "Muelle Este",
+    "name": "Muelle Este y Almacén de Pescado",
     "kind": "puerto",
-    "description": "Un muelle de madera sencillo donde botes de pesca se mecen suavemente. El olor a sal y redes secas domina. Es el punto más tranquilo de la villa.",
+    "description": "Un muelle de madera sencillo donde atracan barcas de pesca. El olor a pescado salado y redes secándose impregna el lugar. El almacén, semiabandonado, tiene un segundo uso menos oficial como punto de intercambio discreto.",
     "regulars": [
-     "Jiro"
+     "Jiro",
+     "Yamato no Kenji"
     ]
    },
    {
-    "name": "Oficina del Registro",
-    "kind": "oficina administrativa",
-    "description": "Un edificio pequeño y ordenado, con papeles meticulosamente archivados. Es el centro de todo el comercio legal y los registros de propiedad de la isla.",
+    "name": "Archivo y Mapoteca de la Villa",
+    "kind": "biblioteca",
+    "description": "Una casa pequeña y atestada de pergaminos, libros de registro y mapas antiguos. El polvo del papel se mezcla con el aroma a tinta y madera de cedro. Es el lugar donde se custodia la memoria escrita de Shimotsuki.",
     "regulars": [
+     "Miyuki",
      "Ayako"
     ]
    },
    {
     "name": "Cuartel de la Guardia",
     "kind": "cuartel",
-    "description": "Una construcción funcional de piedra junto a la entrada principal de la villa. Pocos guardias se ven patrullando, dando una sensación de calma vigilante.",
+    "description": "Una construcción simple y funcional de piedra junto a la entrada principal de la villa. Dentro, unas pocas armas decoran las paredes, más simbólicas que útiles. Es un lugar tranquilo, pues el crimen solía ser casi inexistente... hasta ahora.",
     "regulars": [
      "Takeshi"
     ]
    },
    {
-    "name": "La Taberna del Herrero Cansado",
-    "kind": "taberna",
-    "description": "Lugar de reunión después del trabajo. Olores a sake tibio, estofado y humo de pipa. Las conversaciones son bajas, casi susurradas.",
+    "name": "Santuario de la Cumbre",
+    "kind": "templo",
+    "description": "Un pequeño santuario Shinto en lo alto de una colina, con vista a toda la villa y el mar. Cintas de papel shide crujen en el viento. Es un lugar de gran paz, pero también de soledad, donde se puede ver llegar a los barcos desde lejos.",
     "regulars": [
-     "Jiro",
-     "Takeshi"
+     "Isao"
     ]
    },
    {
-    "name": "Mercado de la Villa",
-    "kind": "mercado",
-    "description": "Una plaza con puestos de pescado fresco, verduras y algunos utensilios básicos. El movimiento es pausado y cordial.",
+    "name": "Cabaña de la Curandera",
+    "kind": "casa_aislada",
+    "description": "Una cabaña de madera junto al río, alejada del bullicio. El jardín está lleno de hierbas medicinales y el sonido del agua es constante. El interior es acogedor, lleno de frascos de cerámica y el suave aroma a plantas secas.",
     "regulars": [
-     "Ayako",
-     "Jiro"
+     "Yua"
     ]
    },
    {
-    "name": "Casa del Maestro Fumio",
-    "kind": "residencia importante",
-    "description": "Una casa tradicional adyacente al dojo, con un jardín de piedras minimalista. Las persianas están bajadas, aumentando el misterio sobre su inhabitante.",
+    "name": "Vertedero de Escoria",
+    "kind": "vertedero",
+    "description": "Una zona en las afueras, cerca de las fraguas, donde se amontonan los restos de metal fallado, escoria y herramientas rotas. Un lugar triste pero lleno de potencial para quien sepa buscar. Pequeñas huellas en el barro delatan visitas frecuentes.",
     "regulars": [
-     "Fumio Shimotsuki"
+     "Ren"
     ]
    }
   ],
   "rumors": [
-   "El maestro Fumio no ha sido visto en días, y algunos juran haber oído sonidos de lucha dentro del dojo por la noche.",
-   "Un barco desconocido atracó en una cala al norte hace unas noches; solo una persona desembarcó.",
-   "Se dice que Akio, el antiguo alumno prodigio, fue expulsado por querer usar las técnicas del dojo para fines deshonrosos.",
-   "Alguien ha estado preguntando en el muelle, de forma discreta, sobre los horarios y rutinas de la guardia local.",
-   "En la herrería falta un pedido especial de acero de alta calidad que solo el maestro Fumio podía trabajar."
+   "Se dice que Akio, el prodigio expulsado, busca la 'Hoja del Exilio', una katana legendaria forjada por el propio fundador y escondida en la isla, para reclamar el dojo por la fuerza.",
+   "Alguien está comprando grandes cantidades de pólvora y vino de arroz de contrabando en el muelle, pero no para una fiesta. Los barriles tienen un destino desconocido.",
+   "El viejo Bunta bebe en la posada y murmura, entre trago y trago, que reconoce el estilo de los golpes que derribaron la puerta del dojo: es el de un asesino a sueldo que operaba en el South Blue hace años.",
+   "Ren, el niño huérfano, jura haber visto luces azuladas y oído cuchicheos cerca del vertedero de escoria por las noches, como si el metal muerto estuviera hablando.",
+   "El Maestro Fumio recibió una carta sellada con un símbolo de espada rota días antes de encerrarse. La cartógrafa Miyuki fue la última en hablar con él y parece muy nerviosa desde entonces."
   ]
  },
  {
   "island": "Villa Syrup",
-  "atmosphere": "Un pueblo costero tranquilo y acogedor, donde la brisa marina se mezcla con el olor a madera húmeda y redes de pesca. Los niños juegan a ser piratas por las calles de tierra, imitando las grandiosas historias que un narrador cuenta en la plaza, historias tan exageradas que nadie las toma del todo en serio, pero que alimentan la imaginación de todos. Una mansión en lo alto de la colina vigila el pueblo con una presencia silenciosa y un tanto inquietante.",
-  "history": "Villa Syrup siempre ha sido un pueblo pesquero y de construcción naval modesto, conocido por su tranquilidad y su comunidad unida. Hace tres años, la vida cambió con la llegada del mayordomo Lucius Amanecer a la mansión de la colina, un evento que, aunque aparentemente menor, marcó el inicio de un misterio que aún perdura. Desde entonces, la antigua dueña, la señorita de la mansión, ha dejado de ser vista en el pueblo, alimentando rumores y susurros entre los vecinos.",
+  "atmosphere": "Un pueblo costero tranquilo y soleado, donde el olor a salitre se mezcla con el aroma a madera recién cortada. Los niños juegan a ser piratas por las callejuelas de tierra, gritando y riendo, mientras los ancianos observan desde las puertas de sus casas. Hay una sensación de sosiego, pero también una inquietud soterrada, un murmullo sobre lo que pasa en la mansión de la colina que nadie se atreve a investigar abiertamente.",
+  "history": "Villa Syrup fue fundada como un modesto asentamiento pesquero y de reparación naval, aprovechando su bahía protegida. Su crecimiento fue lento y pacífico, sin grandes eventos hasta que, hace tres años, el misterioso mayordomo Lucius Amanecer llegó a la mansión de la colina, hogar de una familia local. Desde su llegada, la vida pública de la señorita de la mansión cesó por completo, sembrando la primera semilla de duda y rumor en la historia del pueblo.",
   "customs": [
-   "Cada atardecer, la gente se reúne en la plaza para escuchar las nuevas aventuras que inventa Gideon 'Cuentalargas', un ritual que mantiene viva la tradición oral y el espíritu aventurero.",
-   "Los niños del pueblo organizan 'batallas piratas' con espadas de madera y barcos imaginarios, un juego heredado de generaciones y fomentado por las historias locales.",
-   "Los pescadores ofrecen siempre el primer pez del día a Selma de la Red, considerada la guardiana de la suerte en el muelle, en un pequeño gesto de agradecimiento y superstición."
+   "Al atardecer, la gente se reúne en la plaza para escuchar las fantásticas historias de Gideon 'Cuentalargas', un ritual diario que entretiene a niños y adultos por igual.",
+   "Los conflictos entre pescadores, especialmente entre las facciones de Selma de la Red y Corrina 'La Red Rota', a menudo se resuelven con apuestas amistosas sobre quién trae la mejor captura del día.",
+   "Cada luna llena, la sacerdotisa Seraphine enciende las lámparas del pequeño templo en la colina, un gesto considerado de buen augurio para las pescas y viajes de la semana."
   ],
   "places": [
    {
     "name": "El Rincón del Grumete",
-    "kind": "Taberna",
-    "description": "Una taberna baja de techos, con mesas de madera desgastada por el uso y el salitre. El olor a estofado de pescado y cerveza tibia llena el aire. Tamir Hojadecaña siempre está tras la barra, limpiando un vaso con un trapo que nunca parece limpio.",
+    "kind": "taberna",
+    "description": "Una taberna baja y acogedora con paredes de madera oscura llenas de recuerdos marinos. El olor a cerveza tibia y estofado de pescado es constante. Tamir Hojadecaña siempre está tras la barra, limpiando un vaso con un trapo que nunca parece limpio.",
     "regulars": [
      "Tamir Hojadecaña",
-     "Boris 'Maza'",
+     "Jonás Cala",
+     "Gareth 'Cicatriz'",
+     "Marlow 'El Recibo'"
+    ]
+   },
+   {
+    "name": "El Muelle de la Media Luna",
+    "kind": "puerto",
+    "description": "Un muelle de madera resistente, pero con algunas tablas sueltas que crujen. Botes de pesca pintados de colores brillantes se mecen suavemente en el agua clara. Aquí es donde se carga y descarga el poco comercio que llega al pueblo.",
+    "regulars": [
+     "Selma de la Red",
+     "Corrina 'La Red Rota'",
+     "Kael 'Red Seca'",
      "Leo Tablón"
     ]
    },
    {
-    "name": "La Atalaya del Vigilante",
-    "kind": "Cuartel",
-    "description": "Una pequeña garita de madera junto al único camino que sube a la colina. Más simbólica que efectiva, está siempre limpia y ordenada. Tobias 'El Vigilante' pasa aquí largas horas, observando más el horizonte marino que la propia mansión.",
-    "regulars": [
-     "Tobias 'El Vigilante'"
-    ]
-   },
-   {
-    "name": "Plaza del Cuentalargas",
-    "kind": "Plaza",
-    "description": "El corazón social del pueblo, con un pozo en el centro y bancos de piedra desgastados. Aquí es donde Gideon despliega todo su repertorio, gesticulando frente a un círculo de oyentes boquiabiertos, principalmente niños.",
+    "name": "La Plaza de las Historias",
+    "kind": "plaza",
+    "description": "El corazón social del pueblo, un espacio abierto con un pozo en el centro y bancos de piedra desgastados. Por las noches, se ilumina con antorchas y faroles colgados de los postes. Aquí es donde los niños juegan durante el día.",
     "regulars": [
      "Gideon 'Cuentalargas'",
      "Marina 'Ojo de Halcón'",
+     "Pico",
      "Flora Tejedora"
     ]
    },
    {
-    "name": "Muelle de la Red Dorada",
-    "kind": "Puerto",
-    "description": "Un muelle de madera sencillo, crujiente bajo los pies, donde las barcas de pesca se mecen suavemente. Los pescados recién capturados se exponen sobre mantas de lona. Selma de la Red negocia con voz firme y sonrisa fácil.",
+    "name": "La Mansión de la Colina",
+    "kind": "mansión",
+    "description": "Una gran casa de piedra blanca con tejados de pizarza gris, visible desde cualquier punto del pueblo. Sus ventanas siempre parecen cerradas y los jardines, antes coloridos, ahora están cuidados con una precisión inquietante y excesivamente ordenada. Solo se ve movimiento a horas muy regulares.",
+    "regulars": [
+     "Lucius Amanecer"
+    ]
+   },
+   {
+    "name": "El Puesto de los Susurros",
+    "kind": "mercado",
+    "description": "Un pequeño puesto de madera en el extremo del muelle, lleno de peces frescos, redes y anzuelos. Es el centro de los chismes más jugosos del puerto, especialmente cuando sus dos dueñas rivales están presentes.",
     "regulars": [
      "Selma de la Red",
-     "Leo Tablón"
+     "Corrina 'La Red Rota'",
+     "Flora Tejedora"
     ]
    },
    {
-    "name": "La Mansión de la Colina",
-    "kind": "Mansión",
-    "description": "Una gran casa señorial de piedra gris, con ventanas altas y un jardín descuidado que la rodea. Transmite una quietud absoluta y un poco lúgubre. Las cortinas están siempre corridas. Solo se ve movimiento cuando Lucius Amanecer aparece brevemente en la entrada.",
+    "name": "La Forja del Viejo Marino",
+    "kind": "herrería",
+    "description": "Una fragua siempre encendida junto al camino que sube a la colina. El sonido del martillo sobre el yunque es frecuente. Dentro, herramientas navales y herraduras cuelgan de las paredes, junto a algún recuerdo de los Marines.",
     "regulars": [
-     "Lucius Amanecer"
-    ]
-   },
-   {
-    "name": "Cabaña de Flora Tejedora",
-    "kind": "Casa importante",
-    "description": "Una cabaña llena de ovillos de lana de colores, telares y el constante tintineo de las agujas. Es el centro de todos los chismes del pueblo. Flora siempre tiene una taza de té lista para quien quiera escuchar (y hablar).",
-    "regulars": [
-     "Flora Tejedora",
-     "Gideon 'Cuentalargas'"
-    ]
-   },
-   {
-    "name": "Astillero del Tablón",
-    "kind": "Taller de carpintería naval",
-    "description": "Un cobertizo abierto junto al muelle, lleno de virutas de madera, herramientas y el olor a brea y madera nueva. Aquí se reparan las barcas y, a veces, se sueña con construir algo más grande.",
-    "regulars": [
+     "Gareth 'Cicatriz'",
      "Leo Tablón",
-     "Tamir Hojadecaña"
+     "Tobias 'El Vigilante'"
     ]
    },
    {
-    "name": "La Cala del Capitán",
-    "kind": "Playa / Bosque costero",
-    "description": "Una pequeña cala escondida entre rocas, accesible solo por un sendero estrecho. Es el cuartel general secreto de los juegos piratas infantiles, decorado con 'tesoros' (conchas y piedras pintadas) y un 'barco' hecho con troncos viejos.",
+    "name": "La Cabaña de la Savia",
+    "kind": "casa",
+    "description": "Una cabaña de troncos en las laderas boscosas de la colina, rodeada de pequeños huertos de hierbas medicinales. El aire huele a tierra húmeda y plantas aromáticas. Frascos de cristal con tinturas y pomadas llenan los estantes visibles desde la ventana.",
     "regulars": [
-     "Marina 'Ojo de Halcón'"
+     "Yara Savia",
+     "Seraphine de la Colina"
     ]
    },
    {
-    "name": "Camino del Amanecer",
-    "kind": "Camino / Sendero",
-    "description": "El empinado y sinuoso sendero de tierra que serpentea desde el pueblo hasta la mansión. Está flanqueado por árboles que crean un túnel sombrío. Solo Lucius Amanecer lo recorre con regularidad, siempre impecable y silencioso.",
+    "name": "El Templo del Alba",
+    "kind": "templo",
+    "description": "Una estructura pequeña y sencilla de piedra blanca, casi una capilla, situada en un claro junto al camino a la mansión. Sus puertas de madera están siempre abiertas, y en su interior solo hay un altar simple y un olor a cera e incienso.",
     "regulars": [
-     "Lucius Amanecer"
+     "Seraphine de la Colina",
+     "Flora Tejedora"
     ]
    },
    {
-    "name": "El Rincón de Maza",
-    "kind": "Callejón / Punto de encuentro",
-    "description": "Un callejón trasero cerca de la taberna, con paredes descascaradas y algunos barriles vacíos. Es donde Boris 'Maza' suele reunirse con sus pocos acólitos para farolear sobre sus 'hazañas' y molestar a los incautos.",
+    "name": "La Caseta del Vigilante",
+    "kind": "cuartel",
+    "description": "Más que un cuartel, es una caseta de guardia de madera junto al único camino de entrada al pueblo. Está desordenada, con mapas desplegados y una tetera siempre humeante. Tobias pasa aquí más tiempo charlando que vigilando.",
     "regulars": [
+     "Tobias 'El Vigilante'",
      "Boris 'Maza'"
+    ]
+   },
+   {
+    "name": "La Guarida del Halcón",
+    "kind": "escondite",
+    "description": "Una cueva pequeña y secreta en los acantilados al este del pueblo, accesible solo con marea baja o trepando. Dentro hay un 'tesoro' de objetos brillantes y sin valor, y a veces se ven restos de una pequeña fogata.",
+    "regulars": [
+     "Marina 'Ojo de Halcón'",
+     "Pico"
     ]
    }
   ],
   "rumors": [
-   "Se dice que Lucius Amanecer baja al pueblo de noche, en absoluto silencio, para comprar suministros extraños y caros que no parecen para una sola persona.",
-   "Los niños juran haber visto, en noches de luna llena, la silueta de una mujer asomada a la ventana más alta de la mansión, aunque los adultos lo atribuyen a su imaginación.",
-   "Flora Tejedora susurra que, antes de la llegada del mayordomo, la señorita de la mansión era una mujer alegre que a menudo bajaba al pueblo a comprar telas y charlar. Ahora, ni sus pedidos llegan.",
-   "Algunos pescadores hablan de un pequeño bote desconocido que a veces aparece atado en una cala lejana de la isla, sin dueño aparente, y desaparece tan misteriosamente como llega.",
-   "Gideon 'Cuentalargas' ha empezado a insinuar, entre sus historias más fantásticas, que la mansión podría guardar un 'tesoro' real, no de oro, sino de secretos, animando indirectamente a los más curiosos a investigar."
+   "Gideon 'Cuentalargas' jura que una de sus historias más descabelladas, sobre un tesoro escondido en los arrecifes del norte, está basada en un mapa real que una vez vio. Quizás Elara Brújula sepa algo.",
+   "Marlow 'El Recibo' anda preguntando discretamente por quién tiene deudas pendientes con ciertos prestamistas de islas lejanas, y su mirada se posa a menudo en los pescadores más exitosos.",
+   "Flora Tejedora susurra que, por las noches, se ven luces moviéndose de forma extraña en los jardines de la mansión, como si alguien cavara.",
+   "Kael 'Red Seca' busca clientes discretos para un 'cargamento especial' que llegará con la próxima luna nueva, algo que no quiere que vean ni Selma ni Corrina.",
+   "Algunos niños, liderados por Marina, planean una 'incursión pirata' a la mansión para 'rescatar a la señorita cautiva', una idea peligrosa que Pico apoya con entusiasmo."
   ]
  },
  {
   "island": "Water 7",
-  "atmosphere": "Water 7 es una ciudad vibrante y llena de vida, donde los barcos navegan por los canales que serpentean entre las casas de estilo arquitectónico peculiar. El sonido del agua fluyendo y los ecos de la construcción en los astilleros crean una melodía constante que refleja la energía laboral de sus habitantes. Sin embargo, una tensión subyacente y un aire de desconfianza flotan en el ambiente, pues la fachada de camaradería oculta oscuros secretos.",
-  "history": "Water 7 ha sido durante mucho tiempo el centro de la construcción naval en el mundo de One Piece, famosa por sus astilleros y carpinteros de renombre. Sin embargo, en los últimos años, los rumores sobre planos antiguos que podrían cambiar el rumbo de la historia han comenzado a circular, alimentando la codicia de facciones tanto locales como externas. La llegada de la CP-0 ha dejado a muchos en el pueblo inquietos, ya que la lealtad es un recurso escaso en tiempos de incertidumbre.",
+  "atmosphere": "Una bulliciosa metrópolis flotante construida sobre canales que sirven como avenidas. El olor a madera fresca, agua salada y forja impregna el aire. La prosperidad es visible en sus magníficos astilleros y arquitectura, pero una tensión soterrada palpita bajo la cortesía generalizada, donde la confianza puede ser un arma.",
+  "history": "Water 7 fue fundada por los mejores carpinteros navales del mundo, atraídos por su ubicación estratégica y sus recursos. Durante siglos, su reputación creció al construir barcos legendarios. Hace décadas, una figura oculta de CP-0 comenzó a infiltrarse, buscando los planos de un arma olvidada. La actual Galley-La mantiene la paz y la producción, sin ser plenamente consciente de la sombra que se mueve entre ellos.",
   "customs": [
-   "Los habitantes disfrutan de las reuniones en los canales durante la tarde, donde comparten historias y canciones en un ambiente de camaradería.",
-   "Es costumbre ofrecer pescado fresco en forma de platillos elaborados en diversas festividades locales, destacando el Mercado de Pescado.",
-   "Las celebraciones por la construcción de un nuevo barco en los astilleros son eventos de gran renombre, donde la comunidad se une para festejar con comida y bebida."
+   "El 'Saludo de la Gubia', un gesto donde se lleva la mano abierta a la sien, usado entre carpinteros para mostrar respeto.",
+   "El 'Festival de la Vela Nueva', donde se lanzan pequeñas barcas de madera con velas encendidas a los canales al anochecer, honrando a los barcos terminados.",
+   "La 'Ley del Canal': quien cause un accidente náutico en una intersección principal debe pagar una ronda en la taberna más cercana."
   ],
   "places": [
    {
     "name": "El Ancla Oxidada",
-    "kind": "taberna",
-    "description": "Esta taberna es el lugar de encuentro favorito de los marineros y carpinteros, donde las risas y las historias fluyen junto a la cerveza local. Su dueña, Mira del Remolino, siempre tiene un consejo y una sonrisa para quienes cruzan su puerta.",
+    "kind": "Taberna",
+    "description": "Un establecimiento ruidoso y acogedor lleno de recuerdos marinos colgados de las vigas. El olor a cerveza rancia y estofado de pescado es constante.",
     "regulars": [
-     "Mira del Remolino"
+     "Mira del Remolino",
+     "Rocco el Remachador",
+     "Leto Ceniza",
+     "Ronco Cicatriz"
     ]
    },
    {
-    "name": "Mercado de Pescado",
-    "kind": "mercado",
-    "description": "Un bullicioso mercado donde los pescadores llevan sus capturas frescas cada mañana. Lia de las Escamas, la vendedora más popular, siempre tiene una oferta especial que atrae tanto a locales como a forasteros.",
+    "name": "Astilleros Galley-La",
+    "kind": "Astillero Principal",
+    "description": "Una ciudadela de madera, metal y actividad frenética. Grúas gigantescas mueven cascos, y el sonido de martillos y sierras es un himno constante.",
     "regulars": [
-     "Lia de las Escamas"
-    ]
-   },
-   {
-    "name": "Astillero Secreto",
-    "kind": "astillero",
-    "description": "Poco conocido por la mayoría, este astillero es el lugar donde se llevan a cabo trabajos clandestinos y reuniones furtivas. Bram el Yunque es conocido por su fuerza y su habilidad para mantener el orden entre los matones.",
-    "regulars": [
+     "Orso del Canal",
+     "Silas el Pulcro",
      "Bram el Yunque"
     ]
    },
    {
-    "name": "Biblioteca Municipal Sumergida",
-    "kind": "biblioteca",
-    "description": "Sumergida en la historia, esta biblioteca alberga antiguos manuscritos y planos que muchos desean encontrar. Elias el Pergamino, el archivero, conoce cada rincón y secreto de sus estanterías.",
+    "name": "Mercado de Pescado de las Escamas",
+    "kind": "Mercado",
+    "description": "Un bullicioso muelle cubierto donde los pescadores exhiben sus capturas del día. El suelo está siempre húmedo y el griterío de los vendedores es ensordecedor.",
     "regulars": [
-     "Elias el Pergamino"
-    ]
-   },
-   {
-    "name": "Galley-La",
-    "kind": "cuartel",
-    "description": "Este es el corazón del poder de Water 7, donde se diseñan y construyen algunos de los barcos más famosos del mundo. Orso del Canal supervisa cada proyecto, asegurándose de que la calidad sea impecable.",
-    "regulars": [
-     "Orso del Canal"
+     "Lia de las Escamas",
+     "Cal Deriva",
+     "Galeon Marea"
     ]
    },
    {
     "name": "Cuartel de la Guardia Acuática",
-    "kind": "cuartel",
-    "description": "Sede de la seguridad local, donde Marco la Garza dirige a sus hombres en la protección del pueblo. Aquí, se discuten estrategias y se responden a las inquietudes de los ciudadanos.",
+    "kind": "Cuartel",
+    "description": "Una fortaleza de piedra blanca junto al canal principal, con embarcaderos para sus rápidos. Banderas ondean y los guardias patrullan con eficiencia marcial.",
     "regulars": [
-     "Marco la Garza"
-    ]
-   },
-   {
-    "name": "Oficina del Teniente Arlo Crest",
-    "kind": "cuartel",
-    "description": "Este es el lugar donde el Teniente Arlo Crest coordina la vigilancia de la Marina. Su actitud seria y firme infunde respeto, pero su lealtad es cuestionada por algunos.",
-    "regulars": [
+     "Marco la Garza",
      "Teniente Arlo Crest"
     ]
    },
    {
-    "name": "El muelle de los barcos de carga",
-    "kind": "puerto",
-    "description": "Un área siempre activa donde grandes barcos de carga llegan y parten, llevando productos y mercancías entre islas. Aquí los rumores y secretos flotan tan fácilmente como los barcos que navegan.",
+    "name": "Biblioteca Municipal Sumergida",
+    "kind": "Biblioteca / Archivo",
+    "description": "Un edificio antiguo y silencioso, parcialmente sumergido en un canal tranquilo. Sus salas bajas tienen un olor a pergamino viejo y humedad controlada.",
+    "regulars": [
+     "Elias el Pergamino",
+     "Nina Aguilera"
+    ]
+   },
+   {
+    "name": "Muelles de Carga del Norte",
+    "kind": "Puerto / Muelle",
+    "description": "Una zona industrial menos vigilada, llena de grúas oxidadas y almacenes semivacíos. Ideal para negocios que no brillan a la luz del día.",
+    "regulars": [
+     "Lena Torrente",
+     "Seda Contrabando",
+     "Bram el Yunque"
+    ]
+   },
+   {
+    "name": "Templo de las Mareas Silentes",
+    "kind": "Templo",
+    "description": "Una construcción serena y antigua de piedra gris, alejada del bullicio. En su interior solo se oye el goteo del agua y los susurros de los fieles.",
+    "regulars": [
+     "Kaito Remanso",
+     "Vago Solana"
+    ]
+   },
+   {
+    "name": "Cementerio de Barcos",
+    "kind": "Cementerio / Ruinas",
+    "description": "Una bahía sombría en las afueras, donde los cascos rotos de barcos antiguos se alzan como esqueletos de madera contra el cielo plomizo.",
+    "regulars": [
+     "Ronco Cicatriz",
+     "Cal Deriva"
+    ]
+   },
+   {
+    "name": "Barrios Altos (Colina del Vidente)",
+    "kind": "Barrio Residencial / Casas",
+    "description": "Una serie de casas elegantes construidas en la ladera, con vistas a los canales. Más tranquilo y con aire menos cargado de serrín.",
     "regulars": []
    },
    {
-    "name": "El Faro de Water 7",
-    "kind": "faros",
-    "description": "Un majestuoso faro que guía a los barcos hacia el puerto. Las luces parpadeantes son un símbolo de esperanza y seguridad para los navegantes en apuros. Los pescadores a menudo se reúnen aquí para contar historias de sus travesías.",
-    "regulars": []
+    "name": "Astillero Secreto 'El Yunque'",
+    "kind": "Astillero Secreto / Escondite",
+    "description": "Un cobertizo camuflado entre pilotes y ruinas en el extremo oeste de la ciudad. Solo se accede por un canal oculto. Dentro huele a aceite y proyectos inacabados.",
+    "regulars": [
+     "Bram el Yunque"
+    ]
    }
   ],
   "rumors": [
-   "Se dice que algún miembro de la CP-0 ha sido visto en la taberna, intentando hacer amistad con los carpinteros locales.",
-   "Los planos que muchos buscan podrían estar escondidos en la Biblioteca Municipal Sumergida, pero su acceso es complicado.",
-   "Se habla de que un barco fantasma ha sido avistado cerca del faro, y que trae consigo tesoros olvidados.",
-   "Algunos aseguran que un carpintero de Galley-La ha hecho un pacto con el Gobierno, a cambio de secretos sobre la construcción de barcos.",
-   "Circula un rumor sobre un enfrentamiento inminente entre la Guardia Acuática y un grupo desconocido que busca desestabilizar Water 7."
+   "Dicen que en la Biblioteca Sumergida hay un mapa que muestra la entrada a una cámara oculta bajo la ciudad, construida por los fundadores.",
+   "Un fantasma, un pescador que murió ahogado, merodea el Canal del Norte por las noches, pero algunos susurran que en realidad es un espía que usa la leyenda para moverse sin ser visto.",
+   "Alguien está robando planos antiguos de barcos de guerra retirados de los archivos de Galley-La. Solo faltan los de un modelo concreto, el 'Leviatán de Acero'.",
+   "En el Cementerio de Barcos, un antiguo custodio sabe dónde está enterrado el diario de un arquitecto naval que trabajó para el Gobierno Mundial hace cincuenta años.",
+   "Un contable de Galley-La lleva meses llevando los libros con una precisión obsesiva, pero sus informes nunca cuadran del todo con el inventario real de maderas raras."
   ]
  },
  {
   "island": "Whisky Peak",
-  "atmosphere": "Un pueblo de fiesta perpetua con música alegre, risas forzadas y un dulzor embriagador en el aire que oculta un filo acechante. Cada visitante es aclamado como un héroe, pero las sonrisas de los aldeanos son demasiado brillantes, sus brindis demasiado insistentes.",
-  "history": "Whisky Peak fue fundada como una tranquila parada para navegantes. La llegada de Baroque Works la transformó en una trampa perfecta: un pueblo de cazadores de recompensas que finge ser un paraíso festivo para atraer y emborrachar a piratas incautos antes de entregarlos a la Marina.",
+  "atmosphere": "Un pueblo de fiesta perpetua con risas estridentes, brindis que nunca cesan y una alegría que parece demasiado perfecta para ser real. Cada rincón huele a cerveza derramada, sudor y el dulce aroma de las trampas. La noche es una sinfonía de música alegre, bailes forzados y siluetas que acechan desde los tejados, donde la hospitalidad es un arma.",
+  "history": "Whisky Peak fue fundada como un puerto de descanso para piratas exhaustos tras cruzar Reverse Mountain. Su reputación de 'isla de los héroes' atrajo a Baroque Works, que la convirtió en una trampa letal disfrazada de paraíso. Los festejos se transformaron en una fachada para despojar a los visitantes de sus recompensas. Ahora, es un pueblo-carnada controlado en secreto por la organización criminal.",
   "customs": [
-   "Brindar compulsivamente con cualquier recién llegado, ofreciendo licor gratis hasta la inconsciencia.",
-   "Organizar falsas procesiones de 'héroes' por las calles principales para exhibir a las nuevas presas.",
-   "Cantar y bailar en coros perfectamente coordinados que enmascaran señales silenciosas entre los cazadores."
+   "La 'Lluvia de Brindis': Cada nuevo visitante es recibido con una ráfaga de brindis y cantos hasta que alguien cae inconsciente. La meta no es beber, sino hacer beber al invitado.",
+   "El 'Baile del Desprevenido': Al anochecer, los lugareños invitan a los forasteros a bailar en la plaza, una distracción para que los cazadores de recompensas evalúen a su presa.",
+   "La 'Deuda de Hospitalidad': Todo lo ofrecido (comida, bebida, alojamiento) tiene un precio oculto que se cobra en berries... o en cabezas, si el visitante parece valioso."
   ],
   "places": [
    {
     "name": "La Jarra Resquebrajada",
     "kind": "taberna",
-    "description": "El corazón engañoso del pueblo, con barriles abiertos por doquier, mesas llenas de manjares y un ambiente de camaradería forzada. Gerald Hops brinda desde detrás de la barra con una sonrisa de anfitrión.",
+    "description": "El corazón ruidoso de la falsa alegría, con mesas llenas de barriles vacíos y un olor a cerveza agria. Los cánticos aquí son tan ensordecedores como los ronquidos de los clientes emborrachados. El mostrador está lleno de cicatrices de cuchillos y copas rotas.",
     "regulars": [
      "Gerald Hops",
      "Timón Roy",
-     "Dirk 'Sonrisa Ancha'"
+     "Reed Susurro"
     ]
    },
    {
-    "name": "La Puerta de los Héroes",
-    "kind": "entrada al pueblo",
-    "description": "Un arco de piedra adornado con guirnaldas marchitas. Aquí comienza el recibimiento teatral, con Buck 'Doble-Cara' dando la bienvenida con una alegría exagerada mientras evalúa a los visitantes.",
-    "regulars": [
-     "Buck 'Doble-Cara'",
-     "Lyre Whisper"
-    ]
-   },
-   {
-    "name": "Salón de Fiestas 'Velo Nocturno'",
-    "kind": "salón de baile",
-    "description": "Un edificio elegante donde la música nunca cesa. Saffron Veil baila en el centro, sus movimientos fluidos sirven tanto para entretener como para distraer a las futuras presas.",
+    "name": "Salón de la Risa Eterna",
+    "kind": "salón de fiestas",
+    "description": "Un gran salón con arañas de cristal polvorientas y un escenario donde la música nunca se detiene. Las cortinas de terciopelo rojo esconden puertas secretas. El suelo de madera cruje bajo los pies de los bailarines que parecen marionetas.",
     "regulars": [
      "Saffron Veil",
      "Lyre Whisper"
     ]
    },
    {
-    "name": "Mercado de la Dulce Trampa",
+    "name": "Puerto de los Suspiros",
+    "kind": "puerto",
+    "description": "Un muelle de madera podrida donde se amontonan barcos abandonados y botes de pesca. Las farolas parpadean de forma intermitente, proyectando sombras largas. El aire huele a sal, algas y a la promesa falsa de un refugio seguro.",
+    "regulars": [
+     "Garrick 'Cicatriz'",
+     "Brice 'Ancla'"
+    ]
+   },
+   {
+    "name": "Mercado de las Sonrisas Vacías",
     "kind": "mercado",
-    "description": "Puestos coloridos que venden recuerdos adulterados y licores 'típicos' de fuerza insospechada. Boris Barrel ofrece muestras gratis con la mirada calculadora de un mercader que no vende souvenirs.",
+    "description": "Puestos coloridos que venden recuerdos baratos y licores 'típicos' de fuerza dudosa. Los vendedores sonríen de manera exagerada mientras cuentan monedas bajo el mostrador. El ambiente es una cacofonía de ofertas gritadas y risas forzadas.",
     "regulars": [
      "Boris Barrel",
-     "Mabel Crust"
+     "Mabel Crust",
+     "Ketchup Sol"
     ]
    },
    {
-    "name": "Horno de la Señora Crust",
-    "kind": "panadería",
-    "description": "Huele a pan recién hecho y pasteles dulces, un aroma que tapa otros olores. Mabel Crust hornea sin descanso para alimentar la farsa, sus bollos a menudo acompañan los brindis.",
+    "name": "Archivo Municipal de las Mentiras",
+    "kind": "archivo municipal",
+    "description": "Una habitación polvorienta en el ayuntamiento, llena de mapas falsos y registros adulterados. El único sonido es el rasgueo de plumas sobre pergamino. Aquí se reescribe la historia del pueblo para que encaje en la farsa.",
     "regulars": [
-     "Mabel Crust"
+     "Niles Pluma",
+     "Gerald Hops"
     ]
    },
    {
-    "name": "Almacén del Puerto Seco",
-    "kind": "almacén",
-    "description": "Un cobertizo cerca del muelle, aparentemente para almacenar suministros. En realidad, guarda redes, esposas de marino y el botín 'recogido' de los piratas emborrachados. Silas Mop lo 'limpia' con frecuencia.",
+    "name": "La Guarida del Cobro",
+    "kind": "casas importantes",
+    "description": "Una casa discreta en un callejón trasero, con una puerta de metal reforzado y una ranura para deslizar berries. No hay ventanas. Dentro, solo se oye el sonido de monedas siendo contadas y papeles siendo rasgados.",
     "regulars": [
-     "Silas Mop",
+     "Corvus 'Cobro'",
      "Dirk 'Sonrisa Ancha'"
     ]
    },
    {
-    "name": "Callejón del Tono Perdido",
-    "kind": "callejón",
-    "description": "Un pasaje trasero silencioso, lejos de la música constante. Aquí los aldeanos dejan caer por un momento sus sonrisas, y se escuchan susurros sobre los próximos objetivos y entregas.",
+    "name": "Cabaña de la Hierba Susurrante",
+    "kind": "casas importantes",
+    "description": "Una pequeña cabaña en las afueras del pueblo, rodeada de un jardín de hierbas medicinales y venenosas. El aire huele a tierra húmeda y flores secas. Es un lugar de silencio real, lejos del bullicio fingido.",
     "regulars": [
-     "Lyre Whisper",
-     "Buck 'Doble-Cara'"
+     "Mira Brisa"
     ]
    },
    {
-    "name": "El Dique Viejo",
-    "kind": "muelle",
-    "description": "Un muelle de madera donde varan los barcos de los visitantes. Timón Roy suele estar aquí, fingiendo ser un viejo marinero varado y contando historias para ganar confianza y prolongar la estancia de los incautos.",
+    "name": "Puerta del Héroe",
+    "kind": "cuartel",
+    "description": "La entrada principal al pueblo, vigilada día y noche. Está decorada con banderas y guirnaldas descoloridas. Desde aquí se tiene una vista perfecta de quién llega y con qué fuerza.",
     "regulars": [
-     "Timón Roy",
-     "Silas Mop"
+     "Buck 'Doble-Cara'",
+     "Zora Lámpara"
+    ]
+   },
+   {
+    "name": "Callejón del Resbalón",
+    "kind": "calles importantes",
+    "description": "Un callejón estrecho y mal iluminado detrás de las principales tabernas, lleno de barriles vacíos y borrachos 'dormidos'. El suelo está siempre resbaladizo. Es donde terminan muchos de los 'héroes' después de la fiesta.",
+    "regulars": [
+     "Silas Mop",
+     "Pipo Chispa"
     ]
    }
   ],
   "rumors": [
-   "Dicen que a veces, de madrugada, se escuchan golpes sordos y arrastres de cuerpos desde los almacenes del puerto.",
-   "Corre el susurro de que ningún pirata con recompensa alta ha abandonado jamás la isla por sus propios medios.",
-   "Hay quien afirma que las bebidas más dulces de la taberna tienen un regusto a polvo de sueño, pero solo si preguntas demasiado.",
-   "Se comenta que el alcalde Gerald lleva un registro secreto de todos los barcos que atracan, con cifras tachadas junto a sus nombres.",
-   "Algunos visitantes ebrios juran haber visto, entre bailarín y bailarín, el frío brillo del acero escondido bajo los vestidos de fiesta."
+   "El Alcalde Gerald guarda un libro negro bajo el mostrador de su taberna con los nombres y recompensas de todos los visitantes que han 'desaparecido'.",
+   "El pescador Garrick 'Cicatriz' cuenta historias de un monstruo marino en las aguas profundas cerca de la isla, pero algunos susurran que en realidad vio cómo deshacían los cuerpos.",
+   "En el Archivo Municipal hay un mapa que muestra un túnel secreto que va desde el Salón de Fiestas hasta el puerto, usado para mover 'mercancía' discretamente.",
+   "La curandera Mira Brisa a veces encuentra hierbas extrañas y venenosas que no crecen de forma natural en la isla, lo que sugiere que alguien las cultiva.",
+   "El ex-marine Brice 'Ancla' bebe y habla en sueños sobre un barco con un símbolo de sol que una vez atracó aquí y nunca volvió a zarpar."
   ]
  },
  {
   "island": "Whole Cake Island",
-  "atmosphere": "Un reino de pesadilla dulce donde cada edificio, camino y árbol está hecho de postres finos pero mortales. El aire huele a caramelo quemado y azúcar glas, pero la tensión es palpable: soldados de mochi patrullan silenciosos, y las tuberías de crema susurran secretos a los ministros. Todo parece sacado de un cuento de hadas, pero la sensación de ser observado y la certeza de que cada error será anticipado lo convierte en una jaula gloriosa.",
-  "history": "Originalmente un archipiélago salvaje, fue transformado por la Charlotte Big Mom en su reino personal usando su fruta del diablo para animar a los ingredientes. Tras su caída, Charlotte Katakuri asumió el control, imponiendo una disciplina férrea para mantener la producción y el orden. La isla funciona ahora como una máquina perfecta de confitería y defensa, con su historia más antigua guardada solo en recetas y relatos orales.",
+  "atmosphere": "Un paraíso de confitería que palpita como un monstruo vivo. Los caminos son de bizcocho esponjoso, los árboles de chocolate y los ríos de miel caliente. Cada brisa huele a glaseado y a poder, y la tensión es constante, como si el mismísimo suelo estuviera observando. Aquí, un placer se convierte en trampa en un abrir y cerrar de ojos.",
+  "history": "Construida por la voluntad de la difunta Charlotte Linlin, Big Mom, para satisfacer su obsesión por la comida y el dominio. Tras su caída, el archipiélago quedó bajo el gobierno de Charlotte Katakuri, quien mantiene el orden con disciplina de hierro y su futuromancia, transformando el capricho de su madre en un estado funcional y despiadado.",
   "customs": [
-   "La 'Prueba del Primer Bocado': cualquier nuevo postre o creación culinaria importante debe ser probado primero por un Ministro o guardia designado para detectar fallos o sabotajes.",
-   "El 'Silencio del Glaseado': durante las horas de producción principal, se espera que el trabajo se realice con absoluto silencio; solo se permiten las órdenes precisas de los capataces.",
-   "El 'Tributo de la Especia': los mercaderes externos o residentes deben ofrecer una muestra de sus condimentos más raros a la autoridad local como gesto de lealtad y para su registro."
+   "Ofrecer un dulce recién hecho al encontrarse con un Ministro o un guardia es una señal de respeto que puede suavizar un interrogatorio.",
+   "La hora del té es sagrada y nadie debe interrumpirla; el bullicio o las discusiones en ese momento atraen una atención inmediata y hostil.",
+   "Los habitantes siempre prueban cualquier alimento nuevo con la punta de la lengua antes de comerlo, para detectar venenos o ingredientes de mala calidad."
   ],
   "places": [
    {
-    "name": "La Corte de Caramelo Fundido",
-    "kind": "cuartel y centro de mando",
-    "description": "Una fortaleza hecha de caramelo oscuro y vidrio de azúcar, desde donde Katakuri y sus ministros supervisan el archipiélago. Las paredes rezuman un calor bajo y los pasillos son laberínticos.",
+    "name": "La Torre de Caramelo Hirviente",
+    "kind": "cuartel y residencia principal",
+    "description": "Un espiral gigante de cristal de azúcar y caramelos duros que se alza sobre el archipiélago. El interior está tallado en pan de jengibre oscuro. Es la sede de Katakuri y su guardia personal. El ambiente es frío, silencioso y cada paso hace un crujido sutil.",
     "regulars": [
-     "Masa el Flexible",
-     "Almendra Steno"
+     "Masa el Flexible"
     ]
    },
    {
-    "name": "Mercado de las Especias Ocultas",
+    "name": "Mercado de las Especias Secretas",
     "kind": "mercado",
-    "description": "Un bullicioso bazar bajo toldos de gelatina, donde se comercian condimentos raros, extractos prohibidos y esencias de lugares lejanos. El olor es una mezcla embriagadora y picante.",
+    "description": "Un laberinto de puestos construidos con galletas saladas y toldos de merengue, donde el aire es una mezcla embriagadora de canela, pimienta y azafrán. Aquí se comercian los condimentos que dan carácter a las creaciones de la isla.",
     "regulars": [
-     "Comino el Salado",
-     "Mireya Sirop"
-    ]
-   },
-   {
-    "name": "Bosque de Galletas de Jengibre",
-    "kind": "bosque",
-    "description": "Un denso bosque de árboles de galleta dura y arbustos de azúcar glas. Es fácil perderse, y las ramas crujen como huesos bajo los pies. Zona de entrenamiento y caza.",
-    "regulars": [
-     "Gula el Devorador",
-     "Bastian Miel"
-    ]
-   },
-   {
-    "name": "Fábrica de Tuberías de Crema Chantilly",
-    "kind": "planta industrial",
-    "description": "Una red gigante de tuberías brillantes que bombean crema, sirope y rellenos por toda la isla. El sonido constante es un zumbido húmedo y dulce.",
-    "regulars": [
-     "Chantilly Válvula",
-     "Rafael Uva"
-    ]
-   },
-   {
-    "name": "La Cocina Real",
-    "kind": "cocina principal",
-    "description": "Una cocina cavernosa con hornos del tamaño de casas y batidoras gigantes. Aquí se preparan las creaciones más importantes y los banquetes para la élite.",
-    "regulars": [
-     "Bastian Miel",
-     "Almendra Steno",
-     "Mireya Sirop"
-    ]
-   },
-   {
-    "name": "El Archivo de las Recetas Antiguas",
-    "kind": "biblioteca/archivo",
-    "description": "Una sala tranquila y polvorienta dentro de un pastel de frutas seco. Está llena de pergaminos escritos con glaseado y moldes ancestrales. El aire huele a canela y papel viejo.",
-    "regulars": [
-     "Viejo Glaseado",
-     "Almendra Steno"
-    ]
-   },
-   {
-    "name": "Los Campos de Fruta Confitada",
-    "kind": "plantación",
-    "description": "Inmensas extensiones donde crecen bayas, uvas y cítricos bañados en azúcar. Los trabajadores, vigilados de cerca, cosechan la fruta bajo un sol siempre dorado.",
-    "regulars": [
-     "Rafael Uva",
      "Comino el Salado"
     ]
    },
    {
-    "name": "El Mirador de la Tormenta de Azúcar",
-    "kind": "lugar de vigilancia",
-    "description": "Un alto acantilado de merengue tostado que ofrece una vista panorámica del mar y las costas de la isla. Aquí se apostan los centinelas para detectar intrusos.",
+    "name": "Bosque de Galletas Recias",
+    "kind": "bosque",
+    "description": "Una extensión de árboles cuyo tronco es de galleta dura y sus hojas de chocolate. Es una zona de patrulla intensa, donde los guardias se camuflan como parte del paisaje. El suelo de migas cruje con cada movimiento.",
     "regulars": [
-     "Masa el Flexible",
-     "Gula el Devorador"
+     "Bastian Miel",
+     "Mousse Dulce"
     ]
    },
    {
-    "name": "La Bodega de los Siropes Primarios",
-    "kind": "almacén",
-    "description": "Una cueva fría y húmeda llena de barriles gigantes de sirope de diferentes colores y densidades. El suelo es pegajoso y el aire es pesado y dulce.",
+    "name": "Taberna del Jarabe Ahumado",
+    "kind": "taberna",
+    "description": "Una construcción baja hecha de bizcocho tostado, siempre llena del aroma a mantequilla derretida y siropes oscuros. Es el lugar donde los trabajadores de la isla bajan la guardia, pero los oídos de los Ministros están siempre presentes.",
     "regulars": [
-     "Mireya Sirop",
-     "Chantilly Válvula"
+     "Toffee Armonía",
+     "Nuez el Retirado",
+     "Bubón el Pescador"
+    ]
+   },
+   {
+    "name": "Las Tuberías de Crema",
+    "kind": "planta de suministro",
+    "description": "Una red de enormes conductos de masa de hojaldre por los que fluyen ríos de crema chantilly, natillas y fondant. Es el corazón circulatorio de la isla, constantemente vigilado y mantenido para evitar sabotajes.",
+    "regulars": [
+     "Chantilly Válvula",
+     "Almendra Steno"
+    ]
+   },
+   {
+    "name": "El Panal de los Archivos",
+    "kind": "archivo y biblioteca",
+    "description": "Una estructura hexagonal hecha de celdas de panal de miel solidificado. En su interior se guardan las recetas ancestrales y los registros históricos del reino. Es un lugar silencioso y pegajoso.",
+    "regulars": [
+     "Viejo Glaseado",
+     "Nata Cartógrafa"
+    ]
+   },
+   {
+    "name": "Planta de Confitura Uva",
+    "kind": "plantación y fábrica",
+    "description": "Vastas extensiones de viñedos donde crecen uvas del tamaño de puños, listas para ser confitadas. El aire es dulce y ácido a la vez. Los capataces supervisan la cosecha con mano firme.",
+    "regulars": [
+     "Rafael Uva",
+     "Mireya Sirop"
+    ]
+   },
+   {
+    "name": "La Guarida del Devorador",
+    "kind": "cuartel de caza",
+    "description": "Una cueva excavada en una montaña de brownie, llena de huesos de animales y restos de embarcaciones masticadas. Es el lugar de operaciones de los cazadores de desertores y traidores.",
+    "regulars": [
+     "Gula el Devorador",
+     "Caramelo Endiablado"
+    ]
+   },
+   {
+    "name": "Clínica de la Dulce Flora",
+    "kind": "clínica",
+    "description": "Una cabaña con techo de oblea y paredes de bizcocho, rodeada de macetas de gelatina con hierbas aromáticas. Es el único lugar donde se trata a los heridos sin hacer preguntas sobre su procedencia, aunque todo tiene un precio.",
+    "regulars": [
+     "Dulce Flor"
+    ]
+   },
+   {
+    "name": "El Acantilado de Malvavisco",
+    "kind": "lugar de contemplación",
+    "description": "Un promontorio blanco y esponjoso desde donde se ve el mar de leche condensada que rodea la isla. Aquí acuden los habitantes más viejos o reflexivos, y es donde el sabio oficial de la isla ofrece sus enigmáticos consejos.",
+    "regulars": [
+     "Maestro Malvavisco",
+     "Caramelo Agazapado"
     ]
    }
   ],
   "rumors": [
-   "Se dice que una de las tuberías de crema principal tiene una fuga que conduce a una cámara secreta con recetas anteriores a la era de Big Mom.",
-   "Un lote de especias raras importado por Comino el Salado ha causado sueños vívidos y premonitorios a quienes las probaron, algo que los ministros quieren investigar en secreto.",
-   "Algunas galletas del bosque han empezado a moverse de forma extraña por la noche, como si algo bajo tierra las estuviera animando sin permiso.",
-   "El Viejo Glaseado murmura que la disciplina perfecta de Katakuri está siendo desafiada por pequeñas 'imperfecciones' espontáneas en las estructuras de caramelo, como si la propia isla se estuviera rebelando.",
-   "Hay rumores de un pasadizo oculto cerca del Mirador que usaban los desertores, pero Gula el Devorador asegura haberlo sellado personalmente... aunque algunos dicen que se reabrió solo."
+   "Dicen que en los túneles bajo el Bosque de Galletas hay una receta prohibida que puede debilitar la propia estructura de la isla, y alguien está intentando robarla.",
+   "Un sabotaje en las Tuberías de Crema podría inundar el Mercado de las Especias con un flujo ácido, causando el caos y una distracción perfecta para un golpe mayor.",
+   "Se comenta que Katakuri ha tenido una visión de un desastre inminente, y ahora busca activamente a un \"sabor extraño\" que ha detectado en su territorio, aumentando las paranoia y las redadas.",
+   "Un pescador afirma haber visto una grieta en la base submarina de la Torre de Caramelo, por donde se filtra agua salada, lo que podría ser una debilidad crítica si no se repara.",
+   "Un barco fantasma hecho completamente de pan de muerto y caramelo quemado aparece y desaparece en la niebla del mar de leche, y quienes se acercan demasiado nunca regresan."
   ]
  },
  {
   "island": "Zou",
-  "atmosphere": "Un reino verde y brumoso anclado en el lomo de un elefante ancestral que se mueve lentamente por los mares. El aire huele a tierra húmeda, hojas y la energía animal de los mink. Un lugar de lealtades profundas y secretos antiguos, donde la naturaleza y la civilización se entrelazan en las alturas, protegido por una desconfianza instintiva hacia los forasteros.",
-  "history": "Zou ha viajado por los mares sobre su guardián, el elefante gigante Zunesha, desde tiempos inmemoriales, sirviendo como hogar y fortaleza de la tribu mink. Durante siglos, protegieron un Poneglifo de la familia Kozuki y mantuvieron un juramento de lealtad a los sucesores de dicha familia. Recientemente, el reino se recupera de un período de conflicto y aislamiento, reforzando sus defensas y su unidad interna.",
+  "atmosphere": "Un mundo suspendido en el cielo, sobre el lomo de un elefante de leyenda. El aire es fresco y lleno del aroma a bosque, tierra mojada y forraje. Desde las altas plataformas de madera se oyen los sonidos de la selva, el trabajo de los minks y, en ocasiones, el poderoso y lejano bramido del elefante Zou mismo. Es un lugar de secretos ancestrales y lealtades inquebrantables, donde los extraños no son bienvenidos hasta que demuestran su valor con acciones, no con promesas.",
+  "history": "Los minks han vivido durante siglos sobre el lomo del elefante gigante Zou, que deambula por el océano. Esta comunidad aislada custodia un Poneglifo de los antiguos, ligado a la historia de los Kozuki. Hace años, juraron lealtad a la familia Kozuki y a sus aliados, un pacto que mantienen en secreto y con honor. Su historia es una de resistencia, adaptación a un hogar en constante movimiento y la defensa feroz de su independencia.",
   "customs": [
-   "Los visitantes deben ser presentados formalmente por un mink de confianza o demostrar su valía a través de acciones, nunca solo con palabras.",
-   "Se considera de mala educación preguntar directamente por el Poneglifo o los secretos históricos; el conocimiento se comparte cuando hay confianza.",
-   "Antes de una gran cacería o expedición, se realizan ofrendas de frutas y hierbas a la base de los árboles más antiguos para pedir permiso a Zunesha y al bosque."
+   "La prueba del recibimiento: Cualquier forastero debe someterse a un desafío o realizar una acción tangible para el bien de la comunidad antes de ser considerado un invitado, no un intruso.",
+   "Juramento del crepúsculo: Al atardecer, muchos minks realizan un breve momento de silencio o un canto suave, honrando al elefante Zou y recordando a los aliados lejanos.",
+   "Intercambio por mérito: El comercio interno y con raros visitantes se basa menos en el dinero y más en el valor práctico del objeto o el favor prestado."
   ],
   "places": [
    {
-    "name": "La Puerta del Trueno",
+    "name": "La Aldea de los Minks (Mokomo Dukedom)",
+    "kind": "aldea",
+    "description": "Un asentamiento principal construido en y alrededor de enormes árboles, con casas-cabaña, puentes colgantes y plataformas entrelazadas. Es el corazón de la vida social de Zou.",
+    "regulars": [
+     "Kiba",
+     "Trombo",
+     "Mirela",
+     "Flevo"
+    ]
+   },
+   {
+    "name": "La Gran Puerta del Lomo",
     "kind": "fortificación",
-    "description": "Una enorme puerta de madera petrificada y marfil tallado, la entrada principal a las áreas habitadas de Zou. Está decorada con runas mink y vigilada las 24 horas.",
+    "description": "La entrada principal fortificada a la aldea, tallada en madera petrificada y decorada con colmillos de bestias. Es el primer y más formidable obstáculo para cualquier visitante no deseado.",
     "regulars": [
-     "Trombo"
+     "Trombo",
+     "Kiba",
+     "Murdock"
     ]
    },
    {
-    "name": "Archivos del Andarín",
+    "name": "La Enramada del Archivo",
     "kind": "archivo/templo",
-    "description": "Una biblioteca circular dentro del tronco hueco de un árbol gigante, donde se guardan pergaminos históricos y se rinde respeto al juramento con los Kozuki. El aire huele a papel viejo y cera.",
+    "description": "Una estructura circular escondida entre las raíces más gruesas de un árbol ancestral. En su interior se guardan pergaminos históricos y, en una cámara secreta, el Poneglifo.",
     "regulars": [
-     "Cronos"
+     "Cronos",
+     "Lodur"
     ]
    },
    {
-    "name": "Puente de los Suspiros",
-    "kind": "puente/obra de ingeniería",
-    "description": "Un puente colgante hecho de lianas y madera que conecta dos grandes árboles habitacionales. Se balancea con cada paso de Zunesha, ofreciendo vistas vertiginosas de la niebla y el mar lejano.",
+    "name": "El Mirador del Colmillo",
+    "kind": "puesto de vigilancia",
+    "description": "Una plataforma de observación construida en uno de los colmillos más altos del elefante. Ofrece una vista panorámica e imponente del océano y del lomo de Zou.",
     "regulars": [
+     "Torrin",
+     "Briara"
+    ]
+   },
+   {
+    "name": "La Taberna del Bramido Alegre",
+    "kind": "taberna",
+    "description": "Un lugar acogedor lleno de luces tenues, donde el olor a estofado de bestia y licor de raíces se mezcla con las canciones animadas y las historias de caza.",
+    "regulars": [
+     "Flevo",
+     "Geldra",
+     "Tizón",
      "Bardo"
     ]
    },
    {
-    "name": "La Cabaña del Acebo Plateado",
-    "kind": "taberna",
-    "description": "Una acogedora taberna construida alrededor de una chimenea central, donde los mink comparten historias y bebidas calientes hechas con savia de árbol. Las paredes están cubiertas de colmillos tallados y mapas antiguos.",
+    "name": "El Puente de los Susurros",
+    "kind": "puente/plaza",
+    "description": "Un largo y antiguo puente colgante que conecta dos secciones clave de la aldea. Es un lugar de paso, encuentros casuales y conversaciones discretas.",
     "regulars": [
+     "Bardo",
      "Reynard",
      "Sora"
     ]
    },
    {
-    "name": "El Jardín de las Raíces Susurrantes",
+    "name": "El Jardín de los Humores",
     "kind": "jardín/herbolario",
-    "description": "Un claro sagrado cerca de las patas de Zunesha donde crecen hierbas medicinales únicas, iluminado por hongos bioluminiscentes. Es un lugar de sanación y recogimiento.",
+    "description": "Un claro soleado donde Gen cultiva hierbas medicinales, hongos luminiscentes y plantas extrañas que solo crecen en el microclima de Zou.",
     "regulars": [
-     "Gen"
+     "Gen",
+     "Sora",
+     "Mirela"
     ]
    },
    {
-    "name": "Atalaya del Colmillo",
-    "kind": "puesto de vigilancia",
-    "description": "Una plataforma de observación tallada en un colmillo fosilizado de Zunesha, en un punto alto del lomo. Desde aquí se vigilan los accesos y las rutas de escalada.",
+    "name": "El Mercado del Trueque Esencial",
+    "kind": "mercado",
+    "description": "No es un mercado abarrotado, sino un conjunto de puestos modestos donde se intercambian herramientas, telas, carne seca y las curiosidades que traen los pocos visitantes.",
     "regulars": [
+     "Reynard",
+     "Tizón",
+     "Geldra"
+    ]
+   },
+   {
+    "name": "Los Talleres de los Constructores",
+    "kind": "taller",
+    "description": "Una zona de actividad constante cerca del borde del lomo, donde se trabaja la madera y se reparan las estructuras dañadas por el clima o las bestias.",
+    "regulars": [
+     "Bardo",
      "Kiba"
     ]
    },
    {
-    "name": "Mercado de la Bruma Alta",
-    "kind": "mercado",
-    "description": "Un mercado al aire libre en una gran plataforma de ramas entrelazadas. Los puestos ofrecen herramientas, telas, comida y curiosidades rescatadas del mar o intercambiadas en viajes raros.",
+    "name": "La Senda de las Bestias",
+    "kind": "bosque/ruta de caza",
+    "description": "Un sendero que se adentra en las zonas más salvajes y boscosas del lomo de Zou, hogar de criaturas únicas y peligrosas. Marcado con señales de advertencia.",
     "regulars": [
-     "Reynard",
-     "Bardo"
-    ]
-   },
-   {
-    "name": "La Guarida del Jabalí",
-    "kind": "área residencial/problemática",
-    "description": "Un conjunto de chozas y refugios rudimentarios en una zona boscosa más salvaje y menos vigilada. Es conocida por ser el lugar de reunión de mink jóvenes rebeldes.",
-    "regulars": [
-     "Goro"
-    ]
-   },
-   {
-    "name": "Sendero del Cazador Solitario",
-    "kind": "sendero/bosque de caza",
-    "description": "Un peligroso sendero que serpentea por la espalda del elefante, lleno de criaturas gigantes y plantas carnívoras. Solo los exploradores más experimentados se aventuran aquí.",
-    "regulars": [
-     "Sora"
+     "Torrin",
+     "Sora",
+     "Goro",
+     "Briara"
     ]
    }
   ],
   "rumors": [
-   "Se dice que en las profundidades del bosque, cerca de las 'costillas' de Zunesha, hay una antigua guarida de un depredador gigante que ha despertado y está atacando a los cazadores.",
-   "Un grupo de mink problemáticos, liderados en secreto, está planeando una incursión para 'explorar' zonas prohibidas del lomo, lo que podría desencadenar una crisis interna.",
-   "Un comerciante poco escrupuloso está intentando conseguir mapas de las rutas de acceso secretas a Zou para vendérselas a forasteros, poniendo en peligro la seguridad del reino.",
-   "Algunos mink ancianos susurran que Zunesha ha estado dando pasos más lentos y pesados últimamente, como si cargara con un dolor o un secreto demasiado grande.",
-   "Hay rumores de que un artefacto histórico relacionado con el juramento a la familia Kozuki ha desaparecido de los Archivos, y se teme que haya sido robado o extraviado."
+   "Una de las bestias más feroces de la Senda ha empezado a actuar de forma errática y atacar cerca de la aldea. Algunos susurran que está enferma o poseída.",
+   "Un componente vital para una medicina clave de Gen ha dejado de crecer en el Jardín de los Humores. Se necesitan voluntarios para buscar una nueva fuente en las zonas más peligrosas.",
+   "Goro, el joven problemático, ha sido visto merodeando cerca de la Gran Puerta con intenciones desconocidas, lo que preocupa a los guardianes.",
+   "Lodur, el cartógrafo, cree haber descubierto un patrón en los movimientos de Zou que podría predecir su próxima ruta, un conocimiento que interesaría a muchos en el mundo exterior.",
+   "En el Mercado del Trueque, Tizón habla de un objeto extraño que llegó hace poco, que no es de este mundo y emite un zumbido tenue. Nadie sabe su origen o propósito."
   ]
  }
 ];

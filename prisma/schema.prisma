@@ -296,6 +296,7 @@ model DevilFruit {
   // yet) reassigns it to a player. Everything else is duplicable.
   isSingleton         Boolean     @default(false)
   claimedByWorldActor WorldActor? @relation("WorldActorFruit")
+  claimedAsSecondByWorldActor WorldActor? @relation("WorldActorSecondFruit")
   createdAt           DateTime    @default(now())
 }
 
@@ -786,6 +787,9 @@ model WorldActor {
   canonWeapon  String?
   devilFruitId String?     @unique
   devilFruit   DevilFruit? @relation("WorldActorFruit", fields: [devilFruitId], references: [id])
+  // Only Marshall D. Teach holds two fruits at once (Yami Yami + Gura Gura).
+  secondDevilFruitId String?     @unique
+  secondDevilFruit   DevilFruit? @relation("WorldActorSecondFruit", fields: [secondDevilFruitId], references: [id])
   // Seat of command (engine/faction-seats.ts). Set once by the seed; afterwards only seat duels change it.
   seat         String?
 

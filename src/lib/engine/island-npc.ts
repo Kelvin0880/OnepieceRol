@@ -21,7 +21,7 @@ export interface IslandNpcRow {
   stateNote?: string | null;
 }
 
-export const REPLACEMENT_DELAY_MS = 6 * 60 * 60_000;
+export const REPLACEMENT_DELAY_MS = 60 * 60_000;
 export const MAX_NPC_MEMORY = 8;
 
 const strip = (s: string) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();

@@ -3154,7 +3154,7 @@ export const ISLAND_NPC_DATA: SeedRosterEntry[] = [
  {
   "island": "Little Garden",
   "slot": "comerciante-astillero",
-  "name": "Kael",
+  "name": "Kael Vega",
   "title": "Comerciante de reparaciones del astillero improvisado",
   "category": "merchant",
   "level": 25,

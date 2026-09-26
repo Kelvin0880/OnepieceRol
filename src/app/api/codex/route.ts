@@ -7,7 +7,7 @@ import { actorStyleNames } from "@/lib/engine/actor-styles";
 /** Public codex of the canon cast. A character moving in secret never reveals where they are. */
 export async function GET() {
   const [actors, islands] = await Promise.all([
-    prisma.worldActor.findMany({ include: { devilFruit: { select: { name: true, englishName: true, type: true, rarity: true } } }, orderBy: [{ powerLevel: "desc" }, { name: "asc" }] }),
+    prisma.worldActor.findMany({ include: { devilFruit: { select: { name: true, englishName: true, type: true, rarity: true } }, secondDevilFruit: { select: { name: true, englishName: true, type: true, rarity: true } } }, orderBy: [{ powerLevel: "desc" }, { name: "asc" }] }),
     prisma.island.findMany({ select: { id: true, name: true } }),
   ]);
   const islandName = new Map(islands.map((i) => [i.id, i.name]));
@@ -34,6 +34,7 @@ export async function GET() {
       canonBounty: a.canonBounty != null ? a.canonBounty.toString() : null,
       canonWeapon: a.canonWeapon,
       devilFruit: a.devilFruit,
+      secondDevilFruit: a.secondDevilFruit ? { name: a.secondDevilFruit.name, englishName: a.secondDevilFruit.englishName, type: a.secondDevilFruit.type, rarity: a.secondDevilFruit.rarity } : null,
       stats: a.statsJson ? JSON.parse(a.statsJson) : null,
       abilities: a.abilitiesJson ? (JSON.parse(a.abilitiesJson) as string[]) : [],
       styles: actorStyleNames(a.name),

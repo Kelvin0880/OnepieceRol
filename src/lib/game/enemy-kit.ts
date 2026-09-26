@@ -30,7 +30,7 @@ export async function resolveEnemyKit(subject: KitSubject): Promise<{ kit: Enemy
   const level = subject.level ?? estimateLevel(subject.atk, subject.def);
   let declared: Partial<EnemyKit> | undefined;
   if (subject.worldActorId) {
-    const actor = await prisma.worldActor.findUnique({ where: { id: subject.worldActorId }, include: { devilFruit: { select: { name: true } } } }).catch(() => null);
+    const actor = await prisma.worldActor.findUnique({ where: { id: subject.worldActorId }, include: { devilFruit: { select: { name: true } }, secondDevilFruit: { select: { name: true } } } }).catch(() => null);
     if (actor) {
       const stats = (actor.statsJson ? JSON.parse(actor.statsJson) : {}) as ActorStats;
       const abilities = actor.abilitiesJson ? (JSON.parse(actor.abilitiesJson) as string[]) : [];
@@ -40,6 +40,7 @@ export async function resolveEnemyKit(subject: KitSubject): Promise<{ kit: Enemy
         conqueror: stats.conquerorsHaki,
         weapon: actor.canonWeapon ?? undefined,
         abilities,
+        ...(actor.secondDevilFruit ? { secondFruit: { name: actor.secondDevilFruit.name, phase: stats.fruitPhase ?? (actor.powerLevel >= 90 ? "awakened" : "advanced") } } : {}),
         fruit: actor.devilFruit ? { name: actor.devilFruit.name, phase: stats.fruitPhase ?? (actor.powerLevel >= 90 ? "awakened" : actor.powerLevel >= 75 ? "advanced" : "initial") } : undefined,
       };
     }

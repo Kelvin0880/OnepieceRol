@@ -30,6 +30,7 @@ interface Actor {
   canonBounty: string | null;
   canonWeapon: string | null;
   devilFruit: { name: string; englishName: string; type: string; rarity: string } | null;
+  secondDevilFruit?: { name: string; englishName: string; type: string; rarity: string } | null;
   stats: Stats | null;
   abilities: string[];
   styles?: string[];
@@ -121,7 +122,7 @@ function ActorCard({ a }: { a: Actor }) {
         </span>
         <span className="text-ink-dim">Fruta</span>
         <span className="text-right">
-          {a.devilFruit ? `${a.devilFruit.name}${a.stats?.fruitPhase ? ` (${PHASE_LABEL[a.stats.fruitPhase] ?? a.stats.fruitPhase})` : ""}` : "ninguna"}
+          {a.devilFruit ? `${a.devilFruit.name}${a.stats?.fruitPhase ? ` (${PHASE_LABEL[a.stats.fruitPhase] ?? a.stats.fruitPhase})` : ""}${a.secondDevilFruit ? ` + ${a.secondDevilFruit.name}` : ""}` : "ninguna"}
         </span>
         <span className="text-ink-dim">Arma</span>
         <span className="text-right">{a.canonWeapon ?? "—"}</span>
