@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { raidHistoryFactor } from "../engine/poneglyph-lore";
 import { CharacterStatus, Raid } from "@prisma/client";
 import {
   RAID_PHASES,
@@ -196,7 +197,13 @@ export async function launchRaidPhase(characterId: string, userId: string) {
   const pledged = parse<string[]>(raid.alliesJson, []);
   const actors = pledged.length ? await prisma.worldActor.findMany({ where: { id: { in: pledged } } }) : [];
   const extraNpcs: AllyNpc[] = actors.map((a) => ({ actorId: a.id, name: a.name, stats: allyStats(a.powerLevel) }));
-  const enemy = phaseEnemy(raid.phase);
+  const base = phaseEnemy(raid.phase);
+  // What the coalition has read of the forgotten century weakens the ruler's hold (engine/poneglyph-lore.ts).
+  const readers = await prisma.character.findMany({ where: { id: { in: ready } }, select: { poneglyphsRead: true } });
+  const chapterIds = new Set(readers.flatMap((r) => JSON.parse(r.poneglyphsRead || "[]") as string[]));
+  const chapters = await prisma.poneglyph.count({ where: { kind: "Historia", id: { in: [...chapterIds] } } });
+  const factor = raidHistoryFactor(chapters);
+  const enemy = { ...base, hp: Math.round(base.hp * factor), atk: Math.round(base.atk * factor) };
   try {
     const started = await startJointFight({
       kind: "raid",
@@ -204,7 +211,7 @@ export async function launchRaidPhase(characterId: string, userId: string) {
       extraNpcs,
       enemy: { name: enemy.name, hp: enemy.hp, atk: enemy.atk, def: enemy.def, spd: enemy.spd, isBoss: true },
       rewards: phaseRewards(raid.phase),
-      stakes: `Asalto a Mary Geoise, fase ${raid.phase} de ${RAID_PHASES}: ${enemy.name}.`,
+      stakes: `Asalto a Mary Geoise, fase ${raid.phase} de ${RAID_PHASES}: ${enemy.name}.${chapters ? ` La coalición conoce ${chapters} capítulo(s) de la historia olvidada: el enemigo está más débil.` : ""}`,
       context: { raidId: raid.id, phase: raid.phase, maxEnemyAttacks: enemy.maxEnemyAttacks },
     });
     await prisma.raid.update({ where: { id: raid.id }, data: { status: "ACTIVE", lastActivityAt: new Date() } });

@@ -11,6 +11,8 @@ import DenDenPanel from "./DenDenPanel";
 import OocPanel from "./OocPanel";
 import CrewPanel from "./CrewPanel";
 import SovereigntyPanel from "./SovereigntyPanel";
+import RoutePanel from "./RoutePanel";
+import PathPanel from "./PathPanel";
 import PlayHeader, { type PanelKey } from "./PlayHeader";
 import EventsPanel from "./EventsPanel";
 import { useBadges } from "./useBadges";
@@ -245,14 +247,18 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   // (see resolvePartyFreeTextAction in perform-action.ts).
   const iActedThisRound = party ? party.actedIds.includes(character.id) : false;
   const partyBlocksInput = !!party && !character.pendingEncounter && !duelActive && !jointActive && (party.awaitingNarrator || iActedThisRound);
-  const roundMissing = party ? party.members.filter((m) => !party.actedIds.includes(m.id)).map((m) => m.name) : [];
+  // The narrator opens (or answers), then every member acts once in turnOrder, then the narrator answers again, in a loop.
+  const nextTurnId = party ? party.turnOrder.find((id) => !party.actedIds.includes(id)) : undefined;
+  const nextTurnName = party && nextTurnId ? party.members.find((m) => m.id === nextTurnId)?.name : undefined;
   const partyTurnLabel =
     !party || character.pendingEncounter || jointActive
       ? null
       : party.awaitingNarrator
       ? "El narrador está respondiendo a la ronda..."
-      : iActedThisRound
-      ? `Ya actuaste. Esperando a ${roundMissing.join(", ") || "el narrador"}.`
+      : nextTurnId === character.id
+      ? "Es tu turno."
+      : nextTurnName
+      ? `Le toca a ${nextTurnName}.`
       : `Ronda: ${party.actedIds.length} de ${party.members.length} han actuado.`;
   const actions = { act: doPrisonAction, busy: battleBusy, error: battleError };
 
@@ -266,6 +272,8 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
         </button>
       )}
 
+      {panel === "route" && <RoutePanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
+      {panel === "path" && <PathPanel characterId={character.id} onClose={() => setPanel(null)} onOpen={(p) => setPanel(p)} />}
       {panel === "power" && <SovereigntyPanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
       {panel === "events" && <EventsPanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
       {panel === "denden" && <DenDenPanel characterId={character.id} onClose={() => setPanel(null)} />}

@@ -55,10 +55,15 @@ async function main() {
   for (const m of [a, b, c3]) assert((await prisma.sceneMessage.count({ where: { characterId: m.c.id, role: "narrator" } })) >= 1, `${m.c.name} keeps the exchange in their own memory`);
   assert((await resolvePartyRound(partyId)) === null, "nothing to answer twice");
 
+  // Strict turn order applies to a fresh round too: b cannot jump ahead of a, who goes first in turnOrder.
+  let outOfOrder = "";
+  try { await submitRoundAction({ id: b.c.id, name: b.c.name }, partyId, "me adelanto"); } catch (e) { outOfOrder = e instanceof PartyRoundError ? e.message : "OTHER"; }
+  assert(outOfOrder.includes("Espera tu turno") && outOfOrder.includes(a.c.name), "a fresh round still respects turn order: b cannot go before a");
+
   // Closing a round with only some actions in.
-  await submitRoundAction({ id: b.c.id, name: b.c.name }, partyId, "Pregunto en voz baja a un marinero si sabe de barcos que zarpen esta noche.");
+  await submitRoundAction({ id: a.c.id, name: a.c.name }, partyId, "Pregunto en voz baja a un marinero si sabe de barcos que zarpen esta noche.");
   const closed = await closePartyRound(a.c.id, a.u.id);
-  assert(closed.log.length === 1 && closed.log[0].length > 40, "any member can close the round: the narrator answers whoever acted");
+  assert(closed.log.length === 1 && closed.log[0].length > 40, "any member can close the round early: the narrator answers whoever acted so far");
   let empty = "";
   try { await closePartyRound(a.c.id, a.u.id); } catch (e) { empty = e instanceof PartyRoundError ? e.message : "OTHER"; }
   assert(empty.includes("nadie ha escrito"), "closing an empty round is refused");

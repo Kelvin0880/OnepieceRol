@@ -95,6 +95,9 @@ model Character {
   // are stone, not loot; nobody steals them back, they silence the reader.
   // Spikes hard on each new Poneglyph, decays slowly with time.
   poneglyphHeat  Int    @default(0)
+  // Ancient script (engine/poneglyph-lore.ts): 0-100, studied in Ohara. Without it a Poneglyph only yields a rubbing.
+  ancientScript  Int       @default(0)
+  lastStudyAt    DateTime?
   islandsVisited String @default("[]") // JSON string array of Island ids — gates the once-per-island arc-hook intro
 
   // Out-of-role controls (game/ooc.ts): how the narrator plays enemies, and
@@ -615,6 +618,8 @@ model Poneglyph {
   loreText  String
   guardedBy String? // description of the guardian encounter
   island    Island?
+  // Historia Poneglyphs stand on an island without being its guarded Road stone (no guardian, no stealth run).
+  locationIslandId String?
 }
 
 // ---------- Events (the random engine's content pool) ----------
@@ -847,6 +852,8 @@ model Mission {
   destination   String?
   isArc         Boolean   @default(false)
   patronActorId String?
+  // Faction contract (engine/faction-contracts.ts): extra bounty (pirates) or ladder points (everyone else) on completion.
+  factionRep    Int       @default(0)
   status        String    @default("ACTIVE") // ACTIVE | DONE
   createdAt     DateTime  @default(now())
   completedAt   DateTime?
@@ -1149,6 +1156,13 @@ model War {
   defenderScore Int       @default(0)
   outcome       String? // attacker | defender | stalemate
   logJson       String    @default("[]")
+  // Canon wars (engine/world-wars.ts): attacker/defender ids are WorldActor ids when the kind is "canon"; defenderId null = the Government.
+  attackerKind        String    @default("player") // player | canon
+  defenderKind        String    @default("player")
+  enlistedJson        String    @default("{}") // characterId -> "attacker" | "defender" (players who chose a side)
+  nextFrontAt         DateTime?
+  attackerPlayerBlows Int       @default(0)
+  defenderPlayerBlows Int       @default(0)
   startedAt     DateTime  @default(now())
   endedAt       DateTime?
   updatedAt     DateTime  @updatedAt

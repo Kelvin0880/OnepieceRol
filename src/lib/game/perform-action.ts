@@ -47,7 +47,7 @@ import { applyBountyOrNotoriety } from "./reputation";
 import { narrateExplore, narrateEncounterIntro, narrateCombat, refereeExchange, narrateScene, narratePartyScene, getRecentScene, getFightLog, updateCharacterMemory } from "../ai/narrate";
 import { classifyPlayerAction, ActionId } from "../ai/classify-action";
 import { beginPartyTurn, writePartyMessage, echoToParty, confirmLeaveParty as partyConfirmLeaveParty, rejoinParty as partyRejoinParty } from "./party";
-import { PartyRoundError, resolvePartyRound, submitRoundAction } from "./party-round";
+import { PartyRoundError, resolvePartyRound, submitRoundAction, whoseTurn } from "./party-round";
 import { CharacterStatus } from "@prisma/client";
 import { addStanding } from "./alliance";
 import { recordMissionEvent, judgeAndRecordMissions } from "./missions";
@@ -1735,17 +1735,14 @@ function summarizeCombatForParty(action: ActionId, characterName: string, result
 }
 
 /**
- * The turn-gated branch for a character currently sharing a live scene with
- * crewmates (Character.partyId set — see party.ts). Mechanical actions
- * (explore/train/rest) still dispatch to the exact same solo functions as
- * always — the only difference is a short shared line gets echoed to the
- * party feed and the turn passes to the next member. Pure "narrate" text
- * gets one shared AI call (narratePartyScene) instead of the solo
- * narrateScene, addressed to the whole present roster. Never called while
- * this character has their own pendingEncounter — that always resolves
- * immediately via the unchanged solo path in resolveFreeTextAction below,
- * bypassing party turn order entirely (you can't be blocked from fighting
- * for your life by whose turn it is in the group chat).
+ * The turn-gated branch for a character currently sharing a live scene with crewmates (Character.partyId set — see
+ * party.ts). The narrator opens (or answers), then every member acts once in join order — mechanical or "narrate", it
+ * doesn't matter which — and once the whole roster has gone, the narrator answers the lap as a whole; then it loops.
+ * `whoseTurn`/`submitRoundAction` (party-round.ts) enforce that order; a mechanical action still dispatches to the
+ * exact same solo function as always (so it stays a real, immediate, deterministic result for the acting player) and
+ * also gets recorded as this member's turn for the lap. Never called while this character has their own
+ * pendingEncounter — that always resolves immediately via the unchanged solo path in resolveFreeTextAction below,
+ * bypassing party turn order entirely (you can't be blocked from fighting for your life by whose turn it is).
  */
 async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: string): Promise<ActionResult> {
   const begin = await beginPartyTurn(character.id);
@@ -1768,24 +1765,15 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
     };
   }
 
-  if (action === "narrate") {
-    // Round: the action goes into the shared feed now; the narrator answers everybody's actions together once all have acted.
-    try {
-      const round = await submitRoundAction({ id: character.id, name: character.name }, begin.partyId, freeText);
-      if (!round.allIn) {
-        return emptyResult([`Tu acción está en la ronda. Esperando a ${round.waitingFor.join(", ")}: cuando todos hayan actuado, el narrador responderá a todos a la vez (o pulsa «Que el narrador responda ya»).`], character.level);
-      }
-      const text = await resolvePartyRound(begin.partyId);
-      return emptyResult(text ? [text] : ["Todos habéis actuado: el narrador está preparando la respuesta."], character.level);
-    } catch (err) {
-      if (err instanceof PartyRoundError) throw new GameActionError(err.message);
-      throw err;
-    }
-  }
+  const turn = await whoseTurn(begin.partyId);
+  if (turn && turn.id !== character.id) throw new GameActionError(turn.id === "__narrator__" ? "El narrador está respondiendo a la ronda anterior: espera un momento." : `Espera tu turno: le toca a ${turn.name}.`);
 
   let result: ActionResult;
   let sharedLine: string;
-  try {
+  if (action === "narrate") {
+    result = emptyResult([], character.level);
+    sharedLine = freeText;
+  } else {
     switch (action) {
       case "explore":
         result = await exploreCharacter(character.id, character.userId, freeText);
@@ -1837,16 +1825,29 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
         sharedLine = `${character.name} se toma un respiro para descansar.`;
         break;
     }
-  } catch (err) {
-    throw err;
   }
 
-  const finalLog = [`(interpretado como: ${FREE_TEXT_ACTION_LABELS[action]})`, ...result.log];
-  await prisma.sceneMessage.createMany({ data: exchangeRows(character.id, freeText, finalLog.join("\n\n")) });
-  await writePartyMessage(begin.partyId, character.id, character.name, freeText);
-  await writePartyMessage(begin.partyId, null, "Narrador", sharedLine);
+  const finalLog = action === "narrate" ? [] : [`(interpretado como: ${FREE_TEXT_ACTION_LABELS[action]})`, ...result.log];
+  if (finalLog.length) await prisma.sceneMessage.createMany({ data: exchangeRows(character.id, freeText, finalLog.join("\n\n")) });
 
-  return { ...result, log: finalLog };
+  // Record this member's turn for the lap (this also writes their own bubble to the feed); once everyone's gone,
+  // the narrator answers the whole lap at once and it loops.
+  let lapText: string | null = null;
+  let claimed = false;
+  try {
+    const round = await submitRoundAction({ id: character.id, name: character.name }, begin.partyId, freeText);
+    claimed = true;
+    if (round.allIn) lapText = await resolvePartyRound(begin.partyId);
+  } catch (err) {
+    // The mechanical action already happened for real; losing a rare claim race over the round bookkeeping is not a user-facing error.
+    if (!(err instanceof PartyRoundError)) throw err;
+  }
+  if (claimed && action !== "narrate") await writePartyMessage(begin.partyId, null, "Narrador", sharedLine);
+
+  if (action === "narrate") {
+    return emptyResult(lapText ? [lapText] : ["Tu acción está en la ronda. El narrador responderá cuando todos hayáis actuado."], character.level);
+  }
+  return { ...result, log: lapText ? [...finalLog, lapText] : finalLog };
 }
 
 /** A guarded Poneglyph on this island the character hasn't read yet — the only place sneaking in makes sense. */

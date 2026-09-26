@@ -166,6 +166,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const worldEvent = await getWorldEventForCharacter(id);
     // Only the owner learns that a canon death/capture is waiting for their verdict.
     const admin = (await sessionIsAdmin()) ? { pending: await prisma.worldArc.count({ where: { status: "AWAITING_CONSENT" } }) } : null;
+    const readIds = JSON.parse(character.poneglyphsRead || "[]") as string[];
+    const [roadRead, historyRead] = await Promise.all([prisma.poneglyph.count({ where: { kind: "Road", id: { in: readIds } } }), prisma.poneglyph.count({ where: { kind: "Historia", id: { in: readIds } } })]);
+    const stoneHere = await prisma.poneglyph.findFirst({ where: { kind: "Historia", locationIslandId: character.currentIslandId }, select: { id: true, codeName: true } });
+    const historyStoneHere = stoneHere ? { codeName: stoneHere.codeName, read: readIds.includes(stoneHere.id) } : null;
     const pendingSeatChallenges = await prisma.seatChallenge.count({ where: { defenderId: id, status: "PENDING" } });
     const pendingCrewInvites = await prisma.crewInvite.count({ where: { toCharacterId: id, status: "PENDING", createdAt: { gt: new Date(Date.now() - 24 * 3600 * 1000) } } });
     const crewShaped = character.crew
@@ -191,6 +195,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         companions,
         pendingCrewInvites,
         pendingSeatChallenges,
+        roadRead,
+        historyRead,
+        historyStoneHere,
         crew: crewShaped,
         stamina: staminaNow,
         fatigue: FATIGUE_LABELS[fatigueLevel(staminaNow, character.maxStamina)],

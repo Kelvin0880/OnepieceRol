@@ -264,10 +264,10 @@ de turnos claro.
   - Si durante tu turno decides explorar y te topa un combate, ESE
     combate sigue siendo tuyo y solo tuyo — se resuelve igual que en
     solitario (sección 5), en tu propio ritmo, sin esperar turno de
-    nadie. Tus compañeros ven un resumen de una línea en la escena
-    compartida ("X se topa con problemas — ¡combate!"), pero no pueden
-    meterse dentro de tu pelea todavía; eso sigue siendo terreno de las
-    batallas de tripulación de arriba, no de la escena libre.
+    nadie. Tus compañeros ven la escena completa que viviste (no un
+    resumen), aunque no pueden meterse dentro de tu pelea todavía; eso
+    sigue siendo terreno de las batallas de tripulación de arriba, no de
+    la escena libre.
   - ¿Quieres separarte un momento? Escribe algo como "me separo del
     grupo" o "me voy por mi cuenta", o usa el botón "Separarte del
     grupo". Nunca pasa sin que lo confirmes: el juego te pregunta
@@ -333,6 +333,33 @@ pero mientras esté alto, cada paso que das es más peligroso.
 Reunir los 4 Poneglifos, llegar a Laugh Tale, y lo que eso desate contra
 el Gobierno Mundial — eso es el horizonte final del juego. Nadie lo va a
 lograr en solitario.
+
+LA LENGUA ANTIGUA Y LOS CALCOS
+Ningún Poneglifo se lee de casualidad: hace falta saber la lengua
+antigua. Se estudia solo en las ruinas de Ohara (botón "Poneglifos", una
+sesión cada 3 horas, cuesta aguante). Con 25 puntos lees los Poneglifos
+de Historia; con 50, los de Ruta. Si llegas a un Poneglifo sin saber
+leerlo todavía, no pierdes el viaje: te llevas un CALCO (una copia de los
+símbolos) que puedes descifrar en cuanto aprendas, o entregar a un
+compañero de tripulación que ya sepa leer y esté en tu misma isla.
+
+LOS 6 PONEGLIFOS DE HISTORIA
+Aparte de los 4 de Ruta, hay 6 Poneglifos de Historia repartidos por el
+mundo (Alabasta, Skypiea, Isla Gyojin, Zou, País de Wano y Elbaf), cada
+uno con un capítulo real de la historia perdida del mundo. No hace falta
+vencer a ningún guardián para leerlos: basta con estar en esa isla y
+saber la lengua. El botón "Poneglifos" (pestañas Tu ruta / Historia /
+Ruta) lleva la cuenta de cuánto sabes, qué calcos llevas encima y qué
+capítulos ya conoces. Conocer más capítulos de Historia también debilita
+a los guardianes de los Poneglifos de Ruta: cuanta más verdad sabéis
+entre la tripulación, mejor va el asalto final.
+
+MI CAMINO
+Si no sabes qué hacer ahora mismo, el botón "Mi camino" (junto al de
+Poder, resaltado los primeros niveles) mira tu estado real — tu rango,
+tus misiones, tu puesto, si hay una guerra abierta, si llevas calcos sin
+descifrar — y te dice, en orden de urgencia, qué es lo siguiente que
+vale la pena hacer, con un botón directo a cada panel.
 
 -----------------------------------------------------------
 11B. CÓMO SE ROLEA (LEE ESTO)
@@ -547,6 +574,17 @@ resuelve a la vez. El enemigo crece con el número de luchadores. Tus
 compañeros NPC también pelean. No hay reloj: cada quien responde a su
 ritmo y la ronda se resuelve cuando todos han movido.
 
+CONTRATOS DE FACCIÓN
+Cada isla, además de sus misiones normales, siempre tiene un encargo
+propio de tu facción: para un marine, una orden de arresto contra un
+maleante real de la isla; para un revolucionario, derribar al puño del
+Gobierno local; para el CP-0, una operación encubierta; para un
+cazarrecompensas, un cartel de SE BUSCA que paga más que un encargo
+normal; para un pirata, un golpe o un tesoro. Cumplirlo paga, además del
+premio normal, en la moneda de tu propia facción: recompensa si eres
+pirata, mérito si eres marine, influencia si eres revolucionario,
+confianza del Gobierno si eres del CP-0, o reputación de cazador.
+
 GUARDIANES Y SIGILO
 Los Poneglifos los guardan personajes reales. Si el guardián está en
 casa, hay un 75 % de encontrártelo EN PERSONA (letal si no estás
@@ -756,6 +794,22 @@ mérito: son puestos con plazas fijas y hay que desafiar a quien los ocupa.
   jugador. 3 golpes decisivos en 7 días.
 - Los cazarrecompensas no tienen puestos de mando.
 - Noticias: sección "Rangos y mandos".
+
+GUERRAS DEL MUNDO (no solo las declaran los jugadores)
+El propio mundo también entra en guerra por su cuenta, cada pocos días:
+un Yonko contra la Marina, el Almirante de Flota contra un Yonko, un
+Emperador contra otro, o la Revolución contra el Gobierno — sin que
+ningún jugador tenga que declararla. Se ve en Poder → Guerra, con el
+marcador y el último frente. Un pirata puede alistarse con cualquiera de
+los dos Yonko de una guerra de Emperadores, o con el Yonko atacante en
+una guerra contra la Marina; un cazarrecompensas puede alistarse en
+cualquier bando de una guerra de justicia o contra la Marina. Todo marine
+y CP-0 defiende siempre al Gobierno; todo revolucionario ataca siempre en
+una guerra de la Revolución — sin pedirlo. Cada asalto que ganas en una
+isla del bando contrario suma un golpe decisivo para tu bando. Ganar una
+guerra de la Revolución libera u ocupa una isla de verdad; ganar una de
+Emperadores le quita un dominio al perdedor; ganar una de justicia o
+contra la Marina sube la recompensa del Yonko un 10%.
 
 NUEVAS ISLAS (47 en total)
 Tequila Wolf (East Blue, nivel 1: aquí empiezan los reclutas del CP-0),

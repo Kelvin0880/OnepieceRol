@@ -32,6 +32,8 @@ import { factionTitle, type FactionKey } from "../engine/progression";
 import { ARC_TOTAL_STAGES } from "../engine/world-arcs";
 import { isRevolutionBase, isSeatId, seatWarBlockReason, seatWarKind, SEATS, type SeatId } from "../engine/faction-seats";
 import { GARRISON_MAX } from "../engine/territory";
+import { automaticSide, enlistableSides, WAR_KIND_LABEL, type CanonWarKind, type WarSide } from "../engine/world-wars";
+import { enlistInWar, isCanonWar, settleCanonWarIfDone } from "./world-wars";
 import { postNews } from "./death-resolution";
 import { recordGrudgeIncident } from "./grudges";
 import { notifyIsland } from "./notify";
@@ -104,6 +106,10 @@ const isGov = (c: Pick<Character, "faction">) => c.faction === "MARINE" || c.fac
 function sideInWar(w: War, c: Pick<Character, "id" | "faction">): "attacker" | "defender" | null {
   if (w.attackerId === c.id) return "attacker";
   if (w.defenderId === c.id) return "defender";
+  if (w.attackerKind === "canon") {
+    const enlisted = parse<Record<string, "attacker" | "defender">>(w.enlistedJson, {})[c.id];
+    return enlisted ?? automaticSide(w.kind as CanonWarKind, c.faction as FactionKey);
+  }
   const kind = w.kind as AnyWarKind;
   if (kind === "REVOLUTION") return c.faction === "REVOLUTIONARY" ? "attacker" : isGov(c) ? "defender" : null;
   if (kind === "MARINE") return isGov(c) ? "defender" : null;
@@ -114,7 +120,7 @@ function sideInWar(w: War, c: Pick<Character, "id" | "faction">): "attacker" | "
 async function warFor(c: Pick<Character, "id" | "faction">): Promise<War | null> {
   const own = await prisma.war.findFirst({ where: { status: "ACTIVE", OR: [{ attackerId: c.id }, { defenderId: c.id }] } });
   if (own) return own;
-  const all = await prisma.war.findMany({ where: { status: "ACTIVE", kind: { in: ["MARINE", "REVOLUTION", "JUSTICE"] } }, orderBy: { startedAt: "desc" } });
+  const all = await prisma.war.findMany({ where: { status: "ACTIVE" }, orderBy: { startedAt: "desc" } });
   return all.find((w) => sideInWar(w, c)) ?? null;
 }
 
@@ -210,12 +216,49 @@ export async function getSovereigntyState(characterId: string, userId: string) {
       territoryOwnerName: hereTerritory?.ownerName ?? null,
     },
     canAssaultHere: openWar ? !!(await assaultTarget(openWar, c)) : false,
+    worldWars: await worldWarsFor(c),
   };
+}
+
+/** Every running canon war and where this character stands in it (automatic side, chosen side, or free to enlist). */
+export async function worldWarsFor(c: Pick<Character, "id" | "faction">) {
+  const wars = await prisma.war.findMany({ where: { status: "ACTIVE", attackerKind: "canon" }, orderBy: { startedAt: "desc" } });
+  return wars.map((w) => {
+    const side = sideInWar(w, c);
+    return {
+      id: w.id,
+      label: WAR_KIND_LABEL[w.kind as CanonWarKind] ?? "Guerra",
+      attackerName: w.attackerName,
+      defenderName: w.defenderName,
+      attackerScore: w.attackerScore,
+      defenderScore: w.defenderScore,
+      endsAt: new Date(w.startedAt.getTime() + WAR_DURATION_MS),
+      mySide: side,
+      canEnlist: side ? [] : enlistableSides(w.kind as CanonWarKind, c.faction as FactionKey),
+      log: parse<string[]>(w.logJson, []).slice(-4),
+    };
+  });
+}
+
+export async function enlistInCanonWar(characterId: string, userId: string, warId: string, sideRaw: unknown) {
+  const c = await loadMine(characterId, userId);
+  const side: WarSide | null = sideRaw === "attacker" || sideRaw === "defender" ? sideRaw : null;
+  const w = await prisma.war.findUnique({ where: { id: warId } });
+  if (!w || w.status !== "ACTIVE" || !isCanonWar(w)) throw new SovereigntyError("Esa guerra ya no está en marcha.");
+  if (!side) throw new SovereigntyError("Elige un bando.");
+  if (sideInWar(w, c)) throw new SovereigntyError("Ya luchas en esta guerra.");
+  if (!enlistableSides(w.kind as CanonWarKind, c.faction as FactionKey).includes(side)) throw new SovereigntyError("Tu facción no puede alistarse en ese bando.");
+  const other = await warFor(c);
+  if (other) throw new SovereigntyError("Ya luchas en otra guerra: termina esa primero.");
+  await enlistInWar(c.id, w.id, side);
+  const leader = side === "attacker" ? w.attackerName : w.defenderName;
+  return { log: [`Te alistas con ${leader}. Asalta los dominios del bando contrario (o las bases de la Marina) desde la pestaña Guerra; cada victoria suma un golpe decisivo.`] };
 }
 
 function warView(w: War, me: Pick<Character, "id" | "faction">) {
   return {
     id: w.id,
+    canon: isCanonWar(w),
     kind: w.kind as AnyWarKind,
     status: w.status,
     iAmAttacker: sideInWar(w, me) === "attacker",
@@ -453,6 +496,15 @@ async function assaultTarget(w: War, c: Character): Promise<{ kind: "base" | "te
   if (!island) return null;
   const t = await prisma.territory.findUnique({ where: { islandId: c.currentIslandId } });
   const side = sideInWar(w, c);
+  const ownedBy = (id: string | null) => !!t && !!id && (t.ownerCharacterId === id || t.ownerActorId === id);
+  if (w.attackerKind === "canon") {
+    if (!side) return null;
+    const enemyId = side === "attacker" ? w.defenderId : w.attackerId;
+    if (w.kind === "REVOLUTION") return side === "attacker" ? (isMarineBase(island.factionControl) ? { kind: "base", side } : null) : isRevolutionBase(island.factionControl) ? { kind: "revbase", side } : null;
+    // The Government's side (null leader) is struck at its bases; an Emperor's side at its dominions.
+    if (!enemyId) return isMarineBase(island.factionControl) ? { kind: "base", side } : null;
+    return ownedBy(enemyId) ? { kind: "territory", territory: t!, side } : null;
+  }
   if (w.kind === "REVOLUTION") {
     if (side === "attacker") return isMarineBase(island.factionControl) ? { kind: "base", side } : null;
     if (side === "defender") return isRevolutionBase(island.factionControl) ? { kind: "revbase", side } : null;
@@ -497,8 +549,10 @@ export async function warAssault(characterId: string, userId: string) {
       ? { name: chief.name, ...actorCombatStats(chief.powerLevel), isBoss: true, personality: chief.personality ?? undefined, worldActorId: chief.id, isActor: true }
       : { name: `Guarnición revolucionaria de ${c.currentIsland.name}`, ...baseGarrisonStats(c.currentIsland.dangerLevel, c.level), isBoss: true, personality: "revolucionarios convencidos: defienden su refugio como si fuera el último" };
   } else {
-    const owner = await prisma.character.findUnique({ where: { id: target.territory!.ownerCharacterId! } });
-    enemy = { name: `Guarnición de ${target.territory!.ownerName}`, ...rivalGarrisonStats(target.territory!.garrison, owner?.level ?? 30), isBoss: true, personality: "leales a su Emperador, defienden cada palmo de la isla" };
+    const ownerActor = target.territory!.ownerActorId ? await prisma.worldActor.findUnique({ where: { id: target.territory!.ownerActorId } }) : null;
+    const owner = target.territory!.ownerCharacterId ? await prisma.character.findUnique({ where: { id: target.territory!.ownerCharacterId } }) : null;
+    if (ownerActor) enemy = { name: `Guarnición de ${ownerActor.name} en ${c.currentIsland.name}`, ...actorCombatStats(Math.round(ownerActor.powerLevel * 0.75)), isBoss: true, personality: `leales a ${ownerActor.name}: defienden su bandera sin retroceder` };
+    else enemy = { name: `Guarnición de ${target.territory!.ownerName}`, ...rivalGarrisonStats(target.territory!.garrison, owner?.level ?? 30), isBoss: true, personality: "leales a su Emperador, defienden cada palmo de la isla" };
   }
   try {
     const started = await startJointFight({
@@ -563,6 +617,10 @@ async function settleSeatWar(w: War, result: "attacker" | "defender" | "stalemat
 
 async function settleWarIfDone(w: War, now: Date): Promise<void> {
   if (w.status !== "ACTIVE") return;
+  if (isCanonWar(w)) {
+    await settleCanonWarIfDone(w.id, now);
+    return;
+  }
   const result = warOutcome({ attacker: w.attackerScore, defender: w.defenderScore }, w.startedAt, now);
   if (!result) return;
   const claimed = await prisma.war.updateMany({ where: { id: w.id, status: "ACTIVE" }, data: { status: "ENDED", outcome: result, endedAt: now } });
@@ -604,14 +662,30 @@ export async function handleSovereignFightSettled(p: { contextJson: string; outc
     const scorer = p.outcome === "victory" ? ctx.side : ctx.side === "attacker" ? "defender" : "attacker";
     const place = p.humans[0] ? (await prisma.character.findUnique({ where: { id: p.humans[0].characterId }, include: { currentIsland: true } }))?.currentIsland.name ?? "el frente" : "el frente";
     const line = p.outcome === "victory" ? `${p.humans.map((h) => h.name).join(", ")} gana un golpe decisivo en ${place}.` : `El asalto en ${place} fracasa.`;
-    await prisma.war.update({ where: { id: w.id }, data: { ...(scorer === "attacker" ? { attackerScore: { increment: 1 } } : { defenderScore: { increment: 1 } }), logJson: logLine(w, line) } });
+    await prisma.war.update({
+      where: { id: w.id },
+      data: {
+        ...(scorer === "attacker" ? { attackerScore: { increment: 1 } } : { defenderScore: { increment: 1 } }),
+        ...(p.outcome === "victory" ? (ctx.side === "attacker" ? { attackerPlayerBlows: { increment: 1 } } : { defenderPlayerBlows: { increment: 1 } }) : {}),
+        logJson: logLine(w, line),
+      },
+    });
     lines.push(line);
     if (p.outcome === "victory" && ctx.territoryId) {
       const t = await prisma.territory.findUnique({ where: { id: ctx.territoryId } });
       const taker = ctx.assaulterId ? await prisma.character.findUnique({ where: { id: ctx.assaulterId } }) : null;
       if (t && taker) {
         const islandName = (await prisma.island.findUnique({ where: { id: t.islandId } }))?.name ?? "la isla";
-        if (taker.faction === "MARINE" || taker.faction === "CP0") {
+        const sideLeader = isCanonWar(w) ? (ctx.side === "attacker" ? w.attackerId : w.defenderId) : null;
+        const leaderActor = sideLeader && (ctx.side === "attacker" ? w.attackerKind : w.defenderKind) === "canon" ? await prisma.worldActor.findUnique({ where: { id: sideLeader } }) : null;
+        if (leaderActor && t.ownerActorId) {
+          // In a canon war the island is taken in the name of the side's Emperor, not for the player who fought.
+          await prisma.territory.update({ where: { id: t.id }, data: { ownerActorId: leaderActor.id, homeActorId: leaderActor.id, ownerName: leaderActor.name } });
+          lines.push(`${taker.name} toma ${islandName} en nombre de ${leaderActor.name}.`);
+          await postNews(`${taker.name} toma ${islandName} para ${leaderActor.name}`, `En plena guerra (${w.attackerName} contra ${w.defenderName}), ${taker.name} ha arrebatado ${islandName} y la entrega a la bandera de ${leaderActor.name}.`, "Guerra", taker.id, "major");
+        } else if (isCanonWar(w) && t.ownerActorId) {
+          lines.push(`${islandName} queda devastada: sus defensores se repliegan.`);
+        } else if (taker.faction === "MARINE" || taker.faction === "CP0") {
           const { loseTerritoryToFleet } = await import("./territory");
           await loseTerritoryToFleet(t.islandId);
           lines.push(`La Marina arrebata ${islandName} al Yonko.`);

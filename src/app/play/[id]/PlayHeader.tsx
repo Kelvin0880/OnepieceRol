@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import type { ComponentType, ReactNode } from "react";
-import { Backpack, BookOpen, CalendarDays, Compass, Crown, Flag, Map as MapIcon, MessageCircleQuestion, Newspaper, Radio, ShieldAlert, Trophy, UserRound, Users, Zap } from "lucide-react";
+import { Backpack, BookOpen, CalendarDays, Compass, Crown, Flag, Map as MapIcon, MessageCircleQuestion, Milestone, Newspaper, Radio, ScrollText, ShieldAlert, Trophy, UserRound, Users, Zap } from "lucide-react";
 import StatBar from "@/components/ui/StatBar";
 import { factionTitle, type FactionKey } from "@/lib/engine/progression";
 import { crewNounForFaction } from "@/lib/engine/crew-noun";
@@ -11,7 +11,7 @@ import type { StateResponse } from "./types";
 import { badgeLabel, type BadgeKey } from "./useBadges";
 import type { BadgeCounts } from "./useBadges";
 
-export type PanelKey = "crew" | "coliseum" | "empire" | "denden" | "voyage" | "styles" | "inventory" | "ooc" | "guide" | "power" | "events";
+export type PanelKey = "crew" | "coliseum" | "empire" | "denden" | "voyage" | "styles" | "inventory" | "ooc" | "guide" | "power" | "events" | "route" | "path";
 
 interface NavItem {
   key: string;
@@ -62,11 +62,13 @@ export default function PlayHeader({ data, onOpen, badges, markSeen }: { data: S
   const faction = character.faction as FactionKey;
 
   const items: NavItem[] = [
+    { key: "path", label: "Mi camino", icon: Milestone, testId: "path-open", onClick: () => onOpen("path"), highlight: character.level <= 3 },
     { key: "crew", label: crewNounForFaction(faction), icon: Users, testId: "crew-open-header", onClick: () => onOpen("crew"), badge: character.pendingCrewInvites },
   ];
   if (coliseum || character.currentIsland.name === "Dressrosa")
     items.push({ key: "coliseum", label: "Coliseo", icon: Trophy, testId: "coliseum-open", onClick: () => onOpen("coliseum"), highlight: !!(coliseum && coliseum.onDressrosa && coliseum.status === "ANNOUNCED" && !coliseum.registered) });
   if (character.companions.length > 0 || territory?.isOwner) items.push({ key: "empire", label: "Imperio", icon: Crown, testId: "empire-open", onClick: () => onOpen("empire") });
+  if (!isDead) items.push({ key: "route", label: "Poneglifos", icon: ScrollText, testId: "route-open", onClick: () => onOpen("route"), highlight: !!(character.historyStoneHere && !character.historyStoneHere.read) });
   if (!isDead) items.push({ key: "power", label: "Poder", icon: Flag, testId: "power-open", onClick: () => onOpen("power"), badge: character.pendingSeatChallenges ?? 0, highlight: (character.pendingSeatChallenges ?? 0) > 0 });
   if (!isDead && !isImprisoned) items.push({ key: "denden", label: "Den Den Mushi", icon: Radio, testId: "denden-open", onClick: () => { markSeen("denden"); onOpen("denden"); }, fresh: badges.denden > 0 ? { text: badgeLabel(badges.denden), testId: "badge-denden", title: "Mensajes nuevos" } : undefined });
   items.push({ key: "events", label: "Eventos", icon: CalendarDays, testId: "events-open", onClick: () => { markSeen("events"); onOpen("events"); }, highlight: badges.events > 0, fresh: badges.events > 0 ? { text: badgeLabel(badges.events), testId: "badge-events", title: "Eventos nuevos" } : undefined });

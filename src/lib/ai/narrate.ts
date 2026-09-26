@@ -125,7 +125,7 @@ export async function loadDirectives(characterId: string): Promise<string> {
       styles: describeStyles(c.styles.map((s) => ({ id: s.styleId, mastery: s.mastery })), (c.equippedWeapon ? 1 : 0) + c.ownedWeapons.filter((w) => w.id !== c.equippedWeaponId).length, [...(c.equippedWeapon ? [c.equippedWeapon.name] : []), ...c.ownedWeapons.filter((w) => w.id !== c.equippedWeaponId).map((w) => w.name)]),
       attributes: describeAttributes({ strength: c.strength, agility: c.agility, durability: c.durability, willpower: c.willpower, intellect: c.intellect }),
       berries: c.berries,
-      inventory: await inventoryLineForNarrator(c.id),
+      inventory: [await inventoryLineForNarrator(c.id), await import("../game/poneglyph").then((m) => m.poneglyphLineForNarrator(c)).catch(() => "")].filter(Boolean).join(" "),
       rank: (() => {
         const r = rankProgress((c.faction === "CP0" ? "CP0" : c.faction) as FactionKey, c.bounty, c.notoriety);
         const ladder = r.nextTitle ? `${r.title} (le faltan ${r.remaining?.toLocaleString("es-ES")} de ${r.metric.toLowerCase()} para ${r.nextTitle})` : `${r.title} (lo más alto por méritos; por encima solo hay puestos que se ganan desafiando a quien los ocupa)`;

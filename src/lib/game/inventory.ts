@@ -157,6 +157,8 @@ export async function getInventoryView(characterId: string, userId: string) {
     weapons: c.ownedWeapons.map((w) => ({ id: w.id, name: w.name, kind: w.kind, atkBonus: w.atkBonus, description: w.description, equipped: w.id === c.equippedWeaponId })),
     devilFruit: c.devilFruit ? { name: c.devilFruit.name, description: c.devilFruit.description } : null,
     poneglyphsRead: c.poneglyphsRead,
+    roadRead: await prisma.poneglyph.count({ where: { kind: "Road", id: { in: JSON.parse(c.poneglyphsRead || "[]") as string[] } } }),
+    rubbings: (await prisma.inventoryItem.findMany({ where: { characterId, kind: "Calco" }, select: { name: true } })).map((r) => r.name),
     merchantTitle: merchantStock(c.currentIsland.name, c.currentIsland.dangerLevel).title,
     shop: shopIdsFor(c.currentIsland).map((id) => {
       const d = getItemDef(id)!;
@@ -278,7 +280,9 @@ export async function inventoryLineForNarrator(characterId: string): Promise<str
     // Bagged fruits are separate rows; without them the narrator "forgets" a fruit the player is carrying (real report, Buki Buki no Mi).
     const fruits = await prisma.inventoryItem.findMany({ where: { characterId, kind: "Fruta del Diablo" }, select: { name: true } });
     const fruitLine = fruits.length ? `Frutas del Diablo en la mochila (sin comer, siguen existiendo): ${fruits.map((f) => f.name).join(", ")}.` : "";
-    return [base, fruitLine].filter(Boolean).join(" ");
+    const rubbings = await prisma.inventoryItem.findMany({ where: { characterId, kind: "Calco" }, select: { name: true } });
+    const rubbingLine = rubbings.length ? `Calcos de Poneglifos sin descifrar: ${rubbings.map((r) => r.name.replace(/^Calco: /, "")).join(", ")}.` : "";
+    return [base, fruitLine, rubbingLine].filter(Boolean).join(" ");
   } catch {
     return "";
   }

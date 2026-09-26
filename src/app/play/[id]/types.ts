@@ -171,7 +171,8 @@ export interface RaidState {
 export interface MissionsState {
   islandName: string;
   briefing: { text: string; ready: boolean } | null;
-  missions: { id: string; kind: string; title: string; brief: string; progress: number; target: number; berries: number; xp: number; tier: number; isArc: boolean; status: string }[];
+  missions: { id: string; kind: string; title: string; brief: string; progress: number; target: number; berries: number; xp: number; tier: number; isArc: boolean; status: string; factionRep?: number }[];
+  faction?: string;
 }
 
 export interface BlackMarketState {
@@ -318,6 +319,10 @@ export interface Character {
   /** Someone challenged this character for their seat of command and is waiting for an answer. */
   pendingSeatChallenges?: number;
   seat?: string | null;
+  roadRead?: number;
+  historyStoneHere?: { codeName: string; read: boolean } | null;
+  historyRead?: number;
+  ancientScript?: number;
   imprisonment: Imprisonment | null;
   partyId: string | null;
   isSeparatedFromParty: boolean;

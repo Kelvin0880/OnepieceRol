@@ -6,6 +6,15 @@ import { notifyParty } from "./notify";
 import { writePartyMessage } from "./party";
 import { maybeCompactPartyScene } from "./scene-compaction";
 
+/** The party can dissolve mid-flight (a member left/died while the narrator was answering); losing that race is not an error. */
+async function safePartyUpdate(id: string, data: Record<string, unknown>): Promise<void> {
+  try {
+    await prisma.party.update({ where: { id }, data });
+  } catch (err) {
+    if (!(err instanceof Error) || !err.message.includes("Record to update not found")) throw err;
+  }
+}
+
 export class PartyRoundError extends Error {}
 
 async function memberIdsInOrder(partyId: string, turnOrderJson: string): Promise<{ id: string; name: string; faction: string; level: number }[]> {
@@ -14,7 +23,23 @@ async function memberIdsInOrder(partyId: string, turnOrderJson: string): Promise
   return [...members].sort((a, b) => (order.indexOf(a.id) + 1 || 99) - (order.indexOf(b.id) + 1 || 99));
 }
 
-/** Records this member's action for the round (visible to everyone right away). Returns whether everyone has acted. */
+/**
+ * Read-only: whose turn it is right now — the narrator opens (or answers), then every member acts once in join order,
+ * then the narrator answers again, in a loop. Null means it's genuinely open (a fresh lap with nobody blocked). A
+ * sentinel "__narrator__" id means the AI's answer to the last lap is still in flight: nobody may act until it lands.
+ */
+export async function whoseTurn(partyId: string): Promise<{ id: string; name: string } | null> {
+  const party = await prisma.party.findUnique({ where: { id: partyId } });
+  if (!party) return null;
+  if (party.awaitingNarrator) return { id: "__narrator__", name: "el narrador" };
+  const members = await memberIdsInOrder(party.id, party.turnOrder);
+  const actions = parseRound(party.roundActionsJson);
+  const nextId = missingMembers(members.map((m) => m.id), actions)[0];
+  if (!nextId) return null;
+  return { id: nextId, name: members.find((m) => m.id === nextId)?.name ?? "otro miembro" };
+}
+
+/** Records this member's action for the round in strict turn order. Returns whether everyone has now acted. */
 export async function submitRoundAction(character: { id: string; name: string }, partyId: string, text: string): Promise<{ allIn: boolean; waitingFor: string[] }> {
   const party = await prisma.party.findUnique({ where: { id: partyId } });
   if (!party) throw new PartyRoundError("El grupo ya no existe.");
@@ -22,6 +47,11 @@ export async function submitRoundAction(character: { id: string; name: string },
   const members = await memberIdsInOrder(party.id, party.turnOrder);
   const actions = parseRound(party.roundActionsJson);
   if (actions[character.id]) throw new PartyRoundError("Ya has enviado tu acción de esta ronda: espera a tus compañeros o pide que el narrador responda ya.");
+  const ids = members.map((m) => m.id);
+  const missing = missingMembers(ids, actions);
+  if (missing[0] && missing[0] !== character.id) {
+    throw new PartyRoundError(`Espera tu turno: le toca a ${members.find((m) => m.id === missing[0])?.name ?? "otro miembro"}.`);
+  }
   actions[character.id] = text;
   const claimed = await prisma.party.updateMany({
     where: { id: party.id, awaitingNarrator: false, roundActionsJson: party.roundActionsJson },
@@ -29,7 +59,6 @@ export async function submitRoundAction(character: { id: string; name: string },
   });
   if (claimed.count === 0) throw new PartyRoundError("Otra acción se te adelantó en la ronda: vuelve a enviarla.");
   await writePartyMessage(party.id, character.id, character.name, text);
-  const ids = members.map((m) => m.id);
   return { allIn: roundComplete(ids, actions), waitingFor: missingMembers(ids, actions).map((id) => members.find((m) => m.id === id)?.name ?? "otro miembro") };
 }
 
@@ -73,12 +102,12 @@ export async function resolvePartyRound(partyId: string, force = false): Promise
         { characterId: a.characterId, role: "narrator", text, createdAt: new Date(now + i) },
       ]),
     });
-    await prisma.party.update({ where: { id: party.id }, data: { roundActionsJson: "{}", roundStartedAt: null, awaitingNarrator: false } });
+    await safePartyUpdate(party.id, { roundActionsJson: "{}", roundStartedAt: null, awaitingNarrator: false });
     await notifyParty(party.id);
     void maybeCompactPartyScene(party.id);
     return text;
   } catch (err) {
-    await prisma.party.update({ where: { id: party.id }, data: { awaitingNarrator: false } });
+    await safePartyUpdate(party.id, { awaitingNarrator: false });
     await notifyParty(party.id);
     throw err;
   }

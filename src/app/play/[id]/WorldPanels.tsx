@@ -4,6 +4,7 @@ import { Anchor, Check, Coins, Crown, Flag, Lock, ScrollText, Siren, Skull, Targ
 import StatBar from "@/components/ui/StatBar";
 import { CELL_LABELS } from "@/lib/engine/impel-down";
 import { formatBerries, formatMinutes } from "@/lib/ui/format";
+import { contractRepLabel } from "@/lib/engine/faction-contracts";
 import { useEffect, useState } from "react";
 import type { RescueRaidState, CaptivesState, AdmiralAlertState, BlackMarketState, BusterCallState, Character, MissionsState, RaidState, TerritoryState, WorldEventHere } from "./types";
 
@@ -222,14 +223,15 @@ export function MissionsPanel({ missions }: { missions: MissionsState }) {
       )}
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         {missions.missions.map((m) => (
-          <div key={m.id} data-testid="mission" className={`rounded-md border px-3 py-2 ${m.status === "DONE" ? "border-jade/40 opacity-60" : m.isArc ? "border-gold/60 bg-gold/5" : "border-line bg-black/10"}`}>
+          <div key={m.id} data-testid="mission" className={`rounded-md border px-3 py-2 ${m.status === "DONE" ? "border-jade/40 opacity-60" : m.factionRep ? "border-sky-300/50 bg-sky-300/5" : m.isArc ? "border-gold/60 bg-gold/5" : "border-line bg-black/10"}`}>
+            {!!m.factionRep && <p className="text-[10px] uppercase tracking-wide text-sky-300 mb-0.5" data-testid="faction-contract">Encargo de tu facción</p>}
             <p className="text-sm flex items-start gap-1.5">
               {m.status === "DONE" ? <Check className="w-4 h-4 text-jade shrink-0 mt-0.5" /> : <Target className="w-4 h-4 text-gold shrink-0 mt-0.5" />}
               <span className="text-gold">{m.title}</span>
             </p>
             <p className="text-xs text-ink-dim mt-0.5">{m.brief}</p>
             <p className="text-[11px] text-ink-dim mt-1">
-              {formatBerries(m.berries)} · {m.xp} XP
+              {formatBerries(m.berries)} · {m.xp} XP{m.factionRep ? ` · ${contractRepLabel(missions.faction ?? "", m.factionRep)}` : ""}
             </p>
             <StatBar label="Progreso" value={m.progress} max={m.target} color="var(--gold)" size="sm" />
           </div>

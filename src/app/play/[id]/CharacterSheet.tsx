@@ -40,7 +40,7 @@ export default function CharacterSheet({
   const faction = character.faction as FactionKey;
   const condition = characterCondition(character.hp, character.maxHp);
   const r = rankProgress(faction, character.bounty, character.notoriety);
-  const poneglyphs = (JSON.parse(character.poneglyphsRead || "[]") as string[]).length;
+  const poneglyphs = character.roadRead ?? (JSON.parse(character.poneglyphsRead || "[]") as string[]).length;
   const xpMax = xpToNextLevel(character.level);
 
   return (
@@ -175,7 +175,7 @@ export default function CharacterSheet({
         )}
         {poneglyphs > 0 && (
           <div className="mt-2 pt-2 border-t border-line">
-            <p className="text-xs text-gold mb-1">Poneglifos descifrados: {poneglyphs}/4</p>
+            <p className="text-xs text-gold mb-1">Poneglifos de Ruta descifrados: {poneglyphs}/4</p>
             <div className="flex gap-1" aria-hidden>
               {[0, 1, 2, 3].map((i) => (
                 <span key={i} className={`h-2 flex-1 rounded-sm ${i < poneglyphs ? "bg-[#c0392b]" : "bg-black/30"}`} />

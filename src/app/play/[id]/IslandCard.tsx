@@ -54,6 +54,13 @@ export default function IslandCard({
         </p>
       )}
 
+      {character.historyStoneHere && !character.historyStoneHere.read && !isDead && !isImprisoned && (
+        <p className="text-xs text-gold mt-3 flex items-start gap-1.5" data-testid="history-stone-hint">
+          <Eye className="w-4 h-4 shrink-0" />
+          Aquí hay un Poneglifo de Historia, a la vista de todos. Ábrelo en «Poneglifos» para leerlo (o hacer un calco si aún no sabes la lengua antigua).
+        </p>
+      )}
+
       {voyage && (
         <div className="mt-3 rounded border border-gold/50 bg-gold/5 p-3 text-sm flex items-start gap-2" data-testid="voyage-banner">
           <Ship className="w-4 h-4 text-gold shrink-0 mt-0.5 animate-pulse" />

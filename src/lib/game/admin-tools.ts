@@ -1,11 +1,22 @@
 import { prisma } from "../db";
+import { CharacterStatus } from "@prisma/client";
 import { arcEligible, arcTitle, ARC_TOTAL_STAGES, RECLAIM_ASPIRANTS, type ArcKind } from "../engine/world-arcs";
 import { adminListEvents, cancelPlayerEvent, createPlayerEvent, forceResolvePlayerEvent, PlayerEventError } from "./player-events";
 import { tickWorldHappenings } from "./world-happenings";
 import { postNews } from "./death-resolution";
 import { startDispatch, DispatchError } from "./admiral-dispatch";
+import { startCanonWar, runFront, warsSummary } from "./world-wars";
+import { startCanonSeatEventNow, resolveCanonDuelNow, SeatError } from "./faction-seats";
+import { grantItem, grantCatalogFruit, ITEM_IDS } from "./inventory";
+import { invalidateWorldState } from "./world-state";
 
 export class AdminToolError extends Error {}
+
+async function findCharacterOrThrow(name: string) {
+  const c = await prisma.character.findFirst({ where: { name: name.trim() } });
+  if (!c) throw new AdminToolError(`No encuentro a ningún personaje llamado "${name}".`);
+  return c;
+}
 
 const ONLINE_MS = 3 * 60_000;
 
@@ -34,6 +45,7 @@ export async function getAdminOverview() {
     actors: (await prisma.worldActor.findMany({ select: { name: true, status: true, role: true, factionName: true }, orderBy: { name: "asc" } })).map((a) => ({ name: a.name, status: a.status, role: a.role, factionName: a.factionName })),
     characters: (await prisma.character.findMany({ where: { status: "ALIVE" }, select: { name: true, level: true }, orderBy: { name: "asc" }, take: 300 })).map((c) => ({ name: c.name, level: c.level })),
     islands: (await prisma.island.findMany({ select: { name: true }, orderBy: { name: "asc" } })).map((i) => i.name),
+    itemIds: ITEM_IDS,
   };
 }
 
@@ -107,4 +119,130 @@ export async function adminStartDispatch(admiralName: string | null, islandName:
     if (e instanceof DispatchError) throw new AdminToolError(e.message);
     throw e;
   }
+}
+
+// ---- Wars (Revolution/Justice/Emperor/Marine, engine/world-wars.ts) ----
+
+/** Every war worth showing on the dashboard: active canon/player wars plus the last few ended ones. */
+export async function adminListWars() {
+  const wars = await prisma.war.findMany({ orderBy: { startedAt: "desc" }, take: 20 });
+  return wars.map((w) => ({
+    id: w.id, kind: w.kind, status: w.status, attackerName: w.attackerName, defenderName: w.defenderName,
+    attackerKind: w.attackerKind, defenderKind: w.defenderKind, attackerScore: w.attackerScore, defenderScore: w.defenderScore,
+    nextFrontAt: w.nextFrontAt, startedAt: w.startedAt, outcome: w.outcome,
+  }));
+}
+
+export async function adminStartCanonWar() {
+  const w = await startCanonWar();
+  if (!w) throw new AdminToolError("Ninguna guerra canon puede empezar ahora mismo (ya hay una activa o no hay bando disponible).");
+  return { id: w.id, kind: w.kind, attackerName: w.attackerName, defenderName: w.defenderName };
+}
+
+/** Runs one front of a war right now, ignoring its normal 12h cadence. */
+export async function adminRunWarFront(warId: string) {
+  const line = await runFront(warId, new Date());
+  if (!line) throw new AdminToolError("Esa guerra no existe, ya terminó o no tiene bandos con fuerzas disponibles.");
+  return line;
+}
+
+/** Force-ends a war as a stalemate — an escape hatch if one gets stuck, not part of the normal flow. */
+export async function adminEndWar(warId: string) {
+  const w = await prisma.war.findUnique({ where: { id: warId } });
+  if (!w || w.status !== "ACTIVE") throw new AdminToolError("Esa guerra no existe o ya terminó.");
+  await prisma.war.update({ where: { id: warId }, data: { status: "ENDED", outcome: "stalemate", endedAt: new Date() } });
+  await postNews("Alto el fuego", `${w.attackerName} y ${w.defenderName} detienen las hostilidades: la guerra termina en tablas, por ahora.`, "Guerra", undefined, "major");
+  invalidateWorldState();
+}
+
+export async function adminWarsSummary() {
+  return warsSummary();
+}
+
+// ---- Seats of command (engine/faction-seats.ts) ----
+
+export async function adminListSeatChallenges() {
+  const rows = await prisma.seatChallenge.findMany({ where: { status: { in: ["PENDING", "FIGHTING", "ANNOUNCED"] } }, orderBy: { createdAt: "desc" }, take: 20 });
+  return rows.map((c) => ({ id: c.id, seat: c.seat, status: c.status, challengerName: c.challengerName, defenderName: c.defenderName, expiresAt: c.expiresAt, resolveAt: c.resolveAt }));
+}
+
+export async function adminStartSeatEvent() {
+  await startCanonSeatEventNow();
+}
+
+export async function adminResolveSeatDuel(challengeId: string) {
+  try {
+    await resolveCanonDuelNow(challengeId);
+  } catch (e) {
+    if (e instanceof SeatError) throw new AdminToolError(e.message);
+    throw e;
+  }
+}
+
+// ---- Direct player adjustments (owner-only escape hatches for testing/support) ----
+
+const ADJUSTABLE = ["level", "berries", "bounty", "notoriety", "hp", "ancientScript", "attributePoints"] as const;
+export type AdjustableField = (typeof ADJUSTABLE)[number];
+export const ADJUSTABLE_FIELDS = ADJUSTABLE;
+
+export async function adminAdjustCharacter(name: string, field: AdjustableField, value: number) {
+  const c = await findCharacterOrThrow(name);
+  if (!Number.isFinite(value)) throw new AdminToolError("Valor inválido.");
+  const v = Math.round(value);
+  if (field === "hp") {
+    const clamped = Math.max(0, Math.min(c.maxHp, v));
+    await prisma.character.update({ where: { id: c.id }, data: { hp: clamped } });
+    return `${c.name}: vida ajustada a ${clamped}/${c.maxHp}.`;
+  }
+  if (v < 0) throw new AdminToolError("Ese valor no puede ser negativo.");
+  await prisma.character.update({ where: { id: c.id }, data: { [field]: v } });
+  return `${c.name}: ${field} ajustado a ${v}.`;
+}
+
+export async function adminTeleport(name: string, islandName: string) {
+  const c = await findCharacterOrThrow(name);
+  const island = await prisma.island.findUnique({ where: { name: islandName.trim() } });
+  if (!island) throw new AdminToolError(`No existe la isla "${islandName}".`);
+  await prisma.character.update({ where: { id: c.id }, data: { currentIslandId: island.id, voyageToIslandId: null, voyageFromIslandId: null, voyageArrivesAt: null, voyageAmbushJson: null } });
+  return `${c.name} aparece en ${island.name}.`;
+}
+
+export async function adminHeal(name: string) {
+  const c = await findCharacterOrThrow(name);
+  await prisma.character.update({ where: { id: c.id }, data: { hp: c.maxHp, stamina: 100 } });
+  return `${c.name} recupera toda su vida y aguante.`;
+}
+
+export async function adminReleasePrisoner(name: string) {
+  const c = await findCharacterOrThrow(name);
+  const jail = await prisma.imprisonment.findUnique({ where: { characterId: c.id } });
+  if (!jail || jail.releasedAt) throw new AdminToolError(`${c.name} no está preso.`);
+  await prisma.$transaction([
+    prisma.imprisonment.update({ where: { characterId: c.id }, data: { releasedAt: new Date() } }),
+    prisma.character.update({ where: { id: c.id }, data: { status: CharacterStatus.ALIVE } }),
+  ]);
+  return `${c.name} queda libre.`;
+}
+
+export async function adminSetIslandControl(islandName: string, control: string | null) {
+  const island = await prisma.island.findUnique({ where: { name: islandName.trim() } });
+  if (!island) throw new AdminToolError(`No existe la isla "${islandName}".`);
+  await prisma.island.update({ where: { id: island.id }, data: { factionControl: control?.trim() || null } });
+  invalidateWorldState();
+  return `${island.name} ahora la controla: ${control?.trim() || "nadie"}.`;
+}
+
+export async function adminGiveItem(name: string, itemId: string) {
+  const c = await findCharacterOrThrow(name);
+  if (!ITEM_IDS.includes(itemId)) throw new AdminToolError("Ese objeto no existe en el catálogo.");
+  const line = await grantItem(c.id, itemId);
+  if (!line) throw new AdminToolError("No se pudo entregar el objeto (mochila llena o id inválido).");
+  return `${c.name}: ${line}`;
+}
+
+export async function adminGiveFruit(name: string, fruitName: string) {
+  const c = await findCharacterOrThrow(name);
+  const id = await grantCatalogFruit(c.id, fruitName.trim());
+  if (!id) throw new AdminToolError(`No encuentro la fruta "${fruitName}" en el catálogo, o ${c.name} ya no tiene sitio en la mochila.`);
+  return `${c.name} recibe la fruta ${fruitName}.`;
 }

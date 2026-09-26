@@ -20,13 +20,15 @@ export async function worldStateBlock(): Promise<string> {
     ]);
     const { seatHoldersSummary } = await import("./faction-seats");
     const seats = await seatHoldersSummary().catch(() => []);
+    const { warsSummary } = await import("./world-wars");
+    const wars = await warsSummary().catch(() => []);
     const text = describeWorldState({
       seats,
       yonko: [...actors.filter((a) => a.role === "YONKO" && a.status === "ACTIVE").map((a) => a.name), ...playerYonko.map((p) => `${p.name} (jugador)`)],
       prisoners: actors.filter((a) => a.status === "CAPTURED").map((a) => ({ name: a.name, cell: a.prisonLevel })),
       defeated: actors.filter((a) => a.status === "DEFEATED").map((a) => a.name),
       fallen: actors.filter((a) => a.status === "DECEASED").map((a) => a.name),
-      events: [...arcs.map((a) => a.title), ...dispatches.map((d) => `el almirante ${d.admiralName} ${d.status === "EN_ROUTE" ? "navega hacia" : "está atacando"} ${d.targetIslandName}`)],
+      events: [...wars, ...arcs.map((a) => a.title), ...dispatches.map((d) => `el almirante ${d.admiralName} ${d.status === "EN_ROUTE" ? "navega hacia" : "está atacando"} ${d.targetIslandName}`)],
     });
     cache = { at: Date.now(), text };
     return text;

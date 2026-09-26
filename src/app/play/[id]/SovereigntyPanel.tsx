@@ -41,6 +41,7 @@ interface State {
   warTargets: { id: string; name: string }[];
   here: { islandName: string; isMarineBase: boolean; isRevolutionBase: boolean; territoryOwner: string | null; territoryOwnerName: string | null };
   canAssaultHere: boolean;
+  worldWars: { id: string; label: string; attackerName: string; defenderName: string; attackerScore: number; defenderScore: number; endsAt: string; mySide: "attacker" | "defender" | null; canEnlist: ("attacker" | "defender")[]; log: string[] }[];
 }
 
 type Tab = "yonko" | "warlord" | "seats" | "war";
@@ -253,6 +254,34 @@ export default function SovereigntyPanel({ characterId, onClose, onChanged }: { 
 
       {state && tab === "war" && (
         <div className="flex flex-col gap-3 animate-fade" data-testid="sov-war">
+          {state.worldWars.length > 0 && (
+            <div className="flex flex-col gap-2" data-testid="world-wars">
+              <p className="text-xs uppercase tracking-wide text-orange-300">Guerras del mundo</p>
+              {state.worldWars.map((w) => (
+                <div key={w.id} className="rounded border border-orange-300/40 bg-orange-300/5 p-3 flex flex-col gap-1.5" data-testid="world-war">
+                  <p className="text-xs text-ink-dim">{w.label}</p>
+                  <p className="font-display text-gold-bright">
+                    {w.attackerName} <span className="text-ink-dim text-sm">{w.attackerScore}–{w.defenderScore}</span> {w.defenderName}
+                  </p>
+                  <p className="text-[11px] text-ink-dim">Cada 12 h se libra un frente; gana quien llegue a 3 golpes (o el que más tenga el {new Date(w.endsAt).toLocaleDateString("es-ES")}). Nadie muere: se ganan y pierden islas.</p>
+                  {w.log.length > 0 && <p className="text-xs">{w.log[w.log.length - 1]}</p>}
+                  {w.mySide ? (
+                    <p className="text-xs text-jade">Luchas en el bando de {w.mySide === "attacker" ? w.attackerName : w.defenderName}. Tus victorias en asaltos suman golpes y refuerzan a vuestros campeones en los frentes.</p>
+                  ) : w.canEnlist.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {w.canEnlist.map((side) => (
+                        <button key={side} className="btn-gold px-3 py-1 text-xs" disabled={busy} onClick={() => op({ op: "enlist", warId: w.id, side })} data-testid="war-enlist">
+                          Alistarse con {side === "attacker" ? w.attackerName : w.defenderName}
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-xs text-ink-dim">Tu facción no participa en esta guerra.</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
           {state.war ? (
             <div className="rounded border border-blood/60 bg-blood/10 p-3 flex flex-col gap-2" data-testid="sov-war-active">
               <p className="font-display text-gold-bright flex items-center gap-2">

@@ -11,6 +11,7 @@ import { tickCanonChallenges } from "./canon-encounter";
 import { tickWorldHappenings } from "./world-happenings";
 import { tickPlayerEvents } from "./player-events";
 import { tickFactionSeats } from "./faction-seats";
+import { tickCanonWars } from "./world-wars";
 
 const TICK_INTERVAL_MS = 30 * 60 * 1000; // a new world beat roughly every 30 real minutes — the user found 5 too fast/noisy for a "living but calm" world
 const DIGEST_INTERVAL_MS = 6 * 60 * 60 * 1000; // a couple of bounty roundups a day, deliberately much rarer than the ambient tick
@@ -50,6 +51,8 @@ async function tickWorldIfDueInner(): Promise<void> {
   void tickPlayerEvents();
   // Seats of command: deadlines, canon duels waiting for their verdict, and (every ~36 h) a new challenge from the world itself.
   void tickFactionSeats();
+  // Canon wars: a front every 12 h, the ending, and a new war started by the world every few days.
+  void tickCanonWars();
   const clock = await prisma.worldClock.upsert({
     where: { id: 1 },
     update: {},

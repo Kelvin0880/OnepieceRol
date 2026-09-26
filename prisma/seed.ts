@@ -9,6 +9,7 @@ import { IMPEL_ACTORS, placeCanonPrisoners } from "../src/lib/game/world-actor-i
 import { ISLAND_NPC_DATA } from "../src/lib/game/island-npc-data";
 import { seedIslandRoster } from "../src/lib/game/island-npcs";
 import { assignCanonSeats } from "../src/lib/game/canon-seats";
+import { seedHistoryStones } from "../src/lib/game/history-stones";
 import { WAVE4_ISLANDS, WAVE4_ADJACENCY, WAVE4_STORIES, WAVE4_TERRITORIES } from "../src/lib/game/islands-wave4";
 import { styleAbilityLines, actorStyleNames } from "../src/lib/engine/actor-styles";
 
@@ -2014,6 +2015,7 @@ async function main() {
   await prisma.island.update({ where: { id: islands.abyss.id }, data: { hasPoneglyph: true, poneglyphId: abismoPoneglyph.id } });
   const finalPoneglyph = createdPoneglyphs["Poneglifo de Ruta — Fragmento Final"];
   await prisma.island.update({ where: { id: islands.maryGeoise.id }, data: { hasPoneglyph: true, poneglyphId: finalPoneglyph.id } });
+  console.log(`Placed ${await seedHistoryStones(prisma as never)} Historia Poneglyphs.`);
   await prisma.worldActor.update({ where: { id: worldActors["Thalassa"].id }, data: { homeIslandId: islands.abyss.id } });
   await prisma.worldActor.update({ where: { id: worldActors["Saint Jaygarcia Saturn"].id }, data: { homeIslandId: islands.maryGeoise.id } });
 

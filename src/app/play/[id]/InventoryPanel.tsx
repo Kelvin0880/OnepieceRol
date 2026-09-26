@@ -13,6 +13,8 @@ interface View {
   weapons: { id: string; name: string; kind: string; atkBonus: number; description: string; equipped: boolean }[];
   devilFruit: { name: string; description: string } | null;
   poneglyphsRead: string;
+  roadRead?: number;
+  rubbings?: string[];
   merchantTitle?: string;
   shop: { id: string; name: string; kind: string; description: string; price: number; special?: boolean }[];
   weaponShop?: { name: string; kind: string; description: string; atkBonus: number; price: number }[];
@@ -54,7 +56,7 @@ export default function InventoryPanel({ characterId, onClose, onChanged }: { ch
     }
   }
 
-  const poneglyphs = view ? (JSON.parse(view.poneglyphsRead || "[]") as string[]).length : 0;
+  const poneglyphs = view ? view.roadRead ?? (JSON.parse(view.poneglyphsRead || "[]") as string[]).length : 0;
 
   return (
     <Modal onClose={onClose} testId="inventory-panel" size="lg" label="Inventario" className="p-4 gap-3">
@@ -188,7 +190,12 @@ export default function InventoryPanel({ characterId, onClose, onChanged }: { ch
                 <p className="text-xs text-ink-dim">Ninguna.</p>
               )}
             </section>
-            <p className="text-xs text-ink-dim">Poneglifos descifrados: {poneglyphs}/4</p>
+            <p className="text-xs text-ink-dim">Poneglifos de Ruta descifrados: {poneglyphs}/4</p>
+            {(view?.rubbings ?? []).map((r) => (
+              <p key={r} className="text-xs text-gold" data-testid="inventory-rubbing">
+                📜 {r} (descífralo en la Ruta a Laugh Tale)
+              </p>
+            ))}
           </div>
         )}
 

@@ -8,6 +8,9 @@ import { addStanding } from "./alliance";
 import { notifyCharacters } from "../realtime";
 import { judgeMissionProgress } from "../ai/judge";
 import { judgeableKinds } from "../engine/mission-judge";
+import { factionContract } from "../engine/faction-contracts";
+import type { FactionKey } from "../engine/progression";
+import { applyBountyOrNotoriety } from "./reputation";
 
 const inFlight = new Map<string, Promise<void>>();
 
@@ -40,8 +43,19 @@ async function generateBatch(characterId: string): Promise<void> {
   const residents = rosterAll.filter((n) => npcState(n, new Date(), engaged).usable).map((n) => ({ id: n.id, name: n.name, title: n.title, category: n.category, level: n.level }));
   const specs = generateMissionSpecs(varietyRng(`${characterId}:${island.id}:${Math.floor(Date.now() / 3_600_000)}`), { level: c.level, danger: island.dangerLevel, minLevel: island.minLevelToEnter, islandName: island.name, arcHook: island.arcHook, openNeighbours: neighbours, residents });
   const { patronActorId } = await islandPowers(island.id);
+  const contract = factionContract({
+    faction: c.faction as FactionKey,
+    level: c.level,
+    danger: island.dangerLevel,
+    minLevel: island.minLevelToEnter,
+    islandName: island.name,
+    residents,
+    excludeIds: specs.map((s) => s.targetNpcId).filter((x): x is string => !!x),
+    seed: `${characterId}:${island.id}:${Math.floor(Date.now() / 3_600_000)}`,
+  });
+  const all = contract ? [...specs, contract] : specs;
   await prisma.mission.createMany({
-    data: specs.map((s) => ({
+    data: all.map((s) => ({
       characterId,
       islandId: island.id,
       kind: s.kind,
@@ -56,6 +70,7 @@ async function generateBatch(characterId: string): Promise<void> {
       patronActorId: s.isArc ? patronActorId : null,
       giverNpcId: s.giverNpcId ?? null,
       targetNpcId: s.targetNpcId ?? null,
+      factionRep: "factionRep" in s ? (s as { factionRep: number }).factionRep : 0,
     })),
   });
 
@@ -105,12 +120,13 @@ export function ensureIslandMissions(characterId: string): Promise<void> {
 export async function getMissionState(characterId: string) {
   const c = await prisma.character.findUnique({ where: { id: characterId }, include: { currentIsland: true } });
   if (!c) return null;
-  const missions = await prisma.mission.findMany({ where: { characterId, islandId: c.currentIslandId }, orderBy: [{ status: "asc" }, { createdAt: "desc" }], take: 6 });
+  const missions = await prisma.mission.findMany({ where: { characterId, islandId: c.currentIslandId }, orderBy: [{ status: "asc" }, { createdAt: "desc" }], take: 8 });
   const briefing = await prisma.islandBriefing.findUnique({ where: { characterId_islandId: { characterId, islandId: c.currentIslandId } } });
   return {
     islandName: c.currentIsland.name,
+    faction: c.faction,
     briefing: briefing ? { text: briefing.text, ready: briefing.text.length > 0 } : null,
-    missions: missions.map((m) => ({ id: m.id, kind: m.kind as MissionKind, title: m.title, brief: m.brief, progress: m.progress, target: m.target, berries: m.berries, xp: m.xp, tier: m.tier, isArc: m.isArc, status: m.status })),
+    missions: missions.map((m) => ({ id: m.id, kind: m.kind as MissionKind, title: m.title, brief: m.brief, progress: m.progress, target: m.target, berries: m.berries, xp: m.xp, tier: m.tier, isArc: m.isArc, status: m.status, factionRep: m.factionRep })),
   };
 }
 
@@ -134,6 +150,11 @@ async function settleGains(characterId: string, gains: { m: ActiveMission; gain:
     berries += m.berries;
     xp += m.xp;
     log.push(`¡Misión cumplida! «${m.title}» (฿ ${m.berries.toLocaleString("es-ES")}, ${m.xp} XP).`);
+    if (m.factionRep > 0) {
+      const fresh = await prisma.character.findUnique({ where: { id: characterId } });
+      if (fresh) await applyBountyOrNotoriety(fresh, m.factionRep, [], `Encargo de facción: ${m.title}`);
+      log.push(c.faction === "PIRATE" ? `Tu recompensa sube ฿ ${m.factionRep.toLocaleString("es-ES")}.` : `Tu facción reconoce el encargo: +${m.factionRep}.`);
+    }
     if (m.patronActorId) await addStanding(m.patronActorId, characterId, { mission: m.tier - 1 }, `cumpliste «${m.title}»`);
   }
   if (berries || xp) {

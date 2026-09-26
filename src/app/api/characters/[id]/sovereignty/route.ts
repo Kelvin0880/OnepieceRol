@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { z } from "zod";
 import { requireUserId, UnauthorizedError } from "@/lib/require-user";
-import { applyForWarlord, challengeEmperor, declareWar, getSovereigntyState, payWarlordTribute, proclaimEmperor, resignWarlord, SovereigntyError, warAssault } from "@/lib/game/sovereignty";
+import { applyForWarlord, challengeEmperor, declareWar, enlistInCanonWar, getSovereigntyState, payWarlordTribute, proclaimEmperor, resignWarlord, SovereigntyError, warAssault } from "@/lib/game/sovereignty";
 import { logError } from "@/lib/log-error";
 
 const schema = z.discriminatedUnion("op", [
@@ -12,6 +12,7 @@ const schema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("warlord_resign") }),
   z.object({ op: z.literal("declare_war"), kind: z.enum(["MARINE", "EMPEROR", "REVOLUTION", "JUSTICE"]), targetId: z.string().optional() }),
   z.object({ op: z.literal("war_assault") }),
+  z.object({ op: z.literal("enlist"), warId: z.string().min(1), side: z.enum(["attacker", "defender"]) }),
 ]);
 
 function fail(err: unknown, where: string) {
@@ -52,6 +53,8 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         return NextResponse.json(await declareWar(id, userId, d.kind, d.targetId));
       case "war_assault":
         return NextResponse.json(await warAssault(id, userId));
+      case "enlist":
+        return NextResponse.json(await enlistInCanonWar(id, userId, d.warId, d.side));
     }
   } catch (err) {
     return fail(err, "api/characters/[id]/sovereignty POST");
