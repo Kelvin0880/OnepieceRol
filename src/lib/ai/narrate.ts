@@ -128,8 +128,11 @@ export async function loadDirectives(characterId: string): Promise<string> {
       inventory: await inventoryLineForNarrator(c.id),
       rank: (() => {
         const r = rankProgress((c.faction === "CP0" ? "CP0" : c.faction) as FactionKey, c.bounty, c.notoriety);
-        const ladder = r.nextTitle ? `${r.title} (le faltan ${r.remaining?.toLocaleString("es-ES")} de ${r.metric.toLowerCase()} para ${r.nextTitle})` : `${r.title} (el escalón más alto)`;
-        const power = c.emperorSince || /\byonko\b|emperador/i.test(c.title ?? "") ? " — ES UNO DE LOS YONKO: el mundo entero le teme y le reconoce" : c.warlordSince ? " — es SHICHIBUKAI: patente del Gobierno, la Marina no le persigue" : "";
+        const ladder = r.nextTitle ? `${r.title} (le faltan ${r.remaining?.toLocaleString("es-ES")} de ${r.metric.toLowerCase()} para ${r.nextTitle})` : `${r.title} (lo más alto por méritos; por encima solo hay puestos que se ganan desafiando a quien los ocupa)`;
+        const seatTitle = c.seat && c.title ? c.title : null;
+        const power = seatTitle
+          ? ` — OCUPA EL PUESTO DE ${seatTitle.toUpperCase()}: lo ganó venciendo a quien lo ocupaba`
+          : c.emperorSince || /\byonko\b|emperador/i.test(c.title ?? "") ? " — ES UNO DE LOS YONKO: el mundo entero le teme y le reconoce" : c.warlordSince ? " — es SHICHIBUKAI: patente del Gobierno, la Marina no le persigue" : "";
         return ladder + power;
       })(),
     });

@@ -50,8 +50,8 @@ try {
   check("a CP-0 recruit starts on Tequila Wolf", (await cp.page.textContent('[data-testid="island-card"]')).includes("Tequila Wolf"));
   await cp.page.screenshot({ path: path.join(shots, "sov-01-cp0-tequila-wolf-390.png"), fullPage: true });
   await cp.page.click('[data-testid="power-open"]');
-  await cp.page.waitForSelector('[data-testid="sov-war"]');
-  check("a CP-0 agent only sees the war tab (no Yonko/Shichibukai)", (await cp.page.locator('[data-testid="sov-tab-yonko"]').count()) === 0);
+  await cp.page.waitForSelector('[data-testid="sov-seats"]');
+  check("a CP-0 agent sees the Gorosei and war tabs (no Yonko/Shichibukai)", (await cp.page.locator('[data-testid="sov-tab-yonko"]').count()) === 0 && (await cp.page.locator('[data-testid="sov-tab-seats"]').count()) === 1);
   await cp.ctx.close();
 
   for (const width of [390, 1280]) {

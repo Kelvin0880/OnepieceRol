@@ -18,7 +18,7 @@ export function busterCallTriggered(cellLevel: number, spectacular: boolean): bo
   return true;
 }
 
-export const WAVE_NAMES = ["Vanguardia de acorazados", "Flota de bombardeo", "Almirantazgo de la Buster Call"];
+export const WAVE_NAMES = ["Vanguardia de acorazados", "Flota de bombardeo", "Vicealmirantes de la Buster Call"];
 
 /** Stats of one wave (later waves hit harder); headcount scaling is applied by the joint fight itself. */
 export function waveEnemy(wave: number, islandDanger: number) {

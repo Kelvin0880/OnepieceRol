@@ -25,4 +25,9 @@ describe("describeWorldState", () => {
     expect(t).toContain("Derrotados");
     expect(prisonLabel(null)).toBe("Impel Down");
   });
+  it("names who holds each seat of command, so the narrator never invents another fleet admiral", () => {
+    const t = describeWorldState({ yonko: [], prisoners: [], defeated: [], fallen: [], events: [], seats: ["Almirante de Flota: Sakazuki", "Almirante: Kizaru, Ana (jugador)"] });
+    expect(t).toContain("Almirante de Flota: Sakazuki");
+    expect(t).toContain("nadie más es almirante");
+  });
 });

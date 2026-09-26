@@ -200,6 +200,8 @@ export interface FigureInput {
   notoriety: number;
   isEmperor: boolean;
   isWarlord: boolean;
+  /** A seat of command (Admiral, Fleet Admiral, revolutionary command, Gorosei): always front-page. */
+  seatTitle?: string | null;
 }
 
 /**
@@ -207,7 +209,7 @@ export interface FigureInput {
  * below that its agents are, by design, nobody.
  */
 export function isWorldFigure(i: FigureInput): boolean {
-  if (i.isEmperor || i.isWarlord) return true;
+  if (i.isEmperor || i.isWarlord || i.seatTitle) return true;
   switch (i.faction) {
     case "PIRATE":
       return i.bounty >= 500_000_000;
@@ -231,5 +233,6 @@ export function figureNewsDue(lastAt: Date | null, now: Date): boolean {
 export function figureLabel(i: FigureInput, rankTitle: string): string {
   if (i.isEmperor) return "el Yonko";
   if (i.isWarlord) return "el Shichibukai";
+  if (i.seatTitle) return `el ${i.seatTitle}`;
   return rankTitle;
 }

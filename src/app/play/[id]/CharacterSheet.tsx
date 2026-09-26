@@ -68,15 +68,19 @@ export default function CharacterSheet({
         <div data-testid="rank-progress">
           <div className="flex justify-between text-xs text-ink-dim mb-0.5 gap-2">
             <span>
-              Rango: <span className="text-gold-bright">{r.title}</span>
+              Rango: <span className="text-gold-bright">{character.seat && character.title ? character.title : r.title}</span>
             </span>
-            <span className="text-right">{r.nextTitle ? `→ ${r.nextTitle}` : "cima"}</span>
+            <span className="text-right">{r.nextTitle ? `→ ${r.nextTitle}` : character.seat ? "puesto de mando" : "cima"}</span>
           </div>
           <StatBar value={r.fraction * 100} max={100} color="var(--gold)" hideNumbers size="sm" />
           <p className="text-[11px] text-ink-dim mt-0.5">
             {r.target !== null
               ? `${r.metric}: ${formatNumber(r.value)} / ${formatNumber(r.target)} · faltan ${formatNumber(r.remaining ?? 0)} para «${r.nextTitle}». El ascenso es automático y sale en las noticias.`
-              : `${r.metric}: ${formatNumber(r.value)} · has llegado al escalón más alto.`}
+              : character.seat
+                ? `${r.metric}: ${formatNumber(r.value)} · ocupas un puesto de mando: defiéndelo o disputa el siguiente desde Poder.`
+                : ["MARINE", "REVOLUTIONARY", "CP0"].includes(character.faction)
+                  ? `${r.metric}: ${formatNumber(r.value)} · lo más alto por méritos. Por encima solo hay puestos que se ganan desafiando a quien los ocupa (panel Poder).`
+                  : `${r.metric}: ${formatNumber(r.value)} · has llegado al escalón más alto.`}
           </p>
         </div>
         {character.faction === "PIRATE" ? (

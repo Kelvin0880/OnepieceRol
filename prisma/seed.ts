@@ -8,6 +8,7 @@ import { WAVE4_ACTORS, WAVE4_RELOCATIONS } from "../src/lib/game/world-actor-wav
 import { IMPEL_ACTORS, placeCanonPrisoners } from "../src/lib/game/world-actor-impel";
 import { ISLAND_NPC_DATA } from "../src/lib/game/island-npc-data";
 import { seedIslandRoster } from "../src/lib/game/island-npcs";
+import { assignCanonSeats } from "../src/lib/game/canon-seats";
 import { WAVE4_ISLANDS, WAVE4_ADJACENCY, WAVE4_STORIES, WAVE4_TERRITORIES } from "../src/lib/game/islands-wave4";
 import { styleAbilityLines, actorStyleNames } from "../src/lib/engine/actor-styles";
 
@@ -851,7 +852,7 @@ async function main() {
       personality: "Severo y formal en público, pero capaz de una ironía seca cuando la burocracia del Gobierno Mundial lo exaspera.",
       factionType: FactionType.MARINE,
       factionName: "Marina",
-      rankLabel: "Almirante de Flota (retirado)",
+      rankLabel: "Ex-Almirante de Flota (retirado, inspector general)",
       devilFruitName: "Hito Hito no Mi: Modelo Daibutsu",
     },
     {
@@ -1357,6 +1358,7 @@ async function main() {
   console.log(`Seeded ${await seedIslandRoster(ISLAND_NPC_DATA, prisma)} island residents.`);
 
   console.log(`Placed ${await placeCanonPrisoners(prisma as never)} canon prisoners in Impel Down.`);
+  console.log(`Assigned ${await assignCanonSeats(prisma as never)} canon seats of command.`);
 
   // One-time corrections of where a few canon characters live (only applied when the actor still sits at its old place).
   for (const [actorName, islandKey] of Object.entries({ ...RELOCATIONS, ...WAVE4_RELOCATIONS })) {

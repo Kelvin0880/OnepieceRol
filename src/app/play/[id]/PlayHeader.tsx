@@ -67,7 +67,7 @@ export default function PlayHeader({ data, onOpen, badges, markSeen }: { data: S
   if (coliseum || character.currentIsland.name === "Dressrosa")
     items.push({ key: "coliseum", label: "Coliseo", icon: Trophy, testId: "coliseum-open", onClick: () => onOpen("coliseum"), highlight: !!(coliseum && coliseum.onDressrosa && coliseum.status === "ANNOUNCED" && !coliseum.registered) });
   if (character.companions.length > 0 || territory?.isOwner) items.push({ key: "empire", label: "Imperio", icon: Crown, testId: "empire-open", onClick: () => onOpen("empire") });
-  if (!isDead) items.push({ key: "power", label: "Poder", icon: Flag, testId: "power-open", onClick: () => onOpen("power") });
+  if (!isDead) items.push({ key: "power", label: "Poder", icon: Flag, testId: "power-open", onClick: () => onOpen("power"), badge: character.pendingSeatChallenges ?? 0, highlight: (character.pendingSeatChallenges ?? 0) > 0 });
   if (!isDead && !isImprisoned) items.push({ key: "denden", label: "Den Den Mushi", icon: Radio, testId: "denden-open", onClick: () => { markSeen("denden"); onOpen("denden"); }, fresh: badges.denden > 0 ? { text: badgeLabel(badges.denden), testId: "badge-denden", title: "Mensajes nuevos" } : undefined });
   items.push({ key: "events", label: "Eventos", icon: CalendarDays, testId: "events-open", onClick: () => { markSeen("events"); onOpen("events"); }, highlight: badges.events > 0, fresh: badges.events > 0 ? { text: badgeLabel(badges.events), testId: "badge-events", title: "Eventos nuevos" } : undefined });
   items.push(
@@ -95,8 +95,7 @@ export default function PlayHeader({ data, onOpen, badges, markSeen }: { data: S
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-xl sm:text-2xl text-gold-bright leading-tight truncate">{character.name}</h1>
           <p className="text-xs sm:text-sm text-gold truncate">
-            {character.title ? `${character.title} · ` : ""}
-            {factionTitle(faction, character.bounty, character.notoriety)}
+            {character.seat && character.title ? character.title : `${character.title ? `${character.title} · ` : ""}${factionTitle(faction, character.bounty, character.notoriety)}`}
           </p>
           <p className="text-xs text-ink-dim truncate">
             {FACTION_LABEL[character.faction]} · Nv. {character.level} · {character.currentIsland.name}

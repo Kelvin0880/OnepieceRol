@@ -6,6 +6,8 @@
  * UI and the news feed ("¡Nueva recompensa: 42.000.000 - 'Espadachín
  * Demonio'!"); thresholds are canon-paced, not evenly spaced, because the
  * jump from rookie to Yonko-adjacent should feel enormous.
+ * The very top (Admiral, Fleet Admiral, the Revolution's command, the Gorosei) is not a tier: it is a seat that has to
+ * be won from whoever holds it (engine/faction-seats.ts).
  */
 
 export interface Tier {
@@ -36,8 +38,6 @@ const MARINE_RANK_TIERS: Tier[] = [
   { threshold: 2_400, title: "Comodoro" },
   { threshold: 4_200, title: "Contraalmirante" },
   { threshold: 7_000, title: "Vicealmirante" },
-  { threshold: 12_000, title: "Almirante" },
-  { threshold: 20_000, title: "Almirante de Flota" },
 ];
 
 const REVOLUTIONARY_TIERS: Tier[] = [
@@ -47,7 +47,7 @@ const REVOLUTIONARY_TIERS: Tier[] = [
   { threshold: 350, title: "Organizador regional" },
   { threshold: 700, title: "Comandante de brigada" },
   { threshold: 1_300, title: "Jefe de ejército" },
-  { threshold: 2_400, title: "Mano derecha del líder" },
+  { threshold: 2_400, title: "Veterano de la revolución" },
   { threshold: 4_200, title: "Núcleo revolucionario" },
 ];
 
@@ -72,7 +72,6 @@ export const CP0_TIERS: Tier[] = [
   { threshold: 2_300, title: "Agente CP1" },
   { threshold: 3_500, title: "Agente CP0" },
   { threshold: 6_000, title: "Caballero Divino" },
-  { threshold: 12_000, title: "Gorosei" },
 ];
 
 export type FactionKey = "PIRATE" | "MARINE" | "REVOLUTIONARY" | "BOUNTY_HUNTER" | "CP0";

@@ -10,7 +10,7 @@ const schema = z.discriminatedUnion("op", [
   z.object({ op: z.literal("warlord_apply") }),
   z.object({ op: z.literal("warlord_tribute") }),
   z.object({ op: z.literal("warlord_resign") }),
-  z.object({ op: z.literal("declare_war"), kind: z.enum(["MARINE", "EMPEROR"]), targetId: z.string().optional() }),
+  z.object({ op: z.literal("declare_war"), kind: z.enum(["MARINE", "EMPEROR", "REVOLUTION", "JUSTICE"]), targetId: z.string().optional() }),
   z.object({ op: z.literal("war_assault") }),
 ]);
 

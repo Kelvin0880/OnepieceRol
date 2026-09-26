@@ -55,9 +55,9 @@ describe("marineRankTitle / revolutionaryTitle / bountyHunterTitle", () => {
   });
 
   it("climb with merit points", () => {
-    expect(marineRankTitle(12_000)).toBe("Almirante");
-    expect(marineRankTitle(20_000)).toBe("Almirante de Flota");
-    expect(marineRankTitle(90_000)).toBe("Almirante de Flota"); // caps at top tier, doesn't error past it
+    expect(marineRankTitle(7_000)).toBe("Vicealmirante");
+    // Admiral and Fleet Admiral are seats won by challenge, never reached by merit alone.
+    expect(marineRankTitle(90_000)).toBe("Vicealmirante");
   });
 });
 
@@ -69,7 +69,7 @@ describe("factionTitle", () => {
     expect(factionTitle("BOUNTY_HUNTER", 0, 350)).toBe("Verdugo independiente");
     expect(factionTitle("CP0", 999_999_999, 280)).toBe("Agente CP8"); // bounty ignored for Cipher Pol
     expect(factionTitle("CP0", 0, 0)).toBe("Aspirante");
-    expect(factionTitle("CP0", 0, 50_000)).toBe("Gorosei"); // caps at the top tier
+    expect(factionTitle("CP0", 0, 50_000)).toBe("Caballero Divino"); // the Gorosei are a seat, not a tier
   });
 });
 

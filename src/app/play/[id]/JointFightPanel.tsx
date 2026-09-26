@@ -23,7 +23,7 @@ export default function JointFightPanel({ jointFight, onOoc, busy, doAction }: {
       <div className="flex flex-wrap items-center justify-between gap-2 mb-2">
         <h3 className="font-display text-lg text-gold-bright flex items-center gap-2">
           <Users className="w-5 h-5" />
-          Pelea en grupo contra {jointFight.enemy.name}
+          {jointFight.kind === "seat" ? "Duelo por el puesto contra" : "Pelea en grupo contra"} {jointFight.enemy.name}
           {jointFight.enemy.isBoss && (
             <span className="text-[10px] px-2 py-0.5 rounded bg-blood text-white tracking-wider inline-flex items-center gap-1">
               <Skull className="w-3 h-3" />

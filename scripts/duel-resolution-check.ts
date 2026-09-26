@@ -81,7 +81,8 @@ async function main() {
     await decideVerdict(c.c.id, c.u.id, d2, "capture");
     const captured = await prisma.character.findUniqueOrThrow({ where: { id: e.c.id } });
     assert(captured.status === "IMPRISONED", "the captive is imprisoned");
-    assert((await prisma.character.findUniqueOrThrow({ where: { id: c.c.id } })).berries > beforeBerries, "the winner collects the bounty");
+    const custody = await prisma.imprisonment.findUnique({ where: { characterId: e.c.id } });
+    assert(custody?.custodianId === c.c.id && (await prisma.character.findUniqueOrThrow({ where: { id: c.c.id } })).berries === beforeBerries, "a pirate winner keeps the captive in custody and is paid only on delivery to the Government");
     assert((await prisma.duel.findUniqueOrThrow({ where: { id: d2 } })).status === "FINISHED", "the duel closes after the verdict");
 
     // ---- kill

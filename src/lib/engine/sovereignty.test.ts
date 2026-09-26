@@ -6,6 +6,7 @@ import {
   declareWarBlockReason,
   emperorEnemyStats,
   emperorRequirements,
+  figureLabel,
   figureNewsDue,
   FIGURE_NEWS_GAP_MS,
   governmentSparesWarlord,
@@ -154,6 +155,10 @@ describe("world figures", () => {
   it("follows emperors and warlords whatever their numbers", () => {
     expect(isWorldFigure({ ...base, faction: "PIRATE", isEmperor: true })).toBe(true);
     expect(isWorldFigure({ ...base, faction: "PIRATE", isWarlord: true })).toBe(true);
+  });
+  it("follows every seat of command, even an elder with little public standing", () => {
+    expect(isWorldFigure({ ...base, faction: "CP0", seatTitle: "Gorosei" })).toBe(true);
+    expect(figureLabel({ ...base, faction: "MARINE", seatTitle: "Almirante de Flota" }, "Vicealmirante")).toBe("el Almirante de Flota");
   });
   it("follows the top of every ladder", () => {
     expect(isWorldFigure({ ...base, faction: "PIRATE", bounty: 500_000_000 })).toBe(true);

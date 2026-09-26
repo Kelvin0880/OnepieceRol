@@ -134,6 +134,11 @@ model Character {
   warlordTributeDueAt    DateTime?
   warlordRevokedAt       DateTime?
   lastFigureNewsAt       DateTime? // throttle for "the papers follow world figures everywhere"
+  // Seat of command won by challenge (engine/faction-seats.ts): ADMIRAL | FLEET_ADMIRAL | REV_COMMANDER | REV_CHIEF | REV_LEADER | GOROSEI.
+  seat                 String?
+  seatSince            DateTime?
+  lastSeatChallengeAt  DateTime?
+  lastSeatDefenseAt    DateTime? // when a canon character last came to take it
 
   // Silent context compaction (game/scene-compaction.ts): scene messages up to
   // this instant have already been folded into memorySummary.
@@ -776,6 +781,8 @@ model WorldActor {
   canonWeapon  String?
   devilFruitId String?     @unique
   devilFruit   DevilFruit? @relation("WorldActorFruit", fields: [devilFruitId], references: [id])
+  // Seat of command (engine/faction-seats.ts). Set once by the seed; afterwards only seat duels change it.
+  seat         String?
 
   createdAt DateTime @default(now())
 }
@@ -1272,4 +1279,34 @@ model CanonChallenge {
 
   @@index([characterId, stage])
   @@index([actorId, stage])
+}
+
+// A duel for a seat of command (engine/faction-seats.ts, game/faction-seats.ts). Either side can be a player or a canon
+// character. player vs canon = joint fight kind "seat"; player vs player = friendly duel; canon vs canon = judged later.
+model SeatChallenge {
+  id             String    @id @default(cuid())
+  seat           String
+  faction        String
+  challengerKind String // player | canon
+  challengerId   String
+  challengerName String
+  defenderKind   String // player | canon
+  defenderId     String
+  defenderName   String
+  // PENDING (a player defender must answer) | FIGHTING | ANNOUNCED (canon vs canon, waiting for the verdict) | DONE | CANCELLED
+  status         String    @default("PENDING")
+  outcome        String? // challenger | defender | forfeit
+  islandId       String?
+  islandName     String?
+  fightId        String?
+  duelId         String?
+  resolveAt      DateTime?
+  expiresAt      DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status])
+  @@index([challengerId])
+  @@index([defenderId])
+  @@index([duelId])
 }

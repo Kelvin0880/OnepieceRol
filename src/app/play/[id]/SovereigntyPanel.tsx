@@ -3,6 +3,7 @@
 import { useCallback, useEffect, useState } from "react";
 import { Anchor, Check, Crown, Flag, MapPin, ScrollText, Swords, X } from "lucide-react";
 import Modal from "@/components/ui/Modal";
+import SeatsTab from "./SeatsTab";
 import { formatBerries } from "@/lib/ui/format";
 
 interface Req {
@@ -14,7 +15,7 @@ interface Req {
 
 interface WarView {
   id: string;
-  kind: "MARINE" | "EMPEROR";
+  kind: "MARINE" | "EMPEROR" | "REVOLUTION" | "JUSTICE";
   status: string;
   iAmAttacker: boolean;
   attackerName: string;
@@ -31,16 +32,20 @@ interface State {
   isEmperor: boolean;
   isWarlord: boolean;
   figure: boolean;
+  seatTitle: string | null;
+  seatWar: "REVOLUTION" | "JUSTICE" | null;
   emperor: { ok: boolean; checks: Req[]; seatsTaken: number; canProclaim: boolean; thrones: { id: string; name: string; kind: "canon" | "player"; location: string; here: boolean; block: string | null }[] };
   warlord: { ok: boolean; checks: Req[]; seatsTaken: number; tribute: number | null; tributeDueAt: string | null; tributeState: "ok" | "due" | "overdue" };
   war: WarView | null;
   pastWars: WarView[];
   warTargets: { id: string; name: string }[];
-  here: { islandName: string; isMarineBase: boolean; territoryOwner: string | null; territoryOwnerName: string | null };
+  here: { islandName: string; isMarineBase: boolean; isRevolutionBase: boolean; territoryOwner: string | null; territoryOwnerName: string | null };
   canAssaultHere: boolean;
 }
 
-type Tab = "yonko" | "warlord" | "war";
+type Tab = "yonko" | "warlord" | "seats" | "war";
+
+const SEAT_TAB: Record<string, string> = { MARINE: "Almirantes", REVOLUTIONARY: "Mando revolucionario", CP0: "Gorosei" };
 
 function Checklist({ checks }: { checks: Req[] }) {
   return (
@@ -72,7 +77,7 @@ export default function SovereigntyPanel({ characterId, onClose, onChanged }: { 
     const data = await res.json().catch(() => ({}));
     if (res.ok) {
       setState(data);
-      setTab((t) => (t === "yonko" && data.faction === "PIRATE" ? t : data.faction !== "PIRATE" ? "war" : t));
+      setTab((t) => (data.faction === "PIRATE" ? (t === "seats" ? "yonko" : t) : t === "yonko" ? (SEAT_TAB[data.faction] ? "seats" : "war") : t));
     } else setError(data.error ?? "No se pudo cargar.");
   }, [characterId]);
 
@@ -106,6 +111,11 @@ export default function SovereigntyPanel({ characterId, onClose, onChanged }: { 
         ["warlord", "Shichibukai", ScrollText],
         ["war", "Guerra", Swords],
       ]
+    : state && SEAT_TAB[state.faction]
+    ? [
+        ["seats", SEAT_TAB[state.faction], Crown],
+        ["war", "Guerra", Swords],
+      ]
     : [["war", "Guerra", Swords]];
 
   return (
@@ -117,7 +127,7 @@ export default function SovereigntyPanel({ characterId, onClose, onChanged }: { 
             Poder en el mundo
           </h3>
           <p className="text-xs text-ink-dim">
-            {state?.isEmperor ? "Eres uno de los Emperadores del mar." : state?.isWarlord ? "Tienes patente de Shichibukai." : "Tronos, patentes y guerras abiertas."}
+            {state?.isEmperor ? "Eres uno de los Emperadores del mar." : state?.isWarlord ? "Tienes patente de Shichibukai." : state?.seatTitle ? `Eres ${state.seatTitle}.` : state && state.faction !== "PIRATE" ? "Puestos de mando y guerras abiertas." : "Tronos, patentes y guerras abiertas."}
             {state?.figure && <span className="text-gold"> · Figura mundial: los periódicos siguen cada uno de tus pasos.</span>}
           </p>
         </div>
@@ -196,6 +206,8 @@ export default function SovereigntyPanel({ characterId, onClose, onChanged }: { 
         </div>
       )}
 
+      {state && tab === "seats" && !pirate && <SeatsTab characterId={characterId} onChanged={() => { onChanged(); refresh(); }} />}
+
       {state && tab === "warlord" && pirate && (
         <div className="flex flex-col gap-3 animate-fade" data-testid="sov-warlord">
           <p className="text-sm text-ink-dim">
@@ -263,6 +275,14 @@ export default function SovereigntyPanel({ characterId, onClose, onChanged }: { 
                   ? state.war.iAmAttacker
                     ? "Golpea en una base de la Marina (Cuartel G-5, G-8 Navarone, Marineford, Nuevo Marineford...). Si hay un almirante en la isla, te enfrentas a él."
                     : "Como marine, contraataca los dominios del Yonko: cada isla recuperada es un punto."
+                  : state.war.kind === "REVOLUTION"
+                  ? state.war.iAmAttacker
+                    ? "Golpea en cualquier base de la Marina o del Gobierno (Cuartel G-5, Loguetown, G-8 Navarone, Nuevo Marineford, Enies Lobby...). Cada victoria es un punto para la revolución."
+                    : "Defiende al Gobierno: contraataca en las bases revolucionarias (Isla Baltigo, Reino Kamabakka). Cada victoria es un punto."
+                  : state.war.kind === "JUSTICE"
+                  ? state.war.iAmAttacker
+                    ? `Guerra de justicia: asalta los dominios del Yonko ${state.war.defenderName}. Cada isla tomada es un punto.`
+                    : "Te han declarado una guerra de justicia: golpea bases de la Marina para sumar puntos."
                   : "Asalta los dominios de tu rival: cada isla que tomes es un punto y pasa a tu bandera."}
               </p>
               <button className="btn-gold px-4 py-2 text-sm self-start" disabled={busy || !state.canAssaultHere} onClick={() => op({ op: "war_assault" })} data-testid="sov-assault">
@@ -282,10 +302,29 @@ export default function SovereigntyPanel({ characterId, onClose, onChanged }: { 
                 </button>
               ))}
             </div>
+          ) : state.seatWar === "REVOLUTION" ? (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-ink-dim">Como {state.seatTitle} puedes lanzar al Ejército Revolucionario contra el Gobierno Mundial. Todo revolucionario podrá golpear bases del Gobierno y todo marine o agente del CP-0 podrá contraatacar vuestras bases. Dura hasta 7 días; gana quien sume 3 golpes decisivos.</p>
+              <button className="btn-danger px-4 py-2 text-sm self-start" disabled={busy} onClick={() => op({ op: "declare_war", kind: "REVOLUTION" })} data-testid="sov-war-revolution">
+                Declarar la guerra al Gobierno Mundial
+              </button>
+            </div>
+          ) : state.seatWar === "JUSTICE" ? (
+            <div className="flex flex-col gap-2">
+              <p className="text-sm text-ink-dim">Como Almirante de Flota puedes declarar una guerra de justicia contra un Yonko jugador: toda la Marina y el CP-0 podrán asaltar sus dominios.</p>
+              {state.warTargets.length === 0 && <p className="text-xs text-ink-dim">Ahora mismo no hay ningún Yonko jugador libre de guerras.</p>}
+              {state.warTargets.map((t) => (
+                <button key={t.id} className="btn-danger px-4 py-2 text-sm self-start" disabled={busy} onClick={() => op({ op: "declare_war", kind: "JUSTICE", targetId: t.id })} data-testid="sov-war-justice">
+                  Guerra de justicia contra {t.name}
+                </button>
+              ))}
+            </div>
           ) : (
             <p className="text-sm text-ink-dim">
-              {state.faction === "MARINE" || state.faction === "CP0"
-                ? "No hay ninguna guerra abierta contra la Marina ahora mismo. Cuando un Yonko la declare, podrás contraatacar sus dominios desde aquí."
+              {state.faction === "REVOLUTIONARY"
+                ? "No hay guerra abierta. Solo el Líder o el Jefe de Estado Mayor revolucionario pueden declararla al Gobierno; cuando lo hagan, podrás golpear desde aquí."
+                : state.faction === "MARINE" || state.faction === "CP0"
+                ? "No hay ninguna guerra abierta ahora mismo. Cuando un Yonko o la revolución ataquen al Gobierno, o el Almirante de Flota declare una guerra de justicia, podrás luchar desde aquí."
                 : "Solo un Yonko puede declarar guerras abiertas."}
             </p>
           )}

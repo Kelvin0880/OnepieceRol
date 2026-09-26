@@ -166,6 +166,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     const worldEvent = await getWorldEventForCharacter(id);
     // Only the owner learns that a canon death/capture is waiting for their verdict.
     const admin = (await sessionIsAdmin()) ? { pending: await prisma.worldArc.count({ where: { status: "AWAITING_CONSENT" } }) } : null;
+    const pendingSeatChallenges = await prisma.seatChallenge.count({ where: { defenderId: id, status: "PENDING" } });
     const pendingCrewInvites = await prisma.crewInvite.count({ where: { toCharacterId: id, status: "PENDING", createdAt: { gt: new Date(Date.now() - 24 * 3600 * 1000) } } });
     const crewShaped = character.crew
       ? {
@@ -189,6 +190,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
         sceneMessages: character.sceneMessages.filter((m) => !character.sceneClearedAt || m.createdAt > character.sceneClearedAt).reverse(),
         companions,
         pendingCrewInvites,
+        pendingSeatChallenges,
         crew: crewShaped,
         stamina: staminaNow,
         fatigue: FATIGUE_LABELS[fatigueLevel(staminaNow, character.maxStamina)],

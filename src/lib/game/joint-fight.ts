@@ -50,7 +50,7 @@ export interface JointRewards {
   poneglyphId?: string;
 }
 
-export type JointFightKind = "party" | "poneglyph" | "conquest" | "raid" | "arc" | "sovereign" | "admiral" | "rescue" | "canon_vanguard" | "canon";
+export type JointFightKind = "party" | "poneglyph" | "conquest" | "raid" | "arc" | "sovereign" | "admiral" | "rescue" | "canon_vanguard" | "canon" | "seat";
 
 const STALE_FIGHT_MS = 24 * 60 * 60 * 1000;
 const RECENT_FINISHED_MS = 15 * 60 * 1000;
@@ -113,6 +113,8 @@ export interface StartJointFightOpts {
   rewards: JointRewards;
   stakes?: string;
   context?: Record<string, unknown>;
+  /** One against one: the challenger's NPC companions stay out (a duel for a seat of command). */
+  solo?: boolean;
   /** The move of whoever started the fight, so they don't have to type it twice. */
   opening?: { characterId: string; text: string; tactic: number; technique: TechniqueId };
 }
@@ -136,7 +138,7 @@ export async function startJointFight(opts: StartJointFightOpts): Promise<{ figh
     if (jailed && !jailed.releasedAt) throw new JointFightError(`${c.name} está preso.`);
   }
 
-  const npcs = chars.flatMap((c) => c.companions.filter((n) => n.status === "ALIVE" && n.hp / n.maxHp > 0.5 && isWithPlayer(n.profileJson, Date.now())).map((n) => ({ owner: c, n })));
+  const npcs = opts.solo ? [] : chars.flatMap((c) => c.companions.filter((n) => n.status === "ALIVE" && n.hp / n.maxHp > 0.5 && isWithPlayer(n.profileJson, Date.now())).map((n) => ({ owner: c, n })));
   const extra = opts.extraNpcs ?? [];
   const headcount = chars.length + npcs.length + extra.length;
   const base: Combatant = { name: opts.enemy.name, hp: opts.enemy.hp, maxHp: opts.enemy.hp, atk: opts.enemy.atk, def: opts.enemy.def, spd: opts.enemy.spd };
@@ -586,7 +588,7 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
       enemy.isBoss ? "major" : "normal"
     );
     closing.push(`¡${enemy.name} cae ante el grupo!`);
-    if (enemy.isActor && enemy.worldActorId && fight.kind !== "canon") {
+    if (enemy.isActor && enemy.worldActorId && fight.kind !== "canon" && fight.kind !== "seat") {
       await markActorDefeated(enemy.worldActorId, names.join(" y "), (await prisma.island.findUnique({ where: { id: fight.islandId } }))?.name ?? "su isla");
       closing.push(`${enemy.name} se repliega, humillado en su propio territorio.`);
     }
@@ -594,7 +596,11 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
     for (const p of humans) {
       const c = await loadFull(p.characterId);
       if (!c || c.status !== CharacterStatus.ALIVE) continue;
-      if (p.status === "DOWN" && fight.kind === "admiral") {
+      if (fight.kind === "seat") {
+        // A duel for a seat of command is fought to defeat, never to the death.
+        await prisma.character.update({ where: { id: c.id }, data: { hp: Math.max(5, Math.round(c.maxHp * 0.1), p.status === "DOWN" ? 0 : p.hp) } });
+        closing.push(`${c.name} cae derrotado, pero vivo: era un duelo por el puesto, no a muerte.`);
+      } else if (p.status === "DOWN" && fight.kind === "admiral") {
         // The Government takes prisoners: no death roll, they are shipped off (Impel Down by bounty).
         await (await import("./prison")).captureCharacter({ ...c, faction: c.faction, bounty: c.bounty, notoriety: c.notoriety }, Math.round(enemy.atk / 1.6), `Capturado por el almirante ${enemy.name} en ${c.currentIsland.name}.`, newsLog);
         closing.push(`${c.name} es capturado.`);
@@ -647,6 +653,10 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
     const { handleAdmiralFightSettled } = await import("./admiral-dispatch");
     const fresh = await prisma.jointFight.findUniqueOrThrow({ where: { id: fightId }, include: { participants: true } });
     closing.push(...(await handleAdmiralFightSettled({ contextJson: fresh.contextJson, outcome, enemyName: enemy.name, humans: fresh.participants.filter((p) => !p.isNpc).map((p) => ({ characterId: p.characterId, status: p.status, name: p.name })) })));
+  }
+  if (fight.kind === "seat") {
+    const { handleSeatFightSettled } = await import("./faction-seats");
+    closing.push(...(await handleSeatFightSettled(fight.contextJson, outcome)));
   }
   if (fight.kind === "sovereign") {
     const { handleSovereignFightSettled } = await import("./sovereignty");

@@ -260,6 +260,11 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 pb-16 flex flex-col gap-4">
       <PlayHeader data={data} badges={badges} markSeen={markSeen} onOpen={(p) => (p === "ooc" ? openOoc() : setPanel(p))} />
       <ToastStack toasts={toasts} />
+      {(character.pendingSeatChallenges ?? 0) > 0 && (
+        <button className="rounded border border-blood/70 bg-blood/15 px-3 py-2 text-left text-sm text-gold-bright animate-rise" onClick={() => setPanel("power")} data-testid="seat-challenge-alert">
+          ⚔️ Te han desafiado por tu puesto de mando. Tienes 24 h para responder o lo pierdes. <span className="underline">Responder</span>
+        </button>
+      )}
 
       {panel === "power" && <SovereigntyPanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
       {panel === "events" && <EventsPanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}

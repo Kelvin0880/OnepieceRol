@@ -66,7 +66,8 @@ export async function yieldDuel(characterId: string, userId: string, duelId: str
     await closeDuel(duelId, winner.id, `${me.name} se rinde. ¡${winner.name} gana el duelo! No pasa nada más: es un duelo amistoso.`);
     await postDuelReport(duelId, winner.name, me.name, "yield", { name: a.currentIsland.name, islandId: a.currentIslandId }, false, winner.id);
     await notifyPair(duel.challengerId, duel.opponentId);
-    return { log: [`Te rindes. ${winner.name} gana el duelo amistoso.`], finished: true };
+    const { onSeatDuelFinished } = await import("./faction-seats");
+    return { log: [`Te rindes. ${winner.name} gana el duelo amistoso.`, ...(await onSeatDuelFinished(duelId, winner.id))], finished: true };
   }
   await prisma.duel.update({ where: { id: duelId }, data: { resolution: "VERDICT", pleaById: me.id, winnerId: winner.id } });
   await prisma.duelMessage.create({ data: { duelId, authorCharacterId: null, authorName: "Árbitro", text: `${me.name} se da por vencido. ${winner.name} decide su destino.` } });

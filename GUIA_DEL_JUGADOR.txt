@@ -718,8 +718,44 @@ PODER: YONKO, SHICHIBUKAI Y GUERRAS (botón "Poder")
   bases (a veces con un almirante dentro) y los marines contraatacan tus
   islas. Contra otro Yonko jugador, cada isla suya que tomas pasa a tu
   bandera. Gana quien sume 3 golpes decisivos en 7 días.
-- FIGURAS DEL MUNDO: los Yonko, los Shichibukai y los rangos más altos de
-  cada facción salen en las noticias cuando desembarcan en algún sitio.
+- FIGURAS DEL MUNDO: los Yonko, los Shichibukai, los puestos de mando y los
+  rangos más altos de cada facción salen en las noticias cuando desembarcan
+  en algún sitio.
+
+PUESTOS DE MANDO: ALMIRANTES, REVOLUCIÓN Y GOROSEI (botón "Poder")
+Los rangos más altos de la Marina, la Revolución y el CP-0 NO se ganan por
+mérito: son puestos con plazas fijas y hay que desafiar a quien los ocupa.
+- MARINA (pestaña "Almirantes"): 3 Almirantes y 1 único Almirante de Flota
+  (hoy Sakazuki). Por mérito llegas hasta Vicealmirante. Para ser Almirante:
+  nivel 40 y 7.000 de mérito; si vences a un Almirante, tú ocupas su puesto
+  y él baja a Vicealmirante. Para ser Almirante de Flota hay que SER
+  Almirante (nivel 50, 12.000 de mérito): si vences, os intercambiáis los
+  puestos (él pasa a ser Almirante).
+- REVOLUCIÓN (pestaña "Mando revolucionario"): 5 Comandantes (nivel 30,
+  1.300 de influencia), 1 Jefe de Estado Mayor (hay que ser Comandante,
+  nivel 40, 2.400) y 1 Líder (hay que ser Jefe de Estado Mayor, nivel 50,
+  4.200). Igual: quien gana se queda el puesto y el vencido baja.
+- CP-0 (pestaña "Gorosei"): 5 Ancianos. Nivel 50 y 6.000 de confianza del
+  Gobierno. Si vences a uno, ocupas su asiento.
+- DÓNDE: en la misma isla que tu rival, o presentando el desafío en el
+  cuartel de tu facción (Nuevo Marineford, Isla Baltigo o Mary Geoise):
+  el rival acude allí. Un desafío cada 24 h.
+- CÓMO: contra un personaje canon es una pelea uno contra uno con el
+  árbitro; contra un jugador, un duelo. Siempre A DERROTA, nunca a muerte.
+- TE DESAFÍAN: otros jugadores y también el propio mundo (por ejemplo, un
+  Almirante que va a por tu puesto de Almirante de Flota). Verás un aviso
+  rojo y tienes 24 h para aceptar. Si lo rechazas o no respondes, PIERDES
+  el puesto.
+- Un puesto vacío se reclama en el cuartel si cumples todo. Puedes renunciar.
+- El mundo también se mueve solo: de vez en cuando un personaje canon reta
+  a otro (un Almirante al Almirante de Flota...) y sale en las noticias.
+- GUERRAS: el Líder o el Jefe de Estado Mayor revolucionario pueden
+  declarar la guerra al Gobierno Mundial (todo revolucionario golpea bases
+  de la Marina; todo marine y CP-0 contraataca en Baltigo o Kamabakka). El
+  Almirante de Flota puede declarar una guerra de justicia a un Yonko
+  jugador. 3 golpes decisivos en 7 días.
+- Los cazarrecompensas no tienen puestos de mando.
+- Noticias: sección "Rangos y mandos".
 
 NUEVAS ISLAS (47 en total)
 Tequila Wolf (East Blue, nivel 1: aquí empiezan los reclutas del CP-0),

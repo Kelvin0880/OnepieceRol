@@ -24,12 +24,15 @@ export interface WorldState {
   defeated: string[];
   fallen: string[];
   events: string[];
+  /** "Almirante de Flota: Sakazuki" — who holds each seat of command right now. */
+  seats?: string[];
 }
 
 /** The facts of the world that every narrator must treat as true, whatever the scene. Empty parts are omitted. */
 export function describeWorldState(s: WorldState): string {
   const parts: string[] = [];
   if (s.yonko.length) parts.push(`Yonko vigentes: ${s.yonko.join(", ")} (nadie más ostenta ese título)`);
+  if (s.seats?.length) parts.push(`Puestos de mando actuales (solo ellos ostentan esos títulos; nadie más es almirante, almirante de flota, líder revolucionario ni Gorosei): ${s.seats.join("; ")}`);
   if (s.prisoners.length) parts.push(`PRESOS (capturados, siguen encerrados: nunca aparecen libres ni actuando): ${s.prisoners.map((p) => `${p.name} en ${prisonLabel(p.cell)}`).join("; ")}`);
   if (s.defeated.length) parts.push(`Derrotados, sin poder ni título actual: ${s.defeated.join(", ")}`);
   if (s.fallen.length) parts.push(`Fallecidos: ${s.fallen.join(", ")}`);

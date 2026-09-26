@@ -72,7 +72,7 @@ don't have bounties in-world, so `canonBounty` is null for them.
 | Ryokugyu | ADMIRAL | Almirante | Mori Mori no Mi (singleton) |
 | Sakazuki | ADMIRAL | Almirante de Flota | Magu Magu no Mi (singleton) |
 | Monkey D. Garp | MARINE_GENERAL | Vicealmirante (Héroe de la Marina) | — |
-| Sengoku | MARINE_GENERAL | Almirante de Flota (retirado) | Hito Hito no Mi: Modelo Daibutsu (singleton) |
+| Sengoku | MARINE_GENERAL | Ex-Almirante de Flota (retirado, inspector general) | Hito Hito no Mi: Modelo Daibutsu (singleton) |
 | Smoker | MARINE_GENERAL | Vicealmirante | Moku Moku no Mi (singleton) |
 | X Drake | MARINE_GENERAL | Comodoro (encubierto, SWORD) | — |
 

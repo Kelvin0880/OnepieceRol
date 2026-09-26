@@ -47,7 +47,7 @@ export function challengeBlockReason(p: { actor: CanonActorView; playerFaction: 
   if (p.actor.role === "NOTABLE_CIVILIAN" || p.actor.factionType === "CIVILIAN") return `${p.actor.name} no es un combatiente: no hay duelo que ganar.`;
   if (UNCHALLENGEABLE_ROLES.has(p.actor.role)) return p.actor.role === "YONKO" ? "A un Yonko solo se le desafía por su trono (panel Poder)." : "Ese personaje pertenece al final del juego: aún no se le puede desafiar.";
   const side = ACTOR_SIDE[p.actor.factionType];
-  if (side && side === p.playerFaction && side !== "PIRATE") return `${p.actor.name} es de los tuyos: no te enfrentas a tu propio bando.`;
+  if (side && side === p.playerFaction && side !== "PIRATE") return `${p.actor.name} es de los tuyos: no te enfrentas a tu propio bando. Si quieres su puesto de mando, disputáselo desde Poder.`;
   if (p.hasOpenChallenge) return "Ya tienes un desafío abierto.";
   if (p.busy) return `${p.actor.name} está ocupado o recuperándose ahora mismo.`;
   const min = canonMinLevel(p.actor.powerLevel);

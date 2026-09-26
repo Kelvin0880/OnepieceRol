@@ -319,6 +319,8 @@ async function resolveDuelRoundFor(duelId: string) {
   } else if (finished && winnerChar && loserChar) {
     await postDuelReport(duel.id, winnerChar.name, loserChar.name, "knockout", { name: a.currentIsland.name, islandId: a.currentIslandId }, false, winnerChar.id);
     await settleGroupBattleIfDone(duel.groupBattleId);
+    const { onSeatDuelFinished } = await import("./faction-seats");
+    log.push(...(await onSeatDuelFinished(duel.id, winnerChar.id)));
   }
 
   return { log, waiting: false, finished, winnerName: winnerChar?.name };

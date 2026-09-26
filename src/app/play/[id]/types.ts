@@ -315,6 +315,9 @@ export interface Character {
   companions: PanelCompanion[];
   isCaptain: boolean;
   pendingCrewInvites: number;
+  /** Someone challenged this character for their seat of command and is waiting for an answer. */
+  pendingSeatChallenges?: number;
+  seat?: string | null;
   imprisonment: Imprisonment | null;
   partyId: string | null;
   isSeparatedFromParty: boolean;

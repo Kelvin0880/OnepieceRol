@@ -18,7 +18,10 @@ export async function worldStateBlock(): Promise<string> {
       prisma.worldArc.findMany({ where: { status: { in: ["ACTIVE", "AWAITING_CONSENT"] } }, select: { title: true } }),
       prisma.admiralDispatch.findMany({ where: { status: { in: ["EN_ROUTE", "ARRIVED"] } }, select: { admiralName: true, targetIslandName: true, status: true } }).catch(() => []),
     ]);
+    const { seatHoldersSummary } = await import("./faction-seats");
+    const seats = await seatHoldersSummary().catch(() => []);
     const text = describeWorldState({
+      seats,
       yonko: [...actors.filter((a) => a.role === "YONKO" && a.status === "ACTIVE").map((a) => a.name), ...playerYonko.map((p) => `${p.name} (jugador)`)],
       prisoners: actors.filter((a) => a.status === "CAPTURED").map((a) => ({ name: a.name, cell: a.prisonLevel })),
       defeated: actors.filter((a) => a.status === "DEFEATED").map((a) => a.name),
