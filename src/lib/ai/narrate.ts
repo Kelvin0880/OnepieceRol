@@ -151,9 +151,10 @@ export async function loadDirectives(characterId: string): Promise<string> {
             ...stock.weapons.flatMap((n) => { const w = COMMON_WEAPONS.find((x) => x.name === n); return w ? [`${w.name} ฿${shopPrice(w.basePrice, isle!.dangerLevel)}`] : []; }),
           ].join(", ")}.`
       : "";
-    const missions = await prisma.mission.findMany({ where: { characterId, status: "ACTIVE", islandId: c.currentIslandId }, select: { title: true, progress: true, target: true } }).catch(() => []);
-    const situation = `LUGAR ACTUAL: ${(await prisma.island.findUnique({ where: { id: c.currentIslandId }, select: { name: true } }))?.name ?? "desconocido"} (la escena ocurre AQUÍ; no la traslades ni inventes locales de otra isla).` + merchant +
-      (missions.length ? ` MISIONES ACTIVAS aquí (solo el sistema las avanza, completa y paga; NUNCA anuncies una misión completada, recompensa, reputación ni subida de nivel): ${missions.map((m) => `${m.title} ${m.progress}/${m.target}`).join("; ")}.` : "");
+    const islandTxt = await import("../game/island-lore").then((m) => m.islandBlockFor(c.currentIslandId, [characterId])).catch(() => "");
+    const situation = `LUGAR ACTUAL: ${isle?.name ?? "desconocido"} (la escena ocurre AQUÍ; no la traslades ni inventes locales de otra isla).` + merchant + (islandTxt ? `
+
+${islandTxt}` : "");
     return `
 
 ${caps}
@@ -173,7 +174,13 @@ ${roster}` : ""}${directivesBlock(c.narratorTone, c.oocNotes)}`;
 }
 
 export async function getRecentScene(characterId: string, take = 12): Promise<string[]> {
-  const ch = await prisma.character.findUnique({ where: { id: characterId }, select: { sceneClearedAt: true } });
+  const ch = await prisma.character.findUnique({ where: { id: characterId }, select: { sceneClearedAt: true, partyId: true } });
+  const clipShared = (t: string) => (t.length > 1800 ? `…${t.slice(-1800)}` : t);
+  if (ch?.partyId) {
+    // In a crew scene the shared feed is the story everybody is living; the private one only has this member's half.
+    const shared = await prisma.partySceneMessage.findMany({ where: { partyId: ch.partyId }, orderBy: { createdAt: "desc" }, take });
+    if (shared.length >= 3) return shared.reverse().map((m) => (m.authorCharacterId ? `[${m.authorName}]: ${clipShared(m.text)}` : clipShared(m.text)));
+  }
   const entries = await prisma.sceneMessage.findMany({
     where: { characterId, ...(ch?.sceneClearedAt ? { createdAt: { gt: ch.sceneClearedAt } } : {}) },
     orderBy: [{ createdAt: "desc" }, { role: "asc" }],
@@ -320,11 +327,14 @@ export async function narratePartyScene(input: PartySceneNarrationInput, meta: {
     const memberIds = party ? (JSON.parse(party.turnOrder) as string[]) : [];
     const lead = memberIds[0] ? await prisma.character.findUnique({ where: { id: memberIds[0] }, select: { id: true, currentIslandId: true, currentIsland: { select: { name: true } } } }) : null;
     const rosterTxt = lead ? await rosterBlockFor(lead.currentIslandId, lead.currentIsland.name, lead.id).catch(() => "") : "";
+    const islandTxt = lead ? await import("../game/island-lore").then((m) => m.islandBlockFor(lead.currentIslandId, memberIds)).catch(() => "") : "";
     const playersTxt = lead ? realPlayersBlock(await loadRealPlayers(lead.id).catch(() => [])) : "";
     const playerNames = lead ? (await loadRealPlayers(lead.id).catch(() => [])).map((p) => p.name) : [];
     const memberNames = memberIds.length ? (await prisma.character.findMany({ where: { id: { in: memberIds } }, select: { name: true } })).map((c) => c.name) : [];
     const allowedParty = lead ? await allowedNamesAt(lead.currentIslandId, memberNames).catch(() => [] as string[]) : [];
-    const system = baseSystem + (await worldStateBlock()) + (rosterTxt ? `
+    const system = baseSystem + (await worldStateBlock()) + (islandTxt ? `
+
+${islandTxt}` : "") + (rosterTxt ? `
 
 ${rosterTxt}` : "") + (playersTxt ? `
 

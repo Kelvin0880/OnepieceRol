@@ -1789,7 +1789,11 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
     switch (action) {
       case "explore":
         result = await exploreCharacter(character.id, character.userId, freeText);
-        sharedLine = result.pendingCombat ? `${character.name} se topa con problemas mientras exploraba por su cuenta — ¡combate!` : `${character.name} explora por su cuenta y vuelve con algo que contar.`;
+        {
+          // The crew reads the whole beat, not a stub: the explorer's scene is theirs too.
+          const told = result.log.filter((l) => !l.startsWith("(interpretado como")).join("\n\n").trim();
+          sharedLine = `${character.name} ${result.pendingCombat ? "explora y se topa con problemas — ¡combate!" : "explora:"}${told ? `\n\n${told.slice(0, 5000)}` : ""}`;
+        }
         break;
       case "attack":
         result = await attackCharacter(character.id, character.userId, freeText, {
@@ -2121,7 +2125,17 @@ export async function closeFight(characterId: string, userId: string, note?: str
     return { ...emptyResult(closed.log, character.level), jointFight: true };
   }
   const pending = character.pendingEncounter;
-  if (!pending || pending.phase !== "fighting") throw new GameActionError("No hay ninguna pelea en curso que finalizar.");
+  if (!pending || (pending.phase !== "fighting" && pending.phase !== "threat")) throw new GameActionError("No hay ninguna pelea en curso que finalizar.");
+  if (pending.phase === "threat") {
+    // Nothing has happened yet (no exchange, no HP lost): a safety net for a fight offer the player never meant to trigger
+    // (a stray click, a confusing party moment) needs no AI judge — there is nothing to weigh, just walk away clean.
+    const enemyName = (JSON.parse(pending.enemyJson) as StoredEnemy).name;
+    await prisma.pendingEncounter.delete({ where: { characterId: character.id } });
+    const log = [`Decides no meterte en esa pelea con ${enemyName} y sigues tu camino, como si nada hubiera pasado.`];
+    await prisma.gameLogEntry.create({ data: { characterId: character.id, kind: "explore", text: log.join(" ") } });
+    await prisma.sceneMessage.create({ data: { characterId: character.id, role: "narrator", text: log.join(" ") } });
+    return emptyResult(log, character.level);
+  }
   const enemy = JSON.parse(pending.enemyJson) as StoredEnemy;
   const enemyHp = pending.enemyHp ?? enemy.hp;
   const fightLog = await getFightLog(character.id, pending.createdAt, 40);

@@ -103,6 +103,16 @@ export default function ScenePanel({
             </span>
           </p>
           <p className={`text-xs ${ASSESSMENT_LABEL[enc.assessment].color}`}>{ASSESSMENT_LABEL[enc.assessment].text}</p>
+          {enc.phase === "threat" && (
+            <button
+              data-testid="decline-threat"
+              className="text-xs underline text-ink-dim hover:text-gold mt-2"
+              disabled={busy}
+              onClick={() => void doAction({ action: "close_fight" })}
+            >
+              ¿No querías esta pelea? Cancelarla, como si nada hubiera pasado
+            </button>
+          )}
           {enc.phase === "fighting" && (
             <div className="mt-2">
               {!closeFightOpen ? (

@@ -2,6 +2,7 @@ import { callOpenRouter } from "./openrouter-client";
 import { OPENROUTER_MODELS } from "./models";
 import { logError } from "../log-error";
 import { parseGeneratedNpc, type GeneratedNpc, type IslandNpcRow } from "../engine/island-npc";
+import { parseIslandLore, type IslandLore } from "../engine/island-lore";
 
 const STYLE =
   "Escribes en español para un juego de rol de One Piece. Personajes de RELLENO de una isla: gente corriente del lugar (no héroes ni personajes canon del manga), con nombre propio original con sabor One Piece, un oficio claro, una personalidad marcada y una pequeña historia. ";
@@ -81,3 +82,24 @@ ${p.extra}` : "");
   }
 }
 
+
+const LORE_SYSTEM =
+  "Escribes en español para un juego de rol de One Piece. Para la isla dada escribe su GUÍA FIJA: lo que un narrador necesita para describirla con riqueza sin inventar nada después. " +
+  "Respeta su descripción, su conflicto y su gente (los habitantes que te doy). Si la isla es canon del manga, usa sus lugares canon reales (por ejemplo, en Pueblo Foosha el bar de Makino y el Monte Corvo). " +
+  "Entre 7 y 10 LUGARES con nombre propio (taberna, puerto, mercado, cuartel, templo, bosque, ruinas, casas importantes...), cada uno con 2-3 frases vivas y los habitantes que suelen estar allí (SOLO nombres de la lista de habitantes). " +
+  "Historia de la isla en 3-5 frases, 3-5 costumbres locales, y 3-5 rumores que sirvan de gancho de aventura (sin personajes nuevos con nombre). Nunca inventes personajes con nombre propio que no estén en la lista. " +
+  'Responde SOLO JSON: {"atmosphere":"...","history":"...","customs":["..."],"places":[{"name":"...","kind":"taberna","description":"...","regulars":["Nombre de habitante"]}],"rumors":["..."]}.';
+
+export async function generateIslandLore(p: { name: string; description: string; arcHook: string | null; danger: number; control: string | null; residents: { name: string; title: string }[] }): Promise<IslandLore | null> {
+  const user =
+    `Isla: ${p.name}. Peligro ${p.danger}/10${p.control ? `, la controla: ${p.control}` : ""}.\nDescripción: ${p.description}\nConflicto actual: ${p.arcHook ?? "(ninguno)"}\n` +
+    `Habitantes: ${p.residents.map((r) => `${r.name} (${r.title})`).join("; ")}.`;
+  const names = p.residents.map((r) => r.name);
+  try {
+    const raw = await callOpenRouter(LORE_SYSTEM, user, { models: OPENROUTER_MODELS, jsonMode: true, timeoutMs: 90_000, maxTokens: 2800, validate: (t) => parseIslandLore(t, p.name, names) !== null });
+    return parseIslandLore(raw, p.name, names);
+  } catch (err) {
+    await logError("ai/island-lore", err, { island: p.name });
+    return null;
+  }
+}

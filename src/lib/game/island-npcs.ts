@@ -1,6 +1,7 @@
 // Filler cast of the islands (IslandNpc): roster for the AI, binding fights to residents, live status, deaths, captures, memory and automatic successors.
 import type { PrismaClient } from "@prisma/client";
 import { prisma } from "../db";
+import { allPlaceNames, islandBlockFor } from "./island-lore";
 import { postNews } from "./death-resolution";
 import { generateSuccessor } from "../ai/island-npc";
 import { logError } from "../log-error";
@@ -77,7 +78,7 @@ export async function allowedNamesFor(characterId: string, islandId: string): Pr
   // Names already established in the running scene stay usable (scenes that began before the roster existed); a new invention is still caught at its introduction.
   const established = recent.flatMap((m) => m.text.match(/[A-ZÁÉÍÓÚÑ][a-záéíóúñü'’-]{2,}/g) ?? []);
   const enemy = pending ? [(JSON.parse(pending.enemyJson) as { name?: string }).name ?? ""] : [];
-  return [...roster.map((n) => n.name), ...actors.map((a) => a.name), ...chars.map((c) => c.name), ...mine.map((c) => c.name), ...places.map((p) => p.name), ...established, ...enemy];
+  return [...roster.map((n) => n.name), ...actors.map((a) => a.name), ...chars.map((c) => c.name), ...mine.map((c) => c.name), ...places.map((p) => p.name), ...allPlaceNames(), ...established, ...enemy];
 }
 
 export interface BoundEnemy {
@@ -308,7 +309,7 @@ export async function allowedNamesAt(islandId: string | null, extra: string[] = 
     prisma.character.findMany({ where: { status: "ALIVE" }, select: { name: true }, take: 400 }),
     prisma.island.findMany({ select: { name: true } }),
   ]);
-  return [...roster.map((n) => n.name), ...actors.map((a) => a.name), ...chars.map((c) => c.name), ...places.map((p) => p.name), ...extra];
+  return [...roster.map((n) => n.name), ...actors.map((a) => a.name), ...chars.map((c) => c.name), ...places.map((p) => p.name), ...allPlaceNames(), ...extra];
 }
 
 /** Every name in the whole world (residents of every island, canon, players, places): for texts that are not tied to one island. */
@@ -319,15 +320,16 @@ export async function allowedNamesEverywhere(): Promise<string[]> {
     prisma.character.findMany({ select: { name: true }, take: 800 }),
     prisma.island.findMany({ select: { name: true } }),
   ]);
-  return [...npcs.map((n) => n.name), ...actors.map((a) => a.name), ...chars.map((c) => c.name), ...places.map((p) => p.name)];
+  return [...npcs.map((n) => n.name), ...actors.map((a) => a.name), ...chars.map((c) => c.name), ...places.map((p) => p.name), ...allPlaceNames()];
 }
 
 /** World facts + the island's residents, for referees that have no single character (joint fights). */
 export async function sceneDirectivesFor(islandId: string): Promise<string> {
   const island = await prisma.island.findUnique({ where: { id: islandId }, select: { name: true } });
-  const [world, roster] = await Promise.all([
+  const [world, lore, roster] = await Promise.all([
     import("./world-state").then((m) => m.worldStateBlock()).catch(() => ""),
+    islandBlockFor(islandId).catch(() => ""),
     island ? rosterBlockFor(islandId, island.name) : Promise.resolve(""),
   ]);
-  return [world, roster].filter(Boolean).map((t) => "\n\n" + t).join("");
+  return [world, lore, roster].filter(Boolean).map((t) => "\n\n" + t).join("");
 }
