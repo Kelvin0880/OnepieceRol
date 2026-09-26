@@ -28,3 +28,13 @@ describe("realPlayersBlock", () => {
     expect(b).toContain("NUNCA");
   });
 });
+
+import { inventsSystemResult } from "./real-players";
+describe("inventsSystemResult (real report: a den-den mushi announced a mission and 200,000 berries the system never gave)", () => {
+  it("flags fake system announcements and lets normal prose through", () => {
+    expect(inventsSystemResult("Recompensa asignada: 200,000 berries. Misión: 'La sombra' — COMPLETADA.")).toBe(true);
+    expect(inventsSystemResult("Reputación: 'Pirata eficiente' adquirida.")).toBe(true);
+    expect(inventsSystemResult("La misión de la Marina es capturar piratas; el capitán te mira.")).toBe(false);
+    expect(inventsSystemResult("Golton pide 10.000 berries por la mejora.")).toBe(false);
+  });
+});

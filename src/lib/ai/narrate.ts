@@ -38,7 +38,7 @@ import { OPENROUTER_MODELS } from "./models";
 import { parseCompanionProfile } from "../engine/companions";
 import { isWithPlayer } from "../engine/empire";
 import { describeCapabilities } from "../engine/capabilities";
-import { realPlayersBlock, voicesRealPlayer, type RealPlayer } from "../engine/real-players";
+import { realPlayersBlock, voicesRealPlayer, inventsSystemResult, type RealPlayer } from "../engine/real-players";
 import { describeAttributes } from "../engine/attributes";
 import { describeStyles } from "../engine/styles";
 import { inventoryLineForNarrator } from "../game/inventory";
@@ -86,7 +86,7 @@ export async function loadRealPlayers(characterId: string): Promise<RealPlayer[]
 /** Rejects a narration where an invented voice or action is put in another player's character (the model then tries the next one). */
 export async function narrationValidatorFor(characterId: string): Promise<(text: string) => boolean> {
   const names = (await loadRealPlayers(characterId).catch(() => [])).map((p) => p.name);
-  return (text) => isValidNarration(text) && voicesRealPlayer(text, names) === null;
+  return (text) => isValidNarration(text) && voicesRealPlayer(text, names) === null && !inventsSystemResult(text);
 }
 
 /** Tone + standing out-of-role notes + the sheet of what the character can really do; never throws (defaults if the row is missing). */
@@ -118,9 +118,14 @@ export async function loadDirectives(characterId: string): Promise<string> {
     // Dynamic import: game/world-arcs imports this module for its own narration.
     const presence = await import("../game/world-arcs").then((m) => m.worldPresenceFor(c.currentIslandId)).catch(() => "");
     const players = realPlayersBlock(await loadRealPlayers(characterId));
+    const missions = await prisma.mission.findMany({ where: { characterId, status: "ACTIVE", islandId: c.currentIslandId }, select: { title: true, progress: true, target: true } }).catch(() => []);
+    const situation = `LUGAR ACTUAL: ${(await prisma.island.findUnique({ where: { id: c.currentIslandId }, select: { name: true } }))?.name ?? "desconocido"} (la escena ocurre AQUÍ; no la traslades ni inventes locales de otra isla).` +
+      (missions.length ? ` MISIONES ACTIVAS aquí (solo el sistema las avanza, completa y paga; NUNCA anuncies una misión completada, recompensa, reputación ni subida de nivel): ${missions.map((m) => `${m.title} ${m.progress}/${m.target}`).join("; ")}.` : "");
     return `
 
-${caps}${players ? `
+${caps}
+
+${situation}${players ? `
 
 ${players}` : ""}${presence ? `
 

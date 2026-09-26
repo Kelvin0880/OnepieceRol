@@ -46,3 +46,8 @@ export function voicesRealPlayer(text: string, names: string[]): string | null {
   }
   return null;
 }
+
+/** The narrator announcing what only the system can decide: missions done, payouts, reputation, level-ups. */
+export function inventsSystemResult(text: string): boolean {
+  return /misi[oó]n[^.\n]{0,60}(completad|cumplid|superad)|recompensa asignada|reputaci[oó]n[^.\n]{0,25}adquirid|has subido a nivel|subes a nivel|nivel \d+ alcanzado/i.test(text);
+}
