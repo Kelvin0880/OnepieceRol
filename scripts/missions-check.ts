@@ -22,7 +22,7 @@ async function main() {
   await Promise.all([ensureIslandMissions(low.id), ensureIslandMissions(low.id), ensureIslandMissions(high.id)]);
   const a = await getMissionState(low.id);
   const b = await getMissionState(high.id);
-  assert(a!.missions.length === 3, "concurrent ensures still create exactly one batch of three");
+  assert(a!.missions.length === 4, "concurrent ensures still create exactly one batch (3 island goals + 1 faction contract)");
   const arcLow = a!.missions.find((m) => m.isArc)!;
   const arcHigh = b!.missions.find((m) => m.isArc)!;
   assert(arcHigh.berries > arcLow.berries && arcHigh.xp > arcLow.xp, "a stronger character gets tougher, better-paid goals");
@@ -41,7 +41,7 @@ async function main() {
 
   await ensureIslandMissions(low.id);
   const again = await getMissionState(low.id);
-  assert(again!.missions.length <= 3 + 1 && again!.missions.filter((m) => m.status === "ACTIVE").length <= 1, "no new batch straight after finishing (pacing)");
+  assert(again!.missions.length <= 4 + 1 && again!.missions.filter((m) => m.status === "ACTIVE").length <= 1, "no new batch straight after finishing (pacing)");
   console.log("ALL MISSION CHECKS PASSED");
 }
 main().finally(() => prisma.$disconnect());
