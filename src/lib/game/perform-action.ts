@@ -1875,18 +1875,20 @@ async function resolvePartyFreeTextAction(character: LoadedCharacter, freeText: 
   if (finalLog.length) await prisma.sceneMessage.createMany({ data: exchangeRows(character.id, freeText, finalLog.join("\n\n")) });
 
   // Record this member's turn for the lap (this also writes their own bubble to the feed); once everyone's gone,
-  // the narrator answers the whole lap at once and it loops.
+  // the narrator answers the whole lap at once and it loops. When a mechanical action is what closes the lap, its
+  // own echo folds into that SAME narrator message (resolvePartyRound's appendText) instead of a second bubble
+  // right after it — one combined answer to the round, not what read like two separate replies to two people.
   let lapText: string | null = null;
   let claimed = false;
   try {
     const round = await submitRoundAction({ id: character.id, name: character.name }, begin.partyId, freeText);
     claimed = true;
-    if (round.allIn) lapText = await resolvePartyRound(begin.partyId);
+    if (round.allIn) lapText = await resolvePartyRound(begin.partyId, false, action !== "narrate" ? sharedLine : undefined);
   } catch (err) {
     // The mechanical action already happened for real; losing a rare claim race over the round bookkeeping is not a user-facing error.
     if (!(err instanceof PartyRoundError)) throw err;
   }
-  if (claimed && action !== "narrate") await writePartyMessage(begin.partyId, null, "Narrador", sharedLine);
+  if (claimed && action !== "narrate" && !lapText) await writePartyMessage(begin.partyId, null, "Narrador", sharedLine);
 
   if (action === "narrate") {
     return emptyResult(lapText ? [lapText] : ["Tu acción está en la ronda. El narrador responderá cuando todos hayáis actuado."], character.level);

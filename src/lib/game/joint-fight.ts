@@ -667,8 +667,10 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
     const { killIslandNpc, defeatIslandNpc, noteNpc } = await import("./island-npcs");
     const place = (await prisma.island.findUnique({ where: { id: fight.islandId }, select: { name: true } }))?.name ?? "la isla";
     const lead = humans[0];
-    const leader = lead ? await prisma.character.findUnique({ where: { id: lead.characterId }, select: { id: true, name: true, faction: true } }) : null;
-    const team = humans.map((h) => h.name).join(", ");
+    const leader = lead ? await prisma.character.findUnique({ where: { id: lead.characterId }, select: { id: true, name: true, faction: true, crewId: true } }) : null;
+    // A resident felled by a group knows they were jumped by a crew, not by a roll call of individual names.
+    const crewName = leader?.crewId ? (await prisma.crew.findUnique({ where: { id: leader.crewId }, select: { name: true } }))?.name : null;
+    const team = humans.length > 1 && crewName ? `la tripulación ${crewName}` : humans.map((h) => h.name).join(", ");
     if (outcome === "victory" && leader) {
       const fate = await judgeFate({ victim: { name: enemy.name, level: enemy.level ?? 2, durability: 20, willpower: 20, faction: "PIRATE" }, cause: `Fue derrotado en combate por ${team}.`, killer: { name: team, isBoss: false }, islandName: place, islandDanger: rewards.islandDanger, characterId: leader.id });
       if (fate.fate === "death") await killIslandNpc(enemy.islandNpcId, { id: leader.id, name: team, credit: humans.map((h) => h.characterId) }, place);

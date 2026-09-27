@@ -65,9 +65,11 @@ export async function submitRoundAction(character: { id: string; name: string },
 
 /**
  * The narrator answers every action of the round in one message. `force` answers with whoever already acted (someone closed the round,
- * or it stalled). Returns the narration, or null when there was nothing to answer / another request already took the round.
+ * or it stalled). `appendText` folds a mechanical action's own echo (e.g. "X explora: ...") into this SAME message instead of a second
+ * one right after it — two "Narrador" bubbles back to back for one beat reads like the narrator answered everyone separately.
+ * Returns the narration, or null when there was nothing to answer / another request already took the round.
  */
-export async function resolvePartyRound(partyId: string, force = false): Promise<string | null> {
+export async function resolvePartyRound(partyId: string, force = false, appendText?: string): Promise<string | null> {
   const party = await prisma.party.findUnique({ where: { id: partyId }, include: { messages: { orderBy: { createdAt: "desc" }, take: 14 } } });
   if (!party || party.awaitingNarrator) return null;
   const members = await memberIdsInOrder(party.id, party.turnOrder);
@@ -98,9 +100,8 @@ export async function resolvePartyRound(partyId: string, force = false): Promise
     const marked = extractCombatMarker(rawText);
     const text = marked.text;
     const fightNotice = marked.attacker ? await import("./perform-action").then((m) => m.startFightFromNarration(ordered[0].characterId, marked.attacker!)).catch(() => null) : null;
-    await writePartyMessage(party.id, null, "Narrador", fightNotice ? `${text}
-
-${fightNotice}` : text);
+    const shown = [text, fightNotice, appendText].filter(Boolean).join("\n\n");
+    await writePartyMessage(party.id, null, "Narrador", shown);
     const now = Date.now();
     await prisma.sceneMessage.createMany({
       data: ordered.flatMap((a, i) => [
