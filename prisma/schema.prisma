@@ -481,6 +481,9 @@ model JointFightMessage {
   authorCharacterId String? // null = the narrator
   authorName        String
   text              String
+  // Set only on a narrator round-resolution message: [{name, hpBefore, hpAfter, lost, staminaLost}] for every
+  // fighter that round, ground truth for "who actually lost what" instead of re-deriving it from prose later.
+  hpDeltaJson       String?
   createdAt         DateTime   @default(now())
 }
 

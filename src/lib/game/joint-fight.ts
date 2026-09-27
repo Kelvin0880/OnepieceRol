@@ -502,7 +502,12 @@ async function resolveJointRoundFor(fightId: string) {
     ...(failedFlight.length ? [`Intentaron huir sin éxito: ${failedFlight.join(", ")}.`] : []),
     ...(guarding.length ? [`Sin decidirse a tiempo, aguantan a la defensiva: ${guarding.join(", ")}.`] : []),
   ];
-  await prisma.jointFightMessage.create({ data: { fightId, authorCharacterId: null, authorName: "Narrador", text: [narration, ...extra].join("\n\n") } });
+  // Ground truth for later audits ("did X really lose life this round?") instead of re-deriving it from prose.
+  const hpDelta = [
+    ...fighters.map((f, i) => ({ name: f.combatant.name, hpBefore: f.hp, hpAfter: applied[i]?.hpAfter ?? f.hp, lost: Math.max(0, f.hp - (applied[i]?.hpAfter ?? f.hp)), staminaLost: applied[i]?.staminaLoss ?? 0 })),
+    ...(foe ? [{ name: enemy.name, hpBefore: fight.enemyHp, hpAfter: foe.hpAfter, lost: Math.max(0, fight.enemyHp - foe.hpAfter), staminaLost: 0 }] : []),
+  ];
+  await prisma.jointFightMessage.create({ data: { fightId, authorCharacterId: null, authorName: "Narrador", text: [narration, ...extra].join("\n\n"), hpDeltaJson: JSON.stringify(hpDelta) } });
   await prisma.jointFight.update({
     where: { id: fightId },
     data: {
