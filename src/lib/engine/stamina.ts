@@ -5,7 +5,10 @@
  * computed lazily from a timestamp on read, no background job.
  */
 export const DEFAULT_MAX_STAMINA = 100;
-export const STAMINA_REGEN_PER_MINUTE = 2;
+// Full recovery from empty took under an hour at the old rate — real play has long gaps between
+// messages (writing, thinking), so passive regen was quietly undoing fatigue as a side effect of
+// pacing rather than a deliberate rest. Slowed 4x: full recovery now takes a little over 3 hours.
+export const STAMINA_REGEN_PER_MINUTE = 0.5;
 export const REST_RECOVERY_FRACTION = 0.6;
 
 export type FatigueLevel = "fresh" | "tired" | "exhausted";
