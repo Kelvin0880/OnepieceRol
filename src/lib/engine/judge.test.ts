@@ -90,4 +90,8 @@ describe("group fight end (clampJointEnd, group words)", () => {
   it("never touches a no-winner verdict", () => {
     expect(clampJointEnd("ended", healthy, 1, 88)).toBe("ended");
   });
+  it("allowSurrender accepts a loss even at full health, for an inescapable fight", () => {
+    expect(clampJointEnd("player_lost", healthy, 88, 88, true)).toBe("player_lost");
+    expect(clampJointEnd("player_won", healthy, 88, 88, true)).toBe("ended"); // a claimed win still needs the rival actually low
+  });
 });

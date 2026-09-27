@@ -99,6 +99,32 @@ async function main() {
   assert(done.status === "ENDED" && (JSON.parse(done.captured) as string[]).length === 3, "the dispatch ends with the list of captured");
   assert((await prisma.newsItem.count({ where: { headline: { contains: "capturados" }, islandId: jaya.id } })) > 0, "the news tell who was captured");
 
+  // Surrender without reaching 0 HP: nobody can flee an Admiral, so closing the fight early ("Finalizar pelea")
+  // must still end in capture even though everyone is still well above half life — it just never had a death-roll
+  // downside to begin with. Real bug found live (2026-09-27): the judge's "player_lost" verdict was rejected by
+  // the usual half-life floor, and even a defeat outcome only captured participants literally at 0 HP.
+  await prisma.admiralDispatch.update({ where: { id: d.id }, data: { endedAt: new Date(Date.now() - 13 * 3600_000) } });
+  await prisma.worldActor.update({ where: { id: d.admiralActorId }, data: { busyUntil: null } });
+  await prisma.character.updateMany({ where: { id: { in: [b.id, late.id] } }, data: { currentIslandId: jaya.id, status: "ALIVE" } });
+  await prisma.imprisonment.deleteMany({ where: { characterId: { in: [b.id, late.id] } } });
+  const dSurrender = (await startDispatch({ islandId: jaya.id, manual: true, minutes: 5, admiralName: d.admiralName }))!;
+  await prisma.admiralDispatch.update({ where: { id: dSurrender.id }, data: { arrivesAt: new Date(Date.now() - 1000) } });
+  await tickAdmiralDispatch();
+  const surrenderDispatch = await prisma.admiralDispatch.findUniqueOrThrow({ where: { id: dSurrender.id } });
+  const surrenderFight = await prisma.jointFight.findUniqueOrThrow({ where: { id: surrenderDispatch.jointFightId! }, include: { participants: true } });
+  // Well above half life on both sides, on purpose: this must NOT be reachable through normal HP-threshold logic.
+  await prisma.jointFightParticipant.updateMany({ where: { fightId: surrenderFight.id, isNpc: false }, data: { hp: 70 } });
+  await prisma.character.updateMany({ where: { id: { in: surrenderFight.participants.filter((p) => !p.isNpc).map((p) => p.characterId) } }, data: { hp: 70 } });
+  await prisma.jointFight.update({ where: { id: surrenderFight.id }, data: { enemyHp: Math.round(surrenderFight.enemyMaxHp * 0.95) } });
+  const { closeJointFight } = await import("../src/lib/game/joint-fight");
+  const closer = [b, late].find((x) => surrenderFight.participants.some((p) => p.characterId === x.id))!;
+  const closed = await closeJointFight(closer.id, closer.user.id, "nos rendimos, no hay forma de ganar esto");
+  assert(closed.finished === true && closed.outcome === "defeat", "a surrender against an inescapable Admiral is accepted, not rejected for having too much HP left");
+  for (const id of surrenderFight.participants.filter((p) => !p.isNpc).map((p) => p.characterId)) {
+    const c = await prisma.character.findUniqueOrThrow({ where: { id } });
+    assert(c.status === "IMPRISONED", `${c.name} is captured on surrender, even though nobody hit 0 HP`);
+  }
+
   // Empty-handed: nobody hunted on the island -> he sails home in the same time
   await prisma.admiralDispatch.update({ where: { id: d.id }, data: { endedAt: new Date(Date.now() - 13 * 3600_000) } });
   await prisma.worldActor.update({ where: { id: d.admiralActorId }, data: { busyUntil: null } });

@@ -287,7 +287,7 @@ export async function closeJointFight(characterId: string, userId: string, note?
     note: note?.trim() || undefined,
     characterId,
   });
-  const outcome = clampJointEnd(verdict.outcome, inFight.map((p) => ({ hp: p.hp, maxHp: p.maxHp })), full.enemyHp, full.enemyMaxHp);
+  const outcome = clampJointEnd(verdict.outcome, inFight.map((p) => ({ hp: p.hp, maxHp: p.maxHp })), full.enemyHp, full.enemyMaxHp, full.kind === "admiral");
   const result = outcome === "player_won" ? "victory" : outcome === "player_lost" ? "defeat" : null;
 
   const text =
@@ -605,8 +605,9 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
         // A duel for a seat of command is fought to defeat, never to the death.
         await prisma.character.update({ where: { id: c.id }, data: { hp: Math.max(5, Math.round(c.maxHp * 0.1), p.status === "DOWN" ? 0 : p.hp) } });
         closing.push(`${c.name} cae derrotado, pero vivo: era un duelo por el puesto, no a muerte.`);
-      } else if (p.status === "DOWN" && fight.kind === "admiral") {
-        // The Government takes prisoners: no death roll, they are shipped off (Impel Down by bounty).
+      } else if (fight.kind === "admiral") {
+        // Inescapable, so "manages to retreat" (the FIGHTING fallback below) can't happen here: whether DOWN or
+        // still standing, a loss to an Admiral always means custody, no death roll — surrender counts the same as being felled.
         await (await import("./prison")).captureCharacter({ ...c, faction: c.faction, bounty: c.bounty, notoriety: c.notoriety }, Math.round(enemy.atk / 1.6), `Capturado por el almirante ${enemy.name} en ${c.currentIsland.name}.`, newsLog);
         closing.push(`${c.name} es capturado.`);
       } else if (p.status === "DOWN") {
