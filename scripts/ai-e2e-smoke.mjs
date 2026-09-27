@@ -65,7 +65,7 @@ try {
   await act("Estaría mirando un bar, y entraría a ver si alguna chica quiere conmigo.");
   await shot("ai-02-after-freetext-bar-scene.png");
 
-  const sceneBubbles = await page.locator("div.whitespace-pre-line").count();
+  const sceneBubbles = await page.locator(".bubble").count();
   check("free-roam bar/social text produced a narrator reply in the Escena panel", sceneBubbles >= 1);
   check('no "(interpretado como: ...)" noise for a plain narrate turn', !(await page.locator("text=interpretado como: Explorar").isVisible().catch(() => false)));
   check("no unclear/blocked error shown for free-roam text", !(await page.locator("text=No logro entender").isVisible().catch(() => false)));

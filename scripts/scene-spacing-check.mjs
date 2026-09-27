@@ -36,7 +36,11 @@ try {
   await page.click('button:has-text("Actuar")');
   const mine = page.locator('[data-testid="scene-panel"] .bubble-mine').last();
   await mine.waitFor({ timeout: 90000 });
-  const rendered = await mine.evaluate((el) => ({ ws: getComputedStyle(el).whiteSpace, inner: el.innerText, raw: el.textContent }));
+  const rendered = await mine.evaluate((el) => {
+    const clone = el.cloneNode(true);
+    clone.querySelector('[data-testid="copy-message"]')?.remove();
+    return { ws: getComputedStyle(el).whiteSpace, inner: el.innerText, raw: clone.textContent };
+  });
   console.log(JSON.stringify(rendered));
   check("bubble keeps whitespace (pre-wrap)", rendered.ws === "pre-wrap", rendered.ws);
   check("the stored text is identical to what was typed", rendered.raw === text, JSON.stringify(rendered.raw));

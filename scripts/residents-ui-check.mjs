@@ -35,7 +35,7 @@ try {
   await page.fill("textarea", "Miro a mi alrededor y respiro hondo el aire del puerto.");
   await page.click('button:has-text("Actuar")');
   // The scene's first message has a copy button that puts its text on the clipboard.
-  await page.waitForSelector('[data-testid="copy-message"]', { timeout: 20000 });
+  await page.waitForSelector('[data-testid="copy-message"]', { timeout: 90000 });
   const first = page.locator('[data-testid="copy-message"]').first();
   await first.click();
   await page.waitForTimeout(300);

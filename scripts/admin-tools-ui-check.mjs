@@ -48,12 +48,12 @@ try {
   check("an official announcement is published", (await notice()).includes("Anuncio publicado"));
 
   await page.fill('[data-testid="admin-happening-idea"]', "Una tormenta de arena descubre unas ruinas antiguas junto al puerto");
-  await page.fill('[data-testid="admin-happening"] input[list="admin-islands"]', "Loguetown");
+  await page.locator('[data-testid="admin-happening"] select').selectOption("Loguetown");
   await page.click('[data-testid="admin-happening-go"]');
   check("the AI develops the owner's idea into a happening", (await notice()).includes("Suceso publicado"));
 
   await page.fill('[data-testid="admin-event-idea"]', "Una carrera de barcas por la bahía");
-  await page.fill('[data-testid="admin-events"] input[list="admin-islands"]', "Pueblo Foosha");
+  await page.locator('[data-testid="admin-events"] select').first().selectOption("Pueblo Foosha");
   await page.click('[data-testid="admin-event-create"]');
   check("a beginner event is announced from the panel", (await notice()).includes("Evento anunciado"));
   await page.waitForSelector('[data-testid="admin-event"]');
@@ -62,11 +62,10 @@ try {
   await page.waitForFunction(() => document.querySelector('[data-testid="admin-event"]')?.textContent?.includes("CANCELLED"), null, { timeout: 20000 });
   check("and it can be cancelled", true);
 
-  await page.fill('[data-testid="admin-start-arc"] input[placeholder^="Objetivo"]', "Nadie Inventado");
-  await page.fill('[data-testid="admin-start-arc"] input[placeholder^="Agresor"]', "Sakazuki");
-  await page.click('[data-testid="admin-start-arc-go"]');
-  check("an unknown character is refused for a world event", (await notice()).includes("No encuentro"));
-  await page.fill('[data-testid="admin-start-arc"] input[placeholder^="Objetivo"]', "Marshall D. Teach");
+  // The target/aggressor pickers are closed <select>s (real canon actors only), so a made-up name can no longer
+  // even be entered — that negative case from when these were free-text inputs no longer applies.
+  await page.locator('[data-testid="admin-start-arc"] select').nth(0).selectOption("Marshall D. Teach");
+  await page.locator('[data-testid="admin-start-arc"] select').nth(1).selectOption("Sakazuki");
   await page.click('[data-testid="admin-start-arc-go"]');
   const arcMsg = await notice();
   check("a valid pair starts a world event", arcMsg.includes("Evento mundial iniciado"), arcMsg);
