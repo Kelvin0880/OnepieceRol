@@ -4,6 +4,16 @@ import { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { Anchor, ArrowLeft, Check, Crosshair, EyeOff, Flame, MapPin, Shield, Skull, Sword, Swords, Target, type LucideIcon } from "lucide-react";
+import { m } from "motion/react";
+import { SPRING } from "@/components/motion/presets";
+
+// The chosen card lifts; hovering (mouse only) lifts it too; pressing squashes it slightly.
+const lift = (on: boolean) => ({
+  animate: { y: on ? -3 : 0, scale: on ? 1.015 : 1 },
+  whileHover: { y: -3 },
+  whileTap: { scale: 0.98 },
+  transition: SPRING.snappy,
+});
 
 const FACTION_LOOK: Record<string, { icon: LucideIcon; color: string }> = {
   PIRATE: { icon: Skull, color: "#f0c869" },
@@ -104,19 +114,25 @@ export default function CreateCharacterPage() {
               const Icon = look.icon;
               const on = faction === f.id;
               return (
-                <button
+                <m.button
                   type="button"
                   key={f.id}
                   onClick={() => setFaction(f.id)}
-                  className={`relative text-left p-4 panel transition-all duration-200 hover:-translate-y-0.5 ${on ? "panel-accent" : "opacity-85 hover:opacity-100"}`}
+                  className={`relative text-left p-4 panel transition-[border-color,box-shadow,opacity] duration-200 ${on ? "panel-accent" : "opacity-85 hover:opacity-100"}`}
                   style={on ? { borderColor: look.color, boxShadow: `0 0 0 1px ${look.color}33, 0 12px 30px -16px ${look.color}` } : undefined}
                   aria-pressed={on}
+                  {...lift(on)}
                 >
                   {on && <Check className="absolute top-3 right-3 w-4 h-4 animate-pop" style={{ color: look.color }} />}
                   <div className="flex items-center gap-2">
-                    <span className="w-8 h-8 rounded-full grid place-items-center border" style={{ borderColor: look.color, color: look.color }}>
+                    <m.span
+                      className="w-8 h-8 rounded-full grid place-items-center border"
+                      style={{ borderColor: look.color, color: look.color, transformPerspective: 300, boxShadow: on ? `0 0 12px -2px ${look.color}` : undefined }}
+                      animate={{ rotateY: on ? 360 : 0 }}
+                      transition={{ duration: 0.7, ease: [0.22, 1, 0.36, 1] }}
+                    >
                       <Icon className="w-4 h-4" />
-                    </span>
+                    </m.span>
                     <span className="font-display text-sm text-gold-bright">{f.name}</span>
                   </div>
                   <div className="text-xs text-ink-dim mt-2">{f.description}</div>
@@ -124,7 +140,7 @@ export default function CreateCharacterPage() {
                     <MapPin className="w-3 h-3" />
                     Inicias en: {f.island}
                   </div>
-                </button>
+                </m.button>
               );
             })}
           </div>
@@ -137,12 +153,13 @@ export default function CreateCharacterPage() {
               const Icon = ARCHETYPE_ICON[a.id];
               const on = archetypeId === a.id;
               return (
-                <button
+                <m.button
                   type="button"
                   key={a.id}
                   onClick={() => setArchetypeId(a.id)}
-                  className={`relative text-left p-4 panel transition-all duration-200 hover:-translate-y-0.5 ${on ? "panel-accent" : "opacity-85 hover:opacity-100"}`}
+                  className={`relative text-left p-4 panel transition-[border-color,box-shadow,opacity] duration-200 ${on ? "panel-accent" : "opacity-85 hover:opacity-100"}`}
                   aria-pressed={on}
+                  {...lift(on)}
                 >
                   {on && <Check className="absolute top-3 right-3 w-4 h-4 text-gold animate-pop" />}
                   <div className="flex items-center gap-2">
@@ -151,7 +168,7 @@ export default function CreateCharacterPage() {
                   </div>
                   <div className="text-xs text-ink-dim mt-1">{a.description}</div>
                   <StatRow stats={a.stats} />
-                </button>
+                </m.button>
               );
             })}
           </div>

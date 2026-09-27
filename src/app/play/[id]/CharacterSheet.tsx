@@ -2,6 +2,7 @@
 
 import { Anchor, Apple, Flame, Sword, Users } from "lucide-react";
 import StatBar from "@/components/ui/StatBar";
+import AnimatedNumber from "@/components/motion/AnimatedNumber";
 import WantedPoster from "@/components/ui/WantedPoster";
 import AttributesCard from "./AttributesCard";
 import PortraitEditor from "./PortraitEditor";
@@ -50,7 +51,7 @@ export default function CharacterSheet({
           <span className="text-xs text-ink-dim">Estado</span>
           <span className={`text-sm font-display ${CONDITION_COLOR[condition]}`}>{conditionLabel(condition)}</span>
         </div>
-        <StatBar label="Vida" value={character.hp} max={character.maxHp} color="var(--blood)" />
+        <StatBar label="Vida" value={character.hp} max={character.maxHp} color="var(--blood)" warnBelow={25} />
         <div data-testid="xp-bar">
           <StatBar label={`Experiencia (nivel ${character.level} → ${character.level + 1})`} value={character.experience} max={xpMax} color="var(--gold)" />
           <p className="text-[11px] text-ink-dim mt-0.5">
@@ -63,7 +64,7 @@ export default function CharacterSheet({
         </div>
         <div className="flex justify-between text-sm">
           <span className="text-ink-dim">Berries</span>
-          <span className="text-gold-bright font-display tabular-nums">{formatBerries(character.berries)}</span>
+          <AnimatedNumber className="text-gold-bright font-display tabular-nums" value={character.berries} format={formatBerries} />
         </div>
         <div data-testid="rank-progress">
           <div className="flex justify-between text-xs text-ink-dim mb-0.5 gap-2">
@@ -86,12 +87,12 @@ export default function CharacterSheet({
         {character.faction === "PIRATE" ? (
           <div className="flex justify-between text-sm">
             <span className="text-ink-dim">Recompensa</span>
-            <span className="text-gold-bright tabular-nums">{formatBerries(character.bounty)}</span>
+            <AnimatedNumber className="text-gold-bright tabular-nums" value={character.bounty} format={formatBerries} />
           </div>
         ) : (
           <div className="flex justify-between text-sm">
             <span className="text-ink-dim">Mérito</span>
-            <span className="text-gold-bright tabular-nums">{formatNumber(character.notoriety)}</span>
+            <AnimatedNumber className="text-gold-bright tabular-nums" value={character.notoriety} format={formatNumber} />
           </div>
         )}
         {character.poneglyphHeat > 0 && (

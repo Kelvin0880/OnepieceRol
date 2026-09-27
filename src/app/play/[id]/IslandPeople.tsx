@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Swords, Users } from "lucide-react";
 import Countdown from "@/components/ui/Countdown";
 import type { CanonHereState, IslandCastEntry } from "./types";
+import TabBar from "@/components/motion/TabBar";
 
 type Act = (body: Record<string, unknown>, path?: string) => Promise<void>;
 
@@ -64,16 +65,17 @@ export function IslandPeoplePanel({ canon, cast, islandName, act, busy, error, j
         <p className="text-xs text-ink-dim mt-3" data-testid="canon-fighting">{ch.stage === "VANGUARD" ? `Estás abriéndote paso hacia ${ch.actorName}.` : `Estás enfrentando a ${ch.actorName}.`}</p>
       )}
 
-      <div className="flex gap-2 mt-3">
-        {hasCanon && (
-          <button onClick={() => setTab("canon")} className={`px-3 py-1 rounded-full text-xs border ${tab === "canon" ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="people-tab-canon">
-            Personajes canon ({canon!.actors.length})
-          </button>
-        )}
-        <button onClick={() => setTab("residents")} className={`px-3 py-1 rounded-full text-xs border ${tab === "residents" || !hasCanon ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="people-tab-residents">
-          Habitantes ({alive.length})
-        </button>
-      </div>
+      <TabBar<"canon" | "residents">
+        className="mt-3"
+        variant="outline"
+        size="sm"
+        value={hasCanon ? tab : "residents"}
+        onChange={setTab}
+        tabs={[
+          ...(hasCanon ? [{ id: "canon" as const, label: `Personajes canon (${canon!.actors.length})`, testId: "people-tab-canon" }] : []),
+          { id: "residents" as const, label: `Habitantes (${alive.length})`, testId: "people-tab-residents" },
+        ]}
+      />
 
       {tab === "canon" && hasCanon && (
         <ul className="flex flex-col gap-2 mt-3">

@@ -3,6 +3,7 @@
 import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import BackToCharacter from "@/components/ui/BackToCharacter";
+import TabBar from "@/components/motion/TabBar";
 
 interface NewsItem {
   id: string;
@@ -41,6 +42,8 @@ const CATEGORY_COLOR: Record<string, string> = {
   "Rangos y mandos": "text-sky-300",
 };
 
+// Sentinel id for the "all categories" chip; never a real category name.
+const ALL_CATEGORIES = "__all__";
 const CATEGORIES = ["Coliseo", "Rangos y mandos", "Eventos mundiales", "Sucesos del mundo", "Eventos", "Anuncios", "Figuras del mundo", "Recompensas", "Frutas", "Poneglifos", "Tripulaciones", "Guerra", "Muertes", "Gobierno Mundial"];
 
 function dayLabel(dateStr: string): string {
@@ -245,23 +248,14 @@ export default function NewsPage() {
         </section>
       )}
 
-      <div className="flex flex-wrap gap-2 mb-6">
-        <button
-          onClick={() => setCategory(null)}
-          className={`px-3 py-1 rounded-full text-xs border ${!category ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`}
-        >
-          Todas
-        </button>
-        {CATEGORIES.map((c) => (
-          <button
-            key={c}
-            onClick={() => setCategory(c)}
-            className={`px-3 py-1 rounded-full text-xs border ${category === c ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`}
-          >
-            {c}
-          </button>
-        ))}
-      </div>
+      <TabBar<string>
+        className="mb-6"
+        variant="outline"
+        size="sm"
+        value={category ?? ALL_CATEGORIES}
+        onChange={(id) => setCategory(id === ALL_CATEGORIES ? null : id)}
+        tabs={[{ id: ALL_CATEGORIES, label: "Todas" }, ...CATEGORIES.map((c) => ({ id: c, label: c }))]}
+      />
 
       {loading ? (
         <p className="text-ink-dim">Cargando...</p>

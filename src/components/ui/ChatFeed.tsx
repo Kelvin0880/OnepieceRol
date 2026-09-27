@@ -1,6 +1,8 @@
 "use client";
 
 import { forwardRef, useState, type ReactNode } from "react";
+import { AnimatePresence, m } from "motion/react";
+import { SPRING } from "@/components/motion/presets";
 
 export interface FeedMessage {
   id: string;
@@ -11,15 +13,36 @@ export interface FeedMessage {
 
 export function TypingIndicator({ label = "El narrador escribe..." }: { label?: string }) {
   return (
-    <div className="bubble bubble-narrator flex items-center gap-2 text-ink-dim italic" data-testid="typing-indicator">
+    <m.div
+      className="bubble bubble-narrator flex items-center gap-2 text-ink-dim italic"
+      data-testid="typing-indicator"
+      initial={{ opacity: 0, y: 8, scale: 0.96 }}
+      animate={{ opacity: 1, y: 0, scale: 1 }}
+      transition={SPRING.soft}
+    >
       <span className="flex gap-1" aria-hidden>
         <span className="typing-dot" />
         <span className="typing-dot" />
         <span className="typing-dot" />
       </span>
       {label}
-    </div>
+    </m.div>
   );
+}
+
+const GLOW = ["0 0 0 0 rgba(212,169,74,0)", "0 0 26px -4px rgba(212,169,74,0.55)", "0 0 0 0 rgba(212,169,74,0)"];
+
+// Only messages that arrive after the feed mounted animate in (AnimatePresence initial={false}): opening a scene
+// with sixty old messages costs nothing.
+function enterFor(kind: FeedMessage["kind"]) {
+  if (kind === "mine") return { initial: { opacity: 0, x: 24, y: 6, scale: 0.97 }, animate: { opacity: 1, x: 0, y: 0, scale: 1 }, transition: SPRING.soft };
+  if (kind === "narrator")
+    return {
+      initial: { opacity: 0, x: -18, y: 10 },
+      animate: { opacity: 1, x: 0, y: 0, boxShadow: GLOW },
+      transition: { ...SPRING.soft, boxShadow: { duration: 1.6, times: [0, 0.3, 1] } },
+    };
+  return { initial: { opacity: 0, x: -18, y: 6 }, animate: { opacity: 1, x: 0, y: 0 }, transition: SPRING.soft };
 }
 
 async function copyText(text: string): Promise<boolean> {
@@ -72,13 +95,15 @@ const ChatFeed = forwardRef<
   return (
     <div ref={ref} className={`flex flex-col gap-2.5 overflow-y-auto scrollbar-thin pr-1 ${className}`} data-testid={testId}>
       {messages.length === 0 && empty}
-      {messages.map((m) => (
-        <div key={m.id} className={`bubble ${m.kind === "mine" ? "bubble-mine" : m.kind === "narrator" ? "bubble-narrator" : "bubble-other"}`}>
-          {m.kind !== "mine" && m.author && <div className="text-[10px] uppercase tracking-wider text-gold/80 mb-0.5 font-display">{m.author}</div>}
-          {m.text}
-          <CopyButton text={m.text} />
-        </div>
-      ))}
+      <AnimatePresence initial={false}>
+        {messages.map((msg) => (
+          <m.div key={msg.id} className={`bubble ${msg.kind === "mine" ? "bubble-mine" : msg.kind === "narrator" ? "bubble-narrator" : "bubble-other"}`} {...enterFor(msg.kind)}>
+            {msg.kind !== "mine" && msg.author && <div className="text-[10px] uppercase tracking-wider text-gold/80 mb-0.5 font-display">{msg.author}</div>}
+            {msg.text}
+            <CopyButton text={msg.text} />
+          </m.div>
+        ))}
+      </AnimatePresence>
       {typing && <TypingIndicator label={typing} />}
       {children}
     </div>

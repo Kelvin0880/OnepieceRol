@@ -1,7 +1,9 @@
 "use client";
 
 import { useCallback, useState } from "react";
+import { AnimatePresence, m } from "motion/react";
 import type { DeltaToast } from "@/lib/ui/format";
+import { SPRING } from "@/components/motion/presets";
 
 interface LiveToast extends DeltaToast {
   id: number;
@@ -26,20 +28,46 @@ export function useToasts() {
   return { toasts, push };
 }
 
+// Small toasts slide in from the edge and float away; a level-up or a promotion swings in in 3D like a medal
+// being turned over, with a shine across it.
 export function ToastStack({ toasts }: { toasts: LiveToast[] }) {
   return (
-    <div className="fixed z-[60] top-16 right-3 sm:right-6 flex flex-col items-end gap-2 pointer-events-none" aria-live="polite" data-testid="toast-stack">
-      {toasts.map((t) =>
-        t.kind === "level" || t.kind === "rank" ? (
-          <div key={t.id} className="panel panel-accent px-4 py-2.5 animate-pop font-display text-lg text-gold-bright shadow-2xl" data-testid="toast-big">
-            ✦ {t.text}
-          </div>
-        ) : (
-          <div key={t.id} className={`rounded-full border bg-sea-deep/90 px-3 py-1 text-sm font-display animate-float-up ${TONE[t.tone]}`} data-testid="toast">
-            {t.text}
-          </div>
-        )
-      )}
+    <div
+      className="fixed z-[60] right-3 sm:right-6 flex flex-col items-end gap-2 pointer-events-none"
+      style={{ top: "calc(var(--play-header-h, 3.5rem) + 0.5rem)" }}
+      aria-live="polite"
+      data-testid="toast-stack"
+    >
+      <AnimatePresence initial={false}>
+        {toasts.map((t) =>
+          t.kind === "level" || t.kind === "rank" ? (
+            <m.div
+              key={t.id}
+              className="panel panel-accent shine-sweep px-4 py-2.5 font-display text-lg text-gold-bright shadow-2xl"
+              data-testid="toast-big"
+              style={{ transformPerspective: 600 }}
+              initial={{ opacity: 0, rotateY: -95, scale: 0.6 }}
+              animate={{ opacity: 1, rotateY: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -12, scale: 0.9, transition: { duration: 0.25 } }}
+              transition={{ ...SPRING.bouncy, opacity: { duration: 0.15 } }}
+            >
+              ✦ {t.text}
+            </m.div>
+          ) : (
+            <m.div
+              key={t.id}
+              className={`rounded-full border bg-sea-deep/90 px-3 py-1 text-sm font-display ${TONE[t.tone]}`}
+              data-testid="toast"
+              initial={{ opacity: 0, x: 40, scale: 0.9 }}
+              animate={{ opacity: 1, x: 0, scale: 1 }}
+              exit={{ opacity: 0, y: -16, transition: { duration: 0.35 } }}
+              transition={SPRING.snappy}
+            >
+              {t.text}
+            </m.div>
+          )
+        )}
+      </AnimatePresence>
     </div>
   );
 }

@@ -2,6 +2,9 @@
 
 import { useEffect, useState, useCallback, useRef, use } from "react";
 import { Skull } from "lucide-react";
+import { AnimatePresence, m } from "motion/react";
+import HitVignette from "@/components/motion/HitVignette";
+import { SPRING } from "@/components/motion/presets";
 import InventoryPanel from "./InventoryPanel";
 import StylesPanel from "./StylesPanel";
 import ColiseumPanel from "./ColiseumPanel";
@@ -266,24 +269,27 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 pb-16 flex flex-col gap-4">
       <PlayHeader data={data} badges={badges} markSeen={markSeen} onOpen={(p) => (p === "ooc" ? openOoc() : setPanel(p))} />
       <ToastStack toasts={toasts} />
+      {!isDead && <HitVignette hp={character.hp} maxHp={character.maxHp} />}
       {(character.pendingSeatChallenges ?? 0) > 0 && (
         <button className="rounded border border-blood/70 bg-blood/15 px-3 py-2 text-left text-sm text-gold-bright animate-rise" onClick={() => setPanel("power")} data-testid="seat-challenge-alert">
           ⚔️ Te han desafiado por tu puesto de mando. Tienes 24 h para responder o lo pierdes. <span className="underline">Responder</span>
         </button>
       )}
 
-      {panel === "route" && <RoutePanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
-      {panel === "path" && <PathPanel characterId={character.id} onClose={() => setPanel(null)} onOpen={(p) => setPanel(p)} />}
-      {panel === "power" && <SovereigntyPanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
-      {panel === "events" && <EventsPanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
-      {panel === "denden" && <DenDenPanel characterId={character.id} onClose={() => setPanel(null)} />}
-      {panel === "empire" && <EmpirePanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
-      {panel === "voyage" && <VoyagePanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
-      {panel === "coliseum" && <ColiseumPanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
-      {panel === "styles" && <StylesPanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
-      {panel === "inventory" && <InventoryPanel characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
+      <AnimatePresence>
+      {panel === "route" && <RoutePanel key="route" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
+      {panel === "path" && <PathPanel key="path" characterId={character.id} onClose={() => setPanel(null)} onOpen={(p) => setPanel(p)} />}
+      {panel === "power" && <SovereigntyPanel key="power" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
+      {panel === "events" && <EventsPanel key="events" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
+      {panel === "denden" && <DenDenPanel key="denden" characterId={character.id} onClose={() => setPanel(null)} />}
+      {panel === "empire" && <EmpirePanel key="empire" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
+      {panel === "voyage" && <VoyagePanel key="voyage" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
+      {panel === "coliseum" && <ColiseumPanel key="coliseum" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
+      {panel === "styles" && <StylesPanel key="styles" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
+      {panel === "inventory" && <InventoryPanel key="inventory" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
       {panel === "crew" && (
         <CrewPanel
+          key="crew"
           characterId={character.id}
           characterName={character.name}
           characterLevel={character.level}
@@ -296,9 +302,9 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           onChanged={() => load()}
         />
       )}
-      {panel === "ooc" && <OocPanel characterId={character.id} starter={oocStarter} onClose={() => setPanel(null)} onChanged={() => load()} onRestoreText={(t) => setFreeText(t)} />}
+      {panel === "ooc" && <OocPanel key="ooc" characterId={character.id} starter={oocStarter} onClose={() => setPanel(null)} onChanged={() => load()} onRestoreText={(t) => setFreeText(t)} />}
       {panel === "guide" && (
-        <Modal onClose={() => setPanel(null)} size="sm" className="p-6" label="Mapa y Guía">
+        <Modal key="guide" onClose={() => setPanel(null)} size="sm" className="p-6" label="Mapa y Guía">
           <h3 className="font-display text-xl text-gold-bright mb-2">Mapa y Guía del Jugador</h3>
           <p className="text-sm text-ink-dim mb-4">
             Referencia externa (se abre en una pestaña nueva): un mapa interactivo de todas las islas con su peligro, nivel mínimo y conexiones, y la guía completa de cómo se juega — incluyendo cómo se sube de nivel de verdad.
@@ -316,16 +322,23 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           </button>
         </Modal>
       )}
+      </AnimatePresence>
 
       {arcIntro && (
-        <section className="panel panel-accent p-5 animate-pop">
+        <m.section
+          className="panel panel-accent shine-sweep p-5"
+          style={{ transformPerspective: 900, originY: 0 }}
+          initial={{ opacity: 0, rotateX: -60, y: -10 }}
+          animate={{ opacity: 1, rotateX: 0, y: 0 }}
+          transition={{ ...SPRING.soft, opacity: { duration: 0.25 } }}
+        >
           <p className="text-xs text-gold-bright uppercase tracking-wide mb-1">Llegas por primera vez a</p>
           <h2 className="font-display text-xl text-gold-bright mb-2">{arcIntro.islandName}</h2>
           <p className="text-sm text-ink italic mb-4">{arcIntro.hook}</p>
           <button className="btn-gold px-4 py-2 text-sm" onClick={() => setArcIntro(null)}>
             Continuar
           </button>
-        </section>
+        </m.section>
       )}
 
       {isDead && (

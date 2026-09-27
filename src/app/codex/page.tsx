@@ -80,6 +80,7 @@ const CELLS = [
 
 /** Every canon prisoner by Impel Down level, with the level needed to attempt a rescue raid. */
 import ResidentsSection from "./ResidentsSection";
+import TabBar from "@/components/motion/TabBar";
 
 function PrisonSection({ actors }: { actors: Actor[] }) {
   const held = actors.filter((a) => a.status === "CAPTURED");
@@ -104,7 +105,7 @@ function PrisonSection({ actors }: { actors: Actor[] }) {
 function ActorCard({ a }: { a: Actor }) {
   const gone = a.status !== "ACTIVE";
   return (
-    <div className={`panel p-4 flex flex-col gap-2 ${gone ? "opacity-70" : ""}`} data-testid="codex-card">
+    <div className={`panel p-4 flex flex-col gap-2 cv-auto [--cv-h:420px] ${gone ? "opacity-70" : ""}`} data-testid="codex-card">
       <div className="flex items-baseline justify-between gap-2">
         <h3 className="font-display text-lg text-gold-bright">{a.name}</h3>
         <span className={`text-[10px] uppercase tracking-wide ${gone ? "text-blood" : "text-emerald-300"}`}>{STATUS_LABEL[a.status] ?? a.status}</span>
@@ -221,7 +222,7 @@ function PlayersSection({ query }: { query: string }) {
       </p>
       <div className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
         {shown.map((p) => (
-          <div key={p.id} className={`panel p-3 flex flex-col gap-1 ${p.status === "DEAD" ? "opacity-70" : ""}`} data-testid="codex-player">
+          <div key={p.id} className={`panel p-3 flex flex-col gap-1 cv-auto [--cv-h:140px] ${p.status === "DEAD" ? "opacity-70" : ""}`} data-testid="codex-player">
             <div className="flex items-start justify-between gap-2">
               {p.portraitUrl && <img src={p.portraitUrl} alt={p.name} className={`w-12 h-12 rounded border border-gold/40 object-cover shrink-0 ${p.status === "DEAD" ? "grayscale" : ""}`} data-testid="codex-player-photo" />}
               <strong className="text-gold-bright flex-1">{p.name}</strong>
@@ -284,20 +285,17 @@ export default function CodexPage() {
         Todos los personajes que mueven el mundo: recompensa, fruta, arma, habilidades, estadísticas y dónde están ahora. Quien se mueve en secreto aparece como «Ubicación desconocida»; quien va navegando, como «En el mar, entre X y Y».
       </p>
 
-      <div className="flex gap-2">
-        <button onClick={() => setSection("canon")} className={`px-3 py-1.5 rounded text-sm border ${section === "canon" ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="codex-tab-canon">
-          Personajes canon
-        </button>
-        <button onClick={() => setSection("prison")} className={`px-3 py-1.5 rounded text-sm border ${section === "prison" ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="codex-tab-prison">
-          Prisioneros
-        </button>
-        <button onClick={() => setSection("residents")} className={`px-3 py-1.5 rounded text-sm border ${section === "residents" ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="codex-tab-residents">
-          Habitantes
-        </button>
-        <button onClick={() => setSection("players")} className={`px-3 py-1.5 rounded text-sm border ${section === "players" ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`} data-testid="codex-tab-players">
-          Jugadores
-        </button>
-      </div>
+      <TabBar<"canon" | "players" | "prison" | "residents">
+        variant="outline"
+        value={section}
+        onChange={setSection}
+        tabs={[
+          { id: "canon", label: "Personajes canon", testId: "codex-tab-canon" },
+          { id: "prison", label: "Prisioneros", testId: "codex-tab-prison" },
+          { id: "residents", label: "Habitantes", testId: "codex-tab-residents" },
+          { id: "players", label: "Jugadores", testId: "codex-tab-players" },
+        ]}
+      />
 
       {section === "players" && (
         <>
@@ -312,11 +310,7 @@ export default function CodexPage() {
 
       {section === "canon" && (<>
       <div className="flex flex-wrap gap-2 items-center">
-        {FACTIONS.map((f) => (
-          <button key={f.id} onClick={() => setFaction(f.id)} className={`px-3 py-1 rounded-full text-xs border ${faction === f.id ? "border-gold-bright text-gold-bright" : "border-white/15 text-ink-dim"}`}>
-            {f.label}
-          </button>
-        ))}
+        <TabBar<string> variant="outline" size="sm" value={faction} onChange={setFaction} tabs={FACTIONS.map((f) => ({ id: f.id, label: f.label }))} />
         <button onClick={() => setShowHistory((v) => !v)} className={`px-3 py-1 rounded-full text-xs border ${showHistory ? "border-blood text-blood" : "border-white/15 text-ink-dim"}`} data-testid="codex-history">
           {showHistory ? "Viendo historia (fuera de juego)" : "Ver historia (fuera de juego)"}
         </button>

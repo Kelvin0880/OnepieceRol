@@ -2,6 +2,7 @@
 
 import Modal from "@/components/ui/Modal";
 import { useCallback, useEffect, useState } from "react";
+import TabBar from "@/components/motion/TabBar";
 
 export interface PanelMember {
   id: string;
@@ -229,13 +230,6 @@ export default function CrewPanel({
     }
   }
 
-  const tabBtn = (id: typeof tab, label: string, badge?: number) => (
-    <button key={id} className={`px-3 py-1.5 text-sm rounded ${tab === id ? "btn-gold" : "btn-ghost"}`} onClick={() => setTab(id)} data-testid={`crew-tab-${id}`}>
-      {label}
-      {badge ? <span className="ml-1.5 text-[11px] px-1.5 rounded bg-blood text-white">{badge}</span> : null}
-    </button>
-  );
-
   const aliveNpcs = companions.filter((c) => c.status === "ALIVE").length;
   const isSolo = faction === "BOUNTY_HUNTER";
 
@@ -282,11 +276,17 @@ export default function CrewPanel({
           </div>
         )}
 
-        <div className={`flex gap-2 flex-wrap ${isSolo ? "hidden" : ""}`}>
-          {tabBtn("crew", "Miembros")}
-          {tabBtn("nakamas", `Nakamas NPC (${aliveNpcs}/3)`)}
-          {tabBtn("invite", "Invitar y unirse", received.length)}
-        </div>
+        {!isSolo && (
+          <TabBar<typeof tab>
+            value={tab}
+            onChange={setTab}
+            tabs={[
+              { id: "crew", label: "Miembros", testId: "crew-tab-crew" },
+              { id: "nakamas", label: `Nakamas NPC (${aliveNpcs}/3)`, testId: "crew-tab-nakamas" },
+              { id: "invite", label: "Invitar y unirse", testId: "crew-tab-invite", badge: received.length },
+            ]}
+          />
+        )}
 
         {notice && (
           <p className="text-sm text-gold" data-testid="crew-notice">

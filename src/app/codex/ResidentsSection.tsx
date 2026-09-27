@@ -65,7 +65,7 @@ export default function ResidentsSection() {
         <p className="text-ink-dim">Nadie coincide con ese filtro.</p>
       ) : (
         byIsland.map(([island, list]) => (
-          <div key={island} className="panel p-3 flex flex-col gap-2" data-testid="residents-island">
+          <div key={island} className="panel p-3 flex flex-col gap-2 cv-auto [--cv-h:1400px]" data-testid="residents-island">
             <h3 className="font-display text-gold-bright">
               {island} <span className="text-xs text-ink-dim">({list.length})</span>
             </h3>

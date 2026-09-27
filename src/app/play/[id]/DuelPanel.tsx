@@ -5,6 +5,8 @@ import { Swords } from "lucide-react";
 import StatBar from "@/components/ui/StatBar";
 import ChatFeed from "@/components/ui/ChatFeed";
 import type { DuelState } from "./types";
+import { m } from "motion/react";
+import { SPRING } from "@/components/motion/presets";
 
 export default function DuelPanel({
   duel,
@@ -51,12 +53,28 @@ export default function DuelPanel({
     <section className={`panel p-4 animate-rise ${duel.lethal ? "panel-danger" : "panel-accent"} ${duel.lethal && duel.status === "ACTIVE" ? "animate-danger" : ""}`}>
       <div className="flex flex-wrap items-center justify-between gap-2 mb-3">
         <h3 className="font-display text-lg text-gold-bright flex items-center gap-2">
-          <Swords className="w-5 h-5" />
+          <m.span
+            key={duel.status}
+            className="inline-flex"
+            initial={{ rotate: -45, scale: 1.8, opacity: 0 }}
+            animate={{ rotate: 0, scale: 1, opacity: 1 }}
+            transition={SPRING.bouncy}
+          >
+            <Swords className="w-5 h-5" />
+          </m.span>
           {duel.hostile ? "Caza" : "Duelo"} contra {duel.opponentName}
           {duel.lethal && <span className="text-[10px] px-2 py-0.5 rounded bg-blood text-white tracking-wider">A MUERTE</span>}
         </h3>
         <span className="text-xs text-ink-dim flex items-center gap-2">
-          {duel.status === "PROPOSED" ? "Reto pendiente" : duel.status === "ACTIVE" ? `Ronda ${duel.round}` : "Terminado"}
+          {duel.status === "PROPOSED" ? (
+            "Reto pendiente"
+          ) : duel.status === "ACTIVE" ? (
+            <m.span key={duel.round} className="inline-block" initial={{ scale: 1.6, color: "#f0c869" }} animate={{ scale: 1, color: "#cbb992" }} transition={SPRING.bouncy}>
+              Ronda {duel.round}
+            </m.span>
+          ) : (
+            "Terminado"
+          )}
           <button className="btn-ghost px-2 py-0.5 text-[11px]" onClick={() => onOoc("Sobre este duelo (fuera de rol): ")}>
             Fuera de rol
           </button>
@@ -65,7 +83,7 @@ export default function DuelPanel({
       {duel.status !== "PROPOSED" && (
         <div className="grid grid-cols-2 gap-3 mb-3">
           <div>
-            <StatBar label="Tú" value={duel.me.hp} max={duel.me.maxHp} color="var(--blood)" />
+            <StatBar label="Tú" value={duel.me.hp} max={duel.me.maxHp} color="var(--blood)" warnBelow={25} />
             {duel.status === "ACTIVE" && <p className={`text-[11px] mt-0.5 ${duel.me.submitted ? "text-jade" : "text-ink-dim"}`}>{duel.me.submitted ? "Movimiento enviado" : "Falta tu movimiento"}</p>}
           </div>
           <div>

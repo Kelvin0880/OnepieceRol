@@ -4,6 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { BookOpen, Check, Circle, Feather, Lock, ScrollText } from "lucide-react";
 import Modal from "@/components/ui/Modal";
 import StatBar from "@/components/ui/StatBar";
+import TabBar from "@/components/motion/TabBar";
 
 interface RouteState {
   script: number;
@@ -77,19 +78,15 @@ export default function RoutePanel({ characterId, onClose, onChanged }: { charac
         </button>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        {(
-          [
-            ["route", "Tu ruta"],
-            ["history", `Historia (${known}/${state?.chapters.length ?? 6})`],
-            ["road", `Ruta (${road}/4)`],
-          ] as [Tab, string][]
-        ).map(([id, label]) => (
-          <button key={id} className={`${tab === id ? "btn-gold" : "btn-ghost"} px-3 py-1.5 text-sm`} onClick={() => setTab(id)} data-testid={`route-tab-${id}`}>
-            {label}
-          </button>
-        ))}
-      </div>
+      <TabBar<Tab>
+        value={tab}
+        onChange={setTab}
+        tabs={[
+          { id: "route", label: "Tu ruta", testId: "route-tab-route" },
+          { id: "history", label: `Historia (${known}/${state?.chapters.length ?? 6})`, testId: "route-tab-history" },
+          { id: "road", label: `Ruta (${road}/4)`, testId: "route-tab-road" },
+        ]}
+      />
 
       {error && <p className="text-blood text-sm" data-testid="route-error">{error}</p>}
       {notice.length > 0 && (

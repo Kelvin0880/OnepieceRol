@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Cinzel, Crimson_Pro } from "next/font/google";
 import "./globals.css";
 import SeaBackground from "@/components/ui/SeaBackground";
+import MotionProvider from "@/components/motion/MotionProvider";
 
 const cinzel = Cinzel({
   variable: "--font-display",
@@ -30,7 +31,9 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
     <html lang="es" className={`${cinzel.variable} ${crimson.variable} h-full antialiased`}>
       <body className="min-h-full flex flex-col">
         <SeaBackground />
-        <div className="relative z-10 flex-1 flex flex-col">{children}</div>
+        <MotionProvider>
+          <div className="relative z-10 flex-1 flex flex-col">{children}</div>
+        </MotionProvider>
       </body>
     </html>
   );

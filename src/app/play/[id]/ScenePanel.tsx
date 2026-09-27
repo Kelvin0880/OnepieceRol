@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
+import { m } from "motion/react";
 import { BedDouble, Dumbbell, Feather, Send, Swords } from "lucide-react";
 import ChatFeed, { type FeedMessage } from "@/components/ui/ChatFeed";
+import { SPRING } from "@/components/motion/presets";
 import { ASSESSMENT_LABEL } from "./labels";
 import type { Character, JointFightState, PartyState } from "./types";
 
@@ -95,9 +97,19 @@ export default function ScenePanel({
       />
 
       {canWrite && enc && (enc.phase === "threat" || enc.phase === "fighting") && (
-        <div className="rounded-md border border-blood/70 bg-blood/10 p-3 animate-rise" data-testid="encounter-box">
+        <m.div
+          key={enc.phase}
+          className="rounded-md border border-blood/70 bg-blood/10 p-3"
+          data-testid="encounter-box"
+          style={{ transformPerspective: 800, originY: 0 }}
+          initial={{ opacity: 0, rotateX: -35, scale: 0.94 }}
+          animate={{ opacity: 1, rotateX: 0, scale: 1, x: [0, -7, 7, -4, 3, 0] }}
+          transition={{ ...SPRING.bouncy, opacity: { duration: 0.15 }, x: { duration: 0.45, delay: 0.12 } }}
+        >
           <p className="text-sm mb-1 flex items-center gap-1.5">
-            <Swords className="w-4 h-4 text-blood shrink-0" />
+            <m.span className="inline-flex shrink-0" initial={{ rotate: -30, scale: 1.6 }} animate={{ rotate: 0, scale: 1 }} transition={{ ...SPRING.bouncy, delay: 0.08 }}>
+              <Swords className="w-4 h-4 text-blood" />
+            </m.span>
             <span>
               {enc.phase === "threat" ? "Te enfrentas a" : "Sigues luchando contra"} <span className="text-gold-bright">{enc.enemyName}</span>.
             </span>
@@ -146,15 +158,22 @@ export default function ScenePanel({
               )}
             </div>
           )}
-        </div>
+        </m.div>
       )}
 
       {canWrite && enc?.phase === "victory" && (
-        <div className="rounded-md border border-gold/60 bg-gold/5 p-3 animate-pop">
+        <m.div
+          className="rounded-md border border-gold/60 bg-gold/5 p-3 shine-sweep"
+          data-testid="victory-box"
+          style={{ transformPerspective: 700 }}
+          initial={{ opacity: 0, rotateX: 90, scale: 0.9 }}
+          animate={{ opacity: 1, rotateX: 0, scale: 1 }}
+          transition={{ ...SPRING.bouncy, opacity: { duration: 0.2 } }}
+        >
           <p className="text-sm">
             <span className="text-gold-bright">{enc.enemyName}</span> está derrotado y a tu merced. ¿Qué haces?
           </p>
-        </div>
+        </m.div>
       )}
 
       {canWrite && (

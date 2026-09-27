@@ -7,6 +7,11 @@ import { factionTitle, rankProgress, type FactionKey } from "@/lib/engine/progre
 import WantedPoster from "@/components/ui/WantedPoster";
 import StatBar from "@/components/ui/StatBar";
 import { formatNumber } from "@/lib/ui/format";
+import { m } from "motion/react";
+import Compass3D from "@/components/motion/Compass3D";
+import TabBar from "@/components/motion/TabBar";
+import TiltCard from "@/components/motion/TiltCard";
+import { SPRING } from "@/components/motion/presets";
 
 type FactionId = FactionKey;
 
@@ -145,9 +150,7 @@ export default function HomePage() {
       <main className="flex-1 flex items-center justify-center p-4 sm:p-6">
         <div className="w-full max-w-5xl grid gap-8 lg:grid-cols-[1.1fr_1fr] items-center">
           <section className="text-center lg:text-left animate-rise">
-            <div className="relative mx-auto lg:mx-0 w-28 h-28 sm:w-36 sm:h-36 mb-4">
-              <CompassRose className="absolute inset-0 w-full h-full text-gold animate-spin-slow" />
-            </div>
+            <Compass3D className="mx-auto lg:mx-0 w-28 h-28 sm:w-40 sm:h-40 mb-4" />
             <h1 className="font-display text-4xl sm:text-5xl text-gold-bright mb-2 drop-shadow-[0_2px_12px_rgba(240,200,105,0.25)]">Grand Line RPG</h1>
             <p className="text-ink-dim text-base sm:text-lg mb-6">Un rol de texto ambientado en el mundo de One Piece</p>
             <ul className="hidden sm:grid gap-3 text-left max-w-md mx-auto lg:mx-0 stagger">
@@ -165,15 +168,23 @@ export default function HomePage() {
             </ul>
           </section>
 
-          <div className="panel panel-accent p-6 w-full max-w-sm mx-auto animate-rise" style={{ animationDelay: "0.1s" }}>
-            <div className="flex gap-2 mb-5 text-sm">
-              <button className={`flex-1 py-2 rounded ${mode === "login" ? "btn-gold" : "btn-ghost"}`} onClick={() => setMode("login")} type="button">
-                Entrar
-              </button>
-              <button className={`flex-1 py-2 rounded ${mode === "register" ? "btn-gold" : "btn-ghost"}`} onClick={() => setMode("register")} type="button">
-                Crear cuenta
-              </button>
-            </div>
+          <m.div
+            className="panel panel-accent p-6 w-full max-w-sm mx-auto"
+            style={{ transformPerspective: 1000, originY: 0 }}
+            initial={{ opacity: 0, rotateX: -18, y: 24 }}
+            animate={{ opacity: 1, rotateX: 0, y: 0 }}
+            transition={{ ...SPRING.soft, delay: 0.08, opacity: { duration: 0.3, delay: 0.08 } }}
+          >
+            <TabBar<"login" | "register">
+              className="mb-5"
+              stretch
+              value={mode}
+              onChange={setMode}
+              tabs={[
+                { id: "login", label: "Entrar" },
+                { id: "register", label: "Crear cuenta" },
+              ]}
+            />
 
             <form onSubmit={submitAuth} className="flex flex-col gap-3">
               <input className="field px-3 py-2.5 text-sm" placeholder="Nombre de usuario" value={username} onChange={(e) => setUsername(e.target.value)} autoComplete="username" />
@@ -200,7 +211,7 @@ export default function HomePage() {
                 Guía del jugador
               </a>
             </div>
-          </div>
+          </m.div>
         </div>
       </main>
     );
@@ -253,7 +264,8 @@ export default function HomePage() {
             const r = rankProgress(c.faction, c.bounty, c.notoriety);
             const dead = c.status === "DEAD";
             return (
-              <div key={c.id} className={`panel p-4 flex flex-col gap-3 transition-all duration-200 hover:-translate-y-0.5 hover:border-gold ${dead ? "opacity-60 grayscale" : ""}`} style={{ borderTop: `3px solid ${look.color}` }}>
+              <TiltCard key={c.id} max={4} className="rounded-[0.6rem]">
+              <div className={`panel h-full p-4 flex flex-col gap-3 transition-[border-color] duration-200 hover:border-gold ${dead ? "opacity-60 grayscale" : ""}`} style={{ borderTop: `3px solid ${look.color}` }}>
                 <Link href={`/play/${c.id}`} className="flex gap-3 min-w-0">
                   {c.faction === "PIRATE" ? (
                     <WantedPoster name={c.name} bounty={c.bounty} size="sm" deceased={dead} photoUrl={c.portraitUpdatedAt ? `/api/characters/${c.id}/portrait?v=${new Date(c.portraitUpdatedAt).getTime()}` : null} />
@@ -303,6 +315,7 @@ export default function HomePage() {
                   )}
                 </div>
               </div>
+              </TiltCard>
             );
           })}
         </div>

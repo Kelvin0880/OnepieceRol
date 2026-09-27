@@ -2,6 +2,7 @@
 
 import Modal from "@/components/ui/Modal";
 import { useCallback, useEffect, useRef, useState } from "react";
+import TabBar from "@/components/motion/TabBar";
 
 interface Overview {
   tone: string;
@@ -199,12 +200,6 @@ export default function OocPanel({
     }
   }
 
-  const tabBtn = (id: typeof tab, label: string) => (
-    <button key={id} className={`px-3 py-1.5 text-sm rounded ${tab === id ? "btn-gold" : "btn-ghost"}`} onClick={() => setTab(id)}>
-      {label}
-    </button>
-  );
-
   return (
     <Modal onClose={onClose} testId="ooc-panel" size="lg" label="Fuera de rol" className="p-4 gap-3">
         <div className="flex items-start justify-between gap-2">
@@ -217,11 +212,15 @@ export default function OocPanel({
           </button>
         </div>
 
-        <div className="flex gap-2 flex-wrap">
-          {tabBtn("chat", "Hablar con la IA")}
-          {tabBtn("tools", "Herramientas")}
-          {tabBtn("points", "Puntos de restauración")}
-        </div>
+        <TabBar<typeof tab>
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { id: "chat", label: "Hablar con la IA" },
+            { id: "tools", label: "Herramientas" },
+            { id: "points", label: "Puntos de restauración" },
+          ]}
+        />
 
         {notice && <p className="text-sm text-gold" data-testid="ooc-notice">{notice}</p>}
         {error && <p className="text-sm text-blood" data-testid="ooc-error">{error}</p>}

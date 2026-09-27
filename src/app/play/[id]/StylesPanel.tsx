@@ -2,6 +2,7 @@
 
 import Modal from "@/components/ui/Modal";
 import { useCallback, useEffect, useState } from "react";
+import TabBar from "@/components/motion/TabBar";
 
 interface Known {
   id: string;
@@ -77,19 +78,15 @@ export default function StylesPanel({ characterId, onClose, onChanged }: { chara
             Cerrar
           </button>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          {(
-            [
-              ["mine", "Mis estilos"],
-              ["learn", "Aprender aquí"],
-              ["map", "Dónde aprender"],
-            ] as [Tab, string][]
-          ).map(([id, label]) => (
-            <button key={id} className={tab === id ? "btn-gold px-3 py-1.5 text-sm" : "btn-ghost px-3 py-1.5 text-sm"} onClick={() => setTab(id)} data-testid={`styles-tab-${id}`}>
-              {label}
-            </button>
-          ))}
-        </div>
+        <TabBar<Tab>
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { id: "mine", label: "Mis estilos", testId: "styles-tab-mine" },
+            { id: "learn", label: "Aprender aquí", testId: "styles-tab-learn" },
+            { id: "map", label: "Dónde aprender", testId: "styles-tab-map" },
+          ]}
+        />
         {notice && (
           <p className="text-sm text-gold" data-testid="styles-notice">
             {notice}

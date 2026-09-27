@@ -2,6 +2,7 @@
 
 import Modal from "@/components/ui/Modal";
 import { useCallback, useEffect, useState } from "react";
+import TabBar from "@/components/motion/TabBar";
 
 interface View {
   berries: number;
@@ -66,19 +67,15 @@ export default function InventoryPanel({ characterId, onClose, onChanged }: { ch
             Cerrar
           </button>
         </div>
-        <div className="flex gap-2 flex-wrap">
-          {(
-            [
-              ["bag", "Mochila"],
-              ["gear", "Equipo"],
-              ["shop", "Mercader"],
-            ] as [Tab, string][]
-          ).map(([id, label]) => (
-            <button key={id} className={tab === id ? "btn-gold px-3 py-1.5 text-sm" : "btn-ghost px-3 py-1.5 text-sm"} onClick={() => setTab(id)} data-testid={`inv-tab-${id}`}>
-              {label}
-            </button>
-          ))}
-        </div>
+        <TabBar<Tab>
+          value={tab}
+          onChange={setTab}
+          tabs={[
+            { id: "bag", label: "Mochila", testId: "inv-tab-bag" },
+            { id: "gear", label: "Equipo", testId: "inv-tab-gear" },
+            { id: "shop", label: "Mercader", testId: "inv-tab-shop" },
+          ]}
+        />
         {view && (
           <p className="text-xs text-ink-dim">
             Berries: <span className="text-gold-bright" data-testid="inv-berries">฿ {view.berries.toLocaleString("es-ES")}</span> · Mochila {view.slotsUsed}/{view.slots}

@@ -5,6 +5,7 @@ import { Anchor, Check, Crown, Flag, MapPin, ScrollText, Swords, X } from "lucid
 import Modal from "@/components/ui/Modal";
 import SeatsTab from "./SeatsTab";
 import { formatBerries } from "@/lib/ui/format";
+import TabBar from "@/components/motion/TabBar";
 
 interface Req {
   id: string;
@@ -137,14 +138,7 @@ export default function SovereigntyPanel({ characterId, onClose, onChanged }: { 
         </button>
       </div>
 
-      <div className="flex gap-2 flex-wrap">
-        {tabs.map(([id, label, Icon]) => (
-          <button key={id} className={`${tab === id ? "btn-gold" : "btn-ghost"} px-3 py-1.5 text-sm inline-flex items-center gap-1.5`} onClick={() => setTab(id)} data-testid={`sov-tab-${id}`}>
-            <Icon className="w-4 h-4" />
-            {label}
-          </button>
-        ))}
-      </div>
+      <TabBar<Tab> value={tab} onChange={setTab} tabs={tabs.map(([id, label, Icon]) => ({ id, label, icon: Icon, testId: `sov-tab-${id}` }))} />
 
       {error && <p className="text-blood text-sm" data-testid="sov-error">{error}</p>}
       {notice && <p className="text-jade text-sm animate-rise" data-testid="sov-notice">{notice}</p>}

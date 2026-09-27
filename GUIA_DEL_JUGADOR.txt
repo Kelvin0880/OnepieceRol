@@ -821,3 +821,13 @@ isla.
 VOLVER A TU PERSONAJE
 En Noticias, Códice y Administración hay un botón dorado "Volver a <tu
 personaje>" que te devuelve a la partida.
+
+EN EL MÓVIL
+Los paneles (Inventario, Tripulación, Poder...) suben desde abajo: para
+cerrarlos, arrastra hacia abajo la barrita de arriba, toca fuera o pulsa
+"Cerrar". Puedes instalar el juego como una app: en el navegador del móvil,
+"Añadir a pantalla de inicio" (sale con su propio icono y a pantalla
+completa). Cuando pierdes vida, el borde de la pantalla destella en rojo y el
+daño aparece junto a tu barra; si te queda un cuarto de vida o menos, las
+barras laten en rojo: es el momento de descansar o huir. Si tienes activado
+"reducir movimiento" en tu teléfono, el juego lo respeta.

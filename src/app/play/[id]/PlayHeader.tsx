@@ -1,7 +1,7 @@
 "use client";
 
 import Link from "next/link";
-import type { ComponentType, ReactNode } from "react";
+import { useEffect, useRef, type ComponentType, type ReactNode } from "react";
 import { Backpack, BookOpen, CalendarDays, Compass, Crown, Flag, Map as MapIcon, MessageCircleQuestion, Milestone, Newspaper, Radio, ScrollText, ShieldAlert, Trophy, UserRound, Users, Zap } from "lucide-react";
 import StatBar from "@/components/ui/StatBar";
 import { factionTitle, type FactionKey } from "@/lib/engine/progression";
@@ -88,11 +88,30 @@ export default function PlayHeader({ data, onOpen, badges, markSeen }: { data: S
 
   const accent = FACTION_ACCENT[character.faction] ?? "var(--gold)";
 
+  // Publishes the header's real height so floating layers (toasts) can sit right under it on any width.
+  const headerRef = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const el = headerRef.current;
+    if (!el) return;
+    const root = document.documentElement;
+    const ro = new ResizeObserver(() => root.style.setProperty("--play-header-h", `${el.offsetHeight}px`));
+    ro.observe(el);
+    return () => {
+      ro.disconnect();
+      root.style.removeProperty("--play-header-h");
+    };
+  }, []);
+
   return (
-    <header className="sticky top-0 z-40 -mx-4 md:-mx-6 px-4 md:px-6 pt-3 pb-2 bg-sea-deep/85 backdrop-blur-md border-b border-line" data-testid="play-header">
+    <header ref={headerRef} className="sticky top-0 z-40 -mx-4 md:-mx-6 px-4 md:px-6 pt-3 pb-2 bg-sea-deep/85 backdrop-blur-md border-b border-line" data-testid="play-header">
       <div className="flex items-center gap-3">
-        <div className="w-10 h-10 shrink-0 rounded-full grid place-items-center font-display text-lg border-2" style={{ borderColor: accent, color: accent, background: "rgba(0,0,0,0.3)" }} aria-hidden>
-          {character.name.slice(0, 1).toUpperCase()}
+        <div className="w-10 h-10 shrink-0 rounded-full grid place-items-center overflow-hidden font-display text-lg border-2" style={{ borderColor: accent, color: accent, background: "rgba(0,0,0,0.3)", boxShadow: `0 0 14px -4px ${accent}` }} aria-hidden>
+          {character.portraitUpdatedAt ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={`/api/characters/${character.id}/portrait?v=${new Date(character.portraitUpdatedAt).getTime()}`} alt="" className="w-full h-full object-cover" />
+          ) : (
+            character.name.slice(0, 1).toUpperCase()
+          )}
         </div>
         <div className="min-w-0 flex-1">
           <h1 className="font-display text-xl sm:text-2xl text-gold-bright leading-tight truncate">{character.name}</h1>
@@ -104,11 +123,11 @@ export default function PlayHeader({ data, onOpen, badges, markSeen }: { data: S
           </p>
         </div>
         <div className="w-28 sm:w-44 shrink-0 flex flex-col gap-1 lg:hidden" data-testid="header-vitals">
-          <StatBar label="Vida" value={character.hp} max={character.maxHp} color="var(--blood)" size="sm" />
+          <StatBar label="Vida" value={character.hp} max={character.maxHp} color="var(--blood)" size="sm" warnBelow={25} />
           <StatBar label="Aguante" value={character.stamina} max={character.maxStamina} color="var(--stamina)" size="sm" />
         </div>
       </div>
-      <nav className="mt-2 -mx-4 px-4 md:mx-0 md:px-0 flex gap-2 overflow-x-auto md:flex-wrap scrollbar-none" aria-label="Herramientas del personaje">
+      <nav className="nav-fade mt-2 -mx-4 px-4 pr-8 md:mx-0 md:px-0 flex gap-2 overflow-x-auto md:flex-wrap scrollbar-none" aria-label="Herramientas del personaje">
         {items.map((it) => (
           <NavButton key={it.key} item={it} />
         ))}

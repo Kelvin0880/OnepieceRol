@@ -2,6 +2,8 @@
 
 import { Eye, MapPin, Ship } from "lucide-react";
 import type { Character, Island, StateResponse } from "./types";
+import { m } from "motion/react";
+import { SPRING } from "@/components/motion/presets";
 
 function DangerMeter({ level }: { level: number }) {
   const tone = level >= 8 ? "bg-blood" : level >= 5 ? "bg-orange-400" : "bg-gold";
@@ -36,7 +38,15 @@ export default function IslandCard({
   const read = JSON.parse(character.poneglyphsRead || "[]") as string[];
 
   return (
-    <section className="panel p-4 animate-rise overflow-hidden relative" data-testid="island-card">
+    <m.section
+      key={island.id}
+      className="panel p-4 overflow-hidden relative"
+      data-testid="island-card"
+      style={{ transformPerspective: 1200, originX: 0 }}
+      initial={{ opacity: 0, rotateY: -28, x: -12 }}
+      animate={{ opacity: 1, rotateY: 0, x: 0 }}
+      transition={{ ...SPRING.soft, opacity: { duration: 0.3 } }}
+    >
       <div className="absolute -right-10 -top-10 w-40 h-40 rounded-full opacity-[0.07] pointer-events-none" style={{ background: "radial-gradient(circle, var(--gold) 0%, transparent 70%)" }} aria-hidden />
       <div className="flex flex-wrap items-center justify-between gap-2 mb-1">
         <h2 className="font-display text-lg flex items-center gap-2">
@@ -83,6 +93,6 @@ export default function IslandCard({
           </div>
         </div>
       )}
-    </section>
+    </m.section>
   );
 }
