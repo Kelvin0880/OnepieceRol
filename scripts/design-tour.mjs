@@ -98,8 +98,9 @@ async function run(width) {
     await shot(n, false);
     await fits(n);
     await page.keyboard.press("Escape");
-    const close = page.locator('button:has-text("Cerrar")').first();
-    if (await close.isVisible().catch(() => false)) await close.click();
+    // Panels slide/fade out (~0.2 s): wait for that before falling back to their own "Cerrar" button.
+    const closed = await page.waitForFunction(() => !document.querySelector('[role="dialog"]'), null, { timeout: 2000 }).then(() => true).catch(() => false);
+    if (!closed) await page.locator('[role="dialog"] button:has-text("Cerrar")').first().click();
     await page.waitForTimeout(300);
   }
 
