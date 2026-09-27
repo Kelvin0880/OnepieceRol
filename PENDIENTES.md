@@ -82,3 +82,5 @@
 - [x] Recuperación más corta: habitante perdonado 20 min, detenido 1 h, sucesor tras muerte 1 h; canon perdonado/derrotado 1 h.
 - [x] La IA abre el modo lucha: el narrador marca `[[COMBATE: Nombre]]` cuando un habitante real empieza la agresión y el juego crea la pelea (solo o en grupo).
 - [x] GitHub Pages (guia.html y mapa.html) actualizadas.
+- [x] Prueba de duelo real (Kaito nivel 45 vs Smoker canon, 10 rondas con IA real; transcripción en `PRUEBA_DUELO_SMOKER.md`). Arreglos que salieron de ella: el árbitro exige siempre el siguiente ataque del rival (`expectIntent`), que la intención use piezas reales del kit (`kitTerms`/`usesKit`), rival creativo (técnicas nuevas a partir de su fruta/Haki/arma) y táctico (crea oportunidades), vida apuntada sin herida visible se recorta (`capUnshownWounds`) y heridas "profundas/graves" cuestan al menos un golpe sólido (`raiseUnderbookedWounds`). PvP: las técnicas inventadas por jugadores se aceptan si nacen de lo que poseen.
+- [ ] Vigilar la latencia: con reintento correctivo una ronda puede tardar 50-80 s (sin reintento, ~25 s).

@@ -106,7 +106,7 @@ export function describeEnemyKit(name: string, kit: EnemyKit): string {
   if (kit.secondFruit) parts.push(`SEGUNDA Fruta del Diablo (posee DOS a la vez, único en el mundo): ${kit.secondFruit.name}, ${PHASE_WORD[kit.secondFruit.phase]}`);
   if (kit.weapon) parts.push(`arma: ${kit.weapon}`);
   if (kit.abilities.length) parts.push(`técnicas propias: ${kit.abilities.join("; ")}`);
-  return `REPERTORIO REAL DE ${name.toUpperCase()} (juega TODO esto, con inteligencia y variedad, y NADA que no esté aquí): ${parts.join("; ")}.`;
+  return `REPERTORIO REAL DE ${name.toUpperCase()} (juega TODO esto, con inteligencia y variedad; puedes inventar usos, variantes y técnicas NUEVAS con nombre propio a partir de estas mismas piezas, pero NUNCA poderes, frutas, Haki ni armas que no estén aquí): ${parts.join("; ")}.`;
 }
 
 /** Shared rule for every fighter the AI voices — enemies and allied NPCs alike. */

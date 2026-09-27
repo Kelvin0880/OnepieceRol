@@ -341,6 +341,41 @@ export function unbookedWounds(verdict: RefereeVerdict, actors: RefereeBound[], 
   return [...found].filter(([n]) => booked(n) === 0).map(([name, level]) => ({ name, level }));
 }
 
+const SHOWN_HIT = /\b(golpe\w*|impact\w*|encaj\w*|retrocede\w*|cae\b|cayó|rodilla|dolor|herid\w*|sangr\w*|tambale\w*|roz(?:ó|o|a|aron)|magull\w*|conect(?:ó|a)|desgarr\w*|corte)/i;
+
+/** Life booked for a fighter whose story shows no hit on them at all (a dodged strike booked as -26%): the number is cut back to a graze. */
+export function capUnshownWounds(verdict: RefereeVerdict, actors: RefereeBound[], solo: boolean): RefereeVerdict {
+  const head = verdict.rivalIntent && verdict.narration.endsWith(verdict.rivalIntent) ? verdict.narration.slice(0, verdict.narration.length - verdict.rivalIntent.length) : verdict.narration;
+  const sentences = splitSentences(head).filter((s) => !NEGATED_WOUND.test(s));
+  const player = actors.filter((a) => a.side === "player");
+  const shown = (a: RefereeBound): boolean =>
+    sentences.some((s) => SHOWN_HIT.test(s) && (norm(s).includes(norm(a.name)) || (solo && player.length === 1 && player[0].name === a.name && /\b(te|tu|tus)\b/i.test(s))));
+  const changes = verdict.changes.map((c) => {
+    const a = actors.find((x) => norm(x.name) === norm(c.name));
+    if (!a || (verdict.defeated ?? []).some((d) => norm(d) === norm(a.name))) return c;
+    const limit = Math.max(1, Math.round(a.maxHp * WOUND_FLOOR_FRACTION.graze));
+    return c.hp > limit && c.hp >= a.maxHp * 0.1 && !shown(a) ? { ...c, hp: limit } : c;
+  });
+  return { ...verdict, changes };
+}
+
+
+// Live test (Smoker duel, round 8): a clean, deep cut from shoulder to hip was booked as 3 %. A wound the story calls deep or serious costs at least a solid hit.
+const STRONG_WOUND = /\b(profund\w*|significativ\w*|grave\w*|contundente|brutal\w*|devastador\w*|de\s+lleno|hemorragia)/i;
+
+export function raiseUnderbookedWounds(verdict: RefereeVerdict, actors: RefereeBound[], solo: boolean): RefereeVerdict {
+  const head = verdict.rivalIntent && verdict.narration.endsWith(verdict.rivalIntent) ? verdict.narration.slice(0, verdict.narration.length - verdict.rivalIntent.length) : verdict.narration;
+  const sentences = splitSentences(head).filter((x) => !NEGATED_WOUND.test(x) && STRONG_WOUND.test(x) && (SOLID_WOUND.test(x) || GRAZE_WOUND.test(x) || SHOWN_HIT.test(x)));
+  const player = actors.filter((a) => a.side === "player");
+  const changes = verdict.changes.map((c) => {
+    const a = actors.find((x) => norm(x.name) === norm(c.name));
+    if (!a || (verdict.defeated ?? []).some((d) => norm(d) === norm(a.name))) return c;
+    const hit = sentences.some((x) => norm(x).includes(norm(a.name)) || (solo && player.length === 1 && player[0].name === a.name && /\b(te|tu|tus)\b/i.test(x)));
+    const floor = Math.round(a.maxHp * WOUND_FLOOR_FRACTION.solid);
+    return hit && c.hp > 0 && c.hp < floor ? { ...c, hp: floor } : c;
+  });
+  return { ...verdict, changes };
+}
 /** Last resort after the corrective retry: a shown wound costs at least a graze (3%) or a solid hit (8%) of maximum life. */
 export function floorWounds(verdict: RefereeVerdict, actors: RefereeBound[], solo: boolean): RefereeVerdict {
   const missing = unbookedWounds(verdict, actors, solo);
@@ -359,8 +394,15 @@ export function floorWounds(verdict: RefereeVerdict, actors: RefereeBound[], sol
 
 const MIN_INTENT_CHARS = 350;
 
-export function checkConsistency(verdict: RefereeVerdict, bounds: RefereeBound[], solo = false): string[] {
+export function checkConsistency(verdict: RefereeVerdict, bounds: RefereeBound[], solo = false, expectIntent = false, rivalKitTerms: string[] = []): string[] {
   const issues: string[] = [];
+  if (expectIntent && verdict.rivalIntent?.trim() && (verdict.defeated ?? []).length === 0 && !usesKit(verdict.rivalIntent, rivalKitTerms)) {
+    issues.push(`La "intencion_rival" no usa NADA del repertorio real del rival (${rivalKitTerms.slice(0, 6).join(", ")}). Reescríbela usando al menos una de esas piezas con su nombre, y combinándola con una oportunidad que el rival CREA (finta, cebo, terreno, presión sobre una herida, cansancio o descuido que ya vio).`);
+  }
+  // Reported in a live test (Smoker duel, round 4): the answer ended on the rival's reaction with no next attack announced, so the player had nothing to answer.
+  if (expectIntent && !verdict.rivalIntent?.trim() && (verdict.defeated ?? []).length === 0 && !verdict.escaped) {
+    issues.push('Falta "intencion_rival": mientras el rival siga en pie DEBES terminar con su siguiente ataque escrito como intención (secuencia larga, con técnica nombrada y plan B). Solo se deja vacía si cae o no puede seguir (y entonces lo listas en "derrotados").');
+  }
   for (const w of unbookedWounds(verdict, bounds, solo)) {
     issues.push(`Narras que ${w.name} resulta herido o alcanzado, pero en "cambios" su vida perdida es 0. Todo golpe que la narración muestra que conecta cuesta vida (roce 2-6%, golpe sólido 8-18% de su vida máxima): pon la cifra que corresponda o reescribe sin que conecte.`);
   }
@@ -423,4 +465,42 @@ export function extractCombatMarker(text: string): { text: string; attacker: str
     return "";
   });
   return { text: clean.replace(/\n{3,}/g, "\n\n").trim(), attacker };
+}
+
+/**
+ * The pieces of a rival's real repertoire (Haki, fruit, weapon, named techniques) taken from its kit text, so the referee's
+ * announced attack can be checked to actually use them instead of a generic punch.
+ */
+export function kitTerms(kit: string | undefined): string[] {
+  if (!kit) return [];
+  const terms: string[] = [];
+  const grab = (label: string, splitOn: string) => {
+    const at = kit.indexOf(label);
+    if (at < 0) return;
+    const rest = kit.slice(at + label.length);
+    const end = rest.search(/;|\.\s*$|\.$/);
+    for (const part of (end >= 0 ? rest.slice(0, end) : rest).split(splitOn)) {
+      const name = part.replace(/\(.*?\)/g, "").split(",")[0].trim();
+      if (name.length >= 4 && !/^ninguna/i.test(name)) terms.push(name);
+    }
+  };
+  grab("técnicas propias:", ";");
+  grab("arma:", "\u0000");
+  grab("Fruta del Diablo:", "\u0000");
+  const armament = /Haki de Armadura: (?!no lo domina)/.test(kit);
+  const observation = /Haki de Observación: (?!no lo domina)/.test(kit);
+  if (armament || observation) terms.push("Haki");
+  return terms;
+}
+
+/** True when the announced attack names at least one piece of the rival's kit (when the kit has any). */
+export function usesKit(intent: string, terms: string[]): boolean {
+  if (terms.length === 0) return true;
+  const text = norm(intent);
+  return terms.some((t) => {
+    const n = norm(t);
+    if (text.includes(n)) return true;
+    const words = n.split(/\s+/).filter((w) => w.length >= 5);
+    return words.length > 0 && words.some((w) => text.includes(w));
+  });
 }

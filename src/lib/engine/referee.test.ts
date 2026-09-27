@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { extractCombatMarker, playerActSentences, dropSentences, unbookedWounds, floorWounds, foldUnknownChanges, checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
+import { raiseUnderbookedWounds, kitTerms, usesKit, capUnshownWounds, extractCombatMarker, playerActSentences, dropSentences, unbookedWounds, floorWounds, foldUnknownChanges, checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
 
 const NARR = "El rival bloquea con el antebrazo y responde con una patada baja que se acerca a tu rodilla.";
 const good = (extra = "") => JSON.stringify({ narracion: NARR, cambios: [{ nombre: "Kirito", vida: 10, aguante: 5 }, { nombre: "Bandido", vida: 20, aguante: 8 }], ...(extra ? { x: extra } : {}) });
@@ -316,5 +316,63 @@ describe("extractCombatMarker", () => {
   it("leaves a normal narration alone and strips stray markers", () => {
     expect(extractCombatMarker("Nada pasa.")).toEqual({ text: "Nada pasa.", attacker: null });
     expect(extractCombatMarker("Texto [[combate:  Kaleb ]] más").text).toBe("Texto  más");
+  });
+});
+
+describe("the rival's next attack is mandatory while it stands", () => {
+  const base = { narration: "Smoker se endereza y respira más fuerte, con el puro casi sin ceniza en la boca y el hombro decolorado.", changes: [] };
+  it("asks for the intention when it is missing, but not when the rival falls or the mode is a duel", () => {
+    expect(checkConsistency(base, [], true, true).some((i) => i.includes("intencion_rival"))).toBe(true);
+    expect(checkConsistency({ ...base, defeated: ["Smoker"] }, [], true, true).some((i) => i.includes("intencion_rival"))).toBe(false);
+    expect(checkConsistency(base, [], true, false).some((i) => i.includes("intencion_rival"))).toBe(false);
+    expect(checkConsistency({ ...base, rivalIntent: "x".repeat(400) }, [], true, true).some((i) => i.includes("Falta"))).toBe(false);
+  });
+});
+
+describe("capUnshownWounds", () => {
+  const actors = [
+    { name: "Kaito", side: "player" as const, hp: 466, maxHp: 520 },
+    { name: "Smoker", side: "enemy" as const, hp: 1324, maxHp: 1360 },
+  ];
+  it("cuts life booked for a dodged strike back to a graze, keeps life for a shown hit", () => {
+    const v = { narration: "Smoker se desplaza hacia atrás y tu sable no lo alcanza. Tu filo corta solo el aire.", changes: [{ name: "Smoker", hp: 351, stamina: 0 }, { name: "Kaito", hp: 60, stamina: 0 }] };
+    const out = capUnshownWounds(v, actors, true);
+    expect(out.changes.find((c) => c.name === "Smoker")!.hp).toBe(Math.round(1360 * 0.03));
+    const hit = { narration: "El puñetazo de Smoker te golpea el costado con un dolor sordo. Tu sable no lo alcanza.", changes: [{ name: "Smoker", hp: 0, stamina: 0 }, { name: "Kaito", hp: 60, stamina: 0 }] };
+    expect(capUnshownWounds(hit, actors, true).changes.find((c) => c.name === "Kaito")!.hp).toBe(60);
+  });
+});
+
+describe("the rival must use its real kit", () => {
+  const kit = "REPERTORIO REAL DE SMOKER (juega TODO esto): Haki de Armadura: avanzado (70/100); Haki de Observación: avanzado (78/100); Haki del Rey: no lo posee; Fruta del Diablo: Moku Moku no Mi, dominio avanzado; arma: Jitte con Kairoseki; técnicas propias: Cuerpo de humo; White Blow/White Snake; Persecución implacable.";
+  it("extracts Haki, fruit, weapon and techniques", () => {
+    const t = kitTerms(kit);
+    expect(t).toEqual(expect.arrayContaining(["Haki", "Cuerpo de humo", "Jitte con Kairoseki"]));
+    expect(t.some((x) => x.startsWith("Moku Moku"))).toBe(true);
+  });
+  it("accepts an intention that names a piece and rejects a generic punch", () => {
+    const t = kitTerms(kit);
+    expect(usesKit("Smoker finta con el jitte y lanza un White Snake hacia tus tobillos.", t)).toBe(true);
+    expect(usesKit("Smoker intenta darte un puñetazo fuerte en la cara.", t)).toBe(false);
+    expect(usesKit("cualquier cosa", [])).toBe(true);
+  });
+  it("makes checkConsistency ask for a rewrite", () => {
+    const v = { narration: "x", rivalIntent: "Smoker intenta darte un puñetazo fuerte en la cara y luego otro. ".repeat(8), changes: [] };
+    expect(checkConsistency(v, [], true, true, kitTerms(kit)).some((i) => i.includes("repertorio real"))).toBe(true);
+  });
+});
+
+describe("raiseUnderbookedWounds", () => {
+  const actors = [
+    { name: "Kaito", side: "player" as const, hp: 200, maxHp: 520 },
+    { name: "Smoker", side: "enemy" as const, hp: 987, maxHp: 1360 },
+  ];
+  it("raises a deep wound booked as a scratch to a solid hit, leaves fair numbers alone", () => {
+    const v = { narration: "El tajo abre un corte limpio y profundo en el pecho de Smoker, que sangra.", changes: [{ name: "Smoker", hp: 41, stamina: 0 }, { name: "Kaito", hp: 10, stamina: 0 }] };
+    const out = raiseUnderbookedWounds(v, actors, true);
+    expect(out.changes.find((c) => c.name === "Smoker")!.hp).toBe(Math.round(1360 * 0.08));
+    expect(out.changes.find((c) => c.name === "Kaito")!.hp).toBe(10);
+    const fair = { narration: v.narration, changes: [{ name: "Smoker", hp: 150, stamina: 0 }] };
+    expect(raiseUnderbookedWounds(fair, actors, true).changes[0].hp).toBe(150);
   });
 });
