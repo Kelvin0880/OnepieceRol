@@ -13,6 +13,7 @@ interface Overview {
   wars: { id: string; kind: string; status: string; attackerName: string; defenderName: string; attackerKind: string; defenderKind: string; attackerScore: number; defenderScore: number; nextFrontAt: string | null; startedAt: string; outcome: string | null }[];
   seatChallenges: { id: string; seat: string; status: string; challengerName: string; defenderName: string; expiresAt: string | null; resolveAt: string | null }[];
   itemIds: string[];
+  fruitNames: string[];
 }
 
 const ADJUSTABLE_FIELD_LABEL: Record<string, string> = { level: "Nivel", berries: "Berries", bounty: "Recompensa", notoriety: "Notoriedad", hp: "Vida", ancientScript: "Lengua antigua", attributePoints: "Puntos de atributo" };
@@ -45,6 +46,15 @@ function CharacterSelect({ value, onChange, characters, label = "Personaje…", 
     <select className={`${field} sm:w-56`} value={value} onChange={(e) => onChange(e.target.value)} data-testid={testId}>
       <option value="">{label}</option>
       {characters.map((c) => <option key={c.name} value={c.name}>{c.name} (nv. {c.level})</option>)}
+    </select>
+  );
+}
+
+function FruitSelect({ value, onChange, fruitNames }: { value: string; onChange: (v: string) => void; fruitNames: string[] }) {
+  return (
+    <select className={`${field} sm:w-64`} value={value} onChange={(e) => onChange(e.target.value)} data-testid="admin-give-fruit-name">
+      <option value="">Fruta (no singleton)…</option>
+      {fruitNames.map((n) => <option key={n} value={n}>{n}</option>)}
     </select>
   );
 }
@@ -337,7 +347,7 @@ export default function AdminTools() {
 
         <div className="flex flex-wrap items-center gap-2">
           <CharacterSelect value={f.giveFruitTo} onChange={(v) => set("giveFruitTo", v)} characters={o.characters} testId="admin-give-fruit-to" />
-          <input className={`${field} sm:w-56`} placeholder="Nombre exacto de la fruta" value={f.giveFruitName} onChange={(e) => set("giveFruitName", e.target.value)} data-testid="admin-give-fruit-name" />
+          <FruitSelect value={f.giveFruitName} onChange={(v) => set("giveFruitName", v)} fruitNames={o.fruitNames} />
           <button
             className="btn-ghost px-3 py-2 text-sm"
             disabled={busy || !f.giveFruitTo || !f.giveFruitName}

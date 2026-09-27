@@ -8,6 +8,7 @@ import { startDispatch, DispatchError } from "./admiral-dispatch";
 import { startCanonWar, runFront, warsSummary } from "./world-wars";
 import { startCanonSeatEventNow, resolveCanonDuelNow, SeatError } from "./faction-seats";
 import { grantItem, grantCatalogFruit, ITEM_IDS } from "./inventory";
+import { DEVIL_FRUIT_CATALOG } from "./devil-fruit-catalog";
 import { invalidateWorldState } from "./world-state";
 
 export class AdminToolError extends Error {}
@@ -46,6 +47,8 @@ export async function getAdminOverview() {
     characters: (await prisma.character.findMany({ where: { status: "ALIVE" }, select: { name: true, level: true }, orderBy: { name: "asc" }, take: 300 })).map((c) => ({ name: c.name, level: c.level })),
     islands: (await prisma.island.findMany({ select: { name: true }, orderBy: { name: "asc" } })).map((i) => i.name),
     itemIds: ITEM_IDS,
+    // Only the duplicable catalog: grantCatalogFruit itself refuses singletons, so offering them here would just be a picker for a button that always fails.
+    fruitNames: DEVIL_FRUIT_CATALOG.filter((f) => !f.isSingleton).map((f) => f.name).sort((a, b) => a.localeCompare(b)),
   };
 }
 
