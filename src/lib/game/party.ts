@@ -1,7 +1,7 @@
 import { prisma } from "../db";
 import { buildTurnOrder, nextTurnIndex } from "../engine/party-turns";
 import { notifyParty } from "./notify";
-import { parseRound, roundStalled } from "../engine/party-round";
+import { parseRound } from "../engine/party-round";
 
 /**
  * Live multiplayer party scenes — crewmates who are physically together
@@ -192,10 +192,6 @@ export async function getPartyStateForCharacter(characterId: string): Promise<Pa
     include: { members: { select: { id: true, name: true } }, messages: { orderBy: { createdAt: "asc" }, take: 60 } },
   });
   if (!party) return null;
-  // Self-healing: a round nobody closes is answered anyway, with whoever already acted.
-  if (!party.awaitingNarrator && roundStalled(party.roundStartedAt, Object.keys(parseRound(party.roundActionsJson)).length, new Date())) {
-    void import("./party-round").then((m) => m.resolvePartyRound(party.id, true)).catch(() => undefined);
-  }
   return {
     id: party.id,
     turnOrder: JSON.parse(party.turnOrder) as string[],

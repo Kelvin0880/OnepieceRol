@@ -64,8 +64,9 @@ export async function submitRoundAction(character: { id: string; name: string },
 }
 
 /**
- * The narrator answers every action of the round in one message. `force` answers with whoever already acted (someone closed the round,
- * or it stalled). `appendText` folds a mechanical action's own echo (e.g. "X explora: ...") into this SAME message instead of a second
+ * The narrator answers every action of the round in one message. `force` answers with whoever already acted — only when a member
+ * explicitly closes the round early (`closePartyRound`); there is no automatic time limit, a round waits for everyone for as long
+ * as it takes. `appendText` folds a mechanical action's own echo (e.g. "X explora: ...") into this SAME message instead of a second
  * one right after it — two "Narrador" bubbles back to back for one beat reads like the narrator answered everyone separately.
  * Returns the narration, or null when there was nothing to answer / another request already took the round.
  */

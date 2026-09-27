@@ -22,7 +22,7 @@ import { recordGrudgeIncident } from "./grudges";
 import { grantXp } from "./xp";
 import { markActorDefeated } from "./guardian";
 import { notifyFightParticipants, notifyIsland } from "./notify";
-import { getOpenDuelFor } from "./duel";
+import { isDuelActive } from "./duel";
 import { CharacterStatus } from "@prisma/client";
 
 export class JointFightError extends Error {}
@@ -87,7 +87,7 @@ export async function freePartyMemberIds(characterId: string): Promise<string[]>
   });
   const free: string[] = [];
   for (const m of mates) {
-    if (m.id !== me.id && ((await getOpenDuelFor(m.id)) || (await getOpenJointFightFor(m.id)))) continue;
+    if (m.id !== me.id && ((await isDuelActive(m.id)) || (await getOpenJointFightFor(m.id)))) continue;
     free.push(m.id);
   }
   return free.includes(me.id) ? free : [me.id, ...free];
@@ -132,7 +132,7 @@ export async function startJointFight(opts: StartJointFightOpts): Promise<{ figh
     if (c.status !== CharacterStatus.ALIVE) throw new JointFightError(`${c.name} no está en condiciones de luchar.`);
     if (c.currentIslandId !== island) throw new JointFightError(`${c.name} no está en la misma isla.`);
     if (await getOpenJointFightFor(c.id)) throw new JointFightError(`${c.name} ya está metido en otra pelea.`);
-    if (await getOpenDuelFor(c.id)) throw new JointFightError(`${c.name} está en pleno duelo.`);
+    if (await isDuelActive(c.id)) throw new JointFightError(`${c.name} está en pleno duelo.`);
     if (await prisma.pendingEncounter.findUnique({ where: { characterId: c.id } })) throw new JointFightError(`${c.name} tiene un enfrentamiento sin resolver.`);
     const jailed = await prisma.imprisonment.findUnique({ where: { characterId: c.id } });
     if (jailed && !jailed.releasedAt) throw new JointFightError(`${c.name} está preso.`);

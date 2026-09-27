@@ -1,7 +1,5 @@
 // Shared crew scene, in rounds: the narrator opens, every member writes their action, then the narrator answers ALL of them at once.
 
-export const ROUND_STALL_MS = 15 * 60_000;
-
 export type RoundActions = Record<string, string>;
 
 export function parseRound(json: string | null | undefined): RoundActions {
@@ -20,11 +18,6 @@ export function missingMembers(memberIds: string[], actions: RoundActions): stri
 }
 
 export const roundComplete = (memberIds: string[], actions: RoundActions) => memberIds.length > 0 && missingMembers(memberIds, actions).length === 0;
-
-/** A round nobody closes for a long time is answered anyway with whoever already acted. */
-export function roundStalled(startedAt: Date | null, actionCount: number, now: Date, stallMs = ROUND_STALL_MS): boolean {
-  return !!startedAt && actionCount > 0 && now.getTime() - startedAt.getTime() >= stallMs;
-}
 
 /** Actions in the order the members joined (captain first), ignoring anyone who left. */
 export function orderedActions(memberIds: string[], actions: RoundActions): { characterId: string; text: string }[] {

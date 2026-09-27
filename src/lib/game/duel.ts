@@ -60,6 +60,12 @@ export async function getOpenDuelFor(characterId: string) {
   return duel;
 }
 
+/** Truly mid-duel right now, not just holding an unanswered challenge — an unaccepted PROPOSED invite costs nothing to ignore and shouldn't lock someone out of party/joint combat. */
+export async function isDuelActive(characterId: string): Promise<boolean> {
+  const duel = await getOpenDuelFor(characterId);
+  return duel?.status === "ACTIVE";
+}
+
 export async function challengeDuel(challengerId: string, userId: string, opponentId: string, lethal = false) {
   if (challengerId === opponentId) throw new DuelError("No puedes retarte a ti mismo.");
   const [challenger, opponent] = await Promise.all([loadFighter(challengerId), loadFighter(opponentId)]);
