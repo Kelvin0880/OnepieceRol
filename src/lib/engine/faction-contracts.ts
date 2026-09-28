@@ -58,7 +58,7 @@ export function factionContract(ctx: ContractContext): ContractSpec | null {
   const hunt = (r: ContractResident, title: string, brief: string, berriesMult = 1): ContractSpec =>
     base("defeat_npc", 1, title, brief, {
       targetNpcId: r.id,
-      berries: Math.round((missionRewards(tier, ctx.danger, "win_fights").berries + r.level * 25) * berriesMult),
+      berries: Math.round((missionRewards(tier, ctx.danger, "win_fights").berries + r.level * 250) * berriesMult),
       xp: Math.round(missionRewards(tier, ctx.danger, "win_fights").xp + r.level * 2 * MISSION_XP_BOOST),
     });
   const pickOutlaw = pickBySeed(outlaws, `${ctx.seed}:o`);

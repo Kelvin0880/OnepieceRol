@@ -1,6 +1,6 @@
 import { describe, it, expect } from "vitest";
 import { mulberry32 } from "./rng";
-import { missionTier, missionRewards, generateMissionSpecs, progressGain, isComplete, shouldGenerateBatch, MISSION_BATCH_COOLDOWN_MS } from "./missions";
+import { pirateMissionBounty, missionTier, missionRewards, generateMissionSpecs, progressGain, isComplete, shouldGenerateBatch, MISSION_BATCH_COOLDOWN_MS } from "./missions";
 
 const ctx = { level: 1, danger: 1, minLevel: 1, islandName: "Pueblo Foosha", arcHook: "Un mafioso local extorsiona al pueblo.", openNeighbours: ["Villa Shimotsuki"] };
 
@@ -79,5 +79,26 @@ describe("batch pacing", () => {
     expect(shouldGenerateBatch(2, null, now)).toBe(false);
     expect(shouldGenerateBatch(0, now - 1000, now)).toBe(false);
     expect(shouldGenerateBatch(0, now - MISSION_BATCH_COOLDOWN_MS, now)).toBe(true);
+  });
+});
+
+describe("mission pay (2026-09-27 rescale)", () => {
+  it("berries are in the thousands and climb steeply with tier", () => {
+    expect(missionRewards(1, 1, "explore").berries).toBe(2_600);
+    expect(missionRewards(2, 5, "explore").berries).toBe(16_800);
+    expect(missionRewards(3, 10, "win_fights").berries).toBe(78_750);
+    expect(missionRewards(3, 5, "explore").berries).toBeGreaterThan(missionRewards(1, 5, "explore").berries * 4);
+  });
+  it("the island's own conflict pays more than its other goals", () => {
+    const s = generateMissionSpecs(() => 0.3, { level: 20, danger: 5, minLevel: 5, islandName: "Loguetown", openNeighbours: [] });
+    expect(s[0].isArc).toBe(true);
+    expect(s[0].berries).toBeGreaterThan(s[1].berries * 2);
+  });
+  it("a pirate's bounty rises by millions from the middle of the map, more for the main conflict", () => {
+    expect(pirateMissionBounty(1, 1, "explore", false)).toBe(120_000);
+    expect(pirateMissionBounty(2, 5, "win_fights", true)).toBe(3_600_000);
+    expect(pirateMissionBounty(3, 10, "defeat_npc", true)).toBe(10_800_000);
+    expect(pirateMissionBounty(2, 5, "explore", true)).toBeGreaterThan(pirateMissionBounty(2, 5, "explore", false));
+    expect(pirateMissionBounty(1, 5, "travel", false)).toBeLessThan(pirateMissionBounty(1, 5, "explore", false));
   });
 });

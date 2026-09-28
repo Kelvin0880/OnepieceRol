@@ -223,8 +223,8 @@ export function MissionsPanel({ missions }: { missions: MissionsState }) {
       )}
       <div className="mt-3 grid gap-2 sm:grid-cols-2">
         {missions.missions.map((m) => (
-          <div key={m.id} data-testid="mission" className={`rounded-md border px-3 py-2 ${m.status === "DONE" ? "border-jade/40 opacity-60" : m.factionRep ? "border-sky-300/50 bg-sky-300/5" : m.isArc ? "border-gold/60 bg-gold/5" : "border-line bg-black/10"}`}>
-            {!!m.factionRep && <p className="text-[10px] uppercase tracking-wide text-sky-300 mb-0.5" data-testid="faction-contract">Encargo de tu facción</p>}
+          <div key={m.id} data-testid="mission" className={`rounded-md border px-3 py-2 ${m.status === "DONE" ? "border-jade/40 opacity-60" : m.isContract ? "border-sky-300/50 bg-sky-300/5" : m.isArc ? "border-gold/60 bg-gold/5" : "border-line bg-black/10"}`}>
+            {!!m.isContract && <p className="text-[10px] uppercase tracking-wide text-sky-300 mb-0.5" data-testid="faction-contract">Encargo de tu facción</p>}
             <p className="text-sm flex items-start gap-1.5">
               {m.status === "DONE" ? <Check className="w-4 h-4 text-jade shrink-0 mt-0.5" /> : <Target className="w-4 h-4 text-gold shrink-0 mt-0.5" />}
               <span className="text-gold">{m.title}</span>

@@ -11,7 +11,9 @@ type Act = (body: Record<string, unknown>, path?: string) => Promise<void>;
 const CATEGORY_LABEL: Record<string, string> = { guard: "Guardia", thug: "Matón", marine: "Marine", pirate: "Pirata", civilian: "Civil", merchant: "Comerciante", official: "Autoridad", other: "Vecino" };
 
 /** Everyone you can meet where you stand: the canon characters in plain sight (ask them for a task or go against them) and the island's own people with their live state. */
-export function IslandPeoplePanel({ canon, cast, islandName, act, busy, error, jointActive }: { canon: CanonHereState | null; cast: IslandCastEntry[]; islandName: string; act: Act; busy: boolean; error: string | null; jointActive: boolean }) {
+const MAX_NAKAMAS = 3;
+
+export function IslandPeoplePanel({ canon, cast, islandName, act, busy, error, jointActive, nakamas, onRecruit }: { canon: CanonHereState | null; cast: IslandCastEntry[]; islandName: string; act: Act; busy: boolean; error: string | null; jointActive: boolean; nakamas: number; onRecruit: (text: string) => void }) {
   const hasCanon = !!canon && canon.actors.length > 0;
   const [tab, setTab] = useState<"canon" | "residents">(hasCanon ? "canon" : "residents");
   const [showDead, setShowDead] = useState(false);
@@ -129,7 +131,23 @@ export function IslandPeoplePanel({ canon, cast, islandName, act, busy, error, j
                 <span className={`text-[10px] uppercase tracking-wide shrink-0 ${r.usable ? "text-emerald-300" : "text-amber-300"}`} data-testid="cast-state">{r.state}{r.returnAt && r.returnKind ? <> · <Countdown at={r.returnAt} kind={r.returnKind} /></> : null}</span>
               </div>
               <p className="text-[11px] text-ink-dim">{CATEGORY_LABEL[r.category] ?? r.category} · nivel {r.level}{r.fighter ? "" : " · no combate"} · {r.personality}</p>
+              {r.recruit && (
+                <p className="text-[11px] text-amber-300 mt-0.5" data-testid="cast-special">
+                  ★ Especial · {r.recruit.epithet}. {r.recruit.hint}
+                </p>
+              )}
               {r.memory.length > 0 && <p className="text-[11px] text-ink-dim italic">Recuerda: {r.memory.join(" · ")}</p>}
+              {r.usable && (
+                <button
+                  className="btn-ghost px-3 py-1 text-xs mt-1.5"
+                  disabled={busy || jointActive || nakamas >= MAX_NAKAMAS}
+                  title={nakamas >= MAX_NAKAMAS ? "Tu tripulación NPC está completa" : "Escribe la invitación en tu caja de acción"}
+                  onClick={() => onRecruit(`${r.name}, únete a mi tripulación. `)}
+                  data-testid="cast-recruit"
+                >
+                  Reclutar ({nakamas}/{MAX_NAKAMAS})
+                </button>
+              )}
             </div>
           ))}
           {dead.length > 0 && (
@@ -140,7 +158,7 @@ export function IslandPeoplePanel({ canon, cast, islandName, act, busy, error, j
               {r.name} · {r.title} — {r.diedNote ?? "muerto"}{r.returnAt && r.returnKind ? <> · <Countdown at={r.returnAt} kind={r.returnKind} /></> : null}
             </div>
           ))}
-          <p className="text-[11px] text-ink-dim">Solo estas personas existen aquí con nombre. También en el Códice → Habitantes.</p>
+          <p className="text-[11px] text-ink-dim">Reclutar escribe la invitación en tu caja de acción: añade tus argumentos y envíala. Solo estas personas existen aquí con nombre. También en el Códice → Habitantes.</p>
         </div>
       )}
       {error && <p className="text-blood text-xs mt-2">{error}</p>}

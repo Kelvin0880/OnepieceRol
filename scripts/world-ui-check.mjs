@@ -106,6 +106,19 @@ try {
   check("the owner sees the Administración link", await owner.page.locator('[data-testid="admin-link"]').isVisible());
   await owner.page.screenshot({ path: path.join(shots, "world-01-news.png"), fullPage: true });
 
+  // the arcs can be folded so they never crowd out the feed, and the choice is remembered on this device
+  await owner.page.click('[data-testid="world-event-toggle"]');
+  check("folding an event hides its chapters but keeps a one-line summary", (await owner.page.locator('[data-testid="world-event-beat"]').count()) === 0 && (await owner.page.textContent('[data-testid="world-event"]')).includes("Último:"));
+  await owner.page.reload();
+  await owner.page.waitForSelector('[data-testid="world-event"]');
+  check("the folded state survives a reload", (await owner.page.locator('[data-testid="world-event-beat"]').count()) === 0);
+  await owner.page.screenshot({ path: path.join(shots, "world-01b-folded.png"), fullPage: true });
+  await owner.page.click('[data-testid="collapsible-arcs-toggle"]');
+  check("the whole \"Eventos mundiales\" section folds away", (await owner.page.locator('[data-testid="world-event"]').count()) === 0);
+  await owner.page.click('[data-testid="collapsible-arcs-toggle"]');
+  await owner.page.click('[data-testid="world-event-toggle"]');
+  check("unfolding brings every chapter back", (await owner.page.locator('[data-testid="world-event-beat"]').count()) === 6);
+
   // admin page: the proposal and the verdict
   await owner.page.click('[data-testid="admin-link"]');
   await owner.page.waitForSelector('[data-testid="admin-proposal"]');

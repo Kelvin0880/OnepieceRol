@@ -71,6 +71,10 @@ Being held by the Government (Marines, CP-0) in a jail on an island, or in Impel
 Being held by a non-Government winner of a duel: the captive travels with the captor, is only paid out when delivered to a Government island, and escapes after 24 hours.
 _Avoid_: prison (that is imprisonment)
 
+**Special recruit**:
+A resident with a story of their own who only joins a crew that meets a hand-written condition (level, flag, an item carried, a price, fame). When one leaves, the job is refilled by an ordinary resident, never by another special.
+_Avoid_: unique NPC
+
 **Bail**:
 The berries that free a prisoner. Not offered to highly wanted prisoners.
 
@@ -92,6 +96,13 @@ _Avoid_: event (world happenings and beginner events are different things)
 
 **World happening**:
 A one-off invented event that adds colour to the news and never changes canon.
+
+**Island secret**:
+A hand-written discovery an exploring character can stumble on, with a fixed reward. Whether one is findable in a given hour is fixed by a stable hash, never decided by the AI.
+_Avoid_: random event
+
+**Contract**:
+The one job per island batch that belongs to the character's own faction and pays in that faction's currency (a pirate's bounty, a Marine's merit...).
 
 **Road Poneglyph**:
 One of the four stones needed to reach Laugh Tale. Reading one needs the ancient script and raises pursuit heat.

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import {
   ROLE_RULES,
+  buildRecruitNarrationPrompt,
   buildExploreNarrationPrompt,
   buildCombatNarrationPrompt,
   buildMemoryUpdatePrompt,
@@ -276,5 +277,17 @@ describe("Logia rule", () => {
   it("tells every narrator and referee that only Armament Haki hurts a Logia", () => {
     expect(ROLE_RULES).toMatch(/LOGIA/);
     expect(ROLE_RULES).toMatch(/HAKI DE ARMADURA/);
+  });
+});
+
+describe("buildRecruitNarrationPrompt", () => {
+  const base = { characterName: "Kirito", npcName: "Maren Voss", role: "Médico", accepted: true, islandName: "Loguetown" };
+  it("gives a special recruit's story as a fixed fact", () => {
+    const { user } = buildRecruitNarrationPrompt({ ...base, lore: "Fue cirujano de un barco hundido." });
+    expect(user).toMatch(/Historia del candidato \(hecho fijo/);
+    expect(user).toMatch(/Fue cirujano de un barco hundido\./);
+  });
+  it("leaves the prompt as it was for an ordinary resident", () => {
+    expect(buildRecruitNarrationPrompt(base).user).not.toMatch(/Historia del candidato/);
   });
 });

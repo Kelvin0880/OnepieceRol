@@ -1,5 +1,6 @@
 // Canon characters on your island: ask them for a task, or go against them (a real subordinate first, then them in person).
 // Nobody here is invented: vanguards are the character's own people (canon) or real island residents.
+import { canonDefeatBounty } from "../engine/bounty-impact";
 import { prisma } from "../db";
 import type { Mission, WorldActor } from "@prisma/client";
 import { postNews } from "./death-resolution";
@@ -174,7 +175,7 @@ export async function startCanonChallenge(characterId: string, userId: string, a
       kind: "canon_vanguard",
       characterIds: await freePartyMemberIds(me.id),
       enemy,
-      rewards: { berries: (subActor?.powerLevel ?? 20) * 4000, xp: (subActor?.powerLevel ?? 20) * 4, bounty: (subActor?.powerLevel ?? 20) * 100_000, islandDanger: 9 },
+      rewards: { berries: (subActor?.powerLevel ?? 20) * 4000, xp: (subActor?.powerLevel ?? 20) * 4, bounty: (subActor?.powerLevel ?? 20) * 100_000, pirateBounty: canonDefeatBounty({ powerLevel: subActor?.powerLevel ?? 20, canonBounty: subActor?.canonBounty }, "vanguard"), islandDanger: 9 },
       stakes: `Para llegar hasta ${actor.name} hay que pasar sobre ${vanguardName} y los suyos.`,
       context: { challengeId: challenge.id },
     });
@@ -202,7 +203,7 @@ export async function startCanonDuel(characterId: string, userId: string): Promi
       kind: "canon",
       characterIds: await freePartyMemberIds(me.id),
       enemy: { name: actor.name, hp: s.hp, atk: s.atk, def: s.def, spd: s.spd, isBoss: true, level: s.level, personality: actor.personality ?? undefined, worldActorId: actor.id, isActor: true },
-      rewards: { berries: actor.powerLevel * 15_000, xp: actor.powerLevel * 6, bounty: actor.powerLevel * 250_000, islandDanger: 9 },
+      rewards: { berries: actor.powerLevel * 15_000, xp: actor.powerLevel * 6, bounty: actor.powerLevel * 250_000, pirateBounty: canonDefeatBounty(actor, "canon"), islandDanger: 9 },
       stakes: `${me.name} se enfrenta en persona a ${actor.name} en ${me.currentIsland.name}.`,
       context: { challengeId: ch.id },
     });

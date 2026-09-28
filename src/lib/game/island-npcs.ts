@@ -20,6 +20,7 @@ import {
   rosterBlock,
   type IslandNpcRow,
 } from "../engine/island-npc";
+import { parseSpecialRecruit, type SpecialRecruitDef } from "../engine/special-recruit";
 
 const MAX_SUCCESSORS_PER_TICK = 3;
 const WOUNDED_MS = 20 * 60_000;
@@ -262,6 +263,8 @@ export interface SeedRosterEntry {
   personality: string;
   weapon?: string | null;
   abilities?: string[];
+  /** Present only on a special recruit (game/special-recruit-data.ts). */
+  recruit?: SpecialRecruitDef;
 }
 
 /** Idempotent seed: creates missing residents, refreshes their description, never revives the dead or moves a successor. */
@@ -281,6 +284,7 @@ export async function seedIslandRoster(entries: SeedRosterEntry[], db: PrismaCli
       personality: e.personality,
       weapon: e.weapon ?? null,
       abilitiesJson: JSON.stringify(e.abilities ?? []),
+      recruitJson: e.recruit ? JSON.stringify(e.recruit) : undefined,
     };
     // A resident who died keeps their memorial; only living ones are refreshed.
     const existing = await db.islandNpc.findUnique({ where: { name: e.name }, select: { status: true } });
@@ -301,7 +305,7 @@ export async function getIslandCast(islandId: string, characterId: string) {
     .map((n) => {
       const st = npcState(n, now, engaged);
       const back = npcReturn(n, now);
-      return { returnAt: back ? back.at.toISOString() : null, returnKind: back ? back.kind : null, id: n.id, name: n.name, title: n.title, category: n.category, level: n.level, fighter: isFighter(n.category), state: st.label, usable: st.usable, dead: n.status === "DEAD", personality: n.personality, memory: (n.memoryJson ? (JSON.parse(n.memoryJson) as string[]) : []).slice(-2), diedNote: n.diedNote };
+      return { returnAt: back ? back.at.toISOString() : null, returnKind: back ? back.kind : null, id: n.id, name: n.name, title: n.title, category: n.category, level: n.level, fighter: isFighter(n.category), state: st.label, usable: st.usable, dead: n.status === "DEAD", personality: n.personality, memory: (n.memoryJson ? (JSON.parse(n.memoryJson) as string[]) : []).slice(-2), diedNote: n.diedNote, recruit: (() => { const s = parseSpecialRecruit(n.recruitJson); return s ? { special: true as const, hint: s.hint, epithet: s.epithet } : null; })() };
     })
     .sort((a, b) => Number(a.dead) - Number(b.dead) || Number(b.usable) - Number(a.usable) || a.name.localeCompare(b.name));
 }

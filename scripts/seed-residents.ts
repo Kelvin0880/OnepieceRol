@@ -5,12 +5,13 @@ import { prisma } from "../src/lib/db";
 import { ISLAND_NPC_DATA } from "../src/lib/game/island-npc-data";
 import { ISLAND_NPC_DATA_WAVE2 } from "../src/lib/game/island-npc-data-wave2";
 import { seedIslandRoster } from "../src/lib/game/island-npcs";
+import { ALL_RESIDENTS } from "../src/lib/game/island-residents-all";
 import { IMPEL_ACTORS, placeCanonPrisoners } from "../src/lib/game/world-actor-impel";
 import { profileStatsJson } from "../src/lib/game/world-actor-profiles";
 import { styleAbilityLines } from "../src/lib/engine/actor-styles";
 
 async function main() {
-  console.log(`residents: ${await seedIslandRoster([...ISLAND_NPC_DATA, ...ISLAND_NPC_DATA_WAVE2])}`);
+  console.log(`residents: ${await seedIslandRoster(ALL_RESIDENTS)}`);
   const islands = new Map((await prisma.island.findMany({ select: { id: true, name: true } })).map((i) => [i.name, i.id]));
   const impel = islands.get("Impel Down") ?? null;
   for (const e of IMPEL_ACTORS) {

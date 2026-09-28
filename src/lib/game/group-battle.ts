@@ -1,6 +1,7 @@
 import { prisma } from "../db";
 import { notifyCharacters } from "../realtime";
 import { berryReward, bountyReward } from "../engine/economy";
+import { bountyForFaction } from "../engine/bounty-impact";
 import { postNews } from "./death-resolution";
 import { applyBountyOrNotoriety, ReputationCharacter } from "./reputation";
 import { CharacterStatus } from "@prisma/client";
@@ -146,7 +147,7 @@ export async function grantVictorSpoils(character: ReputationCharacter & { berri
   const berries = berryReward(islandDanger, false);
   const bountyOrNotorietyDelta =
     character.faction === "PIRATE" || character.faction === "BOUNTY_HUNTER"
-      ? bountyReward(islandDanger, character.level, false)
+      ? bountyForFaction(character.faction, bountyReward(islandDanger, character.level, false))
       : Math.round(bountyReward(islandDanger, character.level, false) / 20_000);
   await prisma.character.update({ where: { id: character.id }, data: { berries: character.berries + berries } });
   await applyBountyOrNotoriety(character, bountyOrNotorietyDelta, newsLog, "Victoria en batalla grupal");

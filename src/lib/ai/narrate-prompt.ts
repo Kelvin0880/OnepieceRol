@@ -639,6 +639,8 @@ export interface RecruitNarrationInput {
   accepted: boolean;
   islandName: string;
   recentScene?: string[];
+  /** A special recruit's own story: a fixed fact the narrator may use, never extend. */
+  lore?: string;
 }
 
 /** The persuasion roll was decided by the engine; the narrator only stages the answer of the NPC. */
@@ -657,6 +659,7 @@ export function buildRecruitNarrationPrompt(input: RecruitNarrationInput): Promp
     (input.accepted
       ? `Resultado decidido: ${input.npcName} ACEPTA. Narra el momento con emoción y deja claro que desde ahora es su nakama y qué aporta (${input.role}).`
       : `Resultado decidido: ${input.npcName} RECHAZA (por ahora). Narra sus razones con respeto y deja la puerta abierta, sin hostilidad.`) +
+    (input.lore ? `\n\nHistoria del candidato (hecho fijo: úsala para sus motivos, sin añadir personas, lugares ni hechos nuevos): ${input.lore}` : "") +
     transcript +
     "\n\nNo repitas lo que el jugador escribió: empieza por la reacción de la otra persona." +
     `\n\n${plan.instruction}`;

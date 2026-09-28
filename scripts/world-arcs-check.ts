@@ -56,7 +56,7 @@ async function main() {
   const kizaru = await prisma.worldActor.findUniqueOrThrow({ where: { name: "Kizaru" }, include: { devilFruit: true } });
   check(kizaru.devilFruit?.name === "Pika Pika no Mi", "Kizaru still holds the Pika Pika no Mi");
   const kaido = await prisma.worldActor.findUniqueOrThrow({ where: { name: "Kaido" }, include: { devilFruit: true } });
-  check(kaido.status === "ACTIVE" && !!kaido.devilFruit, "Kaido is active again (the owner keeps him alive) with his signature fruit");
+  check(kaido.status === "DEFEATED" && !!kaido.devilFruit, "Kaido is a defeated ex-Yonko (he reclaims his throne through a world arc) and still holds his signature fruit");
   const bounties = await prisma.worldActor.count({ where: { canonBounty: { not: null } } });
   check(bounties >= 40, `many characters carry a canon bounty (${bounties})`);
 
@@ -76,7 +76,12 @@ async function main() {
   const moved = afterActors.filter((a) => a.currentIslandId !== before.get(a.id));
   check(moved.length > 0, `actors wander over time (${moved.length} moved in 25 ticks)`);
   check(afterActors.every((a) => (a.locationKind === "island" && !!a.currentIslandId) || (a.locationKind === "sea" && !a.currentIslandId && !!a.seaFromIslandId && !!a.seaToIslandId)), "everybody is always either on an island or sailing between two named islands");
-  const sailing = afterActors.filter((a) => a.locationKind === "sea");
+  // Sailing is a matter of chance per tick: keep ticking (bounded) until somebody is at sea instead of relying on one snapshot.
+  let sailing = afterActors.filter((a) => a.locationKind === "sea");
+  for (let i = 0; i < 300 && sailing.length === 0; i++) {
+    await moveActorsTick();
+    sailing = (await prisma.worldActor.findMany({ where: { status: "ACTIVE", locationKind: "sea" } }));
+  }
   check(sailing.length > 0, `some actors are at sea right now (${sailing.length})`);
   const sail = sailing[0];
   if (sail) {

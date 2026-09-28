@@ -46,6 +46,8 @@ async function main() {
   let quietSeen = false;
   for (let i = 0; i < 12 && !readOne; i++) {
     const master = await mk("Sombra", island.id, { agility: 900, intellect: 300 });
+    // Reading a Road Poneglyph needs the old script (poneglyph rework); without it only a rubbing is taken.
+    await prisma.character.update({ where: { id: master.id }, data: { ancientScript: 100 } });
     const before = await prisma.newsItem.count({ where: { characterId: master.id } });
     const r = await sneakPoneglyph(master.id, master.userId, "Me cuelo por los conductos de ventilación, sin hacer ruido.", 15);
     const after = await prisma.character.findUniqueOrThrow({ where: { id: master.id } });

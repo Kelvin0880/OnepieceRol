@@ -171,7 +171,7 @@ export interface RaidState {
 export interface MissionsState {
   islandName: string;
   briefing: { text: string; ready: boolean } | null;
-  missions: { id: string; kind: string; title: string; brief: string; progress: number; target: number; berries: number; xp: number; tier: number; isArc: boolean; status: string; factionRep?: number }[];
+  missions: { id: string; kind: string; title: string; brief: string; progress: number; target: number; berries: number; xp: number; tier: number; isArc: boolean; status: string; factionRep?: number; isContract?: boolean }[];
   faction?: string;
 }
 
@@ -215,6 +215,8 @@ export interface IslandCastEntry {
   diedNote: string | null;
   returnAt: string | null;
   returnKind: string | null;
+  /** Set only for a special recruit: the story hook and what it takes, never exact numbers. */
+  recruit: { special: true; hint: string; epithet: string } | null;
 }
 
 export interface RescueRaidState {

@@ -452,8 +452,25 @@ los villanos y qué está pasando ahora. Además te ofrece tres misiones
 a tu medida: la amenaza propia de la isla, reconocerla, y una tercera
 (entrenar, perdonar a un enemigo o zarpar hacia una isla vecina). Se
 escalan con tu nivel: cuanto más fuerte eres, más piden y más pagan.
-Cumplirlas da berries, XP y la confianza del poder de la isla, que
-luego sirve para el asalto final. Las ves en el panel "Panorama y misiones".
+Cumplirlas da berries (miles, y decenas de miles en las islas duras), XP y la
+confianza del poder de la isla, que luego sirve para el asalto final. La
+amenaza propia de la isla es el encargo que mejor paga. Si eres PIRATA, cada
+misión que cumples también SUBE TU RECOMPENSA en cientos de miles o millones
+(más en las islas peligrosas y más aún en la amenaza de la isla), y el encargo
+de tu facción paga todavía más. Cuidado: una cabeza cara atrae a la Marina y,
+desde 10 millones, ya no hay fianza. La recompensa de un pirata se mueve en
+MILLONES y cuanto más famoso eres, más sube cada hazaña (el doble a partir de
+250 M, el triple hacia los 500 M). Vencer a un personaje canon la dispara según
+quién sea: un lugarteniente suma decenas de millones y un Yonko o un almirante
+cientos de millones. Las ves en el panel "Panorama y misiones".
+
+SECRETOS DE ISLA
+Al explorar con éxito, cada isla puede dejarte un hallazgo escrito a mano:
+un alijo escondido, un naufragio, un santuario. Hay uno repetible (paga poco y
+vuelve tras un tiempo) y uno raro de una sola vez por personaje que paga bien:
+objetos valiosos, un arma e incluso, en las islas más duras, una Fruta del Diablo.
+No se pueden buscar a voluntad: aparecen cuando la isla lo permite, así que
+volver a explorar otro día es la forma de encontrarlos.
 
 ATRIBUTOS Y NIVEL
 Cada nivel te da 2 puntos de atributo para repartir en la tarjeta "Atributos"
@@ -701,8 +718,15 @@ vivo. Puedes invitar a jugadores de tu isla o por nombre, aceptar o rechazar
 invitaciones (caducan a las 24 h), unirte con un código y expulsar si eres
 capitán. El capitán puede subir una BANDERA (una imagen). Los cazarrecompensas
 trabajan siempre en solitario: no forman ni se unen a ninguna.
-NAKAMAS NPC: escribe en la escena "Jorge, únete a mi tripulación". Que acepte
-lo decide el juez según lo convincente que seas. Hasta
+NAKAMAS NPC: en "Gente de <isla> -> Habitantes" pulsa "Reclutar" junto a quien
+quieras (te escribe la invitación en tu caja de acción: añade tus argumentos y
+envíala) o escribe tú "Jorge, únete a mi tripulación". Cualquier habitante libre
+se puede reclutar; que acepte lo decide el juez según lo convincente que seas.
+Cuando alguien se va contigo, su puesto lo ocupa otra persona al cabo de un rato.
+RECLUTAS ESPECIALES (marcados con ★): habitantes con historia propia que solo se
+unen si cumples lo que su historia pide (nivel, bandera, un objeto que lleves,
+un precio o fama). Al intentarlo te dicen qué te falta; si lo cumples, se unen
+con habilidades propias y más lealtad. Hasta
 3; SIEMPRE tienen tu nivel, así que nunca se quedan atrás, y ganan
 habilidades nuevas a los niveles 5 y 12. Los ves con su vida, ataque,
 defensa, velocidad y habilidades en el panel.
@@ -721,7 +745,8 @@ TODAS LAS NOTICIAS DICEN DÓNDE OCURREN: una isla concreta, "En el mar,
 entre X y Y" o "Ubicación desconocida". Las noticias son públicas para todos
 los jugadores.
 
-EVENTOS MUNDIALES
+EVENTOS MUNDIALES (en Noticias puedes plegar toda la sección o cada evento con
+un toque; la app recuerda tu elección)
 De vez en cuando se gesta una saga larga entre dos personajes famosos (por
 ejemplo, la caza de un capitán pirata). Se cuenta capítulo a capítulo en
 "Noticias > Eventos mundiales", con horas entre capítulos: rumores,

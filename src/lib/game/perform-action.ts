@@ -5,6 +5,7 @@ import { pickEventTemplate, resolveEvent, eventDifficulty, parseEventBody, Event
 import { judgeOutcome, judgeChoice, judgeFightEnd } from "../ai/judge";
 import { clampFightEnd } from "../engine/judge";
 import { logiaShieldedFrom } from "../engine/logia-guard";
+import { bountyForFaction, canonDefeatBounty } from "../engine/bounty-impact";
 import { maybeAutoCheckpoint } from "./ooc";
 import { dangerBlockReason } from "../engine/safety";
 import { recruitCompanion, CompanionError } from "./companions";
@@ -38,6 +39,7 @@ import { bindRandomFighter, bindTarget, defeatIslandNpc, killIslandNpc, noteNpc,
 import { postNews, handleDeathCheck } from "./death-resolution";
 import { grantPoneglyphRead } from "./poneglyph";
 import { grantXp } from "./xp";
+import { tryIslandSecret } from "./island-secrets";
 import { grantItem, grantLoot, storeFruitInBag } from "./inventory";
 import { getItemDef } from "../engine/inventory";
 import { intellectTacticEdge } from "../engine/attributes";
@@ -166,8 +168,16 @@ interface StoredRewards {
   berries: number;
   xp: number;
   bounty: number;
+  pirateBounty?: number;
   islandDanger: number;
   poneglyphId?: string;
+}
+
+/** A holder beaten in person is worth their weight in fame; anyone else who guards a stone pays the ordinary millions scale. */
+async function guardianPirateBounty(worldActorId: string | undefined, rawBounty: number, faction: string): Promise<number | undefined> {
+  if (faction !== "PIRATE") return undefined;
+  const actor = worldActorId ? await prisma.worldActor.findUnique({ where: { id: worldActorId }, select: { powerLevel: true, canonBounty: true } }) : null;
+  return actor ? canonDefeatBounty(actor, "guardian") : bountyForFaction(faction, rawBounty);
 }
 
 const emptyResult = (log: string[], newLevel: number): ActionResult => ({
@@ -447,6 +457,7 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
       berries: number;
       xp: number;
       bounty: number;
+      pirateBounty?: number;
     } | null = null;
     if (body.poneglyphId && enemy.worldActorId) {
       const g = await applyGuardianPresence(enemy);
@@ -458,6 +469,7 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
           berries: base.berries * ACTOR_REWARD_MULTIPLIER,
           xp: base.xp * ACTOR_REWARD_MULTIPLIER,
           bounty: base.bounty * ACTOR_REWARD_MULTIPLIER,
+          pirateBounty: await guardianPirateBounty(g.enemy.worldActorId, base.bounty * ACTOR_REWARD_MULTIPLIER, character.faction),
         };
       }
     }
@@ -496,6 +508,7 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
       berries: guardianRewards?.berries ?? resolution.berries,
       xp: guardianRewards?.xp ?? resolution.xp,
       bounty: guardianRewards?.bounty ?? resolution.bounty,
+      pirateBounty: guardianRewards?.pirateBounty ?? bountyForFaction(character.faction, resolution.bounty),
       islandDanger: character.currentIsland.dangerLevel,
       poneglyphId: body.poneglyphId,
     };
@@ -594,10 +607,11 @@ async function exploreCharacterInner(characterId: string, userId: string, intent
         berries: Math.max(0, character.berries + resolution.berries),
       },
     });
-    await applyBountyOrNotoriety(character, resolution.bounty, newsLog);
+    await applyBountyOrNotoriety(character, bountyForFaction(character.faction, resolution.bounty), newsLog);
     if (resolution.outcome === "success" || resolution.outcome === "critical_success") {
       const found = await grantLoot(character.id, character.currentIsland.dangerLevel, resolution.outcome);
       if (found) log.push(found);
+      log.push(...(await tryIslandSecret(character.id, newLevel, character.currentIsland.name)));
     }
   }
 
@@ -1023,7 +1037,7 @@ export async function fleeCharacter(characterId: string, userId: string, intentT
         def: enemy.def,
         spd: enemy.spd,
       });
-      bountyDelta = Math.round(bountyReward(character.currentIsland.dangerLevel, character.level, true) * 0.25);
+      bountyDelta = Math.round(bountyForFaction(character.faction, bountyReward(character.currentIsland.dangerLevel, character.level, true)) * 0.25);
       const headline = `${character.name} escapa de ${enemy.name}`;
       await postNews(headline, `${character.name} logró escabullirse de ${enemy.name} tras un enfrentamiento tenso. No parece ser algo que se olvide fácilmente.`, "Tripulaciones", character.id);
       newsLog.push(headline);
@@ -1102,7 +1116,7 @@ async function resolveMercyChoiceInner(characterId: string, userId: string, spar
   const mercyMultiplier = spare ? 0.7 : 1;
   const bystander = !!enemy.islandNpcId && !!enemy.npcCategory && !isFighter(enemy.npcCategory);
   const berriesDelta = rewards.berries + (bystander ? 0 : Math.round(berryReward(rewards.islandDanger, enemy.isBoss) * mercyMultiplier));
-  const baseBounty = bystander ? 0 : rewards.bounty + bountyReward(rewards.islandDanger, character.level, enemy.isBoss);
+  const baseBounty = bystander ? 0 : (character.faction === "PIRATE" ? rewards.pirateBounty ?? rewards.bounty : rewards.bounty) + bountyForFaction(character.faction, bountyReward(rewards.islandDanger, character.level, enemy.isBoss));
   const bountyDelta = character.faction === "PIRATE" || character.faction === "BOUNTY_HUNTER" ? Math.round(baseBounty * mercyMultiplier) : Math.round((baseBounty / 20_000) * mercyMultiplier);
   const xpDelta = bystander ? 0 : rewards.xp + 10;
 
@@ -1706,6 +1720,7 @@ export async function sneakPoneglyph(characterId: string, userId: string, freeTe
         berries: base.berries * mult,
         xp: base.xp * mult,
         bounty: base.bounty * mult,
+        pirateBounty: await guardianPirateBounty(enemy.worldActorId, base.bounty * mult, character.faction),
         islandDanger: island.dangerLevel,
         poneglyphId: guardian.poneglyphId,
       } satisfies StoredRewards),

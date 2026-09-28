@@ -18,6 +18,7 @@ import { judgeFate, judgeJointFightEnd } from "../ai/judge";
 import { clampJointEnd } from "../engine/judge";
 import { canFlee, defeatFate, surrenderAllowed } from "../engine/fight-kind";
 import { logiaImmuneTo } from "../engine/logia-guard";
+import { bountyForFaction } from "../engine/bounty-impact";
 import { applyBountyOrNotoriety } from "./reputation";
 import { grantPoneglyphRead } from "./poneglyph";
 import { recordGrudgeIncident } from "./grudges";
@@ -48,6 +49,8 @@ export interface JointRewards {
   berries: number;
   xp: number;
   bounty: number;
+  /** What a PIRATE earns instead of `bounty` (millions scale, by who the enemy is). Absent = `bounty` as is. */
+  pirateBounty?: number;
   islandDanger: number;
   poneglyphId?: string;
 }
@@ -574,7 +577,7 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
       const xpGain = down ? Math.round((rewards.xp + 10) / 2) : rewards.xp + 10;
       const lvl = await grantXp(c.experience, c.level, xpGain);
       const berries = rewards.berries + Math.round(berryReward(rewards.islandDanger, enemy.isBoss) * 0.8);
-      const baseBounty = rewards.bounty + bountyReward(rewards.islandDanger, c.level, enemy.isBoss);
+      const baseBounty = (c.faction === "PIRATE" ? rewards.pirateBounty ?? rewards.bounty : rewards.bounty) + bountyForFaction(c.faction, bountyReward(rewards.islandDanger, c.level, enemy.isBoss));
       const bountyDelta = c.faction === "PIRATE" || c.faction === "BOUNTY_HUNTER" ? baseBounty : Math.round(baseBounty / 20_000);
       // A downed ally is carried out by the others: alive, but badly hurt.
       const hp = down ? Math.max(5, Math.round(c.maxHp * 0.1)) : Math.max(1, p.hp);

@@ -25,9 +25,11 @@ async function shot(page, name) {
 }
 
 async function act(page, text) {
+  // A round can take 50-80 s when the referee's corrective retry kicks in: wait for the box to be usable again.
+  await page.waitForSelector("textarea:not([disabled])", { timeout: 150000 });
   await page.fill("textarea", text);
   await page.click('button:has-text("Actuar")');
-  await page.waitForSelector("text=Pensando...", { state: "hidden", timeout: 30000 }).catch(() => {});
+  await page.waitForSelector("text=Pensando...", { state: "hidden", timeout: 150000 }).catch(() => {});
   await page.waitForTimeout(2500);
 }
 

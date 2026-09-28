@@ -68,6 +68,13 @@ export const ACTOR_STYLES: Record<string, string[]> = {
   "Vista": ["nitoryu"],
   "Scratchmen Apoo": ["jao_kun_do"],
   "Denjiro Kyoshiro": ["ittoryu"],
+  Ryuma: ["ittoryu"],
+  Kuina: ["ittoryu"],
+  "Fisher Tiger": ["gyojin_karate"],
+  Kuroobi: ["gyojin_karate"],
+  Chew: ["gyojin_karate"],
+  Fukaboshi: ["gyojin_karate"],
+  Namur: ["gyojin_karate"],
 };
 
 /** Ability lines for an actor's kit (the narrator reads these): every technique of each of its styles. */

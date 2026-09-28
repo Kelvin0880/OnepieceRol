@@ -33,7 +33,8 @@ async function main() {
   const created: string[] = [];
   try {
     const fruitsBefore = (await availableEventFruits()).length;
-    assert(fruitsBefore >= 12, "the invented event fruits exist in the database and are unowned");
+    // Up to three open events each reserve one of the 12 fruits (the world tick may have opened some by now).
+    assert(fruitsBefore >= 9, "the invented event fruits exist in the database and are unowned");
 
     const ev = await createPlayerEvent({ withFruit: true, islandName: foosha.name, maxLevel: 10, createdBy: "check" });
     created.push(ev.id);

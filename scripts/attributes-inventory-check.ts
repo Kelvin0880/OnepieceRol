@@ -75,7 +75,9 @@ async function main() {
   assert((await prisma.character.findUniqueOrThrow({ where: { id: c.id } })).berries === berriesBefore + 240, "sale price is 40% of the price per unit");
   assert(await rejects(() => sellInventoryItem(c.id, u.id, "vendaje", 99), InventoryError), "cannot sell more than you have");
 
-  await prisma.character.update({ where: { id: c.id }, data: { berries: 100 } });
+  // Merchants are per island now: Loguetown sells the medic kit and the Log Pose but no relics.
+  const loguetown = await prisma.island.findUniqueOrThrow({ where: { name: "Loguetown" } });
+  await prisma.character.update({ where: { id: c.id }, data: { berries: 100, currentIslandId: loguetown.id } });
   assert(await rejects(() => buyInventoryItem(c.id, u.id, "botiquin"), InventoryError), "cannot buy without berries");
   assert(await rejects(() => buyInventoryItem(c.id, u.id, "reliquia"), InventoryError), "the merchant only sells the shop list");
   await prisma.character.update({ where: { id: c.id }, data: { berries: 50_000 } });

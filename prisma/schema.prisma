@@ -861,6 +861,9 @@ model Mission {
   patronActorId String?
   // Faction contract (engine/faction-contracts.ts): extra bounty (pirates) or ladder points (everyone else) on completion.
   factionRep    Int       @default(0)
+  // The one job per island batch for the character's own faction (its reward is the faction's own currency); ordinary pirate
+  // missions also raise the bounty through factionRep but are not contracts.
+  isContract    Boolean   @default(false)
   status        String    @default("ACTIVE") // ACTIVE | DONE
   createdAt     DateTime  @default(now())
   completedAt   DateTime?
@@ -1279,9 +1282,23 @@ model IslandNpc {
   stateNote   String?
   successorId String?
   generation  Int       @default(1)
+  // A SPECIAL recruit (engine/special-recruit.ts SpecialRecruitDef as JSON): their own story and the hand-written
+  // condition to win them over. Null for ordinary residents. A successor never inherits it.
+  recruitJson String?
   createdAt   DateTime  @default(now())
 
   @@index([islandId, status])
+}
+
+// Which island secrets (game/island-secrets-data.ts) a character has already found; the row is the one-time / cooldown guard.
+model IslandSecretFound {
+  id          String   @id @default(cuid())
+  characterId String
+  secretId    String
+  foundAt     DateTime @default(now())
+
+  @@unique([characterId, secretId])
+  @@index([characterId])
 }
 
 // A player going against a canon character who is on their island: the vanguard first, then the character in person,

@@ -1,6 +1,6 @@
 import { prisma } from "../db";
 import { varietyRng } from "../engine/rng";
-import { generateMissionSpecs, progressGain, isComplete, shouldGenerateBatch, MissionEvent, MissionKind } from "../engine/missions";
+import { generateMissionSpecs, pirateMissionBounty, progressGain, isComplete, shouldGenerateBatch, MissionEvent, MissionKind } from "../engine/missions";
 import { canEnterIsland } from "../engine/travel";
 import { narrateIslandBriefing } from "../ai/narrate";
 import { grantXp } from "./xp";
@@ -70,7 +70,8 @@ async function generateBatch(characterId: string): Promise<void> {
       patronActorId: s.isArc ? patronActorId : null,
       giverNpcId: s.giverNpcId ?? null,
       targetNpcId: s.targetNpcId ?? null,
-      factionRep: "factionRep" in s ? (s as { factionRep: number }).factionRep : 0,
+      factionRep: "factionRep" in s ? (s as { factionRep: number }).factionRep : c.faction === "PIRATE" ? pirateMissionBounty(s.tier, island.dangerLevel, s.kind, s.isArc) : 0,
+      isContract: s === contract,
     })),
   });
 
@@ -126,7 +127,7 @@ export async function getMissionState(characterId: string) {
     islandName: c.currentIsland.name,
     faction: c.faction,
     briefing: briefing ? { text: briefing.text, ready: briefing.text.length > 0 } : null,
-    missions: missions.map((m) => ({ id: m.id, kind: m.kind as MissionKind, title: m.title, brief: m.brief, progress: m.progress, target: m.target, berries: m.berries, xp: m.xp, tier: m.tier, isArc: m.isArc, status: m.status, factionRep: m.factionRep })),
+    missions: missions.map((m) => ({ id: m.id, kind: m.kind as MissionKind, title: m.title, brief: m.brief, progress: m.progress, target: m.target, berries: m.berries, xp: m.xp, tier: m.tier, isArc: m.isArc, status: m.status, factionRep: m.factionRep, isContract: m.isContract })),
   };
 }
 
@@ -152,8 +153,8 @@ async function settleGains(characterId: string, gains: { m: ActiveMission; gain:
     log.push(`¡Misión cumplida! «${m.title}» (฿ ${m.berries.toLocaleString("es-ES")}, ${m.xp} XP).`);
     if (m.factionRep > 0) {
       const fresh = await prisma.character.findUnique({ where: { id: characterId } });
-      if (fresh) await applyBountyOrNotoriety(fresh, m.factionRep, [], `Encargo de facción: ${m.title}`);
-      log.push(c.faction === "PIRATE" ? `Tu recompensa sube ฿ ${m.factionRep.toLocaleString("es-ES")}.` : `Tu facción reconoce el encargo: +${m.factionRep}.`);
+      const applied = fresh ? await applyBountyOrNotoriety(fresh, m.factionRep, [], `Encargo de facción: ${m.title}`) : m.factionRep;
+      log.push(c.faction === "PIRATE" ? `Tu recompensa sube ฿ ${applied.toLocaleString("es-ES")}.` : `Tu facción reconoce el encargo: +${m.factionRep}.`);
     }
     if (m.patronActorId) await addStanding(m.patronActorId, characterId, { mission: m.tier - 1 }, `cumpliste «${m.title}»`);
   }

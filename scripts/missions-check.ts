@@ -28,6 +28,11 @@ async function main() {
   assert(arcHigh.berries > arcLow.berries && arcHigh.xp > arcLow.xp, "a stronger character gets tougher, better-paid goals");
   assert(!!a!.briefing, "the first visit registers a briefing");
 
+  const contracts = a!.missions.filter((m) => m.isContract);
+  assert(contracts.length === 1, "exactly one mission of the batch is the faction contract");
+  assert(a!.missions.filter((m) => !m.isContract).every((m) => (m.factionRep ?? 0) > 0), "a pirate's ordinary goals also raise the bounty");
+  assert(arcLow.berries >= 5_000 && (arcHigh.factionRep ?? 0) >= 1_000_000, "pay is in the thousands of berries and the bounty in millions");
+
   const explore = a!.missions.find((m) => m.kind === "explore")!;
   let log: string[] = [];
   for (let i = 0; i < explore.target; i++) log = await recordMissionEvent(low.id, { kind: "explore" });

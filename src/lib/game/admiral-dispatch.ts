@@ -1,3 +1,4 @@
+import { canonDefeatBounty } from "../engine/bounty-impact";
 import { prisma } from "../db";
 import { varietyRng } from "../engine/rng";
 import {
@@ -154,7 +155,7 @@ async function arrive(d: AdmiralDispatch) {
       kind: "admiral",
       characterIds: free.map((c) => c.id),
       enemy: { name: admiral.name, ...stats, isBoss: true, personality: admiral.personality ?? undefined, worldActorId: admiral.id, isActor: true },
-      rewards: { berries: admiral.powerLevel * 400, xp: admiral.powerLevel * 6, bounty: admiral.powerLevel * 40_000, islandDanger: 10 },
+      rewards: { berries: admiral.powerLevel * 400, xp: admiral.powerLevel * 6, bounty: admiral.powerLevel * 40_000, pirateBounty: canonDefeatBounty(admiral, "admiral"), islandDanger: 10 },
       stakes: `El almirante ${admiral.name} ha desembarcado en ${d.targetIslandName} para erradicar a los piratas. No hay escapatoria: solo vencerlo o caer prisioneros.`,
       context: { dispatchId: d.id },
     });

@@ -364,7 +364,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           {jointFight && <JointFightPanel jointFight={jointFight} onOoc={openOoc} busy={busy} doAction={doAction} />}
 
           <IslandCard character={character} connectedIslands={connectedIslands} voyage={voyage} busy={busy} onTravel={(islandId) => doAction({ action: "travel", targetIslandId: islandId })} />
-          {!isDead && !isImprisoned && <IslandPeoplePanel canon={data.canonHere} cast={data.islandCast ?? []} islandName={character.currentIsland.name} act={doPrisonAction} busy={battleBusy} error={battleError} jointActive={!!jointActive} />}
+          {!isDead && !isImprisoned && <IslandPeoplePanel canon={data.canonHere} cast={data.islandCast ?? []} islandName={character.currentIsland.name} act={doPrisonAction} busy={battleBusy} error={battleError} jointActive={!!jointActive} nakamas={character.companions.filter((n) => n.status === "ALIVE").length} onRecruit={(text) => { setFreeText(text); document.querySelector('[data-testid="composer"]')?.scrollIntoView({ behavior: "smooth", block: "center" }); }} />}
 
           {!isDead && (
             <ScenePanel

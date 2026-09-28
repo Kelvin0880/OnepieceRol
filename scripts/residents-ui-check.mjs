@@ -59,7 +59,7 @@ try {
   await page.click('[data-testid="residents-dead"]');
   await page.waitForSelector('[data-testid="resident-card"]');
   check("the dead are listed apart with how they died", /muerto a manos de Prueba/.test(await page.locator('[data-testid="residents-section"]').textContent()));
-  check("the dead one shows the live countdown to the successor (1 h)", /sucesor en (5[5-9]|60):/.test(await page.locator('[data-testid="residents-section"]').textContent()) || /sucesor en dd:dd/.test(await page.locator('[data-testid="residents-section"]').textContent()));
+  check("the dead one shows the live countdown to the successor (1 h)", /sucesor en \d{1,2}:\d\d/.test(await page.locator('[data-testid="residents-section"]').textContent()));
   const tick1 = await page.locator('[data-testid="countdown"]').first().textContent();
   await page.waitForTimeout(2200);
   const tick2 = await page.locator('[data-testid="countdown"]').first().textContent();

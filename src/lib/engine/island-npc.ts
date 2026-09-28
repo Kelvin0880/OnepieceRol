@@ -21,6 +21,7 @@ export interface IslandNpcRow {
   stateNote?: string | null;
   diedAt?: Date | null;
   successorId?: string | null;
+  recruitJson?: string | null;
 }
 
 export const REPLACEMENT_DELAY_MS = 60 * 60_000;

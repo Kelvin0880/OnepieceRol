@@ -5,6 +5,7 @@ import "dotenv/config";
 import { createRequire } from "module";
 import { DEVIL_FRUIT_CATALOG } from "../src/lib/game/devil-fruit-catalog";
 import { seedIslandRoster } from "../src/lib/game/island-npcs";
+import { ALL_RESIDENTS } from "../src/lib/game/island-residents-all";
 import { ISLAND_NPC_DATA } from "../src/lib/game/island-npc-data";
 import { ISLAND_NPC_DATA_WAVE2 } from "../src/lib/game/island-npc-data-wave2";
 
@@ -36,7 +37,7 @@ async function main() {
       console.log("Marshall D. Teach now holds Yami Yami + Gura Gura");
     }
   }
-  console.log(`residents seeded/updated: ${await seedIslandRoster([...ISLAND_NPC_DATA, ...ISLAND_NPC_DATA_WAVE2], db)}`);
+  console.log(`residents seeded/updated: ${await seedIslandRoster(ALL_RESIDENTS, db)}`);
   await db.$disconnect();
 }
 main().catch((e) => {

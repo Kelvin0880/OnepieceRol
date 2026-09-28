@@ -47,17 +47,35 @@ export function missionTier(level: number, minLevel: number): 1 | 2 | 3 {
 /** Island goals are the main way to level early: they pay two and a half times the base experience. */
 export const MISSION_XP_BOOST = 2.5;
 
+/** Harder goals pay far more than a straight multiple: tier 3 is worth four and a half tier 1s. */
+const TIER_PAY = [1, 2.4, 4.5];
+/** The island's own conflict is the strongest goal of a batch. */
+const ARC_BERRY_BOOST = 2;
+const ARC_XP_BOOST = 1.5;
+
 export function missionRewards(tier: number, danger: number, kind: MissionKind) {
   const kindMult = kind === "win_fights" ? 1.4 : kind === "travel" ? 0.8 : 1;
+  const tierPay = TIER_PAY[Math.min(3, Math.max(1, Math.round(tier))) - 1];
   return {
-    berries: Math.round((120 + 60 * danger) * tier * kindMult),
+    berries: Math.round((1_500 + 1_100 * danger) * tierPay * kindMult),
     xp: Math.round((25 * (1 + tier) + 6 * danger) * kindMult * MISSION_XP_BOOST),
   };
+}
+
+/** What a pirate's bounty grows by for finishing an ordinary island goal: millions from the middle of the map on. */
+export function pirateMissionBounty(tier: number, danger: number, kind: MissionKind, isArc: boolean): number {
+  const kindMult = kind === "win_fights" || kind === "defeat_npc" ? 1.5 : kind === "travel" ? 0.6 : 1;
+  return Math.round(120_000 * Math.max(1, tier) * Math.max(1, danger) * kindMult * (isArc ? 2 : 1));
 }
 
 function clip(text: string, max: number): string {
   const t = text.trim();
   return t.length <= max ? t : `${t.slice(0, max - 1).trimEnd()}…`;
+}
+
+function boostedArc(tier: number, danger: number) {
+  const r = missionRewards(tier, danger, "win_fights");
+  return { berries: Math.round(r.berries * ARC_BERRY_BOOST), xp: Math.round(r.xp * ARC_XP_BOOST) };
 }
 
 /** Always three goals: the island's own conflict, getting to know the place, and one guide-you-onwards pick. */
@@ -87,10 +105,10 @@ export function generateMissionSpecs(rng: Rng, ctx: MissionContext): MissionSpec
         isArc: true,
         targetNpcId: target.id,
         giverNpcId: giver?.id,
-        berries: Math.round(missionRewards(tier, ctx.danger, "win_fights").berries + target.level * 25),
-        xp: Math.round(missionRewards(tier, ctx.danger, "win_fights").xp + target.level * 3 * MISSION_XP_BOOST),
+        berries: Math.round((missionRewards(tier, ctx.danger, "win_fights").berries + target.level * 250) * ARC_BERRY_BOOST),
+        xp: Math.round((missionRewards(tier, ctx.danger, "win_fights").xp + target.level * 3 * MISSION_XP_BOOST) * ARC_XP_BOOST),
       })
-    : mk("win_fights", 1 + tier, `La amenaza de ${ctx.islandName}`, arcBrief, { isArc: true });
+    : mk("win_fights", 1 + tier, `La amenaza de ${ctx.islandName}`, arcBrief, { isArc: true, ...boostedArc(tier, ctx.danger) });
   const specs: MissionSpec[] = [
     arc,
     mk("explore", 2 + tier, `Reconoce ${ctx.islandName}`, `Recorre la isla ${2 + tier} veces: habla con la gente${giver && giver.id !== arc.giverNpcId ? `, empezando por ${giver.name} (${giver.title})` : ""}, husmea y descubre qué se cuece de verdad.`, giver && giver.id !== arc.giverNpcId ? { giverNpcId: giver.id } : {}),

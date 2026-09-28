@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from "react";
 import Link from "next/link";
 import BackToCharacter from "@/components/ui/BackToCharacter";
 import TabBar from "@/components/motion/TabBar";
+import Collapsible, { ToggleHeader, useOpenState } from "@/components/ui/Collapsible";
 
 interface NewsItem {
   id: string;
@@ -131,33 +132,40 @@ const STATUS_LABEL: Record<string, string> = {
   RESOLVED: "Concluido",
 };
 
-function WorldEventCard({ event }: { event: WorldEvent }) {
+function WorldEventCard({ event, defaultOpen }: { event: WorldEvent; defaultOpen: boolean }) {
+  const [open, setOpen] = useOpenState(`arc:${event.id}`, defaultOpen);
+  const latest = event.beats[event.beats.length - 1];
   return (
-    <div className="panel p-4 border-2 border-orange-300/50" data-testid="world-event">
-      <div className="flex items-center justify-between mb-2 gap-2">
-        <span className="font-display text-lg text-gold-bright">{event.title}</span>
-        <span className="text-xs text-orange-300 uppercase tracking-wide" data-testid="world-event-status">
-          {STATUS_LABEL[event.status] ?? event.status}
+    <div className="panel p-4 border-2 border-orange-300/50" data-testid="world-event" data-open={open ? "1" : "0"}>
+      <ToggleHeader open={open} onToggle={() => setOpen(!open)} testId="world-event-toggle">
+        <span className="flex items-center justify-between gap-2">
+          <span className="font-display text-lg text-gold-bright">{event.title}</span>
+          <span className="text-xs text-orange-300 uppercase tracking-wide shrink-0" data-testid="world-event-status">
+            {STATUS_LABEL[event.status] ?? event.status}
+          </span>
         </span>
-      </div>
-      <div className="h-1.5 rounded bg-black/30 overflow-hidden mb-3">
+      </ToggleHeader>
+      <div className="h-1.5 rounded bg-black/30 overflow-hidden my-2">
         <div className="h-full" style={{ width: `${(event.stage / event.totalStages) * 100}%`, background: "var(--gold)" }} />
       </div>
-      <p className="text-[11px] text-ink-dim mb-2">
+      <p className="text-[11px] text-ink-dim">
         Capítulo {event.stage} de {event.totalStages}
         {event.status === "AWAITING_CONSENT" ? " · el mundo contiene el aliento" : ""}
+        {!open && latest ? ` · Último: ${latest.headline}` : ""}
       </p>
-      <ol className="flex flex-col gap-2 border-l border-orange-300/30 pl-3">
-        {event.beats.map((b) => (
-          <li key={b.id} data-testid="world-event-beat">
-            <div className="flex items-center justify-between gap-2">
-              <span className="text-sm font-display">{b.headline}</span>
-              <Where name={b.locationName} />
-            </div>
-            <p className="text-xs text-ink-dim">{b.body}</p>
-          </li>
-        ))}
-      </ol>
+      {open && (
+        <ol className="flex flex-col gap-2 border-l border-orange-300/30 pl-3 mt-3">
+          {event.beats.map((b) => (
+            <li key={b.id} data-testid="world-event-beat">
+              <div className="flex items-center justify-between gap-2">
+                <span className="text-sm font-display">{b.headline}</span>
+                <Where name={b.locationName} />
+              </div>
+              <p className="text-xs text-ink-dim">{b.body}</p>
+            </li>
+          ))}
+        </ol>
+      )}
     </div>
   );
 }
@@ -235,17 +243,18 @@ export default function NewsPage() {
       </p>
 
       {events.length > 0 && !category && (
-        <section className="mb-6" data-testid="world-events">
-          <h2 className="font-display text-sm uppercase tracking-widest text-orange-300 mb-2">Eventos mundiales</h2>
-          <p className="text-xs text-ink-dim mb-3">
-            Sucesos lentos que se gestan durante días, capítulo a capítulo. Si estás en el lugar indicado y tienes el nivel, puedes intervenir.
-          </p>
-          <div className="flex flex-col gap-3">
-            {events.map((e) => (
-              <WorldEventCard key={e.id} event={e} />
-            ))}
-          </div>
-        </section>
+        <div className="mb-6" data-testid="world-events">
+          <Collapsible id="arcs" title="Eventos mundiales" count={events.length} accent="text-orange-300">
+            <p className="text-xs text-ink-dim mb-3">
+              Sucesos lentos que se gestan durante días, capítulo a capítulo. Si estás en el lugar indicado y tienes el nivel, puedes intervenir. Toca un evento para abrirlo o plegarlo.
+            </p>
+            <div className="flex flex-col gap-3">
+              {events.map((e, i) => (
+                <WorldEventCard key={e.id} event={e} defaultOpen={i === 0} />
+              ))}
+            </div>
+          </Collapsible>
+        </div>
       )}
 
       <TabBar<string>

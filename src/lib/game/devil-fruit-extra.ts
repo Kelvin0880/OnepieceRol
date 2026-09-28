@@ -44,4 +44,9 @@ export const SINGLETON_OVERRIDES = new Set([
   "Inu Inu no Mi: Modelo Okuchi no Makami",
   "Nagi Nagi no Mi",
   "Doa Doa no Mi",
+  "Toge Toge no Mi",
+  "Buki Buki no Mi",
+  "Guru Guru no Mi",
+  "Fude Fude no Mi",
+  "Neko Neko no Mi: Modelo Dientes de Sable",
 ]);

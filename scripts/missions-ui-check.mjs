@@ -41,7 +41,7 @@ try {
     await page.click('button:has-text("Zarpar")');
     await page.waitForSelector('[data-testid="missions-panel"]', { timeout: 30000 });
     const missions = await page.locator('[data-testid="mission"]').count();
-    check(`${label}: three missions are offered on the starting island`, missions === 3);
+    check(`${label}: three island goals plus the faction contract are offered on the starting island (${missions})`, missions === 4);
     // The AI panorama arrives asynchronously; the panel refreshes itself.
     await page.waitForFunction(() => {
       const el = document.querySelector('[data-testid="island-briefing"]');

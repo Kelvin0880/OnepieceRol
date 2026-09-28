@@ -7,6 +7,8 @@ import { MAX_COMPANIONS, RecruitTier, companionMaxHp, companionSheet, parseCompa
 import { narrateRecruit, getRecentScene } from "../ai/narrate";
 import { engagedNpcIds, loadRoster, recruitIslandNpc } from "./island-npcs";
 import { matchNpc, npcState } from "../engine/island-npc";
+import { parseSpecialRecruit, recruitConditionProblem } from "../engine/special-recruit";
+import { loadStacks } from "./inventory";
 
 export class CompanionError extends Error {}
 
@@ -135,10 +137,19 @@ export async function recruitCompanion(characterId: string, userId: string, opts
   });
   if (recentFail) throw new CompanionError(`${name} ya te dijo que no hace poco. Dale tiempo antes de insistir.`);
 
-  const role = normalizeRole(opts.role);
+  // A special recruit has a story and a hand-written condition: code checks it, the narrator only stages it.
+  const special = parseSpecialRecruit(resident.recruitJson);
+  if (special) {
+    const stacks = await loadStacks(characterId);
+    const problem = recruitConditionProblem(special.condition, { level: c.level, faction: c.faction, bounty: c.bounty, notoriety: c.notoriety, berries: c.berries, itemIds: stacks.map((s) => s.id) });
+    if (problem) throw new CompanionError(`${name} (${special.epithet}): ${problem} ${special.hint}`);
+  }
+
+  const role = special ? normalizeRole(special.role) : normalizeRole(opts.role ?? resident.title);
   const tacticModifier = opts.tacticModifier ?? 0;
   const difficulty = recruitDifficulty({ willpower: c.willpower, intellect: c.intellect, tacticModifier, tier: opts.tier ?? "average" });
-  const verdict = await judgeOutcome({
+  // A special recruit whose condition is met has already earned the yes: the hand-written quest was the challenge.
+  const verdict = special ? { outcome: "success" as const } : await judgeOutcome({
     situation: `Convencer a ${name} (${role}) de unirse a la tripulación de ${c.name} en ${c.currentIsland.name}. Un candidato orgulloso o poderoso se resiste; un buen argumento y una voluntad fuerte ayudan`,
     actor: { name: c.name, level: c.level, power: 50 + Math.round(c.willpower * 0.4 + c.intellect * 0.3 + tacticModifier * 0.8) },
     intent: opts.intentText,
@@ -149,12 +160,14 @@ export async function recruitCompanion(characterId: string, userId: string, opts
   const accepted = verdict.outcome === "success" || verdict.outcome === "critical_success";
 
   const recentScene = await getRecentScene(characterId, 8);
-  const prose = await narrateRecruit({ characterName: c.name, npcName: name, role, accepted, islandName: c.currentIsland.name, recentScene }, { characterId });
+  const prose = await narrateRecruit({ characterName: c.name, npcName: name, role, accepted, islandName: c.currentIsland.name, recentScene, lore: special?.lore }, { characterId });
 
   if (accepted) {
-    const loyalty = startingLoyalty(tacticModifier);
+    const loyalty = special ? Math.min(90, startingLoyalty(tacticModifier) + 15) : startingLoyalty(tacticModifier);
     const max = companionMaxHp(c.level, role);
-    await prisma.nPCCompanion.create({ data: { characterId, name, role, hp: max, maxHp: max, loyalty, personality: resident.personality } });
+    const profileJson = special ? JSON.stringify({ epithet: special.epithet, abilities: special.abilities, styleId: special.styleId, attrs: special.attrs }) : undefined;
+    if (special?.condition.berries) await prisma.character.update({ where: { id: characterId }, data: { berries: { decrement: special.condition.berries } } });
+    await prisma.nPCCompanion.create({ data: { characterId, name, role, hp: max, maxHp: max, loyalty, personality: resident.personality, profileJson } });
     await recruitIslandNpc(resident.id, { id: c.id, name: c.name }, c.currentIsland.name);
     const line = `${name} (${role}) se une a tu tripulación como nakama. Estará siempre a tu nivel.`;
     await prisma.gameLogEntry.create({ data: { characterId, kind: "recruit", text: line } });

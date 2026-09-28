@@ -27,7 +27,7 @@ export function shopPrice(basePrice: number, danger: number): number {
   return Math.round(basePrice * (1 + Math.max(0, danger - 1) * 0.06));
 }
 
-async function loadStacks(characterId: string): Promise<Stack[]> {
+export async function loadStacks(characterId: string): Promise<Stack[]> {
   const rows = await prisma.inventoryItem.findMany({ where: { characterId }, orderBy: { createdAt: "asc" } });
   const out: Stack[] = [];
   for (const r of rows) {
