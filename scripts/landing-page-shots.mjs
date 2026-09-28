@@ -25,7 +25,7 @@ try {
     await page.goto(`${url}?tier=${tier}&nosmooth=1&nointro=1&capture=1`, { waitUntil: "load" });
     await page.waitForSelector('[data-ready="true"]', { timeout: 60000 }).catch(() => console.log("3D not ready"));
     for (const id of process.env.SECTIONS ? process.env.SECTIONS.split(",") : SECTIONS) {
-      await page.evaluate((sid) => document.getElementById(sid)?.scrollIntoView({ block: "start" }), id);
+      await page.evaluate((sid) => (sid === "bottom" ? window.scrollTo(0, document.documentElement.scrollHeight) : document.getElementById(sid)?.scrollIntoView({ block: "start" })), id);
       await page.waitForTimeout(Number(process.env.WAIT ?? 3200));
       const path = `shots/landing/page/${label}-${id}.png`;
       await page.screenshot({ path });

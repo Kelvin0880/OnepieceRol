@@ -1,15 +1,19 @@
+import { CREATOR } from "../data/content";
 import { GAME_URL } from "../lib/wake";
 
 export function Footer() {
   return (
-    <footer data-sea="4" className="relative border-t border-gold/15 bg-abyss/85 px-4 py-12 backdrop-blur-sm sm:px-6">
+    <footer data-sea="4" className="relative border-t border-gold/15 bg-abyss/85 px-4 pt-12 pb-24 backdrop-blur-sm sm:px-6 sm:pb-12">
       <div className="mx-auto flex max-w-6xl flex-col gap-8 md:flex-row md:items-start md:justify-between">
         <div className="max-w-md">
           <div className="flex items-center gap-2.5">
             <img src="./favicon.svg" alt="" className="h-9 w-9" width={36} height={36} />
             <span className="font-display text-sm font-bold tracking-[0.22em] text-ink">GRAND LINE RPG</span>
           </div>
-          <p className="mt-4 text-sm leading-relaxed text-ink-mute">
+          <p className="mt-4 font-display text-[0.72rem] tracking-[0.2em] text-ink-dim uppercase" data-testid="creator">
+            Creado por <span className="text-gold-bright">{CREATOR}</span>
+          </p>
+          <p className="mt-3 text-sm leading-relaxed text-ink-mute">
             Proyecto de fans, gratuito y sin ánimo de lucro. One Piece es obra de Eiichiro Oda; sus marcas pertenecen a Shueisha y Toei Animation. Este juego no está afiliado ni respaldado por ellos.
           </p>
         </div>

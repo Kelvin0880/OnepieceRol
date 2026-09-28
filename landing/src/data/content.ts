@@ -3,6 +3,8 @@ import data from "./game-data.json";
 export const GAME = data;
 export const COUNTS = data.counts;
 
+export const CREATOR = "Kelvin Piña";
+
 export const MARQUEE_TOP = [
   "Sin dados",
   "Una IA arbitra cada golpe",

@@ -36,7 +36,8 @@ export function World({ settings }: { settings: TierSettings }) {
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05);
     const t = state.clock.elapsedTime;
-    voyage.current = damp(voyage.current, voyage.target, 2.4, dt);
+    // A looser cap than the rest of the frame: on a slow device the sea should still keep up with the scroll.
+    voyage.current = damp(voyage.current, voyage.target, 2.4, Math.min(delta, 0.12));
     const v = voyage.current;
     sampleEnv(v, env);
     syncUniforms(env, t, flash.value);

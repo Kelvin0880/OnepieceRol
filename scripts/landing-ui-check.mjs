@@ -148,6 +148,11 @@ try {
     await page.waitForTimeout(2500);
     await shot(page, "desk-finale");
 
+    const credit = (await page.locator('[data-testid="creator"]').textContent()) ?? "";
+    check("desktop: the footer credits the creator", credit.includes("Kelvin Piña"), credit);
+    check("desktop: the page names its author for search engines", (await page.getAttribute('meta[name="author"]', "content")) === "Kelvin Piña");
+    const ld = JSON.parse((await page.locator('script[type="application/ld+json"]').textContent()) ?? "{}");
+    check("desktop: structured data names the game and its creator", ld.name === "Grand Line RPG" && ld.author?.name === "Kelvin Piña");
     for (const doc of ["guia.html", "mapa.html"]) {
       const res = await page.request.get(`${url}${doc}`);
       check(`desktop: ${doc} is still published next to the landing`, res.ok());

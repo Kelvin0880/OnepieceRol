@@ -43,7 +43,7 @@ function FactionCard({ faction, index }: { faction: (typeof GAME.factions)[numbe
               <p className="mt-auto flex items-center gap-2 text-sm text-ink-dim">
                 <MapPin className="h-4 w-4 text-gold" /> Empiezas en <b className="text-ink">{faction.start}</b>
               </p>
-              <p className="mt-3 font-display text-[0.62rem] tracking-[0.22em] text-gold uppercase">Toca para ver su camino</p>
+              <p className="mt-3 font-display text-[0.62rem] tracking-[0.22em] text-gold uppercase">Pulsa para ver su camino</p>
             </div>
             <div className="absolute inset-0 flex flex-col rounded-3xl border border-gold/30 bg-[#0b1623]/95 p-6 [backface-visibility:hidden] [transform:rotateY(180deg)]">
               <p className="font-display text-[0.62rem] tracking-[0.22em] uppercase" style={{ color: copy.color }}>
