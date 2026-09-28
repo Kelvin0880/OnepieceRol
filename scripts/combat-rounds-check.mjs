@@ -62,7 +62,7 @@ try {
   await page.waitForSelector("text=Te enfrentas a", { timeout: 10000 });
   await shot(page, "combat-01-threat.png");
 
-  check("the enemy's life is not shown as a number or bar", !(await page.locator("text=25/25").isVisible().catch(() => false)));
+  check("the enemy's life bar is shown while fighting", await page.locator('[data-testid="enemy-life"]').isVisible().catch(() => false));
 
   // Round 1: a well-reasoned tactic (should get a favorable tactic modifier).
   await act(page, "Aprovecho que es torpe: finjo un ataque directo y en el último instante golpeo su costado desprotegido.");

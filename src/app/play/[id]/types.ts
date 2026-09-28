@@ -315,6 +315,8 @@ export interface Character {
     phase: "threat" | "fighting" | "victory";
     assessment: "weaker" | "even" | "superior";
     enemyName: string;
+    enemyHp: number;
+    enemyMaxHp: number;
   } | null;
   crew: PanelCrew | null;
   companions: PanelCompanion[];

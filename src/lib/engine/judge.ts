@@ -1,3 +1,4 @@
+import { DEFEAT_PHRASES } from "./referee";
 /**
  * The judge: what used to be a dice roll is decided by the AI with logic. This file is the pure half: the shapes,
  * the strict parsing of the model's JSON, and the deterministic stand-in used only by scripted checks (JUDGE_STUB=1).
@@ -159,8 +160,8 @@ export function stubFightEnd(playerHp: number, playerMaxHp: number, enemyHp: num
  * `allowSurrender` skips the half-life floor on a loss only: in a fight nobody can flee (an Admiral dispatch) yielding to
  * certain capture is a real ending, and losing there only ever means custody, never a death roll.
  */
-export function clampJointEnd(outcome: FightEnd, allies: { hp: number; maxHp: number }[], enemyHp: number, enemyMaxHp: number, allowSurrender = false): FightEnd {
-  if (outcome === "player_won" && enemyHp > enemyMaxHp / 2) return "ended";
+export function clampJointEnd(outcome: FightEnd, allies: { hp: number; maxHp: number }[], enemyHp: number, enemyMaxHp: number, allowSurrender = false, rivalFell = false): FightEnd {
+  if (outcome === "player_won" && enemyHp > enemyMaxHp / 2 && !rivalFell) return "ended";
   if (outcome === "player_lost" && !allowSurrender && allies.some((a) => a.hp > a.maxHp / 2)) return "ended";
   return outcome;
 }
@@ -168,9 +169,39 @@ export function clampJointEnd(outcome: FightEnd, allies: { hp: number; maxHp: nu
 /**
  * A win or a loss is only accepted when the loser is at half life or less (the same rule the referee follows for a
  * defeat); otherwise the closing judge cannot hand a fight to whoever asks, and it is closed with no winner.
+ * `rivalFell` is the one exception, for a win: the referee's OWN narration (never the player's text) already showed the
+ * rival fall, but its life bound refused to book it (reported 2026-09-28: a resident narrated dead twice, the fight then
+ * closed "sin ganador" and paid nothing). What the story showed is the fight's truth; the player's words never count.
  */
-export function clampFightEnd(outcome: FightEnd, playerHp: number, playerMaxHp: number, enemyHp: number, enemyMaxHp: number): FightEnd {
-  if (outcome === "player_won" && enemyHp > enemyMaxHp / 2) return "ended";
+export function clampFightEnd(outcome: FightEnd, playerHp: number, playerMaxHp: number, enemyHp: number, enemyMaxHp: number, rivalFell = false): FightEnd {
+  if (outcome === "player_won" && enemyHp > enemyMaxHp / 2 && !rivalFell) return "ended";
   if (outcome === "player_lost" && playerHp > playerMaxHp / 2) return "ended";
   return outcome;
+}
+
+const FALL_NEGATION = /\b(no|ni|casi|intent\w*|a\s+punto\s+de|evit\w*|esquiv\w*|fing\w*|como\s+si)\b/i;
+const strip = (t: string) => t.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase();
+
+/**
+ * True when one of the last referee messages says, in a sentence about this rival, that it fell (dead, unconscious, out of
+ * the fight). Only referee lines count: pass the narrator texts, never the players' own lines.
+ */
+export function rivalNarratedFallen(refereeTexts: string[], rivalName: string, lastN = 2): boolean {
+  const full = strip(rivalName).trim();
+  if (!full) return false;
+  const first = full.split(/\s+/).find((w) => w.length >= 3);
+  const firstWord = first ? new RegExp(`\\b${first}\\b`) : null;
+  for (const text of refereeTexts.slice(-lastN)) {
+    for (const sentence of text.split(/(?<=[.!?…])\s+|\n+/)) {
+      const s = strip(sentence);
+      if (!(s.includes(full) || (firstWord && firstWord.test(s)))) continue;
+      if (DEFEAT_PHRASES.test(sentence) && !FALL_NEGATION.test(sentence)) return true;
+    }
+  }
+  return false;
+}
+
+/** The referee lines of a fight log made by getFightLog / jointFightLog ("[Árbitro]: text"), without the prefix. */
+export function refereeLines(fightLog: string[]): string[] {
+  return fightLog.filter((l) => l.startsWith("[Árbitro]: ")).map((l) => l.slice("[Árbitro]: ".length));
 }

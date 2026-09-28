@@ -3,7 +3,7 @@ import { logError } from "../log-error";
 import { varietyRng } from "../engine/rng";
 import { pickEventTemplate, resolveEvent, eventDifficulty, parseEventBody, EventBody } from "../engine/events";
 import { judgeOutcome, judgeChoice, judgeFightEnd } from "../ai/judge";
-import { clampFightEnd } from "../engine/judge";
+import { clampFightEnd, refereeLines, rivalNarratedFallen } from "../engine/judge";
 import { logiaShieldedFrom } from "../engine/logia-guard";
 import { bountyForFaction, canonDefeatBounty } from "../engine/bounty-impact";
 import { maybeAutoCheckpoint } from "./ooc";
@@ -793,7 +793,7 @@ export async function engageCharacter(
       where: { characterId: character.id },
       data: {
         phase: "victory",
-        enemyHp: Math.max(0, enemyHpAfter),
+        enemyHp: 0, // a defeated rival is at zero, whatever the last exchange left it at
         enemyStamina: enemyStaminaAfter,
         roundNumber,
       },
@@ -2215,7 +2215,9 @@ export async function closeFight(characterId: string, userId: string, note?: str
     note: note?.trim() || undefined,
     characterId: character.id,
   });
-  verdict.outcome = clampFightEnd(verdict.outcome, character.hp, character.maxHp, enemyHp, enemy.hp);
+  // The referee's own narration showing the rival fall counts even when its life bound never booked it (a resident narrated dead twice, then closed "sin ganador").
+  const rivalFell = verdict.outcome !== "player_lost" && rivalNarratedFallen(refereeLines(fightLog), enemy.name);
+  verdict.outcome = clampFightEnd(rivalFell ? "player_won" : verdict.outcome, character.hp, character.maxHp, enemyHp, enemy.hp, rivalFell);
   const log: string[] = [];
   const newsLog: string[] = [];
   const closing = (text: string) => prisma.sceneMessage.create({ data: { characterId: character.id, role: "narrator", text } });

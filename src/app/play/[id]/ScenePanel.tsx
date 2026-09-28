@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { m } from "motion/react";
 import { BedDouble, Dumbbell, Feather, Send, Swords } from "lucide-react";
 import ChatFeed, { type FeedMessage } from "@/components/ui/ChatFeed";
+import StatBar from "@/components/ui/StatBar";
 import { SPRING } from "@/components/motion/presets";
 import { ASSESSMENT_LABEL } from "./labels";
 import type { Character, JointFightState, PartyState } from "./types";
@@ -114,6 +115,9 @@ export default function ScenePanel({
               {enc.phase === "threat" ? "Te enfrentas a" : "Sigues luchando contra"} <span className="text-gold-bright">{enc.enemyName}</span>.
             </span>
           </p>
+          <div className="my-1.5" data-testid="enemy-life">
+            <StatBar label={enc.enemyName} value={enc.enemyHp} max={enc.enemyMaxHp} color="var(--blood)" size="sm" warnBelow={25} />
+          </div>
           <p className={`text-xs ${ASSESSMENT_LABEL[enc.assessment].color}`}>{ASSESSMENT_LABEL[enc.assessment].text}</p>
           {enc.phase === "threat" && (
             <button

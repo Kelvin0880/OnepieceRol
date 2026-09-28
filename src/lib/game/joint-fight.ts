@@ -15,7 +15,7 @@ import { resolveEnemyKit } from "./enemy-kit";
 import { toCombatant } from "./derive";
 import { postNews, handleDeathCheck } from "./death-resolution";
 import { judgeFate, judgeJointFightEnd } from "../ai/judge";
-import { clampJointEnd } from "../engine/judge";
+import { clampJointEnd, refereeLines, rivalNarratedFallen } from "../engine/judge";
 import { canFlee, defeatFate, surrenderAllowed } from "../engine/fight-kind";
 import { logiaImmuneTo } from "../engine/logia-guard";
 import { bountyForFaction } from "../engine/bounty-impact";
@@ -283,16 +283,19 @@ export async function closeJointFight(characterId: string, userId: string, note?
   const rewards = JSON.parse(full.rewardsJson) as JointRewards;
   const inFight = full.participants.filter((p) => p.status !== "FLED");
   const humans = inFight.filter((p) => !p.isNpc);
+  const fightLog = await jointFightLog(full.id);
   const verdict = await judgeJointFightEnd({
     allyNames: inFight.map((p) => p.name),
     enemyName: enemy.name,
-    fightLog: await jointFightLog(full.id),
+    fightLog,
     allies: { hp: inFight.reduce((n, p) => n + p.hp, 0), maxHp: inFight.reduce((n, p) => n + p.maxHp, 0) },
     enemy: { hp: full.enemyHp, maxHp: full.enemyMaxHp },
     note: note?.trim() || undefined,
     characterId,
   });
-  const outcome = clampJointEnd(verdict.outcome, inFight.map((p) => ({ hp: p.hp, maxHp: p.maxHp })), full.enemyHp, full.enemyMaxHp, surrenderAllowed(full.kind));
+  // Only ordinary party fights against a resident: a narrated fall never hands a group win over a canon or an Admiral.
+  const rivalFell = full.kind === "party" && verdict.outcome !== "player_lost" && rivalNarratedFallen(refereeLines(fightLog), enemy.name);
+  const outcome = clampJointEnd(rivalFell ? "player_won" : verdict.outcome, inFight.map((p) => ({ hp: p.hp, maxHp: p.maxHp })), full.enemyHp, full.enemyMaxHp, surrenderAllowed(full.kind), rivalFell);
   const result = outcome === "player_won" ? "victory" : outcome === "player_lost" ? "defeat" : null;
 
   const text =
@@ -548,7 +551,7 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
   const humans = fight.participants.filter((p) => !p.isNpc && p.status !== "FLED");
   const npcs = fight.participants.filter((p) => p.isNpc);
 
-  await prisma.jointFight.update({ where: { id: fightId }, data: { status: outcome === "victory" ? "WON" : outcome === "defeat" ? "LOST" : "CANCELLED" } });
+  await prisma.jointFight.update({ where: { id: fightId }, data: { status: outcome === "victory" ? "WON" : outcome === "defeat" ? "LOST" : "CANCELLED", ...(outcome === "victory" ? { enemyHp: 0 } : {}) } });
 
   for (const npc of npcs) {
     if (npc.characterId.startsWith(`${NPC_PREFIX}ally:`)) continue; // a pledged actor is not a row we own
