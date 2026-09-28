@@ -10,9 +10,9 @@ export interface DeviceHints {
   saveData?: boolean;
 }
 
-/** "none" means no 3D at all: the page falls back to an animated gradient of the same sky. */
+/** "none" means no 3D at all (no WebGL): the page falls back to a painted sky. Reduced motion keeps the 3D but calms it (see World.tsx). */
 export function pickTier(h: DeviceHints): Tier | "none" {
-  if (!h.webgl || h.reducedMotion) return "none";
+  if (!h.webgl) return "none";
   if (h.saveData) return "low";
   if ((h.memoryGb !== undefined && h.memoryGb <= 2) || (h.cores !== undefined && h.cores <= 2)) return "low";
   if (h.coarsePointer && h.cores !== undefined && h.cores <= 4) return "low";

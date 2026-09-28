@@ -15,6 +15,9 @@ import { Sky } from "./Sky";
 import { env, flash, pointer, shipTrack, voyage } from "./store";
 import { syncUniforms, U } from "./uniforms";
 
+// Reduced motion keeps the 3D (the scene mostly moves with the scroll) but slows the sea's own animation.
+const TIME_SCALE = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0.3 : 1;
+
 const damp = (from: number, to: number, lambda: number, dt: number) => from + (to - from) * (1 - Math.exp(-lambda * dt));
 
 export function World({ settings }: { settings: TierSettings }) {
@@ -35,7 +38,7 @@ export function World({ settings }: { settings: TierSettings }) {
 
   useFrame((state, delta) => {
     const dt = Math.min(delta, 0.05);
-    const t = state.clock.elapsedTime;
+    const t = state.clock.elapsedTime * TIME_SCALE;
     // A looser cap than the rest of the frame: on a slow device the sea should still keep up with the scroll.
     voyage.current = damp(voyage.current, voyage.target, 2.4, Math.min(delta, 0.12));
     const v = voyage.current;

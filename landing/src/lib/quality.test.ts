@@ -8,9 +8,9 @@ describe("pickTier", () => {
     expect(pickTier(desktop)).toBe("high");
   });
 
-  it("skips 3D without WebGL or when the visitor asked for less motion", () => {
+  it("skips 3D only without WebGL; reduced motion keeps the scene (it is calmed elsewhere)", () => {
     expect(pickTier({ ...desktop, webgl: false })).toBe("none");
-    expect(pickTier({ ...desktop, reducedMotion: true })).toBe("none");
+    expect(pickTier({ ...desktop, reducedMotion: true })).toBe("high");
   });
 
   it("keeps phones on a lighter scene", () => {
