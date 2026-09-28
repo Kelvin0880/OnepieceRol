@@ -6,6 +6,8 @@ leading to Laugh Tale / becoming Pirate King. This file exists so a future
 session with zero conversation history can pick up exactly where the last
 one left off — read this before touching anything.
 
+Shared vocabulary lives in `CONTEXT.md` (glossary only) and the big standing decisions in `docs/adr/` — use those terms, and add a term or an ADR there when one is settled.
+
 ## The user, in one paragraph
 
 Wants "absolutely everything" One Piece has — every fruit, every faction,

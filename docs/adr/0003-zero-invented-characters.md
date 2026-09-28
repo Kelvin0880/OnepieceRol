@@ -1,0 +1,3 @@
+# The narrator may not invent named characters
+
+Left alone, the AI filled thin scenes with invented guards, smugglers and side plots that players could not follow up on. Every named person it presents must now be a resident, a canon actor, a real player or an established name in the running scene, and places must come from each island's gazetteer. Validators in every AI path (narrator, referee, party scene, news, world events) reject text that breaks this and ask again or cut it. The alternative, trusting the prompt alone, was tried first and failed in live play. Cost: a corrective retry can double latency, and a wide roster of residents plus per-island lore had to be written up front.

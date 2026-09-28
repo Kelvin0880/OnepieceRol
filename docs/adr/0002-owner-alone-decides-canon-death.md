@@ -1,0 +1,3 @@
+# Only the owner decides a canon actor's death or capture
+
+Neither code nor the AI may kill, capture or dethrone a canon actor as a fact. World arcs, player verdicts and reclaim attempts stop at an awaiting-consent step, and only the owner's decision in `/admin` (with a double confirmation) applies it; denying leaves the actor alive and in hiding. Beating a canon actor in a fight only makes them busy and recovering for a while. This was chosen over automatic outcomes because canon deaths are permanent for everyone sharing one world, and the owner wants that authority for themselves. The news writer is likewise forbidden from narrating such an outcome as done.

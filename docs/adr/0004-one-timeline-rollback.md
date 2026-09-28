@@ -1,0 +1,3 @@
+# A rollback restores one timeline, including the narrator's memory
+
+A player can go back to a checkpoint, but only after an explicit warning of what will be erased, and never when dead (permadeath), imprisoned or mid-fight. It restores numbers and the narrator's memory together and deletes the later scene, log and news, because restoring only the numbers left the AI remembering events that no longer happened. Every background writer of AI memory therefore writes conditionally on the character's `timelineEpoch`, so a summary still in flight cannot bring the discarded timeline back. Gear, fruit and inventory are not rolled back and berries only when the gear is unchanged, to block buy-then-rollback refunds.
