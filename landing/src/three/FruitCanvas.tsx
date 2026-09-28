@@ -4,6 +4,9 @@ import { useEffect, useMemo, useRef } from "react";
 import { CatmullRomCurve3, Color, DoubleSide, Group, MeshStandardMaterial, Shape, ShapeGeometry, ShaderMaterial, SphereGeometry, TubeGeometry, Vector3 } from "three";
 
 /** The swirls of a devil fruit: the sphere is tiled with spirals around evenly spread (Fibonacci) centres. */
+// Reduced motion keeps the 3D fruit but turns it slowly.
+const CALM = typeof window !== "undefined" && window.matchMedia("(prefers-reduced-motion: reduce)").matches ? 0.35 : 1;
+
 const fragmentShader = /* glsl */ `
 uniform vec3 uA;
 uniform vec3 uB;
@@ -111,7 +114,7 @@ function Fruit({ colors }: { colors: [string, string] }) {
     (built.material.uniforms.uB.value as Color).lerp(target.b, 1 - Math.exp(-dt * 5));
     spin.current *= Math.exp(-dt * 2.2);
     if (group.current) {
-      group.current.rotation.y += dt * (0.45 + spin.current);
+      group.current.rotation.y += dt * (0.45 + spin.current) * CALM;
       group.current.position.y = Math.sin(performance.now() / 900) * 0.08;
     }
   });

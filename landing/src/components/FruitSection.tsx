@@ -35,7 +35,7 @@ export function FruitSection() {
   const near = useInView(stage, { margin: "300px 0px" });
   const visible = useInView(stage, { amount: 0.15 });
   const [mounted, setMounted] = useState(false);
-  const can3d = useMemo(() => typeof window !== "undefined" && webglOk() && !window.matchMedia("(prefers-reduced-motion: reduce)").matches, []);
+  const can3d = useMemo(() => typeof window !== "undefined" && webglOk(), []);
   const fine = useMemo(() => typeof window !== "undefined" && window.matchMedia("(pointer: fine)").matches, []);
   useEffect(() => {
     if (near) setMounted(true);
