@@ -156,11 +156,8 @@ export function stubFightEnd(playerHp: number, playerMaxHp: number, enemyHp: num
 /**
  * Group version of clampFightEnd: the group wins only if the rival is at half life or less, and loses only if every ally
  * still in the fight is at half life or less. Nobody can hand the fight to their side by asking.
- */
-/**
- * `allowSurrender` skips the half-life floor on a loss: for a fight nobody can flee (an Admiral dispatch),
- * yielding to certain capture is a real ending on its own — it was never meant to require being beaten
- * half to death first, since losing there only ever means custody, never a death roll.
+ * `allowSurrender` skips the half-life floor on a loss only: in a fight nobody can flee (an Admiral dispatch) yielding to
+ * certain capture is a real ending, and losing there only ever means custody, never a death roll.
  */
 export function clampJointEnd(outcome: FightEnd, allies: { hp: number; maxHp: number }[], enemyHp: number, enemyMaxHp: number, allowSurrender = false): FightEnd {
   if (outcome === "player_won" && enemyHp > enemyMaxHp / 2) return "ended";
