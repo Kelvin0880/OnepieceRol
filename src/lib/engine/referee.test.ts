@@ -376,3 +376,19 @@ describe("raiseUnderbookedWounds", () => {
     expect(raiseUnderbookedWounds(fair, actors, true).changes[0].hp).toBe(150);
   });
 });
+
+describe("applyVerdict hpImmune", () => {
+  const verdict = { narration: "x".repeat(60), changes: [{ name: "Shiro", hp: 4, stamina: 6 }] };
+  it("takes no life but still tires the fighter", () => {
+    const [s] = applyVerdict(verdict, [{ name: "Shiro", hp: 100, maxHp: 100, stamina: 80, hpImmune: true }]);
+    expect(s).toMatchObject({ hpLoss: 0, hpAfter: 100, staminaLoss: 6, staminaAfter: 74 });
+  });
+  it("also ignores a declared defeat", () => {
+    const [s] = applyVerdict({ ...verdict, defeated: ["Shiro"] }, [{ name: "Shiro", hp: 30, maxHp: 100, hpImmune: true }]);
+    expect(s.hpLoss).toBe(0);
+  });
+  it("leaves everyone else untouched", () => {
+    const [s] = applyVerdict(verdict, [{ name: "Shiro", hp: 100, maxHp: 100, stamina: 80 }]);
+    expect(s.hpLoss).toBe(4);
+  });
+});

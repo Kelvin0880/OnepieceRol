@@ -12,18 +12,18 @@ _Avoid_: user (that is the account), avatar
 
 **Canon actor**:
 A named character from the One Piece story who acts on their own in the world (Shanks, Kizaru, Dragon...). Only the **Owner** decides their death or capture.
-_Avoid_: NPC, boss
+_Avoid_: boss
 
 **Resident**:
 A filler character who lives on one island (bartender, guard, thug...) with a live state (free, hurt, captured, dead) and a successor when they die. The only invented people the narrator may present.
-_Avoid_: NPC, extra
+_Avoid_: extra
 
 **Nakama**:
-An NPC recruited into a player's crew who fights beside them. Always at the captain's level, at most three.
-_Avoid_: companion, follower
+A non-player crewmate recruited by a player, who fights beside them at the captain's level.
+_Avoid_: follower, sidekick
 
 **Owner**:
-The one account with authority over canon deaths and captures, acting through `/admin`.
+The one account with authority over canon deaths and captures, acting through the admin page.
 _Avoid_: admin (a tool, not a role), GM
 
 ### Groups and scenes
@@ -49,7 +49,7 @@ _Avoid_: dice, combat roll
 The AI that decides everything else that used to be a roll (outcomes, fates, matches, how a fight ends). Same rule: code bounds and applies.
 
 **Joint fight**:
-One fight with several fighters on the allied side (players and nakamas) against one enemy, resolved a round at a time. Its **kind** says what it is for and sets its rules: party, poneglyph, conquest, raid, arc, rescue, canon_vanguard, canon, admiral, seat, sovereign.
+One fight with several fighters on the allied side (players and nakamas) against one enemy, resolved a round at a time. Its **kind** says what it is for (an ordinary party fight, an Admiral dispatch, a duel for a seat, a raid...) and sets its rules.
 
 **Duel**:
 A one-on-one fight between two players. Non-lethal unless one side is hunted by the other's faction.

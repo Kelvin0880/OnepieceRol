@@ -4,7 +4,7 @@ import { varietyRng } from "../engine/rng";
 import { pickEventTemplate, resolveEvent, eventDifficulty, parseEventBody, EventBody } from "../engine/events";
 import { judgeOutcome, judgeChoice, judgeFightEnd } from "../ai/judge";
 import { clampFightEnd } from "../engine/judge";
-import { logiaImmuneTo } from "../engine/logia-guard";
+import { logiaShieldedFrom } from "../engine/logia-guard";
 import { maybeAutoCheckpoint } from "./ooc";
 import { dangerBlockReason } from "../engine/safety";
 import { recruitCompanion, CompanionError } from "./companions";
@@ -674,7 +674,7 @@ export async function engageCharacter(
 
   const enemyKitFull = await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId });
   const enemyKitText = enemyKitFull.text;
-  const logiaShielded = character.devilFruit?.type === "LOGIA" && logiaImmuneTo(enemyKitFull.kit);
+  const logiaShielded = logiaShieldedFrom(character.devilFruit?.type, enemyKitFull.kit);
   const scene = await getRecentScene(character.id, 10);
   const fightLog = await getFightLog(character.id, pending.createdAt);
   const grudgeContext = enemy.worldActorId ? await getGrudgeContextForNarration(enemy.worldActorId, character.id) : null;
@@ -976,7 +976,7 @@ export async function fleeCharacter(characterId: string, userId: string, intentT
   const lastNarration = [...scene].reverse().find((l) => !l.startsWith("[Jugador]"));
   const kitFull = await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId });
   const kit = kitFull.text;
-  const logiaShielded = character.devilFruit?.type === "LOGIA" && logiaImmuneTo(kitFull.kit);
+  const logiaShielded = logiaShieldedFrom(character.devilFruit?.type, kitFull.kit);
   // Escaping is judged, not rolled: the referee weighs speed, level, terrain and what the player wrote.
   const verdict = await refereeExchange(
     {
