@@ -1,0 +1,2122 @@
+{
+ "counts": {
+  "islands": 47,
+  "fruits": 207,
+  "fruitsByType": {
+   "PARAMECIA": 103,
+   "LOGIA": 26,
+   "ZOAN": 78
+  },
+  "canon": 252,
+  "residents": 794,
+  "factions": 5,
+  "roadPoneglyphs": 4,
+  "historyPoneglyphs": 6
+ },
+ "islands": [
+  {
+   "key": "foosha",
+   "name": "Pueblo Foosha",
+   "sea": "East Blue",
+   "danger": 1,
+   "minLevel": 1,
+   "faction": null,
+   "poneglyph": null,
+   "desc": "Un pueblo costero tranquilo de tejados rojos, donde los barcos pesqueros zarpan cada mañana y los niños sueñan con el mar. El punto de partida clásico de todo pirata novato."
+  },
+  {
+   "key": "marineG5",
+   "name": "Cuartel Marine G-5",
+   "sea": "East Blue",
+   "danger": 1,
+   "minLevel": 1,
+   "faction": "Marina",
+   "poneglyph": null,
+   "desc": "Una base de entrenamiento gris y disciplinada en el límite del East Blue, donde los reclutas aprenden que la justicia absoluta empieza por obedecer órdenes."
+  },
+  {
+   "key": "baltigo",
+   "name": "Isla Baltigo",
+   "sea": "East Blue",
+   "danger": 2,
+   "minLevel": 1,
+   "faction": "Ejército Revolucionario",
+   "poneglyph": null,
+   "desc": "Oculta tras corrientes que confunden a los Log Pose corrientes, esta isla alberga un cuartel secreto donde se planifica la caída del Gobierno Mundial."
+  },
+  {
+   "key": "gecko",
+   "name": "Isla Gecko",
+   "sea": "East Blue",
+   "danger": 2,
+   "minLevel": 1,
+   "faction": null,
+   "poneglyph": null,
+   "desc": "Un puerto polvoriento dominado por tablones de recompensas y tabernas donde los cazarrecompensas comparan cicatrices y cuentan mentiras sobre sus capturas."
+  },
+  {
+   "key": "shimotsuki",
+   "name": "Villa Shimotsuki",
+   "sea": "East Blue",
+   "danger": 2,
+   "minLevel": 1,
+   "faction": null,
+   "poneglyph": null,
+   "desc": "Famosa por su dojo centenario y sus herreros que aún forjan katanas siguiendo tradiciones perdidas. El acero que sale de aquí puede cortar el destino."
+  },
+  {
+   "key": "baratie",
+   "name": "Restaurante Baratie",
+   "sea": "East Blue",
+   "danger": 3,
+   "minLevel": 1,
+   "faction": null,
+   "poneglyph": null,
+   "desc": "Un galeón reconvertido en el restaurante flotante más famoso de los mares, donde cocineros pelean tan bien como cocinan y ningún hambriento se va sin comer."
+  },
+  {
+   "key": "conomi",
+   "name": "Isla Conomi",
+   "sea": "East Blue",
+   "danger": 4,
+   "minLevel": 1,
+   "faction": "Arlong",
+   "poneglyph": null,
+   "desc": "Un archipiélago de aldeas pesqueras bajo el yugo de un hombre-pez tirano que extorsiona a los humanos con impuestos imposibles de pagar."
+  },
+  {
+   "key": "loguetown",
+   "name": "Loguetown",
+   "sea": "East Blue",
+   "danger": 5,
+   "minLevel": 1,
+   "faction": "Marina",
+   "poneglyph": null,
+   "desc": "La \"Ciudad del Comienzo y el Final\", donde el Rey de los Piratas fue ejecutado. La plataforma de ejecución todavía domina la plaza. Aquí despiertan los nuevos agentes de CP-0."
+  },
+  {
+   "key": "reverseMountain",
+   "name": "Reverse Mountain",
+   "sea": "East Blue",
+   "danger": 6,
+   "minLevel": 1,
+   "faction": null,
+   "poneglyph": null,
+   "desc": "La única entrada segura al Grand Line: una montaña donde cuatro corrientes oceánicas ascienden en vez de descender. Más allá, el mundo se vuelve mucho más peligroso."
+  },
+  {
+   "key": "whiskyPeak",
+   "name": "Whisky Peak",
+   "sea": "Paradise",
+   "danger": 6,
+   "minLevel": 8,
+   "faction": "Baroque Works",
+   "poneglyph": null,
+   "desc": "Un pueblo de fiesta perpetua que recibe a cada recién llegado como a un héroe... hasta que baja la guardia. Nada en el Grand Line es lo que parece."
+  },
+  {
+   "key": "littleGarden",
+   "name": "Little Garden",
+   "sea": "Paradise",
+   "danger": 7,
+   "minLevel": 10,
+   "faction": null,
+   "poneglyph": null,
+   "desc": "Una isla prehistórica congelada en el tiempo, hogar de bestias colosales y de dos gigantes que llevan cien años duelando por una promesa de honor."
+  },
+  {
+   "key": "alabasta",
+   "name": "Alabasta",
+   "sea": "Paradise",
+   "danger": 8,
+   "minLevel": 12,
+   "faction": null,
+   "poneglyph": null,
+   "desc": "Un reino desértico al borde de la guerra civil, donde la arena guarda secretos más viejos que el propio Gobierno Mundial."
+  },
+  {
+   "key": "graveyardIsland",
+   "name": "Isla Cementerio",
+   "sea": "Nuevo Mundo",
+   "danger": 10,
+   "minLevel": 30,
+   "faction": "Marshall D. Teach (Barbanegra)",
+   "poneglyph": "Fragmento del Alba",
+   "desc": "Una fortaleza natural de rocas negras y niebla permanente, dominio absoluto de Barbanegra. Los rumores dicen que aquí guarda mucho más que su tripulación de criminales fugados de Impel Down."
+  },
+  {
+   "key": "eniesLobby",
+   "name": "Enies Lobby",
+   "sea": "Nuevo Mundo",
+   "danger": 10,
+   "minLevel": 35,
+   "faction": "Gobierno Mundial (CP-0)",
+   "poneglyph": "Fragmento del Ocaso",
+   "desc": "La sede judicial del Gobierno Mundial en persona: torres de mármol blanco, un Árbol del Conocimiento marchito, y un Portal de la Justicia que ha visto entrar a más piratas de los que ha visto salir."
+  },
+  {
+   "key": "impelDown",
+   "name": "Impel Down",
+   "sea": "Nuevo Mundo",
+   "danger": 10,
+   "minLevel": 45,
+   "faction": "Gobierno Mundial (Impel Down)",
+   "poneglyph": null,
+   "desc": "La gran prisión submarina del Gobierno Mundial: seis niveles de infierno bajo el mar. Los muy buscados cumplen aquí su condena sin fianza posible; sacar a alguien exige un nivel altísimo y vencer a los carceleros de cada nivel."
+  },
+  {
+   "key": "drum",
+   "name": "Isla Drum",
+   "sea": "Paradise",
+   "danger": 7,
+   "minLevel": 11,
+   "faction": "Sin rey (Dr. Kureha)",
+   "poneglyph": null,
+   "desc": "Un reino de nieve eterna sin rey desde que su tirano huyó. En lo alto de la montaña, una vieja doctora de risa temible cura lo que ningún hospital del mundo puede curar — y cobra a su manera."
+  },
+  {
+   "key": "skypiea",
+   "name": "Skypiea",
+   "sea": "Paradise",
+   "danger": 8,
+   "minLevel": 15,
+   "faction": "Eneru",
+   "poneglyph": null,
+   "desc": "Una isla entre las nubes, hecha de mar de algodón y ruinas de oro, donde un autoproclamado dios impone su ley a rayo limpio y ha convertido la fe de un pueblo en un arma."
+  },
+  {
+   "key": "waterSeven",
+   "name": "Water 7",
+   "sea": "Paradise",
+   "danger": 7,
+   "minLevel": 14,
+   "faction": "Galley-La / CP-0 infiltrada",
+   "poneglyph": null,
+   "desc": "La ciudad del agua: canales que hacen de calles, gigantescos astilleros y los mejores carpinteros del mundo. Bajo tanta prosperidad, alguien lleva años buscando unos planos que el Gobierno prefiere olvidados."
+  },
+  {
+   "key": "sabaody",
+   "name": "Archipiélago Sabaody",
+   "sea": "Paradise",
+   "danger": 8,
+   "minLevel": 18,
+   "faction": "Marina / Dragones Celestiales",
+   "poneglyph": null,
+   "desc": "Setenta y nueve manglares gigantes que respiran burbujas, la última parada antes de bajar al Nuevo Mundo. Bajo la alegría de sus tiendas, una casa de subastas vende personas, y a un paso, los Dragones Celestiales pasean impunes."
+  },
+  {
+   "key": "fishMan",
+   "name": "Isla Gyojin",
+   "sea": "Nuevo Mundo",
+   "danger": 9,
+   "minLevel": 22,
+   "faction": "Nuevos Piratas Gyojin (Hody Jones)",
+   "poneglyph": null,
+   "desc": "Una ciudad de cristal a diez mil metros bajo el mar, gobernada por un reino de gyojin y sirenas y amenazada por un odio antiguo hacia los humanos que ahora alguien ha decidido convertir en guerra."
+  },
+  {
+   "key": "punkHazard",
+   "name": "Punk Hazard",
+   "sea": "Nuevo Mundo",
+   "danger": 9,
+   "minLevel": 25,
+   "faction": "Caesar Clown",
+   "poneglyph": null,
+   "desc": "Una isla partida en dos por un duelo entre dos Almirantes: una mitad arde y la otra está cubierta de hielo eterno. En el laboratorio sellado del centro, un científico sin escrúpulos produce armas y venenos para quien pague."
+  },
+  {
+   "key": "wholeCake",
+   "name": "Whole Cake Island",
+   "sea": "Nuevo Mundo",
+   "danger": 10,
+   "minLevel": 28,
+   "faction": "Charlotte Katakuri",
+   "poneglyph": null,
+   "desc": "Un archipiélago de tartas, torres de caramelo y bosques de galleta: el reino de una de las tripulaciones más grandes del mundo, hoy mantenido por su hijo más disciplinado, un hombre que jamás pierde la calma ni cede un centímetro."
+  },
+  {
+   "key": "wano",
+   "name": "País de Wano",
+   "sea": "Nuevo Mundo",
+   "danger": 10,
+   "minLevel": 32,
+   "faction": "Sin gobierno (samuráis)",
+   "poneglyph": null,
+   "desc": "Un país cerrado durante siglos tras montañas y cascadas, cuna de las mejores espadas del mundo. Cayó un tirano, pero los samuráis y ninjas que lo reconstruyen saben que la paz es solo el intervalo entre dos guerras."
+  },
+  {
+   "key": "abyss",
+   "name": "Isla Abismo",
+   "sea": "Nuevo Mundo",
+   "danger": 10,
+   "minLevel": 38,
+   "faction": "Custodios de las Mareas (Thalassa)",
+   "poneglyph": "Fragmento del Abismo",
+   "desc": "Una isla que las mareas esconden y devuelven a su antojo: emerge unas horas y vuelve a hundirse otras tantas. Los Custodios de las Mareas llevan siglos guardando lo que hay en su corazón de coral negro, un Poneglifo que el mar no quiso llevarse."
+  },
+  {
+   "key": "maryGeoise",
+   "name": "Mary Geoise",
+   "sea": "Nuevo Mundo",
+   "danger": 10,
+   "minLevel": 42,
+   "faction": "Gobierno Mundial (Gorosei)",
+   "poneglyph": "Fragmento Final",
+   "desc": "La Tierra Sagrada sobre la Línea Roja, donde viven los Dragones Celestiales y de donde emana la ley que rige el mundo. Palacios blancos, jardines impecables y, en el corazón del Castillo de Pangea, un salón al que ni los Almirantes tienen acceso."
+  },
+  {
+   "key": "laughTale",
+   "name": "Laugh Tale",
+   "sea": "Nuevo Mundo",
+   "danger": 10,
+   "minLevel": 50,
+   "faction": null,
+   "poneglyph": null,
+   "desc": "La última isla, la que nadie encuentra si no ha leído los cuatro Poneglifos de Ruta. Un lugar que ríe con quien llega y guarda el mayor secreto de la historia: lo que fue el One Piece, y por qué el mundo lleva ochocientos años sin poder mencionarlo."
+  },
+  {
+   "key": "orangeTown",
+   "name": "Orange Town",
+   "sea": "East Blue",
+   "danger": 2,
+   "minLevel": 1,
+   "faction": "Sin gobierno (bandas locales)",
+   "poneglyph": null,
+   "desc": "Un pueblo de casas naranjas que vive con miedo: una banda de piratas con circo se ha adueñado del puerto y cobra por todo. La gente aún sonríe, pero cierra las puertas antes de que caiga el sol."
+  },
+  {
+   "key": "syrup",
+   "name": "Villa Syrup",
+   "sea": "East Blue",
+   "danger": 2,
+   "minLevel": 1,
+   "faction": "Sin gobierno",
+   "poneglyph": null,
+   "desc": "Un pueblo costero tranquilo al pie de una colina con una mansión. Los niños juegan a ser piratas y un narrador de historias cuenta aventuras tan grandes que nadie las cree del todo."
+  },
+  {
+   "key": "ohara",
+   "name": "Ohara",
+   "sea": "Paradise",
+   "danger": 6,
+   "minLevel": 14,
+   "faction": "Sin gobierno (ruinas)",
+   "poneglyph": null,
+   "desc": "Lo que queda de la isla de los arqueólogos: un árbol enorme carbonizado, una biblioteca convertida en cenizas y un silencio que pesa. Se dice que el Gobierno arrasó la isla por estudiar lo que no debía."
+  },
+  {
+   "key": "marineford",
+   "name": "Marineford",
+   "sea": "Paradise",
+   "danger": 9,
+   "minLevel": 26,
+   "faction": "Marina (Cuartel General)",
+   "poneglyph": null,
+   "desc": "El cuartel general de la Marina, una fortaleza blanca con una plaza enorme donde se han decidido guerras. Hay más almirantes por metro cuadrado que en cualquier otro lugar del mundo, y ninguno tiene prisa por sonreír."
+  },
+  {
+   "key": "dressrosa",
+   "name": "Dressrosa",
+   "sea": "Nuevo Mundo",
+   "danger": 9,
+   "minLevel": 28,
+   "faction": "Reino de Dressrosa (reconstruido)",
+   "poneglyph": null,
+   "desc": "La isla de la pasión: flores, plazas, un coliseo donde los gladiadores luchan por un premio imposible y, bajo el ruido de la fiesta, las cicatrices de un reinado de marionetas que aún nadie termina de olvidar."
+  },
+  {
+   "key": "zou",
+   "name": "Zou",
+   "sea": "Nuevo Mundo",
+   "danger": 9,
+   "minLevel": 30,
+   "faction": "Mink de Zou",
+   "poneglyph": null,
+   "desc": "Un elefante gigante, mayor que una isla, que camina por el mar con una ciudad-bosque sobre el lomo. Los mink lo llaman hogar, guardan un Poneglifo y aún recuerdan un juramento a una familia lejana."
+  },
+  {
+   "key": "egghead",
+   "name": "Isla Egghead",
+   "sea": "Nuevo Mundo",
+   "danger": 10,
+   "minLevel": 36,
+   "faction": "Gobierno Mundial (Laboratorio de Vegapunk)",
+   "poneglyph": null,
+   "desc": "La isla del futuro: torres de cristal, robots por las calles y un laboratorio flotante donde se decide lo que la humanidad será capaz de hacer. Tiene más vigilancia que cualquier prisión, y todo el mundo quiere entrar."
+  },
+  {
+   "key": "jaya",
+   "name": "Jaya",
+   "sea": "Paradise",
+   "danger": 5,
+   "minLevel": 9,
+   "faction": "Sin gobierno (Ciudad Mock y Ciudad Ley)",
+   "poneglyph": null,
+   "desc": "Una isla partida en dos: la Ciudad Mock, donde los piratas beben, cantan y se roban, y la Ciudad Ley, donde la Marina sueña con que algún día se calmen. En la selva, un buscador de oro jura que la Ciudad de Oro existió."
+  },
+  {
+   "key": "longRing",
+   "name": "Long Ring Long Land",
+   "sea": "Paradise",
+   "danger": 6,
+   "minLevel": 11,
+   "faction": "Sin gobierno (isla de duelos)",
+   "poneglyph": null,
+   "desc": "Una isla de llanuras larguísimas y bosques que parecen no acabar, famosa por los duelos donde se apuesta el orgullo, la tripulación y, con frecuencia, el barco entero."
+  },
+  {
+   "key": "thrillerBark",
+   "name": "Thriller Bark",
+   "sea": "Paradise",
+   "danger": 8,
+   "minLevel": 16,
+   "faction": "Sin gobierno (barco fantasma de Moria)",
+   "poneglyph": null,
+   "desc": "Un barco del tamaño de una isla, cubierto de niebla y cementerios, donde los muertos caminan y una sombra más grande que todos vigila desde la torre. Aquí se robó, y aquí se vuelve a robar."
+  },
+  {
+   "key": "amazonLily",
+   "name": "Amazon Lily",
+   "sea": "Paradise",
+   "danger": 8,
+   "minLevel": 20,
+   "faction": "Reino Kuja (solo mujeres)",
+   "poneglyph": null,
+   "desc": "La isla de las guerreras Kuja: bosques enormes, serpientes gigantes y una emperatriz que no permite que ningún hombre pise su reino más de lo imprescindible. Los forasteros aprenden a hablar bajito."
+  },
+  {
+   "key": "kuraigana",
+   "name": "Isla Kuraigana",
+   "sea": "Paradise",
+   "danger": 9,
+   "minLevel": 27,
+   "faction": "Sin gobierno (castillo de un espadachín)",
+   "poneglyph": null,
+   "desc": "Una isla de niebla, cuervos y un castillo en ruinas donde vive un espadachín que solo se levanta por los duelos que le interesan. Nadie llega por casualidad."
+  },
+  {
+   "key": "toroNegro",
+   "name": "Isla del Toro Negro",
+   "sea": "Nuevo Mundo",
+   "danger": 8,
+   "minLevel": 30,
+   "faction": "Piratas Black Bulls (Yonko Kirito)",
+   "poneglyph": null,
+   "desc": "Una isla volcánica en pleno Nuevo Mundo, con un puerto excavado en la roca y una fortaleza de basalto negro sobre el acantilado. Sobre la torre más alta ondea la bandera de un toro negro. Aquí no se pide permiso: se pide audiencia."
+  },
+  {
+   "key": "elbaf",
+   "name": "Elbaf",
+   "sea": "Nuevo Mundo",
+   "danger": 10,
+   "minLevel": 34,
+   "faction": "Guerreros de Elbaf (gigantes)",
+   "poneglyph": null,
+   "desc": "La tierra de los gigantes: bosques colosales, árboles como montañas y guerreros que llevan generaciones peleando por un honor que ya casi nadie sabe explicar. Los humanos aquí son los que caben en una mano."
+  },
+  {
+   "key": "tequilaWolf",
+   "name": "Tequila Wolf",
+   "sea": "East Blue",
+   "danger": 1,
+   "minLevel": 1,
+   "faction": "Gobierno Mundial (CP)",
+   "poneglyph": null,
+   "desc": "Un puente interminable que el Gobierno Mundial lleva setecientos años construyendo sobre el mar del East Blue. Entre andamios, grúas y barracones grises, Cipher Pol entrena en silencio a sus reclutas: aquí se aprende a obedecer, a mirar sin ser visto y a no hacer preguntas."
+  },
+  {
+   "key": "navarone",
+   "name": "G-8 Navarone",
+   "sea": "Paradise",
+   "danger": 6,
+   "minLevel": 10,
+   "faction": "Marina",
+   "poneglyph": null,
+   "desc": "Una fortaleza de la Marina encajada en un anillo de acantilados, con un solo acceso por mar y una cocina que alimenta a miles de marines. Se dice que ningún pirata ha salido de aquí por su propio pie."
+  },
+  {
+   "key": "banaro",
+   "name": "Isla Banaro",
+   "sea": "Paradise",
+   "danger": 7,
+   "minLevel": 14,
+   "faction": null,
+   "poneglyph": null,
+   "desc": "Una isla desierta cuyo único pueblo quedó reducido a cenizas en el duelo entre el fuego y la oscuridad. Aún hay marcas de quemaduras en las piedras y un silencio que no parece natural."
+  },
+  {
+   "key": "rusukaina",
+   "name": "Isla Rusukaina",
+   "sea": "Paradise",
+   "danger": 8,
+   "minLevel": 18,
+   "faction": null,
+   "poneglyph": null,
+   "desc": "Una isla del Calm Belt donde las estaciones cambian cada diez días y las bestias son tan fuertes que el invierno las vuelve aún más fieras. Un lugar para quien quiere entrenar hasta romperse."
+  },
+  {
+   "key": "kamabakka",
+   "name": "Reino Kamabakka",
+   "sea": "Paradise",
+   "danger": 6,
+   "minLevel": 12,
+   "faction": "Ejército Revolucionario",
+   "poneglyph": null,
+   "desc": "El reino de los okama, un paraíso rosa donde Emporio Ivankov entrena a sus soldados y esconde a revolucionarios fugitivos. Sus 'artes de combate' son tan extravagantes como letales."
+  },
+  {
+   "key": "hachinosu",
+   "name": "Hachinosu",
+   "sea": "Nuevo Mundo",
+   "danger": 10,
+   "minLevel": 32,
+   "faction": "Piratas de Barbanegra",
+   "poneglyph": null,
+   "desc": "La Isla Colmena: el refugio pirata donde Barbanegra ha levantado su nuevo imperio. Una calavera de piedra domina el puerto y la ley es simple: aquí manda quien no ha caído todavía."
+  },
+  {
+   "key": "nuevoMarineford",
+   "name": "Nuevo Marineford",
+   "sea": "Nuevo Mundo",
+   "danger": 10,
+   "minLevel": 30,
+   "faction": "Marina",
+   "poneglyph": null,
+   "desc": "El antiguo G-1, convertido en el cuartel general de la Marina tras la guerra de Marineford. Desde aquí el Almirante de Flota dirige la justicia absoluta sobre el Nuevo Mundo, a un paso de la Tierra Sagrada."
+  }
+ ],
+ "factions": [
+  {
+   "key": "PIRATE",
+   "start": "Pueblo Foosha",
+   "metric": "Recompensa",
+   "ladder": [
+    "Sin recompensa",
+    "Novato de la Grand Line",
+    "Pirata de interés",
+    "Superrookie",
+    "Amenaza reconocida",
+    "Objetivo prioritario",
+    "Candidato a Shichibukai",
+    "Rango de Emperador",
+    "Leyenda viviente",
+    "Rey Pirata en ciernes"
+   ]
+  },
+  {
+   "key": "MARINE",
+   "start": "Cuartel Marine G-5",
+   "metric": "Mérito",
+   "ladder": [
+    "Recluta",
+    "Marine Raso",
+    "Cabo",
+    "Sargento",
+    "Teniente",
+    "Capitán",
+    "Comodoro",
+    "Contraalmirante",
+    "Vicealmirante"
+   ]
+  },
+  {
+   "key": "REVOLUTIONARY",
+   "start": "Isla Baltigo",
+   "metric": "Influencia",
+   "ladder": [
+    "Simpatizante",
+    "Célula activa",
+    "Agente de campo",
+    "Organizador regional",
+    "Comandante de brigada",
+    "Jefe de ejército",
+    "Veterano de la revolución",
+    "Núcleo revolucionario"
+   ]
+  },
+  {
+   "key": "BOUNTY_HUNTER",
+   "start": "Isla Gecko",
+   "metric": "Reputación de gremio",
+   "ladder": [
+    "Cazador novato",
+    "Cazador de gremio",
+    "Rastreador temido",
+    "Verdugo independiente",
+    "Cazador de leyenda",
+    "Rival de la Marina",
+    "Azote de los mares"
+   ]
+  },
+  {
+   "key": "CP0",
+   "start": "Tequila Wolf",
+   "metric": "Confianza del Gobierno",
+   "ladder": [
+    "Aspirante",
+    "Agente CP10",
+    "Agente CP9",
+    "Agente CP8",
+    "Agente CP7",
+    "Agente CP5",
+    "Agente CP3",
+    "Agente CP1",
+    "Agente CP0",
+    "Caballero Divino"
+   ]
+  }
+ ],
+ "archetypes": [
+  {
+   "name": "Espadachín",
+   "description": "Ágil y letal con la hoja en la mano. Prospera en duelos rápidos."
+  },
+  {
+   "name": "Luchador Cuerpo a Cuerpo",
+   "description": "Puños de acero y un cuerpo que absorbe castigo sin quebrarse."
+  },
+  {
+   "name": "Tirador",
+   "description": "Frío, calculador, y letal a distancia antes de que el enemigo reaccione."
+  },
+  {
+   "name": "Fuerza Bruta",
+   "description": "Lento pero devastador. Lo que golpea, no se vuelve a levantar."
+  }
+ ],
+ "canon": {
+  "yonko": [
+   "Shanks",
+   "Marshall D. Teach",
+   "Buggy",
+   "Monkey D. Luffy"
+  ],
+  "admirals": [
+   "Kizaru",
+   "Fujitora",
+   "Ryokugyu",
+   "Sakazuki",
+   "Aokiji (Kuzan)"
+  ],
+  "gorosei": [
+   "Saint Jaygarcia Saturn",
+   "Topman Warcury",
+   "Marcus Mars",
+   "Ethanbaron V. Nusjuro",
+   "Shepherd Ju Peter"
+  ],
+  "revolution": [
+   "Sabo",
+   "Monkey D. Dragon",
+   "Emporio Ivankov",
+   "Koala",
+   "Belo Betty",
+   "Lindbergh",
+   "Morley",
+   "Karasu",
+   "Hack",
+   "Inazuma",
+   "Terry Gilteo"
+  ],
+  "warlords": [
+   "Dracule Mihawk",
+   "Boa Hancock",
+   "Crocodile",
+   "Donquixote Doflamingo",
+   "Gecko Moria",
+   "Bartholomew Kuma"
+  ],
+  "cipherPol": [
+   "Kaku",
+   "Kalifa",
+   "Rob Lucci",
+   "Spandam",
+   "Stussy",
+   "Jabra",
+   "Blueno",
+   "Fukuro",
+   "Kumadori",
+   "Guernica",
+   "Joseph",
+   "Maha",
+   "Gismonda"
+  ]
+ },
+ "history": [
+  {
+   "title": "I. El Reino Sin Nombre",
+   "island": "Alabasta"
+  },
+  {
+   "title": "II. La Campana de las Nubes",
+   "island": "Skypiea"
+  },
+  {
+   "title": "III. La Promesa del Mar",
+   "island": "Isla Gyojin"
+  },
+  {
+   "title": "IV. La Voz de Todas las Cosas",
+   "island": "Zou"
+  },
+  {
+   "title": "V. Las Puertas Cerradas",
+   "island": "País de Wano"
+  },
+  {
+   "title": "VI. Los Gigantes que Recordaban",
+   "island": "Elbaf"
+  }
+ ],
+ "fruits": [
+  {
+   "name": "Bara Bara no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Permite separar el cuerpo en pedazos a voluntad, inmune a cortes."
+  },
+  {
+   "name": "Sube Sube no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Vuelve la piel perfectamente resbaladiza; los golpes y agarres resbalan sin efecto."
+  },
+  {
+   "name": "Kilo Kilo no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Cambia el propio peso entre 1 y 10.000 kilos a voluntad."
+  },
+  {
+   "name": "Bomu Bomu no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Todo el cuerpo, incluidos mocos y aliento, puede detonar como explosivo."
+  },
+  {
+   "name": "Doa Doa no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Crea puertas en cualquier superficie, incluido el aire."
+  },
+  {
+   "name": "Toge Toge no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "El cuerpo puede cubrirse de púas afiladas como agujas."
+  },
+  {
+   "name": "Horo Horo no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Invoca espíritus que debilitan la voluntad de lucha del enemigo."
+  },
+  {
+   "name": "Hana Hana no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Hace florecer partes del propio cuerpo en cualquier superficie al alcance de la vista."
+  },
+  {
+   "name": "Doku Doku no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "El cuerpo genera y controla venenos capaces de corroer una isla entera."
+  },
+  {
+   "name": "Bari Bari no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Genera barreras irrompibles a voluntad, incluso para atacar."
+  },
+  {
+   "name": "Ope Ope no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Crea una \"sala\" esférica donde su usuario controla el espacio como un cirujano todopoderoso."
+  },
+  {
+   "name": "Ito Ito no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Genera hilos más afilados que espadas y capaces de controlar cuerpos ajenos como marionetas."
+  },
+  {
+   "name": "Kage Kage no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Manipula sombras propias y ajenas, pudiendo robarlas para crear ejércitos de zombis."
+  },
+  {
+   "name": "Zushi Zushi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "LEGENDARY",
+   "description": "Controla la gravedad a voluntad, capaz de atraer meteoritos del espacio."
+  },
+  {
+   "name": "Mero Mero no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Convierte en piedra a quien sienta atracción y baje la guardia ante su usuario."
+  },
+  {
+   "name": "Jiki Jiki no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Genera y controla campos magnéticos capaces de atraer o repeler metal a voluntad."
+  },
+  {
+   "name": "Mochi Mochi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "LEGENDARY",
+   "description": "Un híbrido especial de Logia y Paramecia: cuerpo, creación y control absoluto del mochi, \"más fuerte que la propia goma\"."
+  },
+  {
+   "name": "Toshi Toshi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Altera la edad propia o ajena con un toque, tanto para rejuvenecer como para envejecer de golpe."
+  },
+  {
+   "name": "Suna Suna no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "EPIC",
+   "description": "Cuerpo, creación y control de arena; puede absorber la humedad de cualquier cosa."
+  },
+  {
+   "name": "Mera Mera no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Cuerpo, creación y control absoluto del fuego."
+  },
+  {
+   "name": "Hie Hie no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Cuerpo, creación y control del hielo, capaz de congelar mares enteros."
+  },
+  {
+   "name": "Pika Pika no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Cuerpo, creación y control de la luz; ataca y se mueve a velocidad lumínica."
+  },
+  {
+   "name": "Moku Moku no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "RARE",
+   "description": "Cuerpo, creación y control del humo; puede volverse una nube cortante e impenetrable."
+  },
+  {
+   "name": "Yami Yami no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "MYTHICAL_TIER",
+   "description": "Controla la oscuridad y la gravedad de la nada misma; la única Logia que, en vez de esquivar, atrae cualquier golpe hacia sí."
+  },
+  {
+   "name": "Magu Magu no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "MYTHICAL_TIER",
+   "description": "Cuerpo, creación y control del magma, considerado el elemento más fuerte al superar al fuego."
+  },
+  {
+   "name": "Ushi Ushi no Mi: Modelo Bisonte",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Transformación en un poderoso bisonte de combate, o un híbrido con fuerza descomunal."
+  },
+  {
+   "name": "Neko Neko no Mi: Modelo Leopardo",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "EPIC",
+   "description": "Transformación en un leopardo ágil y letal, o un híbrido de reflejos felinos."
+  },
+  {
+   "name": "Inu Inu no Mi: Modelo Okuchi no Makami",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "EPIC",
+   "description": "Transformación en el lobo-deidad guardián que puede caminar sobre el hielo a voluntad."
+  },
+  {
+   "name": "Hito Hito no Mi",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "RARE",
+   "description": "Transformación (o hibridación) en un ser humano completo — para quien no lo era, un cambio que reordena su vida entera."
+  },
+  {
+   "name": "Hito Hito no Mi: Modelo Daibutsu",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "LEGENDARY",
+   "description": "Transformación en un gigantesco Buda dorado, con ondas de choque devastadoras."
+  },
+  {
+   "name": "Tori Tori no Mi: Modelo Fénix",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "LEGENDARY",
+   "description": "Transformación en un fénix de llamas azules capaces de regenerar heridas mortales."
+  },
+  {
+   "name": "Mori Mori no Mi",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "LEGENDARY",
+   "description": "Convierte cualquier terreno en un bosque denso e impenetrable a voluntad, terreno y trampa a la vez."
+  },
+  {
+   "name": "Yomi Yomi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Devuelve el alma al cuerpo tras la muerte, una sola vez — quien la come vive una segunda vida."
+  },
+  {
+   "name": "Uo Uo no Mi: Modelo Seiryu",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "MYTHICAL_TIER",
+   "description": "Transformación en un dragón oriental legendario capaz de controlar el clima a su alrededor."
+  },
+  {
+   "name": "Hito Hito no Mi: Modelo Nika",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "MYTHICAL_TIER",
+   "description": "La legendaria \"fruta más ridícula del mundo\": otorga un cuerpo de goma con libertad absoluta de movimiento, dicha en leyendas como el fruto del Guerrero de la Liberación."
+  },
+  {
+   "name": "Goro Goro no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Cuerpo, creación y control de la electricidad: descargas, velocidad del rayo y una Observación casi infalible para quien la domina."
+  },
+  {
+   "name": "Gasu Gasu no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Convierte al usuario en gas y le deja crear atmósferas venenosas o explosivas: letal en cerrado, temible en cualquier sitio."
+  },
+  {
+   "name": "Pamu Pamu no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Permite hacer estallar cualquier cosa que el usuario toque; cuanto más grande el objeto, más inconsistente es el estallido."
+  },
+  {
+   "name": "Noro Noro no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Emite rayos que ralentizan todo lo que tocan durante unos segundos: una ventaja enorme para quien sepa aprovecharla."
+  },
+  {
+   "name": "Buki Buki no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Convierte cualquier parte del cuerpo en armas y proyectiles; el arsenal más versátil que un cuerpo puede llevar."
+  },
+  {
+   "name": "Nagi Nagi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Crea zonas de silencio absoluto: sin sonido, ni un paso ni un grito se oye. Un sueño para infiltradores."
+  },
+  {
+   "name": "Fuwa Fuwa no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Hace flotar cualquier objeto que el usuario toque; útil para evitar golpes y para lanzar lo que el enemigo no espera."
+  },
+  {
+   "name": "Mane Mane no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Permite copiar el rostro y la voz de cualquier persona que el usuario haya tocado. Poder de espías y estafadores."
+  },
+  {
+   "name": "Supa Supa no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Convierte cualquier parte del cuerpo en una cuchilla capaz de cortar el acero como si fuera pan."
+  },
+  {
+   "name": "Kira Kira no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "El cuerpo se vuelve un diamante de dureza extrema: casi indestructible, aunque pesado y lento."
+  },
+  {
+   "name": "Woshu Woshu no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Lava y limpia todo lo que toca, incluida la ropa y, en manos hábiles, hasta el sudor del enemigo... y su voluntad de pelear."
+  },
+  {
+   "name": "Guru Guru no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Permite girar cualquier parte del cuerpo a velocidades vertiginosas: hélices, taladros y trompos humanos."
+  },
+  {
+   "name": "Kame Kame no Mi",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Transformación en tortuga: caparazón resistente, buena defensa y una presencia tranquila a la que nadie da importancia... hasta que es tarde."
+  },
+  {
+   "name": "Ryu Ryu no Mi: Modelo Pteranodon",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "EPIC",
+   "description": "Transformación en un pterodáctilo gigante: vuelo, mordida demoledora y una envergadura que oscurece el sol."
+  },
+  {
+   "name": "Sara Sara no Mi: Modelo Axolotl",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "EPIC",
+   "description": "Transformación en un anfibio de regeneración casi absoluta: heridas que se cierran solas y un cuerpo que se adapta."
+  },
+  {
+   "name": "Gura Gura no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "MYTHICAL_TIER",
+   "description": "Genera terremotos con cada golpe: puede resquebrajar el aire, el mar y el propio mundo."
+  },
+  {
+   "name": "Nikyu Nikyu no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "LEGENDARY",
+   "description": "Repele cualquier cosa que toquen sus palmas, incluso el dolor o la distancia misma."
+  },
+  {
+   "name": "Ori Ori no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Encierra al rival en grilletes y jaulas de hierro que se cierran alrededor de su cuerpo."
+  },
+  {
+   "name": "Soru Soru no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "MYTHICAL_TIER",
+   "description": "Arranca y manipula almas: da vida a objetos y a homies, y roba años de vida."
+  },
+  {
+   "name": "Pero Pero no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Convierte su saliva en caramelo duro y adhesivo con el que inmoviliza y forja armas."
+  },
+  {
+   "name": "Bisu Bisu no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Crea y moldea galleta dura como el acero, con la que fabrica armas y ejércitos."
+  },
+  {
+   "name": "Shibo Shibo no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Exprime cualquier cuerpo hasta secarlo, arrancándole sus fluidos y su fuerza."
+  },
+  {
+   "name": "Ryu Ryu no Mi: Modelo Brachiosaurus",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "EPIC",
+   "description": "Forma híbrida de un saurópodo colosal: un cuello que golpea como una maza y un cuerpo casi indestructible."
+  },
+  {
+   "name": "Zou Zou no Mi: Modelo Mamut",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "EPIC",
+   "description": "Un mamut colosal, tan pesado como imparable, que aplasta lo que cae bajo sus patas."
+  },
+  {
+   "name": "Ryu Ryu no Mi: Modelo Pachycephalosaurus",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "RARE",
+   "description": "Cráneo de piedra y una embestida de cabeza capaz de quebrar muros."
+  },
+  {
+   "name": "Ryu Ryu no Mi: Modelo Allosaurus",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "RARE",
+   "description": "Un depredador ancestral de mandíbulas enormes: velocidad y mordida devastadoras."
+  },
+  {
+   "name": "Ushi Ushi no Mi: Modelo Jirafa",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Alcance y patadas de jirafa: un cuello largo y golpes desde donde nadie espera."
+  },
+  {
+   "name": "Dia Dia no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Convierte el cuerpo en diamante, casi indestructible, a costa de algo de velocidad."
+  },
+  {
+   "name": "Baku Baku no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Devora cualquier cosa y fusiona lo comido con su propio cuerpo."
+  },
+  {
+   "name": "Bane Bane no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Convierte sus piernas y brazos en muelles: saltos, rebotes y golpes en cadena."
+  },
+  {
+   "name": "Shiro Shiro no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Un castillo viviente dentro de su cuerpo, con armas, ejército y refugio propio."
+  },
+  {
+   "name": "Oto Oto no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Ondas de sonido que lo transforman en un arma: golpes de vibración y notas que desorientan."
+  },
+  {
+   "name": "Doru Doru no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Cera endurecible con la que fabrica armas, muros y trampas."
+  },
+  {
+   "name": "Horu Horu no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Hormonas a voluntad: cura, transforma y altera cuerpos."
+  },
+  {
+   "name": "Wara Wara no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Su cuerpo de paja transfiere el daño recibido a un muñeco y a quien lo golpea."
+  },
+  {
+   "name": "Awa Awa no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Burbujas de jabón que dejan todo resbaladizo, limpio... y sin fuerzas."
+  },
+  {
+   "name": "Inu Inu no Mi: Modelo Lobo",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Transformación en lobo: olfato, velocidad y una mordida certera."
+  },
+  {
+   "name": "Yuki Yuki no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Cuerpo y control de la nieve y la ventisca; congela con un aliento."
+  },
+  {
+   "name": "Tsuta Tsuta no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Hace brotar hiedra viva desde su cuerpo y el suelo: enreda, trepa, ata y forma muros verdes. Crece más rápido con humedad y sol; el fuego la marchita."
+  },
+  {
+   "name": "Kagami Kagami no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Convierte superficies en espejos que devuelven ataques directos y crean reflejos engañosos. No refleja lo que no ve venir ni ataques por la espalda."
+  },
+  {
+   "name": "Sango Sango no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Cubre su cuerpo y armas de coral duro y afilado, y hace crecer arrecifes cortantes bajo sus enemigos. Necesita agua cerca para regenerar el coral."
+  },
+  {
+   "name": "Hoshi Hoshi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Lanza estrellas de luz cortante y ligera que rebotan entre los enemigos; de noche sus estrellas brillan más y llegan más lejos."
+  },
+  {
+   "name": "Arashi Arashi no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo se vuelve tormenta: viento, lluvia y rayos a su voluntad. Los ataques comunes lo atraviesan; el Haki de Armadura sí le hace daño."
+  },
+  {
+   "name": "Tora Tora no Mi: Modelo Tigre Blanco",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "RARE",
+   "description": "Se transforma en un tigre blanco: zarpazos, emboscadas silenciosas y una velocidad felina en la nieve y el bosque."
+  },
+  {
+   "name": "Same Same no Mi: Modelo Tiburón Martillo",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Un tiburón martillo: gran olfato para la sangre, cabezazos brutales y ventaja bajo el agua... aunque, como toda fruta, le impide nadar."
+  },
+  {
+   "name": "Shio Shio no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Controla las mareas: sube y baja el agua de la zona, forma olas y arrastra a sus rivales. Cerca del mar es formidable; lejos de él, casi inútil."
+  },
+  {
+   "name": "Hari Hari no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Crece y dispara agujas de todos los tamaños desde su piel, desde alfileres precisos hasta lanzas. Sus agujas no atraviesan el Haki de Armadura fuerte."
+  },
+  {
+   "name": "Kusuri Kusuri no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Prepara con su cuerpo remedios y venenos: cura heridas ajenas, adormece o debilita. Cada dosis le cuesta aguante y no revive a nadie."
+  },
+  {
+   "name": "Yume Yume no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Entra en los sueños de quien duerme o está aturdido y los moldea. Un rival bien despierto y entrenado casi no se ve afectado."
+  },
+  {
+   "name": "Rasen Rasen no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Todo lo que toca gira: puños taladro, torbellinos de aire y desvíos de golpes. Se marea si abusa de girar sobre sí mismo."
+  },
+  {
+   "name": "Tsuki Tsuki no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Fruta Logia lunar: su cuerpo se vuelve luz de luna y polvo plateado. Puede disparar haces lunares cortantes, teñir de plata todo lo que toca y cargar de peso lunar o aligerar (gravedad lunar) a quien está cerca; sus mareas tiran del agua y de los cuerpos. Su poder crece de noche y bajo luna llena; en un día nublado o de luna nueva es mucho más débil. Al ser Logia, los golpes normales lo atraviesan: solo el Haki de Armadura lo hiere. El agua de mar y el Kairoseki lo anulan como a toda fruta."
+  },
+  {
+   "name": "Hobi Hobi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Convierte a quien toca en juguete y borra su recuerdo de todos: quien fue juguete deja de existir en la memoria del mundo. El hechizo se rompe si su dueña cae o pierde la concentración."
+  },
+  {
+   "name": "Memo Memo no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Lee, extrae, corta y reescribe recuerdos: borra un miedo, injerta un falso recuerdo o pone a alguien contra los suyos. Cada intervención exige contacto visual y deja a su usuario agotado."
+  },
+  {
+   "name": "Mira Mira no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Crea espejos donde quiera que haya superficie, entra y sale por ellos, copia el aspecto de quien se refleje en ellos y lanza reflejos como armas de luz."
+  },
+  {
+   "name": "Netsu Netsu no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Su cuerpo irradia un calor extremo: derrite el acero al tocarlo, cuece el aire a su alrededor y convierte sus puños en hierros al rojo vivo."
+  },
+  {
+   "name": "Beri Beri no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Su cuerpo se separa en decenas de bolas del tamaño de una baya que se mueven solas, se reagrupan y golpean por todas partes; es casi imposible cortarlo de un tajo."
+  },
+  {
+   "name": "Beta Beta no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Segrega un lodo viscoso y pegajoso que inmoviliza, engancha armas y recubre el suelo; puede endurecerlo en muros o en armas."
+  },
+  {
+   "name": "Mini Mini no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Encoge el cuerpo hasta el tamaño de una mano y lo vuelve a agrandar a voluntad: infiltración, evasión, y golpes de gigante al volver a su tamaño."
+  },
+  {
+   "name": "Hebi Hebi no Mi: Modelo Anaconda",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Un cuerpo de serpiente anaconda: constricción aplastante, movimiento silencioso y una mirada que hace dudar. Fuerte en la selva, torpe en el frío."
+  },
+  {
+   "name": "Hebi Hebi no Mi: Modelo Cobra Real",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "RARE",
+   "description": "La cobra real: veneno paralizante, capucha intimidante y velocidad de mordida. Su veneno no mata a la primera; adormece y debilita."
+  },
+  {
+   "name": "Mushi Mushi no Mi: Modelo Escarabajo Rinoceronte",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Coraza de escarabajo y un cuerno enorme: embestidas brutales, vuelo torpe pero fuerte y una resistencia excelente a los golpes."
+  },
+  {
+   "name": "Mushi Mushi no Mi: Modelo Avispa",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "RARE",
+   "description": "Alas rápidas y un aguijón envenenado: ataques en picado, vuelo veloz y enjambres cuando el usuario es hábil."
+  },
+  {
+   "name": "Tori Tori no Mi: Modelo Albatros",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "El albatros: vuelo de larga distancia sin descanso, planeo casi infinito y buena vista sobre el mar. Poco dañino en combate directo."
+  },
+  {
+   "name": "Neko Neko no Mi: Modelo Puma",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Un puma ágil: saltos gigantescos, zarpazos y emboscadas silenciosas en terreno accidentado."
+  },
+  {
+   "name": "Inu Inu no Mi: Modelo Chacal",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Olfato de chacal y la mordida del carroñero: rastrea a cualquiera herido y resiste el calor del desierto sin agua."
+  },
+  {
+   "name": "Inu Inu no Mi: Modelo Teckel",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Cuerpo largo y bajo de perro salchicha: se cuela por rendijas, muerde tobillos y es tan terco como inofensivo parece."
+  },
+  {
+   "name": "Uma Uma no Mi: Modelo Caballo",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Un caballo de guerra: galope veloz, coces demoledoras y capacidad para cargar a un aliado a la espalda."
+  },
+  {
+   "name": "Mogu Mogu no Mi: Modelo Topo",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Un topo: cava túneles con rapidez, ataca desde el subsuelo y ve muy bien en la oscuridad, aunque a la luz del día es casi ciego."
+  },
+  {
+   "name": "Ryu Ryu no Mi: Modelo Espinosaurio",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "EPIC",
+   "description": "Un depredador anfibio ancestral: vela dorsal, mandíbulas de cocodrilo y una fuerza devastadora dentro y fuera del agua."
+  },
+  {
+   "name": "Ryu Ryu no Mi: Modelo Triceratops",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "EPIC",
+   "description": "Tres cuernos y un escudo óseo: embestidas de tanque que aplastan muros y un cráneo casi impenetrable."
+  },
+  {
+   "name": "Neko Neko no Mi: Modelo Dientes de Sable",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "RARE",
+   "description": "Colmillos como dagas y una fuerza muscular monstruosa: mordida perforadora y zarpazos capaces de abrir una coraza."
+  },
+  {
+   "name": "Kumo Kumo no Mi: Modelo Rosamygale Grauvogeli",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "RARE",
+   "description": "Una araña gigante prehistórica: hilos de seda resistentes como el acero, telarañas trampa, patas afiladas y veneno paralizante."
+  },
+  {
+   "name": "Kagi Kagi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Convierte en llave o en cerradura lo que toca: abre cualquier puerta o cofre y sella cerraduras que ni un herrero abre. Cerrar un cuerpo con su cerradura solo funciona con quien no la resiste con Haki."
+  },
+  {
+   "name": "Tokei Tokei no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Acelera o ralentiza el tiempo en una zona del tamaño de una habitación: sus enemigos se mueven como en melaza. Cada segundo de tiempo torcido se lo cobra en aguante."
+  },
+  {
+   "name": "Fude Fude no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Todo lo que dibuja con su pincel cobra vida un rato: muros, fieras de tinta, cuerdas. Lo dibujado se emborrona con agua y se deshace en pocos minutos."
+  },
+  {
+   "name": "Kusari Kusari no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Cadenas que brotan de su cuerpo y del suelo: atan, arrastran y levantan. Un rival fuerte las rompe, pero pierde un instante en hacerlo."
+  },
+  {
+   "name": "Hon Hon no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Sus libros guardan hechizos, mapas y criaturas de tinta que sale de sus páginas; cada libro solo puede usarse una vez por combate."
+  },
+  {
+   "name": "Nawa Nawa no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Cuerdas vivas que se anudan solas, trepan, azotan y cuelgan a los rivales boca abajo."
+  },
+  {
+   "name": "Tane Tane no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Produce semillas de cualquier planta que ha tocado: espinas, lianas, frutos curativos o esporas. Necesita tierra o agua cerca para que crezcan rápido."
+  },
+  {
+   "name": "Saka Saka no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Invierte una sola cosa a la vez: el sentido de un golpe, la gravedad sobre un objeto, la dirección de un empujón. Un rival muy sereno le adivina el truco."
+  },
+  {
+   "name": "Ura Ura no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Da la vuelta a lo que toca como un guante: cierra una puerta en una pared, invierte el suelo bajo los pies del rival o lo deja de cabeza."
+  },
+  {
+   "name": "Uso Uso no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Sus mentiras cobran cuerpo unos segundos: un espejismo convincente, un aliado falso, un muro que no está. Quien conoce la verdad de la escena casi no se deja engañar."
+  },
+  {
+   "name": "Yubi Yubi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Sus dedos se estiran, se separan y vuelan como proyectiles perforantes; puede tejer redes de dedos como si fueran hilos."
+  },
+  {
+   "name": "Kuchi Kuchi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Abre bocas en cualquier parte de su cuerpo y del terreno: muerde, grita o traga proyectiles pequeños."
+  },
+  {
+   "name": "Mimi Mimi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Un oído absoluto: oye a kilómetros, distingue a cada persona por su pulso y detecta engaños por el latido. No es un arma directa."
+  },
+  {
+   "name": "Me Me no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Sus ojos ven a través de cuerpos, muros finos y mentiras; puede compartir su vista con un aliado. La luz cegadora lo deja indefenso."
+  },
+  {
+   "name": "Hone Hone no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Saca y moldea huesos como armas, lanzas y escudos, y puede levantar esqueletos pequeños para distraer."
+  },
+  {
+   "name": "Chi Chi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Controla la sangre: la suya, que endurece en armas, y la de quien acaba de herir. Sin sangre a la vista es solo una fruta modesta."
+  },
+  {
+   "name": "Tama Tama no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Esferas de energía o de piedra que orbitan a su alrededor: golpean, bloquean y estallan al chocar."
+  },
+  {
+   "name": "Ha Ha no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Sus dientes crecen como espadas y se disparan como balas; le crecen de nuevo en segundos."
+  },
+  {
+   "name": "Kasa Kasa no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Un paraguas vivo que desvía balas, abre planeos y se vuelve lanza; su tela no resiste el fuego intenso."
+  },
+  {
+   "name": "Ami Ami no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Lanza redes de hilo, cadena o luz que atrapan multitudes o barcos pequeños. No aguanta a alguien muy fuerte que las tire con Haki."
+  },
+  {
+   "name": "Kabe Kabe no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Levanta muros de piedra, hielo o luz sólida en un instante para cortar el paso o proteger a los suyos. Cuanto más grande el muro, más aguante gasta."
+  },
+  {
+   "name": "Tobi Tobi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Salta de un punto a otro que ve, a unos pocos metros, sin cruzar el espacio intermedio. No sirve a ciegas ni más allá de su vista."
+  },
+  {
+   "name": "Kaori Kaori no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Aromas a voluntad: seduce, aturde, tranquiliza o marca a un rival para rastrearlo. Inútil con el viento en contra."
+  },
+  {
+   "name": "Iro Iro no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Pinta cuerpos y cosas de colores que causan efectos: el rojo enfurece, el azul calma, el negro ciega un momento."
+  },
+  {
+   "name": "Tsuno Tsuno no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Cuernos que crecen de su cabeza y sus hombros: embestidas y cornadas que perforan madera y cuero."
+  },
+  {
+   "name": "Tsume Tsume no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Garras largas y afiladas en manos y pies: cortes rápidos y agarre en muros y árboles."
+  },
+  {
+   "name": "Hane Hane no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Lluvia de plumas afiladas y un planeo corto; sus plumas se ven en todo el aire y desorientan."
+  },
+  {
+   "name": "Uroko Uroko no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Cubre su piel de escamas duras como acero que además le permiten respirar bajo el agua."
+  },
+  {
+   "name": "Kabi Kabi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Moho y esporas que pudren madera, cuero y comida, y debilitan a quien las respira; el fuego lo limpia todo."
+  },
+  {
+   "name": "Gomi Gomi no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Convierte cualquier desecho en armas y escudos y no se ensucia ni se contagia de nada; huele fatal."
+  },
+  {
+   "name": "Mizu Mizu Bin no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Guarda líquidos, gases y hasta pequeños objetos dentro de su cuerpo como en un frasco, y los libera a voluntad."
+  },
+  {
+   "name": "Denki Denki no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Almacena estática en su cuerpo y la libera en descargas cortas; no es Logia: un golpe sólido lo alcanza."
+  },
+  {
+   "name": "Rei Rei no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Ve, habla con y convoca fantasmas de los que murieron cerca: le dan pistas, se cuelan por muros y asustan; no puede convocar a nadie sin lugar donde haya muerto alguien."
+  },
+  {
+   "name": "Doku Doku Nuru no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "UNCOMMON",
+   "description": "Un limo elástico que amortigua golpes, se desliza por rendijas y adhiere lo que toca; la sal lo reseca."
+  },
+  {
+   "name": "Kakera Kakera no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Se rompe en cristales afilados y se recompone, y cada fragmento puede lanzarse como cuchilla y hacer de ojos."
+  },
+  {
+   "name": "Niji Niji no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Puentes de luz de colores sobre los que corre sin caerse, y siete rayos de color con efectos distintos; solo funciona con luz."
+  },
+  {
+   "name": "Kōri Kōri no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Piruletas de hielo que enfrían lo que tocan, pegajosas y resbaladizas; no es Logia y no hiela nada grande."
+  },
+  {
+   "name": "Pazuru Pazuru no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "COMMON",
+   "description": "Reordena un objeto o un lugar pequeño como un rompecabezas: abre una pared, cambia la posición de un techo o desarma un arma rival."
+  },
+  {
+   "name": "Gyaku Gyaku no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Devuelve una parte del daño que recibe al que lo causó; no funciona contra ataques que no ve o que lo toman por sorpresa."
+  },
+  {
+   "name": "Tsuki Kage no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Sus sombras hacen de armas, esconden a sus aliados y le dan un paso por cualquier sombra cercana. De día pleno queda casi sin poder."
+  },
+  {
+   "name": "Jishin Jishin no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "RARE",
+   "description": "Golpes con temblor local: el suelo en un radio pequeño cede, se agrieta y ondula. A diferencia de la Gura Gura, no llega a quebrar el aire ni el mar."
+  },
+  {
+   "name": "Hiru Hiru no Mi",
+   "type": "PARAMECIA",
+   "sub": "PARAMECIA",
+   "rarity": "EPIC",
+   "description": "Enciende o apaga la luz del día sobre una zona: ciega a quien mira, esconde el rastro y hace sonar como si fuera medianoche o mediodía. Su trampa se apaga si se mira sin miedo."
+  },
+  {
+   "name": "Kuma Kuma no Mi: Modelo Oso Pardo",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Un oso pardo: fuerza bruta, zarpazos pesados y una piel gruesa que aguanta filos flojos. Lento en terreno abierto, temible cuerpo a cuerpo."
+  },
+  {
+   "name": "Washi Washi no Mi: Modelo Águila",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Un águila: vuelo alto y veloz, vista de lince y garras que atrapan desde el aire. En el agua es una presa fácil."
+  },
+  {
+   "name": "Gori Gori no Mi: Modelo Gorila",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Un gorila: brazos enormes, puños que rompen muros y una resistencia excelente. Pega despacio pero con mucha fuerza."
+  },
+  {
+   "name": "Kaba Kaba no Mi: Modelo Hipopótamo",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Un hipopótamo: mandíbula aplastante, piel gruesa y una embestida mucho más rápida de lo que parece; en el agua es un tanque."
+  },
+  {
+   "name": "Sai Sai no Mi: Modelo Rinoceronte",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Un rinoceronte: cuerno y embestida capaces de derribar puertas, y una piel que aguanta la mayoría de cortes normales."
+  },
+  {
+   "name": "Wani Wani no Mi: Modelo Cocodrilo",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Un cocodrilo: mordida de presa, vuelta mortal en el agua y emboscada desde la orilla. En seco es más torpe."
+  },
+  {
+   "name": "Tako Tako no Mi: Modelo Pulpo",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Un pulpo: ocho brazos que atrapan y estrangulan, camuflaje en el terreno y una nube de tinta para huir."
+  },
+  {
+   "name": "Ika Ika no Mi: Modelo Calamar",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Un calamar: propulsión a chorro, tentáculos ágiles y tinta cegadora. Fuera del agua pierde mucha velocidad."
+  },
+  {
+   "name": "Kani Kani no Mi: Modelo Cangrejo",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Un cangrejo: caparazón resistente y pinzas que cortan cuerdas y cadenas; camina de lado, pero muy rápido."
+  },
+  {
+   "name": "Fukurō Fukurō no Mi: Modelo Búho",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Un búho: vuelo silencioso, ojos que ven de noche y un giro de cabeza imposible. De día rinde bastante menos."
+  },
+  {
+   "name": "Kōmori Kōmori no Mi: Modelo Murciélago",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Un murciélago: ecolocalización perfecta, vuelo veloz en la oscuridad y chillidos que aturden. La luz del sol lo debilita."
+  },
+  {
+   "name": "Ari Ari no Mi: Modelo Hormiga Soldado",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Una hormiga soldado: fuerza descomunal para su tamaño, mandíbulas y la capacidad de levantar hasta diez veces su peso."
+  },
+  {
+   "name": "Chō Chō no Mi: Modelo Mariposa",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Una mariposa: alas de escamas que dispersan polvo somnífero, vuelo errático difícil de golpear."
+  },
+  {
+   "name": "Karasu Karasu no Mi: Modelo Cuervo",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Un cuervo: astucia de ave inteligente, robo de objetos pequeños y una bandada de sombras que ciega."
+  },
+  {
+   "name": "Hyō Hyō no Mi: Modelo Pantera",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Una pantera negra: sigilo casi total en la oscuridad, velocidad de ataque brutal y zarpazos precisos."
+  },
+  {
+   "name": "Shika Shika no Mi: Modelo Ciervo",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Un ciervo: cornamenta enorme, saltos largos y una embestida de cabeza que levanta a un hombre."
+  },
+  {
+   "name": "Rakuda Rakuda no Mi: Modelo Camello",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Un camello: aguante casi infinito sin comer ni beber, andar firme en la arena y patadas que pesan."
+  },
+  {
+   "name": "Kitsutsuki no Mi: Modelo Pájaro Carpintero",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Un pájaro carpintero: picotazos a ritmo de metralleta capaces de abrir madera, cuero y armadura floja."
+  },
+  {
+   "name": "Hachi Hachi no Mi: Modelo Oso Hormiguero",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "COMMON",
+   "description": "Un oso hormiguero gigante: lengua larguísima, garras fuertes y olfato prodigioso; no soporta el frío."
+  },
+  {
+   "name": "Ookami Ookami no Mi: Modelo Lobo Ártico",
+   "type": "ZOAN",
+   "sub": "ZOAN",
+   "rarity": "UNCOMMON",
+   "description": "Un lobo ártico: resiste el frío extremo, caza en manada con ecos y persigue sin cansarse; en el calor se agota."
+  },
+  {
+   "name": "Ryu Ryu no Mi: Modelo Estegosaurio",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "RARE",
+   "description": "Placas óseas en el lomo y una cola con cuatro púas: su defensa es enorme y su cola es un mazo espinoso."
+  },
+  {
+   "name": "Ryu Ryu no Mi: Modelo Tiranosaurio",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "EPIC",
+   "description": "El rey de los depredadores: mordida de ruina, rugido que paraliza a los débiles y una fuerza tremenda con unas patas cortas que compensa con puro peso."
+  },
+  {
+   "name": "Ryu Ryu no Mi: Modelo Anquilosaurio",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "RARE",
+   "description": "Un cuerpo acorazado y una cola-maza que revienta cráneos; casi nada lo atraviesa, pero se mueve como una roca."
+  },
+  {
+   "name": "Ryu Ryu no Mi: Modelo Velociraptor",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "RARE",
+   "description": "Garra en la pata, velocidad de depredador cazando en grupo y saltos que atrapan por la espalda."
+  },
+  {
+   "name": "Ryu Ryu no Mi: Modelo Quetzalcoatlus",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "RARE",
+   "description": "Un pterosaurio gigante: envergadura de barco, vuelo ancestral y picos como lanzas. Necesita altura y aire libre."
+  },
+  {
+   "name": "Same Same no Mi: Modelo Megalodón",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "EPIC",
+   "description": "El tiburón más grande que existió: mordida capaz de partir un bote, y en el agua un depredador casi sin rival. En tierra apenas se mueve."
+  },
+  {
+   "name": "Hebi Hebi no Mi: Modelo Titanoboa",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "EPIC",
+   "description": "Una serpiente gigante del pantano ancestral: constricción capaz de romper huesos y un cuerpo casi sin punto débil."
+  },
+  {
+   "name": "Namake Namake no Mi: Modelo Megaterio",
+   "type": "ZOAN",
+   "sub": "ZOAN_ANCIENT",
+   "rarity": "RARE",
+   "description": "Un perezoso terrestre gigante: garras enormes, una fuerza descomunal y una piel de pelo grueso que amortigua los golpes."
+  },
+  {
+   "name": "Kitsune Kitsune no Mi: Modelo Zorro de Nueve Colas",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "LEGENDARY",
+   "description": "El zorro mítico de nueve colas: llamas azules, ilusiones tan reales como el mundo y una inteligencia astuta; cada cola que revela es una técnica más."
+  },
+  {
+   "name": "Tengu Tengu no Mi: Modelo Tengu",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "LEGENDARY",
+   "description": "El espíritu del bosque alado: abanico que levanta vendavales, espada de la montaña y un vuelo imposible; no perdona a los arrogantes."
+  },
+  {
+   "name": "Kirin Kirin no Mi: Modelo Kirin",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "LEGENDARY",
+   "description": "La bestia sagrada del trueno y la justicia: galopa sobre el aire, brilla y derriba con un cuerno de luz a quien tenga las manos manchadas; no hiere a los inocentes."
+  },
+  {
+   "name": "Inu Inu no Mi: Modelo Cerbero",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "LEGENDARY",
+   "description": "El perro guardián de tres cabezas: tres mordidas a la vez, un aullido triple que paraliza y una vigilancia que nadie esquiva."
+  },
+  {
+   "name": "Ushi Ushi no Mi: Modelo Minotauro",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "EPIC",
+   "description": "El toro humano del laberinto: hacha de guerra, embestida capaz de derrumbar muros y un instinto de laberinto que le impide perderse."
+  },
+  {
+   "name": "Uma Uma no Mi: Modelo Pegaso",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "LEGENDARY",
+   "description": "El caballo alado: galope aéreo, cascos de luz y la capacidad de llevar consigo a un aliado a través del cielo."
+  },
+  {
+   "name": "Tori Tori no Mi: Modelo Grifo",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "EPIC",
+   "description": "Mitad águila, mitad león: garras de rapiña, zarpazo de fiera y un vuelo veloz que aplasta al que huye en campo abierto."
+  },
+  {
+   "name": "Hebi Hebi no Mi: Modelo Basilisco",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "LEGENDARY",
+   "description": "El rey de las serpientes: su mirada petrifica un instante a quien lo mire de frente y su veneno es tan fuerte como su constricción. Un espejo, o los ojos cerrados, lo neutralizan."
+  },
+  {
+   "name": "Tako Tako no Mi: Modelo Kraken",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "LEGENDARY",
+   "description": "El monstruo de las profundidades: tentáculos del tamaño de mástiles, capaz de hundir un barco y de arrastrar a un hombre a las profundidades. En tierra pierde casi todo."
+  },
+  {
+   "name": "Kujira Kujira no Mi: Modelo Leviatán",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "MYTHICAL_TIER",
+   "description": "La bestia marina de los cuentos antiguos: el mar mismo se levanta con ella, olas gigantes y una masa casi imposible de mover. La más grande de las frutas de mar."
+  },
+  {
+   "name": "Tori Tori no Mi: Modelo Pájaro del Trueno",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "LEGENDARY",
+   "description": "El ave de la tormenta: sus alas provocan truenos y su chillido llama a la lluvia. Fuera de una tormenta gasta el doble de aguante."
+  },
+  {
+   "name": "Inu Inu no Mi: Modelo Anubis",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "LEGENDARY",
+   "description": "El guardián de los muertos: pesa el corazón de sus rivales, ve sus pecados y golpea con más fuerza a quien se sabe culpable; guía a las almas."
+  },
+  {
+   "name": "Neko Neko no Mi: Modelo Mantícora",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "EPIC",
+   "description": "Cara humana, cuerpo de león y cola de escorpión: veneno mortal, saltos enormes y una voz que engaña con su encanto."
+  },
+  {
+   "name": "Ryu Ryu no Mi: Modelo Hidra",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "MYTHICAL_TIER",
+   "description": "La serpiente de muchas cabezas: cuando le cortan una, nacen dos. Su veneno es letal, y solo el fuego que sella la herida detiene su regeneración."
+  },
+  {
+   "name": "Sara Sara no Mi: Modelo Salamandra de Fuego",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "EPIC",
+   "description": "La salamandra que nace del fuego: vive entre llamas, escupe fuego líquido y regenera cualquier herida si hay lumbre cerca. El agua la apaga."
+  },
+  {
+   "name": "Kappa Kappa no Mi: Modelo Kappa",
+   "type": "ZOAN",
+   "sub": "ZOAN_MYTHICAL",
+   "rarity": "RARE",
+   "description": "El espíritu del río: un cuenco de agua sobre la cabeza que le da fuerza, luchas de agarre y una cortesía que puede usarse como trampa. Si el cuenco se vacía, se debilita."
+  },
+  {
+   "name": "Kaze Kaze no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo es viento: vuela, corta con hojas de aire y desvía proyectiles con un vendaval. El Haki de Armadura lo alcanza, y en el vacío o en una cámara cerrada no tiene aire con el que jugar."
+  },
+  {
+   "name": "Mizu Mizu no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo es agua: fluye entre los golpes, ahoga, cura con su corriente y levanta olas. Como toda fruta le impide nadar, y el Kairoseki lo deja como un charco inerte."
+  },
+  {
+   "name": "Tsuchi Tsuchi no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo es tierra: levanta muros, se hunde y sale del suelo, aplasta con rocas y se regenera del terreno. Sin suelo (a bordo de un barco de madera lejos de la costa) pierde mucha fuerza."
+  },
+  {
+   "name": "Kiri Kiri no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo es niebla espesa: esconde al que quiere, se cuela por rendijas y borra el sonido. Un viento fuerte la dispersa."
+  },
+  {
+   "name": "Numa Numa no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo es un pantano: traga a los que pisan su lodo, lo vuelve hirviente o pegajoso y se esconde bajo cualquier charco. El fuego seca su cuerpo."
+  },
+  {
+   "name": "Ishi Ishi no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo es piedra: puños de roca, estatuas que defienden, avalanchas. Muy fuerte y muy pesado; el agua y el hielo lo desgastan."
+  },
+  {
+   "name": "Kinzoku Kinzoku no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo es metal fundido o frío: espadas que le nacen de los brazos, escudos, magnetismo. El óxido del mar lo estropea y la lava lo derrite."
+  },
+  {
+   "name": "Doro Doro no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo es barro: atrapa, sepulta, resbala y se moldea en lo que quiera. Se seca al sol y se endurece, pero no lo destruye."
+  },
+  {
+   "name": "Ame Ame no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo es lluvia: llama a la tormenta, disuelve el fuego y esconde su rastro. Bajo cielo despejado sigue siendo Logia, pero mucho menos fuerte."
+  },
+  {
+   "name": "Hai Hai no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo es ceniza: se deshace, sofoca, ciega y apaga fuegos. La lluvia lo convierte en barro y lo hace pesado."
+  },
+  {
+   "name": "Yoake Yoake no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo es la luz del amanecer: cura a los aliados, ciega a los que mira con odio y sube en poder con cada hora hasta el mediodía. La noche lo apaga a medias."
+  },
+  {
+   "name": "Yūyake Yūyake no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo es el fuego del atardecer: rojo, denso y cálido. Fuerte al caer el sol, débil al mediodía; sus llamas no queman sino que hacen tan pesado el ánimo que el rival duda."
+  },
+  {
+   "name": "Kokuyō Kokuyō no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "LEGENDARY",
+   "description": "Su cuerpo es obsidiana negra y cortante: hojas de cristal volcánico que rebanan el acero. Frágil ante golpes de Haki muy fuertes, que lo rompen como un vidrio."
+  },
+  {
+   "name": "Shōkō Shōkō no Mi",
+   "type": "LOGIA",
+   "sub": "LOGIA",
+   "rarity": "MYTHICAL_TIER",
+   "description": "Su cuerpo es aurora: colores que hipnotizan, velos de luz que curan o abrasan, un manto sobre el cielo entero. Solo en mares del norte o en noches limpias llega a su fuerza total."
+  }
+ ]
+}

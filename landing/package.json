@@ -1,0 +1,37 @@
+{
+  "name": "grand-line-landing",
+  "private": true,
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "data": "cd .. && npx tsx landing/scripts/extract-game-data.ts",
+    "dev": "vite",
+    "build": "node scripts/clean-docs-assets.mjs && tsc --noEmit -p . && vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "typecheck": "tsc --noEmit -p ."
+  },
+  "dependencies": {
+    "@react-three/drei": "^10.7.9",
+    "@react-three/fiber": "^9.8.1",
+    "@react-three/postprocessing": "^3.1.3",
+    "lenis": "^1.3.26",
+    "lucide-react": "^1.48.0",
+    "motion": "^12.43.0",
+    "postprocessing": "^6.39.5",
+    "react": "19.2.8",
+    "react-dom": "19.2.8",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@tailwindcss/vite": "^4.3.3",
+    "@types/react": "^19",
+    "@types/react-dom": "^19",
+    "@types/three": "^0.186.0",
+    "@vitejs/plugin-react": "^6.1.1",
+    "tailwindcss": "^4.3.3",
+    "typescript": "~5.9.3",
+    "vite": "^8.3.1",
+    "vitest": "^4.1.11"
+  }
+}

@@ -12,6 +12,9 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
+    // The GitHub Pages landing is its own Vite project; docs/ holds its minified build.
+    "landing/**",
+    "docs/**",
   ]),
 ]);
 

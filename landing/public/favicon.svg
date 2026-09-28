@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <radialGradient id="bg" cx="50%" cy="30%" r="75%">
+      <stop offset="0%" stop-color="#1d3349"/>
+      <stop offset="100%" stop-color="#0b1520"/>
+    </radialGradient>
+    <linearGradient id="gold" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0%" stop-color="#f7d98a"/>
+      <stop offset="100%" stop-color="#c8963a"/>
+    </linearGradient>
+  </defs>
+  <rect x="1" y="1" width="62" height="62" rx="14" fill="url(#bg)" stroke="#d4a94a" stroke-width="2"/>
+  <g stroke="#f4e8d0" stroke-width="5" stroke-linecap="round">
+    <line x1="14" y1="50" x2="50" y2="26"/>
+    <line x1="50" y1="50" x2="14" y2="26"/>
+  </g>
+  <g fill="#f4e8d0">
+    <circle cx="13" cy="51" r="3.2"/><circle cx="51" cy="51" r="3.2"/>
+    <circle cx="13" cy="25" r="3.2"/><circle cx="51" cy="25" r="3.2"/>
+  </g>
+  <path d="M32 18c-9 0-15 6-15 14 0 5 2.5 8.5 6 10v4.5c0 1.4 1.1 2.5 2.5 2.5h13c1.4 0 2.5-1.1 2.5-2.5V42c3.5-1.5 6-5 6-10 0-8-6-14-15-14z" fill="#f4e8d0"/>
+  <g fill="#0b1520">
+    <ellipse cx="26" cy="33" rx="4" ry="4.4"/>
+    <ellipse cx="38" cy="33" rx="4" ry="4.4"/>
+    <path d="M32 37.5l-2.4 4h4.8z"/>
+    <rect x="27.5" y="45" width="1.6" height="3.6" rx="0.6"/>
+    <rect x="31.2" y="45" width="1.6" height="3.6" rx="0.6"/>
+    <rect x="34.9" y="45" width="1.6" height="3.6" rx="0.6"/>
+  </g>
+  <ellipse cx="32" cy="21" rx="21" ry="4.6" fill="url(#gold)"/>
+  <path d="M20.5 20.5c0-7 5-11.5 11.5-11.5s11.5 4.5 11.5 11.5z" fill="url(#gold)"/>
+  <path d="M20.6 17.4h22.8v3.2H20.6z" fill="#c0392b"/>
+</svg>

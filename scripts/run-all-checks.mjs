@@ -54,6 +54,12 @@ log("== unit tests + types");
 record("vitest", run("npx", ["vitest", "run"], 300000));
 record("tsc", run("npx", ["tsc", "--noEmit"], 300000));
 
+log("== landing page (GitHub Pages portada)");
+if (!fs.existsSync("landing/node_modules")) run("npm", ["--prefix", "landing", "install"], 600000);
+record("landing-vitest", run("npm", ["--prefix", "landing", "test"], 300000));
+record("landing-build", run("npm", ["--prefix", "landing", "run", "build"], 300000));
+record("landing-ui-check", run("node", ["scripts/landing-ui-check.mjs"], 600000));
+
 const dbChecks = ["seats", "island-npc", "canon", "prison-arc", "party-round", "party-turn-order", "party-round-merge", "duel-proposed-not-blocking", "ooc-rollback", "world-arcs", "joint-fight", "guardian", "territory", "escape-buster", "consequence", "black-market", "missions", "grudge", "hunt", "impel", "compaction-travel", "prison-logic", "delete-character", "world-news", "raid", "attributes-inventory", "styles", "coliseum", "voyage", "empire", "duel-resolution", "denden", "battle", "close-fight", "joint-close", "happenings", "player-events", "sovereignty", "reclaim", "admiral-dispatch", "custody", "rescue-raid", "fight-from-narration", "world-wars", "poneglyph-route", "faction-contracts-path", "logia-guard", "bounty-impact", "special-recruit", "island-secrets"];
 const browserFirst = ["battle-smoke", "crew-smoke", "ooc-crew-ui-check", "world-ui-check", "polish-ui-check", "features-ui-check", "world-systems-ui-check", "residents-ui-check", "voyage-ui-check", "empire-ui-check", "duel-ui-check", "events-ui-check", "admin-tools-ui-check", "sovereignty-ui-check", "seats-ui-check", "route-path-ui-check", "design-tour"]; // need a clean DB each
 const browserRest = quick ? [] : ["ai-e2e-smoke", "combat-rounds-check", "roleplay-attack-check", "duel-smoke", "party-multiplayer-smoke", "joint-fight-ui-check", "grudge-ui-check", "missions-ui-check", "realtime-check", "prison-ui-check", "raid-ui-check", "world-panels-ui-check", "check-news-page", "delete-character-ui-check", "close-fight-ui-check", "crew-chat-ui-check", "codex-players-ui-check", "nakama-ui-check", "scene-spacing-check", "motion-ui-check"];
