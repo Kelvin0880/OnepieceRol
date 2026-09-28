@@ -16,6 +16,8 @@ import { toCombatant } from "./derive";
 import { postNews, handleDeathCheck } from "./death-resolution";
 import { judgeFate, judgeJointFightEnd } from "../ai/judge";
 import { clampJointEnd } from "../engine/judge";
+import { canFlee, defeatFate, surrenderAllowed } from "../engine/fight-kind";
+import { logiaImmuneTo } from "../engine/logia-guard";
 import { applyBountyOrNotoriety } from "./reputation";
 import { grantPoneglyphRead } from "./poneglyph";
 import { recordGrudgeIncident } from "./grudges";
@@ -211,7 +213,7 @@ export async function submitJointAction(characterId: string, userId: string, fre
   }
 
   const last = await prisma.jointFightMessage.findFirst({ where: { fightId: fight.id, authorCharacterId: null }, orderBy: { createdAt: "desc" } });
-  const classified = await classifyPlayerAction(freeText, fight.kind === "admiral" ? ["engage"] : ["engage", "flee"], { sceneContext: last?.text.slice(-500) });
+  const classified = await classifyPlayerAction(freeText, canFlee(fight.kind) ? ["engage", "flee"] : ["engage"], { sceneContext: last?.text.slice(-500) });
   const fleeing = classified.action === "flee";
 
   await prisma.jointFightMessage.create({ data: { fightId: fight.id, authorCharacterId: characterId, authorName: me.name, text: freeText } });
@@ -287,7 +289,7 @@ export async function closeJointFight(characterId: string, userId: string, note?
     note: note?.trim() || undefined,
     characterId,
   });
-  const outcome = clampJointEnd(verdict.outcome, inFight.map((p) => ({ hp: p.hp, maxHp: p.maxHp })), full.enemyHp, full.enemyMaxHp, full.kind === "admiral");
+  const outcome = clampJointEnd(verdict.outcome, inFight.map((p) => ({ hp: p.hp, maxHp: p.maxHp })), full.enemyHp, full.enemyMaxHp, surrenderAllowed(full.kind));
   const result = outcome === "player_won" ? "victory" : outcome === "player_lost" ? "defeat" : null;
 
   const text =
@@ -354,6 +356,7 @@ async function resolveJointRoundFor(fightId: string) {
   const fighters: JointFighter[] = [];
   const actionsForNarration: { name: string; text: string; technique?: string; isNpc?: boolean }[] = [];
   const consumedIds: string[] = [];
+  const logiaIds = new Set<string>();
 
   for (const p of fighting) {
     if (p.isNpc && p.npcStatsJson) {
@@ -372,6 +375,7 @@ async function resolveJointRoundFor(fightId: string) {
     const c = chars.get(p.characterId);
     if (!c) continue;
     consumedIds.push(p.id);
+    if (c.devilFruit?.type === "LOGIA") logiaIds.add(p.characterId);
     let tactic = p.tactic;
     let text = p.action ?? "";
     if (p.action === FLEE_TOKEN) {
@@ -389,7 +393,9 @@ async function resolveJointRoundFor(fightId: string) {
     actionsForNarration.push({ name: p.name, text, technique: p.technique !== "none" ? TECHNIQUE_LABELS[p.technique as TechniqueId] : undefined });
   }
 
-  const enemyKitText = (await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId })).text;
+  const enemyKitFull = await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId });
+  const enemyKitText = enemyKitFull.text;
+  const enemyCannotHurtLogia = logiaImmuneTo(enemyKitFull.kit);
   const fightLog = await jointFightLog(fightId, new Set(fighting.map((p) => p.action).filter((a): a is string => !!a)));
   const lastNarrator = await prisma.jointFightMessage.findFirst({ where: { fightId, authorName: "Narrador" }, orderBy: { createdAt: "desc" } });
   const kitOf = (id: string): string | undefined => {
@@ -456,7 +462,7 @@ async function resolveJointRoundFor(fightId: string) {
   }
   const applied = verdict
     ? applyVerdict(verdict, [
-        ...fighters.map((f) => ({ name: f.combatant.name, hp: f.hp, maxHp: f.combatant.maxHp, stamina: prepared.get(f.id)?.staminaAfter ?? fighting.find((p) => p.characterId === f.id)?.stamina, incomingAtk: enemy.atk, defense: f.combatant.def })),
+        ...fighters.map((f) => ({ name: f.combatant.name, hp: f.hp, maxHp: f.combatant.maxHp, stamina: prepared.get(f.id)?.staminaAfter ?? fighting.find((p) => p.characterId === f.id)?.stamina, incomingAtk: enemy.atk, defense: f.combatant.def, hpImmune: enemyCannotHurtLogia && logiaIds.has(f.id) })),
         { name: enemy.name, hp: fight.enemyHp, maxHp: fight.enemyMaxHp, stamina: fight.enemyStamina, incomingAtk: Math.round(fighters.reduce((n, f) => n + f.combatant.atk, 0) / Math.max(1, fighters.length)) * Math.min(3, Math.max(1, fighters.length)), defense: enemy.def },
       ])
     : [];
@@ -601,16 +607,14 @@ async function settleJointFight(fightId: string, outcome: "victory" | "defeat" |
     for (const p of humans) {
       const c = await loadFull(p.characterId);
       if (!c || c.status !== CharacterStatus.ALIVE) continue;
-      if (fight.kind === "seat") {
-        // A duel for a seat of command is fought to defeat, never to the death.
+      const fate = defeatFate(fight.kind, p.status === "DOWN" ? "DOWN" : "FIGHTING");
+      if (fate === "spared") {
         await prisma.character.update({ where: { id: c.id }, data: { hp: Math.max(5, Math.round(c.maxHp * 0.1), p.status === "DOWN" ? 0 : p.hp) } });
         closing.push(`${c.name} cae derrotado, pero vivo: era un duelo por el puesto, no a muerte.`);
-      } else if (fight.kind === "admiral") {
-        // Inescapable, so "manages to retreat" (the FIGHTING fallback below) can't happen here: whether DOWN or
-        // still standing, a loss to an Admiral always means custody, no death roll — surrender counts the same as being felled.
+      } else if (fate === "custody") {
         await (await import("./prison")).captureCharacter({ ...c, faction: c.faction, bounty: c.bounty, notoriety: c.notoriety }, Math.round(enemy.atk / 1.6), `Capturado por el almirante ${enemy.name} en ${c.currentIsland.name}.`, newsLog);
         closing.push(`${c.name} es capturado.`);
-      } else if (p.status === "DOWN") {
+      } else if (fate === "death_roll") {
         // Real stakes: a fallen ally who wasn't rescued by a win faces the ordinary death roll.
         const death = await handleDeathCheck({ ...c, faction: c.faction, currentIslandId: c.currentIslandId }, 0, `Cayó en grupo contra ${enemy.name}.`, newsLog, { name: enemy.name, personality: enemy.personality, isBoss: enemy.isBoss });
         if (death.died) closing.push(`${c.name} ha muerto.`);

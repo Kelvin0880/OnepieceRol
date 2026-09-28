@@ -4,6 +4,7 @@ import { varietyRng } from "../engine/rng";
 import { pickEventTemplate, resolveEvent, eventDifficulty, parseEventBody, EventBody } from "../engine/events";
 import { judgeOutcome, judgeChoice, judgeFightEnd } from "../ai/judge";
 import { clampFightEnd } from "../engine/judge";
+import { logiaImmuneTo } from "../engine/logia-guard";
 import { maybeAutoCheckpoint } from "./ooc";
 import { dangerBlockReason } from "../engine/safety";
 import { recruitCompanion, CompanionError } from "./companions";
@@ -671,7 +672,9 @@ export async function engageCharacter(
   const roundNumber = pending.roundNumber + 1;
   const enemyFatigue = fatigueLevel(enemyStaminaBefore, 100);
 
-  const enemyKitText = (await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId })).text;
+  const enemyKitFull = await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId });
+  const enemyKitText = enemyKitFull.text;
+  const logiaShielded = character.devilFruit?.type === "LOGIA" && logiaImmuneTo(enemyKitFull.kit);
   const scene = await getRecentScene(character.id, 10);
   const fightLog = await getFightLog(character.id, pending.createdAt);
   const grudgeContext = enemy.worldActorId ? await getGrudgeContextForNarration(enemy.worldActorId, character.id) : null;
@@ -721,7 +724,7 @@ export async function engageCharacter(
   if (!verdict) return emptyResult([NO_VERDICT_TEXT], character.level);
 
   const [me, foe] = applyVerdict(verdict, [
-    { name: character.name, hp: character.hp, maxHp: character.maxHp, stamina: prepared.staminaAfter, protectedThisExchange: !!opts.openingStrike, incomingAtk: enemy.atk, defense: pc.def },
+    { name: character.name, hp: character.hp, maxHp: character.maxHp, stamina: prepared.staminaAfter, protectedThisExchange: !!opts.openingStrike, hpImmune: logiaShielded, incomingAtk: enemy.atk, defense: pc.def },
     { name: enemy.name, hp: enemyHpBefore, maxHp: enemy.hp, stamina: enemyStaminaBefore, incomingAtk: pc.atk, defense: enemy.def },
   ]);
   const exchangeHpAfter = me.hpAfter;
@@ -971,7 +974,9 @@ export async function fleeCharacter(characterId: string, userId: string, intentT
   const pc = toCombatant(character);
   const scene = await getRecentScene(character.id, 10);
   const lastNarration = [...scene].reverse().find((l) => !l.startsWith("[Jugador]"));
-  const kit = (await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId })).text;
+  const kitFull = await resolveEnemyKit({ name: enemy.name, atk: enemy.atk, def: enemy.def, isBoss: enemy.isBoss, level: enemyLevel, worldActorId: enemy.worldActorId });
+  const kit = kitFull.text;
+  const logiaShielded = character.devilFruit?.type === "LOGIA" && logiaImmuneTo(kitFull.kit);
   // Escaping is judged, not rolled: the referee weighs speed, level, terrain and what the player wrote.
   const verdict = await refereeExchange(
     {
@@ -993,7 +998,7 @@ export async function fleeCharacter(characterId: string, userId: string, intentT
   );
   if (!verdict) return emptyResult([NO_VERDICT_TEXT], character.level);
   const [me] = applyVerdict(verdict, [
-    { name: character.name, hp: character.hp, maxHp: character.maxHp, stamina, incomingAtk: enemy.atk, defense: pc.def },
+    { name: character.name, hp: character.hp, maxHp: character.maxHp, stamina, hpImmune: logiaShielded, incomingAtk: enemy.atk, defense: pc.def },
     { name: enemy.name, hp: enemyHpBefore, maxHp: enemy.hp, incomingAtk: pc.atk, defense: enemy.def },
   ]);
   const flee = { success: verdict.escaped === true, hpLoss: verdict.escaped === true ? 0 : me.hpLoss };

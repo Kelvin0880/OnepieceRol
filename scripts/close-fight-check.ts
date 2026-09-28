@@ -57,13 +57,9 @@ async function main() {
     const threat = await mk("Amenaza");
     made.push(threat.id);
     await fight(threat.id, 100, "threat");
-    let refused2 = false;
-    try {
-      await closeFight(threat.id, u.id);
-    } catch (e) {
-      refused2 = e instanceof GameActionError;
-    }
-    assert(refused2, "a fight that has not started (still fight-or-flee) cannot be closed this way");
+    await closeFight(threat.id, u.id);
+    assert((await prisma.pendingEncounter.findUnique({ where: { characterId: threat.id } })) === null, "a fight offer not yet accepted (fight-or-flee) is cancelled clean, no judge involved");
+    assert((await prisma.character.findUniqueOrThrow({ where: { id: threat.id } })).hp === 100, "walking away from the offer costs nothing");
 
     let wrongUser = false;
     try {

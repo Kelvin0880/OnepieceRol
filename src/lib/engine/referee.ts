@@ -141,6 +141,8 @@ export interface RefereeBound {
   stamina?: number;
   /** Nothing has been thrown at this fighter yet (e.g. they started the fight): the verdict cannot hurt them. */
   protectedThisExchange?: boolean;
+  /** A Logia body facing an attacker that certainly cannot hurt it (see logia-guard): loses no life, still tires. */
+  hpImmune?: boolean;
   /** Attack of whoever is hitting this fighter and this fighter's own defence: a much weaker attacker cannot take a big bite out of a much tougher target. */
   incomingAtk?: number;
   defense?: number;
@@ -169,7 +171,7 @@ export function applyVerdict(verdict: RefereeVerdict, bounds: RefereeBound[]): A
     const powerCap = b.incomingAtk !== undefined && b.defense !== undefined ? Math.max(1, Math.floor(b.maxHp * powerCapFraction(b.incomingAtk, b.defense))) : hpCap;
     // "Defeated" is explicit and final: a fighter already at half life or less who is declared unable to go on drops to zero.
     const declaredDown = (verdict.defeated ?? []).some((n) => norm(n) === norm(b.name)) && b.hp <= hpCap;
-    const hpLoss = b.protectedThisExchange ? 0 : declaredDown ? Math.max(0, b.hp) : Math.min(asked.hp, hpCap, powerCap, Math.max(0, b.hp));
+    const hpLoss = b.protectedThisExchange || b.hpImmune ? 0 : declaredDown ? Math.max(0, b.hp) : Math.min(asked.hp, hpCap, powerCap, Math.max(0, b.hp));
     const staminaLoss = b.protectedThisExchange ? 0 : Math.min(asked.stamina, MAX_STAMINA_LOSS, Math.max(0, b.stamina ?? MAX_STAMINA_LOSS));
     return {
       name: b.name,
