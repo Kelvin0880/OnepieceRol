@@ -3,7 +3,7 @@
 import Modal from "@/components/ui/Modal";
 import { useCallback, useEffect, useState } from "react";
 
-interface Option {
+export interface Option {
   islandId: string;
   name: string;
   sea: string;
@@ -34,7 +34,18 @@ function riskLabel(r: number): { text: string; color: string } {
   return { text: `Riesgo extremo · ${r}%`, color: "text-blood" };
 }
 
-export default function VoyagePanel({ characterId, onClose, onChanged }: { characterId: string; onClose: () => void; onChanged: () => void }) {
+export default function VoyagePanel({
+  characterId,
+  onClose,
+  onChanged,
+  onDeparted,
+}: {
+  characterId: string;
+  onClose: () => void;
+  onChanged: () => void;
+  /** Fired right after a successful departure, before the at-sea banner settles in — drives the "zarpando" cinematic. */
+  onDeparted?: (o: Option) => void;
+}) {
   const [state, setState] = useState<State | null>(null);
   const [busy, setBusy] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
@@ -63,6 +74,7 @@ export default function VoyagePanel({ characterId, onClose, onChanged }: { chara
       else {
         setNotice((data.log as string[] | undefined)?.join(" ") ?? "Zarpas.");
         setConfirming(null);
+        onDeparted?.(o);
         onChanged();
         await refresh();
       }

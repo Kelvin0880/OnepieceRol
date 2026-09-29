@@ -9,6 +9,9 @@ export interface Island {
   dangerLevel: number;
   factionControl: string | null;
   poneglyphId?: string | null;
+  /** Already sent by GET /api/characters/[id] (a full, unfiltered Island row); only used client-side by the
+   * travel cinematic's mood picker (src/three/travel). */
+  sea: string;
 }
 
 export interface Weapon {
