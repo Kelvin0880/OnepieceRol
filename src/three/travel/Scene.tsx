@@ -105,7 +105,7 @@ export default function Scene({ env, durationSec, onReady }: { env: Env; duratio
     <Canvas
       dpr={SETTINGS.dpr}
       gl={{ antialias: true, powerPreference: "high-performance", alpha: false, stencil: false, toneMapping: ACESFilmicToneMapping }}
-      camera={{ fov: 50, near: 0.3, far: 400, position: [-6, 3.2, 10] }}
+      camera={{ fov: 50, near: 0.3, far: 400, position: [-14, 5, 6] }}
     >
       <ReadyAfterFrames onReady={onReady} />
       <Rig env={env} durationSec={durationSec} />

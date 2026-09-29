@@ -120,7 +120,7 @@ async function main() {
     const phoneMounted = await page.waitForSelector('[data-testid="travel-cinematic"]', { timeout: 4000 }).then(() => true).catch(() => false);
     check("the cinematic mounts and fits at phone width (390px)", phoneMounted);
     if (phoneMounted) {
-      await page.waitForTimeout(700);
+      await page.waitForTimeout(1500);
       const sw = await page.evaluate(() => document.documentElement.scrollWidth);
       check("no horizontal overflow at 390px while the cinematic is up", sw <= 391, `(scrollWidth ${sw})`);
       await page.screenshot({ path: path.join(shots, "travel-cinematic-phone.png") });

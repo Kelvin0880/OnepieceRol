@@ -11,18 +11,28 @@ interface RigKey {
   look: V3;
 }
 
-/** Wide screens: camera holds off to one side of the ship. */
+// Tuned 2026-09-29 after the first real-browser pass sat too close behind the sail (a dead-astern low shot
+// fills the frame with cloth and hides the ship's silhouette and the sky/mood entirely). Offsets now sit well
+// to the side for a three-quarter/broadside cinematic angle — cam/look are relative to the ship's live
+// position (added in Scene.tsx), so a bigger |x| here reads as "off to the side," not "far from the world".
+
+/** Wide screens: starts three-quarter from behind-left, sweeps across to the right, settles on a wide
+ * receding shot as the ship sails off. */
 const WIDE: RigKey[] = [
-  { t: 0, cam: [-6, 3.2, 10], look: [0, 2, -10] },
-  { t: 0.5, cam: [4, 4.5, 9], look: [-1, 2.5, -8] },
-  { t: 1, cam: [-5, 3.8, 12], look: [0, 3, -14] },
+  { t: 0, cam: [-14, 5, 6], look: [0, 2, -6] },
+  { t: 0.5, cam: [12, 6, 4], look: [-2, 2.5, -4] },
+  { t: 1, cam: [-10, 5.5, 10], look: [2, 3, -10] },
 ];
 
-/** Phones: camera stands further back, centred behind the ship. */
+/** Phones: same sweep, camera stands further back so the ship, ocean and sky all fit a narrow (portrait) FOV.
+ * Two earlier passes here still read as a dead-astern close-up of the sail — the fiber Canvas's `fov` is
+ * vertical, so a tall/narrow aspect ratio has a much narrower HORIZONTAL field of view than desktop's; a
+ * lateral offset alone wasn't enough; pulling the whole rig further back (bigger z, not just bigger x) is what
+ * actually gets the ship's silhouette, the ocean and the sky all inside a portrait frame. */
 const TALL: RigKey[] = [
-  { t: 0, cam: [-2, 6, 16], look: [0, 4, -8] },
-  { t: 0.5, cam: [3, 7, 14], look: [-1, 4, -6] },
-  { t: 1, cam: [-2, 6.5, 17], look: [0, 5, -12] },
+  { t: 0, cam: [-13, 6, 14], look: [1, 3, -6] },
+  { t: 0.5, cam: [12, 7, 12], look: [-2, 3.5, -4] },
+  { t: 1, cam: [-10, 6.5, 16], look: [2, 4, -10] },
 ];
 
 export function smoothstep(a: number, b: number, x: number): number {
