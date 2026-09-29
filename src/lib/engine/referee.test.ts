@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { raiseUnderbookedWounds, kitTerms, usesKit, capUnshownWounds, extractCombatMarker, playerActSentences, dropSentences, unbookedWounds, floorWounds, foldUnknownChanges, checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
+import { raiseUnderbookedWounds, kitTerms, usesKit, capUnshownWounds, extractCombatMarker, playerActSentences, dropSentences, unbookedWounds, floorWounds, foldUnknownChanges, checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, WOUND_FLOOR_FRACTION, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
 
 const NARR = "El rival bloquea con el antebrazo y responde con una patada baja que se acerca a tu rodilla.";
 const good = (extra = "") => JSON.stringify({ narracion: NARR, cambios: [{ nombre: "Kirito", vida: 10, aguante: 5 }, { nombre: "Bandido", vida: 20, aguante: 8 }], ...(extra ? { x: extra } : {}) });
@@ -293,6 +293,57 @@ describe("wounds the story shows must cost life", () => {
   it("does not invent wounds for a dodged or missed attack", () => {
     const clean = { narration: "El lingote pasó de largo y se estrelló contra la pared. Akio permanece intacto.", changes: [], };
     expect(unbookedWounds(clean, actors, true)).toEqual([]);
+  });
+
+  // Real case (Zarpe vs Crag el Rompehuesos, group/joint mode, 2026-09-29): a shoulder cut described only by pronoun
+  // ("su hombro"), in a sentence that also contains an earlier, unrelated "desviando" (deflecting a DIFFERENT attack)
+  // that used to negate the whole sentence. Both fighters are named "Zarpe"/"Crag el Rompehuesos", solo=false so the
+  // player-pronoun fallback never applies here — only the carried-forward subject and the clause split can catch it.
+  it("carries the subject across an unnamed follow-up sentence, and a 'pero' clause is not negated by an earlier one", () => {
+    const groupActors = [
+      { name: "Zarpe", side: "player" as const, hp: 400, maxHp: 400 },
+      { name: "Crag el Rompehuesos", side: "enemy" as const, hp: 515, maxHp: 515 },
+    ];
+    const narration =
+      "Zarpe proyecta una ráfaga cortante hacia el torso de Crag el Rompehuesos. La cuchillada atraviesa el aire justo cuando Crag el Rompehuesos se empuja de la pared. " +
+      "El bruto gira su hombro izquierdo cubierto de Haki para interceptar la ráfaga. " +
+      "El impacto produce un destello cegante, desviando el ataque hacia el cielo, pero la fuerza del corte le abre un fino surco en la piel de su hombro, del que brotan unas gotas de sangre.";
+    const groupVerdict = { narration, changes: [{ name: "Zarpe", hp: 0, stamina: 0 }, { name: "Crag el Rompehuesos", hp: 0, stamina: 0 }] };
+    const missing = unbookedWounds(groupVerdict, groupActors, false);
+    expect(missing.map((m) => m.name)).toEqual(["Crag el Rompehuesos"]);
+    const floored = floorWounds(groupVerdict, groupActors, false);
+    expect(floored.changes.find((c) => c.name === "Crag el Rompehuesos")!.hp).toBe(Math.round(515 * WOUND_FLOOR_FRACTION.solid));
+    expect(floored.changes.find((c) => c.name === "Zarpe")!.hp).toBe(0);
+  });
+
+  // Same real fight, one round later: the registered name "Crag el Rompehuesos" is only ever spelled out in full
+  // once or twice — every later sentence just says "Crag", which the old exact-string match never caught at all
+  // (so the whole wound-floor net was effectively off for any multi-word name, not just this one). It also caught
+  // a real false positive the carried-subject fix introduced: "Sus ojos, inyectados en sangre, no se despegan de
+  // Zarpe" names Zarpe only as the OBJECT of "de" (his eyes stay ON Zarpe), and must not hijack whose wound the next,
+  // nameless sentence ("...escupiendo un coágulo de sangre") is describing.
+  it("matches a shortened name, and an object-of-'de' mention never becomes the carried subject", () => {
+    const groupActors = [
+      { name: "Zarpe", side: "player" as const, hp: 400, maxHp: 400 },
+      { name: "Crag el Rompehuesos", side: "enemy" as const, hp: 515, maxHp: 515 },
+    ];
+    const narration =
+      "Crag el Rompehuesos cae de rodillas sobre el suelo irregular de la cantera. " +
+      "Respira con fuerza, un fino hilo de sangre corre por su brazo izquierdo desde el corte en el hombro. " +
+      "Sus ojos, inyectados en sangre, no se despegan de Zarpe. Se levanta con dificultad. " +
+      "'¡Maldito lunático!' escupe, escupiendo un coágulo de sangre.";
+    const groupVerdict = { narration, changes: [{ name: "Zarpe", hp: 0, stamina: 0 }, { name: "Crag el Rompehuesos", hp: 0, stamina: 0 }] };
+    const missing = unbookedWounds(groupVerdict, groupActors, false);
+    expect(missing.map((m) => m.name)).toEqual(["Crag el Rompehuesos"]);
+  });
+
+  it("does not carry a subject across a sentence that named two people at once", () => {
+    const groupActors = [
+      { name: "Zarpe", side: "player" as const, hp: 400, maxHp: 400 },
+      { name: "Crag el Rompehuesos", side: "enemy" as const, hp: 515, maxHp: 515 },
+    ];
+    const ambiguous = "Zarpe y Crag el Rompehuesos chocan en el aire. Un tajo profundo se abre y brota sangre.";
+    expect(unbookedWounds({ narration: ambiguous, changes: [] }, groupActors, false)).toEqual([]);
   });
 });
 

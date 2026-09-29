@@ -362,7 +362,45 @@ const GRAZE_WOUND = /\b(roz(?:ó|o|a|aron)|rozad\w*|magull\w*|ardor|ara[ñn]\w*|
 export type WoundLevel = "graze" | "solid";
 export const WOUND_FLOOR_FRACTION: Record<WoundLevel, number> = { graze: 0.03, solid: 0.08 };
 
-/** Fighters whose wounds the narration shows (by name; the player as "tú" in a solo fight) but whose life loss was booked as 0. */
+// Real case (Zarpe vs Crag el Rompehuesos, 2026-09-29): "...desviando el ataque hacia el cielo, pero la fuerza del
+// corte le abre un fino surco en la piel de su hombro, del que brotan unas gotas de sangre." negated the whole
+// sentence over "desviando", losing the real wound that comes right after "pero". Split on the contrastive
+// conjunction first, so a negation earlier in the sentence cannot cancel a wound described after it.
+const CONTRAST_SPLIT = /,?\s*\b(?:pero|aunque|sin\s+embargo)\b\s*,?\s*/i;
+function woundClauses(sentence: string): string[] {
+  const parts = sentence.split(CONTRAST_SPLIT).map((c) => c.trim()).filter(Boolean);
+  return parts.length > 0 ? parts : [sentence];
+}
+
+// A registered name like "Crag el Rompehuesos" is spelled out in full maybe once; every other mention in the same
+// fight is just "Crag" (same shortening `rivalNarratedFallen` in judge.ts already has to handle). Matching only the
+// exact full string missed almost every real sentence about him, including wounded ones.
+function nameSpan(sentence: string, name: string): { start: number; end: number } | null {
+  const s = norm(sentence);
+  const full = norm(name);
+  const at = s.indexOf(full);
+  if (at >= 0) return { start: at, end: at + full.length };
+  const first = full.split(/\s+/).find((w) => w.length >= 3);
+  if (!first) return null;
+  const m = s.match(new RegExp(`\\b${first}\\b`));
+  return m && m.index !== undefined ? { start: m.index, end: m.index + m[0].length } : null;
+}
+
+// A name mentioned only as the object of "de" ("sus ojos no se despegan de Zarpe" — his eyes stay ON Zarpe) is not
+// who the sentence is about; letting it hijack the carried-forward subject was a real false positive (Crag's own
+// paragraph, "...no se despegan de Zarpe. Se levanta... escupe..." wrongly wounded Zarpe instead of Crag).
+function mentionedAsSubject(sentence: string, name: string): boolean {
+  const span = nameSpan(sentence, name);
+  if (!span) return false;
+  return !/\bde\s$/.test(norm(sentence).slice(Math.max(0, span.start - 4), span.start));
+}
+
+/**
+ * Fighters whose wounds the narration shows (by name; the player as "tú" in a solo fight) but whose life loss was
+ * booked as 0. A sentence that names nobody ("su hombro sangra") still resolves to whoever the previous sentence was
+ * about, the same way a reader follows the subject across a paragraph — but only while that subject was unambiguous
+ * (exactly one actor named as the subject, not merely referenced), so it is never guessed between two people at once.
+ */
 export function unbookedWounds(verdict: RefereeVerdict, actors: RefereeBound[], solo: boolean): { name: string; level: WoundLevel }[] {
   const head = verdict.rivalIntent && verdict.narration.endsWith(verdict.rivalIntent) ? verdict.narration.slice(0, verdict.narration.length - verdict.rivalIntent.length) : verdict.narration;
   const found = new Map<string, WoundLevel>();
@@ -370,13 +408,24 @@ export function unbookedWounds(verdict: RefereeVerdict, actors: RefereeBound[], 
     if (found.get(name) !== "solid") found.set(name, level);
   };
   const player = actors.filter((a) => a.side === "player");
+  let lastNamed: RefereeBound[] = [];
   for (const sentence of splitSentences(head)) {
-    if (NEGATED_WOUND.test(sentence)) continue;
-    const level: WoundLevel | null = SOLID_WOUND.test(sentence) ? "solid" : GRAZE_WOUND.test(sentence) ? "graze" : null;
-    if (!level) continue;
-    const named = actors.filter((a) => a.name.length > 1 && norm(sentence).includes(norm(a.name)));
-    if (named.length > 0) for (const a of named) mark(a.name, level);
-    else if (solo && player.length === 1 && /\b(te|tu|tus|sentiste|sientes)\b/i.test(sentence)) mark(player[0].name, level);
+    const named = actors.filter((a) => a.name.length > 1 && nameSpan(sentence, a.name));
+    const subjectNamed = named.filter((a) => mentionedAsSubject(sentence, a.name));
+    // A sentence that names someone only as an object (never as its subject) says nothing about who the story is
+    // "about" right now, so it leaves whatever was already established untouched rather than resetting it.
+    if (subjectNamed.length === 1) lastNamed = subjectNamed;
+    else if (subjectNamed.length > 1) lastNamed = [];
+    for (const clause of woundClauses(sentence)) {
+      if (NEGATED_WOUND.test(clause)) continue;
+      const level: WoundLevel | null = SOLID_WOUND.test(clause) ? "solid" : GRAZE_WOUND.test(clause) ? "graze" : null;
+      if (!level) continue;
+      // Priority: a name in this very sentence wins; failing that, in a solo fight "tú/tu/tus" always means the
+      // player; only as a last resort does an unnamed clause inherit whoever the story was just talking about.
+      if (named.length > 0) for (const a of named) mark(a.name, level);
+      else if (solo && player.length === 1 && /\b(te|tu|tus|sentiste|sientes)\b/i.test(clause)) mark(player[0].name, level);
+      else if (lastNamed.length === 1) mark(lastNamed[0].name, level);
+    }
   }
   const booked = (n: string) => verdict.changes.filter((c) => norm(c.name) === norm(n)).reduce((t, c) => t + c.hp, 0);
   return [...found].filter(([n]) => booked(n) === 0).map(([name, level]) => ({ name, level }));
