@@ -1431,7 +1431,7 @@ Then: the "Imperio" panel + nakama errands (`engine/empire.ts`, `game/empire.ts`
 **Second real bug in the same case, found right after**: the user still couldn't find "Reintentar ronda" even after that fix. `getJointFightStateForCharacter`'s `stalled` flag (`joint-fight.ts`) was computed from `roundStartedAt` — the exact same timestamp the self-heal's own claim resets to "now" at the START of every retry attempt, success or failure. So the flag (and the button, and the auto-heal trigger) read true for one poll roughly every `STALLED_AFTER_MS` (150 s), then false again the instant that poll's own background retry claimed the round — a flicker far too short for a human to ever see or click, even though the round really was stuck. Fixed by deriving player-visible staleness from something that does NOT reset on a failed attempt: `stuck` = every standing human has answered AND the newest joint fight message is still the `JOINT_NO_VERDICT_NOTICE` (a real failure already happened and nothing has resolved since); `stalled = stuck || dueForAutoRetry` (the old timer keeps its own job — throttling how often the background self-heal fires — but no longer gates what the player sees). `retryJointRound`'s manual-click guard was loosened the same way: it only enforces the 150 s throttle when there is no notice yet (genuinely maybe still in flight); once the notice is posted it's provably idle, so a click works immediately instead of "el árbitro sigue juzgando" on an attempt that already failed seconds ago. Check: `scripts/joint-fight-stalled-check.ts` (direct function calls, no AI — proves the flag stays true across a simulated reset and only clears on a real resolution message).
 **Third real bug, same fight, found by the owner reading the transcript**: once the round finally resolved, "Crag" landed a hit that visibly bled him (booked 0) while the owner watched the numbers not move. Root cause read straight from `unbookedWounds`/`floorWounds` (`engine/referee.ts`, the 2026-09-26 wound floor): the actor is registered as `"Crag el Rompehuesos"`, but after the first mention the story just says "Crag" — the exact-substring name match never fired again, so the whole wound-floor net had been silently off for this (and any multi-word-named) enemy since that feature shipped, not just this fight. A second, narrower bug rode along with the fix: a sentence naming nobody ("su hombro sangra") needed to inherit whoever the previous sentence was about (the same paragraph-subject tracking already used elsewhere, e.g. `rivalNarratedFallen`'s first-word match in `judge.ts`), but a naive version of that let a name mentioned only as the OBJECT of "de" ("sus ojos no se despegan de Zarpe" — his eyes stay ON Zarpe) hijack the tracked subject and wrongly wound the wrong fighter — caught before deploy by testing the fix against this exact real transcript, not just synthetic cases. Fixed, code only: `nameSpan` matches the full registered name or its first significant word (mirrors `judge.ts`'s existing approach); `mentionedAsSubject` excludes a match immediately preceded by "de "; `woundClauses` splits a sentence on "pero/aunque/sin embargo" so a negation earlier in the sentence ("desviando...") cannot cancel a wound described after the contrast ("...pero le abre un fino surco... brotan gotas de sangre"); the paragraph-subject carry-forward only updates from an unambiguous single subject mention, resets on a two-actor sentence, and is the lowest-priority fallback (an explicit name in the wound's own sentence, or "tú/tu" in solo mode, both still win first). Tests: `referee.test.ts`, both using the real Crag transcript text. Not retroactively corrected in the live fight's already-resolved rounds — the fix only changes future exchanges.
 
-**3D "zarpando" cinematic — first pass, on branch `feature/travel-3d`, not merged/deployed (2026-09-29)**: the
+**3D "zarpando" cinematic — first pass, merged to `main`, deployed (2026-09-29)**: the
 owner asked whether the landing page's 3D voyage (ship/ocean/mood) could come into the actual game at the
 travel moment, explicitly scoped down (confirmed via AskUserQuestion) to ONLY the zarpar/travel moment, never
 an ambient background behind normal scenes — every mechanic and every line of text stays untouched. Pure
@@ -1458,8 +1458,8 @@ client-side addition: new `src/three/travel/` module, no schema change, no AI/pr
 - **`lib/path.ts`/`lib/rig.ts`** are new, replacing landing's scroll-driven `shipTrack`/9-key `rig.ts`: a short
   time-based eased path (`shipPosition(t)`, `t∈[0,1]`) and a 3-key wide/phone camera rig blended by aspect
   ratio (same `smoothstep` pattern as landing's `sampleRig`, far less data since this is "sail off, hold, settle"
-  not a 5-stop route). Camera framing is a first pass, confirmed working end-to-end in a real browser but sits
-  a little close behind the sail — a tuning target, not a bug.
+  not a 5-stop route). See the retuning entry below for the camera framing's real shape (the first pass sat
+  too close behind the sail; confirmed and fixed from real screenshots, not assumed).
 - **`TravelCinematic.tsx`** is the lazy entry (`next/dynamic(() => import("./Scene"), { ssr: false })` — the
   first `next/dynamic` usage in this app; landing used bare `React.lazy` since it has no SSR to guard against).
   Tier (`"on"|"off"`, 2 buckets, decided once at mount from WebGL/memory/cores/pointer/`saveData` hints) and
@@ -1498,9 +1498,20 @@ client-side addition: new `src/three/travel/` module, no schema change, no AI/pr
   this path (confirmed by reading `travelCharacterInner`/`startVoyage`), added to `run-all-checks.mjs`'s
   `browserFirst` list. Screenshots confirm a real procedural pirate ship/ocean/sunset sky render correctly at
   both 1280 and 390px. Dev DB reset to clean seeded state afterward.
-- **Not done**: merge to `main`, any deploy. This is deliberately still parked on its own branch per the
-  owner's explicit "vamos a hacerlo primero en una rama aparte, vamos mirando a ver" — pick it up from
-  `feature/travel-3d` next session if continuing.
+- **Camera retuned same day, right after the first pass**: the initial rig sat dead-astern, low and close,
+  filling the frame with the sail instead of showing the ship's silhouette against the sky/ocean — confirmed
+  from the check's own screenshots, not assumed. Both `lib/rig.ts`'s WIDE and TALL keyframes were pulled well
+  off to the side for a broadside/three-quarter cinematic sweep; TALL (phone) needed a bigger pull-back
+  *distance*, not just more lateral offset, since the fiber `Canvas`'s `fov` is vertical and a portrait aspect
+  has a much narrower horizontal field of view than desktop's landscape one — a first retune that only widened
+  the lateral offset still read as dead-astern until the whole rig was pulled further back. Re-verified with
+  the same 33 tests + 14-browser-check pass, plus a `next build && next start` run confirming (via real network
+  request bytes, not manifest-name guessing) that the ~937 KB three.js/react-three-fiber chunk contributes zero
+  bytes to the initial `/play/[id]` load and only downloads once a travel action actually fires.
+- **Merged to `main` and deployed the same day**, once the camera read well in real screenshots at both
+  widths — the owner's own next message after the first pass ("afina lo que falta y sube todo a main"). No
+  schema/Neon push needed (this feature touches no DB data at all); a normal Render code deploy, confirmed
+  `live` via the deploy-status API and a `curl` 200 on the production URL.
 
 ## Conventions to keep matching
 
