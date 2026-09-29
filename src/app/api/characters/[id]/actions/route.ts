@@ -83,7 +83,9 @@ async function dispatch(
     return await resolveFreeTextAction(id, userId, data.freeText);
   }
 
-  if (await getOpenJointFightFor(id)) {
+  // retry_joint_round is how the "Reintentar ronda" button reaches a stalled round: it must never be swallowed by
+  // this guard, or clicking it always answers with this generic line instead of actually retrying anything.
+  if (data.action !== "retry_joint_round" && (await getOpenJointFightFor(id))) {
     throw new GameActionError(
       "Estás en plena pelea con tus aliados: describe tu movimiento en el cuadro de texto.",
     );
