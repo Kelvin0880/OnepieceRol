@@ -24,6 +24,7 @@ import JointFightPanel from "./JointFightPanel";
 import ScenePanel from "./ScenePanel";
 import IslandCard from "./IslandCard";
 import CharacterSheet from "./CharacterSheet";
+import TravelCinematic, { type TravelKind } from "@/three/travel/TravelCinematic";
 import { IslandPeoplePanel } from "./IslandPeople";
 import { RescueRaidPanel, CaptivesPanel, AdmiralAlertPanel, BlackMarketPanel, BusterCallPanel, MissionsPanel, PrisonCard, RaidPanel, TerritoryPanel, WorldEventPanel } from "./WorldPanels";
 import { CrewBattlesPanel, CrewChallengePanel, OthersHerePanel, PrisonersHerePanel } from "./PeoplePanels";
@@ -57,6 +58,10 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
   const [oocStarter, setOocStarter] = useState<string | undefined>(undefined);
   const { toasts, push } = useToasts();
   const lastVitals = useRef<{ id: string; v: VitalsSnapshot } | null>(null);
+  const [cinematic, setCinematic] = useState<{ kind: TravelKind; island: { name: string; sea: string; dangerLevel: number }; holdFor?: Promise<unknown> } | null>(null);
+  // Set only while genuinely at sea; a long voyage can run up to an hour, so this (not VoyagePanel's own poll,
+  // which won't stay mounted that whole time) is the one reliably-running place arrival is observed.
+  const prevVoyageRef = useRef<StateResponse["voyage"] | null>(null);
 
   const load = useCallback(async () => {
     const res = await fetch(`/api/characters/${id}`);
@@ -70,6 +75,11 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     push(diffVitals(prev, v));
     lastVitals.current = { id, v };
     rememberCharacter({ id, name: d.character.name });
+    if (prevVoyageRef.current && !d.voyage) {
+      const isl = d.character.currentIsland;
+      setCinematic({ kind: "arrive", island: { name: isl.name, sea: isl.sea, dangerLevel: isl.dangerLevel } });
+    }
+    prevVoyageRef.current = d.voyage ?? null;
     setData(d);
   }, [id, push]);
 
@@ -210,6 +220,14 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     }
   }
 
+  // The clip covers the request in flight; onDone only fires once both the animation's own length and the
+  // response have settled, so a slow connection never reveals stale island data behind it.
+  function travelHop(islandId: string) {
+    const target = data?.connectedIslands.find((isl) => isl.id === islandId);
+    const p = doAction({ action: "travel", targetIslandId: islandId });
+    if (target) setCinematic({ kind: "hop", island: { name: target.name, sea: target.sea, dangerLevel: target.dangerLevel }, holdFor: p });
+  }
+
   async function submitFreeText() {
     const text = freeText.trim();
     if (!text || busy) return;
@@ -267,6 +285,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
 
   return (
     <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 pb-16 flex flex-col gap-4">
+      {cinematic && <TravelCinematic kind={cinematic.kind} island={cinematic.island} holdFor={cinematic.holdFor} onDone={() => setCinematic(null)} />}
       <PlayHeader data={data} badges={badges} markSeen={markSeen} onOpen={(p) => (p === "ooc" ? openOoc() : setPanel(p))} />
       <ToastStack toasts={toasts} />
       {!isDead && <HitVignette hp={character.hp} maxHp={character.maxHp} />}
@@ -283,7 +302,15 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
       {panel === "events" && <EventsPanel key="events" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
       {panel === "denden" && <DenDenPanel key="denden" characterId={character.id} onClose={() => setPanel(null)} />}
       {panel === "empire" && <EmpirePanel key="empire" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
-      {panel === "voyage" && <VoyagePanel key="voyage" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
+      {panel === "voyage" && (
+        <VoyagePanel
+          key="voyage"
+          characterId={character.id}
+          onClose={() => setPanel(null)}
+          onChanged={() => load()}
+          onDeparted={(o) => setCinematic({ kind: "depart", island: { name: o.name, sea: o.sea, dangerLevel: o.danger } })}
+        />
+      )}
       {panel === "coliseum" && <ColiseumPanel key="coliseum" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
       {panel === "styles" && <StylesPanel key="styles" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
       {panel === "inventory" && <InventoryPanel key="inventory" characterId={character.id} onClose={() => setPanel(null)} onChanged={() => load()} />}
@@ -363,7 +390,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           {data.worldEvent && <WorldEventPanel worldEvent={data.worldEvent} jointActive={!!jointActive} onIntervene={doWorldEvent} busy={battleBusy} error={battleError} />}
           {jointFight && <JointFightPanel jointFight={jointFight} onOoc={openOoc} busy={busy} doAction={doAction} />}
 
-          <IslandCard character={character} connectedIslands={connectedIslands} voyage={voyage} busy={busy} onTravel={(islandId) => doAction({ action: "travel", targetIslandId: islandId })} />
+          <IslandCard character={character} connectedIslands={connectedIslands} voyage={voyage} busy={busy} onTravel={travelHop} />
           {!isDead && !isImprisoned && <IslandPeoplePanel canon={data.canonHere} cast={data.islandCast ?? []} islandName={character.currentIsland.name} act={doPrisonAction} busy={battleBusy} error={battleError} jointActive={!!jointActive} nakamas={character.companions.filter((n) => n.status === "ALIVE").length} onRecruit={(text) => { setFreeText(text); document.querySelector('[data-testid="composer"]')?.scrollIntoView({ behavior: "smooth", block: "center" }); }} />}
 
           {!isDead && (

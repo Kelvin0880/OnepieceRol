@@ -1431,6 +1431,77 @@ Then: the "Imperio" panel + nakama errands (`engine/empire.ts`, `game/empire.ts`
 **Second real bug in the same case, found right after**: the user still couldn't find "Reintentar ronda" even after that fix. `getJointFightStateForCharacter`'s `stalled` flag (`joint-fight.ts`) was computed from `roundStartedAt` — the exact same timestamp the self-heal's own claim resets to "now" at the START of every retry attempt, success or failure. So the flag (and the button, and the auto-heal trigger) read true for one poll roughly every `STALLED_AFTER_MS` (150 s), then false again the instant that poll's own background retry claimed the round — a flicker far too short for a human to ever see or click, even though the round really was stuck. Fixed by deriving player-visible staleness from something that does NOT reset on a failed attempt: `stuck` = every standing human has answered AND the newest joint fight message is still the `JOINT_NO_VERDICT_NOTICE` (a real failure already happened and nothing has resolved since); `stalled = stuck || dueForAutoRetry` (the old timer keeps its own job — throttling how often the background self-heal fires — but no longer gates what the player sees). `retryJointRound`'s manual-click guard was loosened the same way: it only enforces the 150 s throttle when there is no notice yet (genuinely maybe still in flight); once the notice is posted it's provably idle, so a click works immediately instead of "el árbitro sigue juzgando" on an attempt that already failed seconds ago. Check: `scripts/joint-fight-stalled-check.ts` (direct function calls, no AI — proves the flag stays true across a simulated reset and only clears on a real resolution message).
 **Third real bug, same fight, found by the owner reading the transcript**: once the round finally resolved, "Crag" landed a hit that visibly bled him (booked 0) while the owner watched the numbers not move. Root cause read straight from `unbookedWounds`/`floorWounds` (`engine/referee.ts`, the 2026-09-26 wound floor): the actor is registered as `"Crag el Rompehuesos"`, but after the first mention the story just says "Crag" — the exact-substring name match never fired again, so the whole wound-floor net had been silently off for this (and any multi-word-named) enemy since that feature shipped, not just this fight. A second, narrower bug rode along with the fix: a sentence naming nobody ("su hombro sangra") needed to inherit whoever the previous sentence was about (the same paragraph-subject tracking already used elsewhere, e.g. `rivalNarratedFallen`'s first-word match in `judge.ts`), but a naive version of that let a name mentioned only as the OBJECT of "de" ("sus ojos no se despegan de Zarpe" — his eyes stay ON Zarpe) hijack the tracked subject and wrongly wound the wrong fighter — caught before deploy by testing the fix against this exact real transcript, not just synthetic cases. Fixed, code only: `nameSpan` matches the full registered name or its first significant word (mirrors `judge.ts`'s existing approach); `mentionedAsSubject` excludes a match immediately preceded by "de "; `woundClauses` splits a sentence on "pero/aunque/sin embargo" so a negation earlier in the sentence ("desviando...") cannot cancel a wound described after the contrast ("...pero le abre un fino surco... brotan gotas de sangre"); the paragraph-subject carry-forward only updates from an unambiguous single subject mention, resets on a two-actor sentence, and is the lowest-priority fallback (an explicit name in the wound's own sentence, or "tú/tu" in solo mode, both still win first). Tests: `referee.test.ts`, both using the real Crag transcript text. Not retroactively corrected in the live fight's already-resolved rounds — the fix only changes future exchanges.
 
+**3D "zarpando" cinematic — first pass, on branch `feature/travel-3d`, not merged/deployed (2026-09-29)**: the
+owner asked whether the landing page's 3D voyage (ship/ocean/mood) could come into the actual game at the
+travel moment, explicitly scoped down (confirmed via AskUserQuestion) to ONLY the zarpar/travel moment, never
+an ambient background behind normal scenes — every mechanic and every line of text stays untouched. Pure
+client-side addition: new `src/three/travel/` module, no schema change, no AI/prompt change, no change to
+`src/lib/engine`/`src/lib/game` travel logic at all.
+- **A trimmed port of `landing/`'s stack**, not a shared dependency (the two are separate builds/deploy
+  targets) — `src/three/travel/{Ship,shipParts,Ocean,Sky,glsl,uniforms}.{ts,tsx}` are ported near-verbatim
+  from `landing/src/three/*`; `lib/waves.ts` is copied verbatim (pure, framework-free). Deliberately leaner
+  than landing: no `@react-three/drei` (its only landing use, `PerformanceMonitor`, exists to adapt quality
+  *during* a multi-minute scroll journey — this clip is a few seconds, so tier is picked once at mount, never
+  mid-clip), no `@react-three/postprocessing`/`postprocessing` (Bloom/Vignette dropped; `ACESFilmicToneMapping`
+  is a plain `three` constant, no package needed for it), no `lenis`, no landmarks/birds/rain/lightning. Only
+  2 new runtime deps (`three`, `@react-three/fiber`) + `@types/three`; installed clean, no `legacy-peer-deps`
+  needed (unlike `landing/`'s `.npmrc`, since the root app doesn't depend on `@vitejs/plugin-react`, the actual
+  trigger for that gotcha there).
+- **`lib/env.ts`** picks ONE mood directly (`pickMood(sea, name, dangerLevel)`) instead of landing's
+  route-position blend — `Island.sea` (the Prisma enum) maps to 3 of landing's 5 presets (East Blue covers the
+  3 unused Blues too), plus 2 free exact-name overrides (`"Reverse Mountain"`, `"Laugh Tale"` — those seeded
+  island names happen to match landing's chapter names verbatim). `dangerLevel` (1-10, already on every row)
+  scales `rough`/`foam`/`fogNear`/`fogFar` continuously within whichever mood is picked, so a dangerous
+  invented island visibly differs from a calm one of the same sea with zero per-island authoring. Dropped
+  `rain`/`lightning`/`glory`/`birds` fields entirely — nothing in this trimmed scene renders them. **Follow-up,
+  not this pass**: hand-tuned overrides for Wano/Skypiea/Impel Down/Marineford/Zou/Isla Abismo.
+- **`lib/path.ts`/`lib/rig.ts`** are new, replacing landing's scroll-driven `shipTrack`/9-key `rig.ts`: a short
+  time-based eased path (`shipPosition(t)`, `t∈[0,1]`) and a 3-key wide/phone camera rig blended by aspect
+  ratio (same `smoothstep` pattern as landing's `sampleRig`, far less data since this is "sail off, hold, settle"
+  not a 5-stop route). Camera framing is a first pass, confirmed working end-to-end in a real browser but sits
+  a little close behind the sail — a tuning target, not a bug.
+- **`TravelCinematic.tsx`** is the lazy entry (`next/dynamic(() => import("./Scene"), { ssr: false })` — the
+  first `next/dynamic` usage in this app; landing used bare `React.lazy` since it has no SSR to guard against).
+  Tier (`"on"|"off"`, 2 buckets, decided once at mount from WebGL/memory/cores/pointer/`saveData` hints) and
+  `prefers-reduced-motion` (skips to a short fixed ~350 ms hold, no WebGL canvas at all, matching
+  `MotionConfig reducedMotion="user"`'s app-wide convention) are read once; a `CssFallback` gradient (driven by
+  the same `pickMood`) shows underneath always, exactly like `landing/src/components/SceneLayer.tsx`'s
+  `CssSea` pattern. Always has a tap-anywhere-or-"Saltar" skip. An optional `holdFor` promise lets the caller
+  keep the overlay up until its own network request settles too, so a slow response never gets revealed behind
+  an already-closed overlay, without ever cutting the clip's own minimum length short.
+- **Wiring in `play/[id]/`**: one cinematic instance owned by `page.tsx` (not by `IslandCard`/`VoyagePanel`
+  individually), `z-[60]` (above `Modal`'s `z-50`, so it can sit over an open `VoyagePanel`). Three triggers:
+  `kind:"hop"` wraps `IslandCard`'s short-hop `onTravel`, holding on the `doAction` promise; `kind:"depart"`
+  fires from `VoyagePanel`'s `sail()` on a successful `startVoyage` (new `onDeparted` prop, `Option` interface
+  exported); `kind:"arrive"` is detected in `page.tsx`'s own `load()` (the one loop that reliably keeps running
+  across a voyage that can last up to an hour — `VoyagePanel`'s own 15 s poll won't stay mounted that whole
+  time) by diffing the previous `data.voyage` against the new one, non-null → null. `types.ts`'s `Island`
+  interface gained `sea: string` (the API already sent the full row unfiltered; it was just untyped
+  client-side — zero backend change).
+- **eslint gotcha, fixed properly rather than worked around blind**: the wear-speckle noise in the ship's
+  canvas-drawn emblem texture (`shipParts.ts`) used the JS Math object's random call — `src/lib/no-dice.test.ts`
+  forbids that literal string anywhere in `src/` (the owner's "no dice decides a game outcome" rule); this is
+  purely decorative canvas noise, never a player-facing result, so it now uses a small fixed-seed `mulberry32`
+  PRNG instead of carving an exception into that guard. Separately, react-three-fiber's whole rendering model
+  (mutating `scene.fog`, refs, inside `useFrame` — the same pattern `landing/`'s own `World.tsx` already
+  relies on, just never linted since `landing/` is excluded from `eslint.config.mjs`) trips the newer
+  React-Compiler-oriented `react-hooks/immutability`/`react-hooks/refs` rules; scoped an override to
+  `src/three/travel/**` in `eslint.config.mjs` rather than weakening those rules project-wide, with a comment
+  explaining why. `TravelCinematic.tsx`'s own ref writes were moved into a real `useEffect` (not disabled) since
+  writing to a ref during render is a genuine anti-pattern there, unlike the R3F cases.
+- **Verified**: 33 new unit tests (`waves`/`env`/`path`/`rig`/`quality`, all pure) — 1001 total, full suite
+  green, `tsc --noEmit` and `eslint` clean (two pre-existing, unrelated lint errors in `page.tsx`/`VoyagePanel.tsx`
+  confirmed via `git stash` to predate this branch, left untouched). Real browser:
+  `scripts/travel-cinematic-ui-check.mjs` (14 checks — hop mounts/tags/auto-advances/unmounts/reveals the new
+  island, skip button, reduced-motion renders zero `<canvas>` and clears fast, phone width 390px fits with no
+  overflow, zero console errors throughout) — all passed against real `npm run dev`, no AI calls anywhere in
+  this path (confirmed by reading `travelCharacterInner`/`startVoyage`), added to `run-all-checks.mjs`'s
+  `browserFirst` list. Screenshots confirm a real procedural pirate ship/ocean/sunset sky render correctly at
+  both 1280 and 390px. Dev DB reset to clean seeded state afterward.
+- **Not done**: merge to `main`, any deploy. This is deliberately still parked on its own branch per the
+  owner's explicit "vamos a hacerlo primero en una rama aparte, vamos mirando a ver" — pick it up from
+  `feature/travel-3d` next session if continuing.
+
 ## Conventions to keep matching
 
 - All player-facing text is in Spanish (the user writes in Spanish).
