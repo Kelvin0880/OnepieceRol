@@ -88,36 +88,75 @@ function textOf(v: unknown): string {
   return "";
 }
 
-/** Models wrap JSON in fences or chatter: take the first balanced object and validate it. Anything malformed is null. */
+function verdictFromObject(obj: Record<string, unknown>): RefereeVerdict | null {
+  const str = textOf;
+  const result = str(obj.resultado) || str(obj.narracion) || str(obj.narration);
+  const reaction = str(obj.reaccion_rival);
+  const intent = str(obj.intencion_rival);
+  const narration = [result, reaction, intent].filter(Boolean).join("\n\n");
+  if (result.length < 30) return null;
+  const list = Array.isArray(obj.cambios) ? obj.cambios : Array.isArray(obj.changes) ? obj.changes : [];
+  const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.round(v)) : 0);
+  const changes: RefereeChange[] = [];
+  for (const c of list) {
+    if (!c || typeof c !== "object") continue;
+    const rec = c as Record<string, unknown>;
+    const name = typeof rec.nombre === "string" ? rec.nombre : typeof rec.name === "string" ? rec.name : "";
+    if (!name.trim()) continue;
+    changes.push({ name: name.trim(), hp: num(rec.vida ?? rec.hp), stamina: num(rec.aguante ?? rec.stamina) });
+  }
+  const fb = typeof obj.golpe_final === "string" && obj.golpe_final.trim() ? obj.golpe_final.trim() : undefined;
+  const defeated = Array.isArray(obj.derrotados) ? obj.derrotados.filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((x) => x.trim()) : [];
+  const fled = Array.isArray(obj.huyen) ? obj.huyen.filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((x) => x.trim()) : [];
+  const escaped = typeof obj.huida === "boolean" ? obj.huida : undefined;
+  return { narration, ...(intent ? { rivalIntent: intent } : {}), changes, ...(fb ? { finalBlow: fb } : {}), ...(defeated.length ? { defeated } : {}), ...(escaped !== undefined ? { escaped } : {}), ...(fled.length ? { fled } : {}) };
+}
+
+/** A long answer cut off mid-JSON (hit the token limit) still has a real "key": "value" up to where it stopped; pull it out by hand. */
+function extractField(raw: string, keys: string[]): string | null {
+  for (const key of keys) {
+    const closed = raw.match(new RegExp(`"${key}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)"`));
+    if (closed) return unescapeJsonString(closed[1]);
+    const cutOff = raw.match(new RegExp(`"${key}"\\s*:\\s*"((?:[^"\\\\]|\\\\.)*)$`));
+    if (cutOff) return unescapeJsonString(cutOff[1]);
+  }
+  return null;
+}
+
+function unescapeJsonString(s: string): string {
+  return s.replace(/\\n/g, "\n").replace(/\\t/g, "\t").replace(/\\"/g, '"').replace(/\\\\/g, "\\").trim();
+}
+
+/** The object never closed (truncated mid-answer): salvage the narration text itself. Numbers stay unbooked, never guessed. */
+function recoverTruncatedVerdict(raw: string): RefereeVerdict | null {
+  const start = raw.indexOf("{");
+  if (start < 0) return null;
+  const body = raw.slice(start);
+  const result = extractField(body, ["resultado", "narracion", "narration"]);
+  if (!result || result.length < 30) return null;
+  const reaction = extractField(body, ["reaccion_rival"]) ?? "";
+  const intent = extractField(body, ["intencion_rival"]);
+  const narration = [result, reaction, intent].filter(Boolean).join("\n\n");
+  return { narration, ...(intent ? { rivalIntent: intent } : {}), changes: [] };
+}
+
+/**
+ * Models wrap JSON in fences or chatter: take the first balanced object and validate it. A verdict cut off by the
+ * model's own token limit (a long, detailed exchange runs out of room mid-object) is salvaged from the raw text
+ * instead of thrown away outright, so a real answer never stalls the round just because its closing brace never
+ * arrived. Anything that still yields no real narration is null.
+ */
 export function parseRefereeVerdict(raw: string): RefereeVerdict | null {
   const json = firstJsonObject(raw);
-  if (!json) return null;
-  try {
-    const obj = parseLenient(json);
-    const str = textOf;
-    const result = str(obj.resultado) || str(obj.narracion) || str(obj.narration);
-    const reaction = str(obj.reaccion_rival);
-    const intent = str(obj.intencion_rival);
-    const narration = [result, reaction, intent].filter(Boolean).join("\n\n");
-    if (result.length < 30) return null;
-    const list = Array.isArray(obj.cambios) ? obj.cambios : Array.isArray(obj.changes) ? obj.changes : [];
-    const num = (v: unknown) => (typeof v === "number" && Number.isFinite(v) ? Math.max(0, Math.round(v)) : 0);
-    const changes: RefereeChange[] = [];
-    for (const c of list) {
-      if (!c || typeof c !== "object") continue;
-      const rec = c as Record<string, unknown>;
-      const name = typeof rec.nombre === "string" ? rec.nombre : typeof rec.name === "string" ? rec.name : "";
-      if (!name.trim()) continue;
-      changes.push({ name: name.trim(), hp: num(rec.vida ?? rec.hp), stamina: num(rec.aguante ?? rec.stamina) });
+  if (json) {
+    try {
+      const verdict = verdictFromObject(parseLenient(json));
+      if (verdict) return verdict;
+    } catch {
+      // falls through to the salvage below
     }
-    const fb = typeof obj.golpe_final === "string" && obj.golpe_final.trim() ? obj.golpe_final.trim() : undefined;
-    const defeated = Array.isArray(obj.derrotados) ? obj.derrotados.filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((x) => x.trim()) : [];
-    const fled = Array.isArray(obj.huyen) ? obj.huyen.filter((x): x is string => typeof x === "string" && x.trim().length > 0).map((x) => x.trim()) : [];
-    const escaped = typeof obj.huida === "boolean" ? obj.huida : undefined;
-    return { narration, ...(intent ? { rivalIntent: intent } : {}), changes, ...(fb ? { finalBlow: fb } : {}), ...(defeated.length ? { defeated } : {}), ...(escaped !== undefined ? { escaped } : {}), ...(fled.length ? { fled } : {}) };
-  } catch {
-    return null;
   }
+  return recoverTruncatedVerdict(raw);
 }
 
 /**

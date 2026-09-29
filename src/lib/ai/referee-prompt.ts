@@ -214,5 +214,7 @@ export function buildRefereePrompt(input: RefereeInput): PromptOut {
       ? `\n\nACCIONES DE ESTE TURNO (responde a TODAS ahora; ninguna se ignora):\n${input.actions.map((a) => `- ${a.name} escribe:\n"""\n${a.text.trim()}\n"""`).join("\n")}\nTómalas literalmente: es exactamente lo que hace y dice cada personaje, sin añadir nada que no escribieron.`
       : input.actions[0] && input.mode !== "duel" ? currentActionBlock(input.actions[0].text) : "") +
     "\n\nResponde solo con el JSON.";
-  return { system, user, maxTokens: Math.round(maxWords * 2.6) + 600 };
+  // Extra room over the plain word count: the JSON wrapper plus three separate text fields (result, rival
+  // reaction, rival intent) all eat into the same token budget the narration itself uses.
+  return { system, user, maxTokens: Math.round(maxWords * 2.6) + 800 };
 }

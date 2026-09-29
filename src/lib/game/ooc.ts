@@ -213,6 +213,9 @@ export async function undoLastExchange(characterId: string, userId: string) {
   const c = await loadOwned(characterId, userId);
   if (c.status !== CharacterStatus.ALIVE) throw new OocError("Este personaje ya no puede actuar.");
   if (c.pendingEncounter) throw new OocError("Hay una pelea en curso: no se puede borrar un intercambio que ya se juzgó. Usa un punto de restauración si hace falta.");
+  // A joint fight lives in its own transcript, not the personal scene: without this check "Deshacer" would instead
+  // find (and refuse over) an old, unrelated personal message and read as broken rather than "not applicable here".
+  if (await getOpenJointFightFor(characterId)) throw new OocError("Estás en una pelea conjunta: eso no se deshace aquí. Si el árbitro se atascó, usa «Reintentar ronda» en el panel de esa pelea.");
   if (c.partyId && !c.isSeparatedFromParty) throw new OocError("En escena compartida no se puede deshacer: otros jugadores ya la están leyendo.");
   const last = await prisma.sceneMessage.findMany({ where: { characterId }, orderBy: { createdAt: "desc" }, take: 8 });
   const narrator = last.find((m) => m.role === "narrator");

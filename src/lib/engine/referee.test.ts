@@ -32,6 +32,25 @@ describe("parseRefereeVerdict", () => {
     const v = parseRefereeVerdict(JSON.stringify({ narracion: NARR, cambios: [null, 3, { vida: 5 }, { nombre: "  ", vida: 5 }, { nombre: "B", vida: 2 }] }))!;
     expect(v.changes).toEqual([{ name: "B", hp: 2, stamina: 0 }]);
   });
+  // Reported 2026-09-28 (Zarpe vs Crag el Rompehuesos): a long, detailed exchange made the model's JSON answer run out
+  // of tokens before it closed, so the round stalled every retry even though a real narration had already been written.
+  describe("a verdict cut off by the model's own token limit", () => {
+    it("salvages the narration text even though the closing brace never arrived", () => {
+      const cutOff = `\`\`\`json\n{\n  "resultado": "${NARR}",\n  "reaccion_rival": "Crag retrocede tambaleante, sorprendido por el golpe.",\n  "intencion_rival": "Se reincorpora y prepara su Ciclón de Acero para`;
+      const v = parseRefereeVerdict(cutOff)!;
+      expect(v).not.toBeNull();
+      expect(v.narration).toContain(NARR);
+      expect(v.narration).toContain("Crag retrocede tambaleante");
+      expect(v.changes).toEqual([]);
+    });
+    it("still requires a real narration, not just any scrap of text", () => {
+      expect(parseRefereeVerdict(`{\n  "resultado": "corto`)).toBeNull();
+      expect(parseRefereeVerdict(`{\n  "cambios": [{"nombre": "A", "vida":`)).toBeNull();
+    });
+    it("a cleanly closed but otherwise broken object is still null, not salvaged", () => {
+      expect(parseRefereeVerdict("{oops")).toBeNull();
+    });
+  });
 });
 
 describe("applyVerdict", () => {
