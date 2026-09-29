@@ -251,7 +251,11 @@ export async function forceResolveJointRound(fightId: string) {
 export async function retryJointRound(fightId: string) {
   const fight = await prisma.jointFight.findUnique({ where: { id: fightId } });
   if (!fight || fight.status !== "ACTIVE") return { log: ["La pelea ya terminó."], waiting: false };
-  if (Date.now() - fight.roundStartedAt.getTime() < STALLED_AFTER_MS) throw new JointFightError("El árbitro sigue juzgando la ronda; espera un momento.");
+  const lastMessage = await prisma.jointFightMessage.findFirst({ where: { fightId }, orderBy: { createdAt: "desc" } });
+  // The notice only exists once a previous attempt has actually finished and failed, so it proves the referee is
+  // idle right now even if roundStartedAt was reset seconds ago; only without it do we need the plain time guard.
+  const alreadyIdle = lastMessage?.authorCharacterId === null && lastMessage.text === JOINT_NO_VERDICT_NOTICE;
+  if (!alreadyIdle && Date.now() - fight.roundStartedAt.getTime() < STALLED_AFTER_MS) throw new JointFightError("El árbitro sigue juzgando la ronda; espera un momento.");
   return advanceIfReady(fightId);
 }
 
@@ -713,9 +717,16 @@ export async function getJointFightStateForCharacter(characterId: string) {
   // The LAST messages: taking the oldest ones hid the newest replies in a long fight.
   const messages = (await prisma.jointFightMessage.findMany({ where: { fightId: fight.id }, orderBy: { createdAt: "desc" }, take: 60 })).reverse();
   const standing = participants.filter((p) => !p.isNpc && p.status === "FIGHTING");
-  const stalled = fight.status === "ACTIVE" && standing.length > 0 && standing.every((p) => !!p.action) && Date.now() - fight.roundStartedAt.getTime() >= STALLED_AFTER_MS;
+  const everyoneAnswered = fight.status === "ACTIVE" && standing.length > 0 && standing.every((p) => !!p.action);
+  // A failed attempt resets roundStartedAt (it is also the claim used to stop two attempts firing at once), so it
+  // cannot be what tells the player the round is stuck too: that flickers true for one poll and false again the
+  // instant the next background attempt claims the round, long before a human could ever see or click the button.
+  // The no-verdict notice is durable across attempts: it stays the round's last message until one actually resolves.
+  const stuck = everyoneAnswered && messages[messages.length - 1]?.authorCharacterId === null && messages[messages.length - 1]?.text === JOINT_NO_VERDICT_NOTICE;
+  const dueForAutoRetry = everyoneAnswered && Date.now() - fight.roundStartedAt.getTime() >= STALLED_AFTER_MS;
   // Self-healing: the 10 s poll of any ally re-judges a stalled round (at most one attempt per stall window, guarded by the round claim).
-  if (stalled) void retryJointRound(fight.id).catch(() => {});
+  if (dueForAutoRetry) void retryJointRound(fight.id).catch(() => {});
+  const stalled = stuck || dueForAutoRetry;
   const mine = participants.find((p) => p.characterId === characterId);
   return {
     id: fight.id,
