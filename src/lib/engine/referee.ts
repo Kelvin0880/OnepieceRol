@@ -512,6 +512,22 @@ export function checkConsistency(verdict: RefereeVerdict, bounds: RefereeBound[]
   return issues;
 }
 
+/**
+ * Real case (Barbosa vs Novato Finn, 2026-09-30): the model narrated the rival dying across three separate
+ * exchanges, in language varied enough that DEFEAT_PHRASES never matched ("la luz se apaga para siempre",
+ * "sin aliento ni pulso", "inmóvil"), and left "intencion_rival" empty without ever declaring "derrotados" —
+ * even after checkConsistency's own corrective retry asked for exactly that. The fight stayed open forever,
+ * narrating a corpse as still "fighting". An empty rivalIntent while not defeated or escaped is only ever
+ * valid, per the prompt's own rules, when the rival cannot act any more — so after giving the model its one
+ * retry, a still-empty intent is trusted as that structural signal instead of the prose. Safe even if the
+ * model was simply wrong: applyVerdict only actually zeroes a declared-defeated fighter's HP when they were
+ * already at or below half life, so this can never end a fight against someone not already nearly beaten.
+ */
+export function forceDefeatOnEmptyIntent(verdict: RefereeVerdict, rivalName: string): RefereeVerdict {
+  if (verdict.rivalIntent?.trim() || (verdict.defeated ?? []).length > 0 || verdict.escaped) return verdict;
+  return { ...verdict, defeated: [...(verdict.defeated ?? []), rivalName] };
+}
+
 // ---------------------------------------------------------------------------------------------
 // Scene narration outside the referee (reported 2026-09-26, Sebastian vs Akio): the narrator answered a player who
 // only stood on guard by resolving the rival's slash AND writing the player's dodge, block and Haki for them.

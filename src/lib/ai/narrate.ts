@@ -33,7 +33,7 @@ import {
 } from "./narrate-prompt";
 import { callOpenRouter } from "./openrouter-client";
 import { buildRefereePrompt, type RefereeInput } from "./referee-prompt";
-import { capUnshownWounds, raiseUnderbookedWounds, checkConsistency, kitTerms, dropSentences, floorWounds, playerActSentences, foldUnknownChanges, parseRefereeVerdict, sanitizeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
+import { capUnshownWounds, raiseUnderbookedWounds, checkConsistency, kitTerms, dropSentences, floorWounds, forceDefeatOnEmptyIntent, playerActSentences, foldUnknownChanges, parseRefereeVerdict, sanitizeVerdict, stubVerdict, type RefereeVerdict } from "../engine/referee";
 import { OPENROUTER_MODELS } from "./models";
 import { parseCompanionProfile } from "../engine/companions";
 import { isWithPlayer } from "../engine/empire";
@@ -565,10 +565,12 @@ export async function refereeExchange(input: RefereeInput, meta: { characterId?:
     };
     const bounds = input.actors.map((a) => ({ name: a.name, side: a.side, hp: a.hp, maxHp: a.maxHp }));
     const solo = input.mode === "solo";
+    const rival = input.actors.find((a) => a.side === "enemy")?.name ?? "El rival";
+    const expectIntent = input.mode !== "duel" && !input.fleeAttempt;
     let parsed = await ask("");
     if (!parsed) return null;
     // What the text says must match what the numbers do: one corrective retry, then the sanitizer drops what is still unsupported.
-    const issues = checkConsistency(parsed, bounds, solo, input.mode !== "duel" && !input.fleeAttempt, kitTerms(input.actors.find((a) => a.side === "enemy")?.kit));
+    const issues = checkConsistency(parsed, bounds, solo, expectIntent, kitTerms(input.actors.find((a) => a.side === "enemy")?.kit));
     const knownNames = meta.characterId
       ? await allowedNamesForCharacter(meta.characterId)
       : meta.islandId
@@ -593,7 +595,9 @@ export async function refereeExchange(input: RefereeInput, meta: { characterId?:
         }
       }
     }
-    const rival =input.actors.find((a) => a.side === "enemy")?.name ?? "El rival";
+    // Still empty after its one chance to fix it: trust the model's own structural signal over the prose (see
+    // forceDefeatOnEmptyIntent) instead of leaving the fight open forever narrating a rival who cannot act.
+    if (expectIntent) parsed = forceDefeatOnEmptyIntent(parsed, rival);
     if (input.mode !== "duel") parsed = foldUnknownChanges(parsed, input.actors.map((a) => a.name), rival);
     const { verdict, report } = sanitizeVerdict(parsed, input.actions.map((a) => a.text).join("\n"), rival, input.mode === "solo" ? input.actors.find((a) => a.side === "player")?.name : undefined);
     if (issues.length > 0 || report.removed.length > 0) {

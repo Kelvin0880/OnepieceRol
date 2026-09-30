@@ -1533,6 +1533,42 @@ correctly — added to `run-all-checks.mjs`. Known limit, not a bug: real voice 
 the player's OS/browser has installed (Chrome/Edge ship decent Spanish voices; some platforms only have a
 flatter default) — there is no fallback beyond hiding the button when `speechSynthesis` doesn't exist at all.
 
+**A rival narrated dead never closed the fight; the referee's own structural signal, not just prose, now forces it (2026-09-30)**:
+real case Barbosa vs Novato Finn — the owner reported the fight "ended" (three separate exchanges narrated Finn
+dead: "sin aliento ni pulso", "la luz se apagara por completo", "inmóvil") but `PendingEncounter` stayed in
+phase `"fighting"` forever, so the player kept getting round replies narrating the same corpse. Root cause
+read straight from production `ErrorLog`, not guessed: `checkConsistency` (`engine/referee.ts`) DID correctly
+flag both "declares nobody but narrates a fall" and "missing intencion_rival" and fired its one corrective
+retry (`ai/referee-solo-guard` rows prove it) — but the retried answer is never re-validated, so when the model's
+second attempt still left `"derrotados": []` and `"intencion_rival"` empty (just in death-prose varied enough
+that `DEFEAT_PHRASES` never matched either time), the inconsistency sailed straight through. `concluded`/`victor`
+in `perform-action.ts` are driven purely by the NUMERIC `enemyHp` (via `applyVerdict`), never by the prose, so a
+death that was never booked as "derrotados" never actually zeroed the enemy's HP. Fix, code only (`git diff` shows
+zero prompt text touched): `forceDefeatOnEmptyIntent` (`engine/referee.ts`) — the SOLO/JOINT_FORMAT rules already
+say `"intencion_rival"` may only be empty when the rival fell or fled, so after the one retry, a STILL-empty
+intent with no `"derrotados"` and no `"escaped"` is trusted as that structural signal instead of re-parsing
+prose. Safe unconditionally: `applyVerdict`'s existing half-life floor means forcing a name into `"derrotados"`
+only actually zeroes HP when that fighter was already at or below half life, so this can never end a fight
+against someone who isn't already nearly beaten. Wired into the one shared `refereeExchange` (`ai/narrate.ts`),
+so it covers solo fights, joint fights and party members' personal fights alike; PvP duels are untouched
+(`expectIntent` is already false there, matching the existing "never in PvP, where the referee is neutral" rule).
+Also fixed the narration bug reported in the same session right before this one: the rival's own surprise/
+disorient attack sometimes wrote the resulting advantage as going to the player ("te dé una ventaja") instead of
+itself — one clause added to `RIVAL_CRAFT` (`ai/referee-prompt.ts`) clarifying the advantage a rival's trick
+pursues is always its own.
+Verified three ways: `referee.test.ts` gained `forceDefeatOnEmptyIntent` tests built from the REAL Finn transcript
+text (confirms `DEFEAT_PHRASES` really did miss it, confirms the fix is a no-op unless the rival is already
+below half life) — 1011 tests total, `tsc --noEmit` clean; a live real-AI run (`scripts/finishing-blow-check.mjs`,
+new, added to `run-all-checks.mjs`'s `browserRest`; helper `scripts/force-near-death-fight.ts` puts a character
+mid-fight against an enemy already critically low on HP, matching the real fight's numbers right before it got
+stuck) against 3 fresh characters with the real model (no `REFEREE_STUB`) — the exact "Falta intencion_rival"
+pattern from the real bug reproduced twice live during this run, and in both cases the fight still reached
+`phase: "victory"` (mercy choice shown) within a few rounds instead of staying stuck, confirming the fallback
+does its job against the real model, not just a synthetic unit case. Every other mechanic this touches
+(NPC "ocupado"/busy-in-a-fight tracking, `killIslandNpc`/`defeatIslandNpc` on the mercy choice, island-resident
+state) is downstream of the same numeric `concluded`/`victor` transition this fix repairs, not bypassed by it —
+confirmed unchanged by reading `perform-action.ts`'s mercy-choice branch, not just assumed.
+
 ## Conventions to keep matching
 
 - All player-facing text is in Spanish (the user writes in Spanish).

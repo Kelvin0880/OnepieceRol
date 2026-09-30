@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { raiseUnderbookedWounds, kitTerms, usesKit, capUnshownWounds, extractCombatMarker, playerActSentences, dropSentences, unbookedWounds, floorWounds, foldUnknownChanges, checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, WOUND_FLOOR_FRACTION, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict } from "./referee";
+import { raiseUnderbookedWounds, kitTerms, usesKit, capUnshownWounds, extractCombatMarker, playerActSentences, dropSentences, unbookedWounds, floorWounds, forceDefeatOnEmptyIntent, foldUnknownChanges, checkConsistency, powerCapFraction, MAX_HP_LOSS_FRACTION, MAX_STAMINA_LOSS, WOUND_FLOOR_FRACTION, applyVerdict, parseRefereeVerdict, sanitizeVerdict, splitSentences, stubVerdict, DEFEAT_PHRASES } from "./referee";
 
 const NARR = "El rival bloquea con el antebrazo y responde con una patada baja que se acerca a tu rodilla.";
 const good = (extra = "") => JSON.stringify({ narracion: NARR, cambios: [{ nombre: "Kirito", vida: 10, aguante: 5 }, { nombre: "Bandido", vida: 20, aguante: 8 }], ...(extra ? { x: extra } : {}) });
@@ -396,6 +396,45 @@ describe("the rival's next attack is mandatory while it stands", () => {
     expect(checkConsistency({ ...base, defeated: ["Smoker"] }, [], true, true).some((i) => i.includes("intencion_rival"))).toBe(false);
     expect(checkConsistency(base, [], true, false).some((i) => i.includes("intencion_rival"))).toBe(false);
     expect(checkConsistency({ ...base, rivalIntent: "x".repeat(400) }, [], true, true).some((i) => i.includes("Falta"))).toBe(false);
+  });
+});
+
+describe("forceDefeatOnEmptyIntent (Barbosa vs Novato Finn, 2026-09-30: a fight stayed open forever after the rival was narrated dead)", () => {
+  it("leaves the verdict untouched when there is a real intent, a declared defeat, or an escape", () => {
+    expect(forceDefeatOnEmptyIntent({ narration: "x", changes: [], rivalIntent: "Finn intenta..." }, "Finn").defeated).toBeUndefined();
+    expect(forceDefeatOnEmptyIntent({ narration: "x", changes: [], defeated: ["Finn"] }, "Finn").defeated).toEqual(["Finn"]);
+    expect(forceDefeatOnEmptyIntent({ narration: "x", changes: [], escaped: true }, "Finn").defeated).toBeUndefined();
+  });
+  it("forces the rival into \"derrotados\" when its next attack is empty, no defeat was declared and nobody escaped", () => {
+    const v = forceDefeatOnEmptyIntent({ narration: "x", changes: [] }, "Novato Finn");
+    expect(v.defeated).toEqual(["Novato Finn"]);
+  });
+  it("real transcript: three real exchanges narrated Finn dead in language DEFEAT_PHRASES never matched, always with an empty intent", () => {
+    const realFinalLines = [
+      "El cuerpo de Novato Finn permanece inmóvil, sin aliento ni pulso. El último destello de sorpresa y deber se ha apagado por completo en sus ojos. No hay reacción.",
+      "Novato Finn permanece inmóvil, tendido de espaldas, con los ojos vidriosos y la boca abierta alrededor de la aguja metálica. No hay sonido de respiración ni movimiento alguno; el deber y el nerviosismo se han apagado para siempre en su rostro.",
+    ];
+    for (const reaction of realFinalLines) {
+      const verdict = { narration: `resultado...\n\n${reaction}`, changes: [{ name: "Novato Finn", hp: 0, stamina: 0 }] };
+      expect(DEFEAT_PHRASES.test(verdict.narration)).toBe(false); // confirms the prose-matching safety net really did miss this
+      expect(forceDefeatOnEmptyIntent(verdict, "Novato Finn").defeated).toEqual(["Novato Finn"]);
+    }
+  });
+  it("is a no-op for applyVerdict when the forced-defeated rival is not actually below half life, so it can never end a fight early", () => {
+    const verdict = forceDefeatOnEmptyIntent({ narration: "x", changes: [] }, "Novato Finn");
+    const [, foe] = applyVerdict(verdict, [
+      { name: "Barbosa", hp: 90, maxHp: 106 },
+      { name: "Novato Finn", hp: 90, maxHp: 115 }, // still well above half life
+    ]);
+    expect(foe.hpAfter).toBe(90);
+  });
+  it("finishes off a rival already below half life, matching what the story showed", () => {
+    const verdict = forceDefeatOnEmptyIntent({ narration: "x", changes: [] }, "Novato Finn");
+    const [, foe] = applyVerdict(verdict, [
+      { name: "Barbosa", hp: 90, maxHp: 106 },
+      { name: "Novato Finn", hp: 24, maxHp: 115 }, // the real fight's numbers right before it got stuck
+    ]);
+    expect(foe.hpAfter).toBe(0);
   });
 });
 
