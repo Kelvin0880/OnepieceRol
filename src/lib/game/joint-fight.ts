@@ -76,7 +76,12 @@ export async function getOpenJointFightFor(characterId: string) {
   });
   if (!part) return null;
   if (Date.now() - part.fight.updatedAt.getTime() > STALE_FIGHT_MS) {
-    await prisma.jointFight.update({ where: { id: part.fightId }, data: { status: "CANCELLED" } });
+    // Real case (Zarpe vs Crag el Rompehuesos, 2026-09-30): a bare status update here — instead of the same
+    // settleJointFight every other ending goes through — silently skipped every kind-specific settle hook
+    // (canon, conquest, raid, arc, rescue, admiral, seat, sovereign), leaving whatever record tracks that fight
+    // (here, a CanonChallenge) stuck open forever, blocking any new attempt. A stale fight is exactly a
+    // "nobody won" ending, so it goes through the real settle path with outcome null, same as any other escape.
+    await settleJointFight(part.fightId, null, JSON.parse(part.fight.enemyJson) as JointEnemy, JSON.parse(part.fight.rewardsJson) as JointRewards);
     return null;
   }
   return part.fight;

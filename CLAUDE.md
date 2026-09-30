@@ -1569,6 +1569,33 @@ does its job against the real model, not just a synthetic unit case. Every other
 state) is downstream of the same numeric `concluded`/`victor` transition this fix repairs, not bypassed by it —
 confirmed unchanged by reading `perform-action.ts`'s mercy-choice branch, not just assumed.
 
+**A stale joint fight silently orphaned whatever was tracking it — here, a permanently stuck canon challenge
+(2026-09-30)**: real case, Zarpe vs Crag el Rompehuesos (the same `canon_vanguard` fight named in the 2026-09-28
+"referee round stuck forever" entry above) — the owner reported being told "Ya tienes un desafío abierto" and
+unable to challenge ANY canon character. Confirmed from production data, not guessed: Zarpe's one `CanonChallenge`
+row sat in stage `"VANGUARD"` since 2026-09-28 (`updatedAt` never changed since creation — it was never touched
+again), while its linked `JointFight` was `status: "CANCELLED"`. Root cause read straight from
+`getOpenJointFightFor` (`game/joint-fight.ts`): its lazy 24h-abandoned-fight cleanup did a bare
+`prisma.jointFight.update({ data: { status: "CANCELLED" } })` instead of going through the same `settleJointFight`
+every real ending uses — so it silently skipped every kind-specific settle hook (`canon`/`canon_vanguard`,
+`conquest`, `raid`, `arc`, `rescue`, `admiral`, `seat`, `sovereign`). The Crag fight had gone stale from the
+referee-JSON-truncation bug (now fixed) sitting unresolved past `STALE_FIGHT_MS`, the lazy cleanup fired,
+cancelled the fight, and never told `canon-encounter.ts` — leaving the `CanonChallenge` stuck in one of
+`OPEN_STAGES` forever, and `startCanonChallenge`'s own guard blocks a SECOND open challenge against anyone,
+regardless of who the stuck one was against. This was a structural gap affecting all 8 joint-fight kinds with a
+settle hook, not just canon — any of them going stale the same way would leave its own tracking record (a
+`Territory`, `Raid`, `WorldArc`, custody, `AdmiralDispatch`, `SeatChallenge`, or sovereignty throne state) equally
+orphaned; it had zero test coverage before this. Fix, one line of real logic: `getOpenJointFightFor` now calls
+`settleJointFight(fightId, null, enemy, rewards)` — the exact same path `ownerSettleJointFight`/a normal
+flee/escape ending already uses — instead of the bare status update, so going stale is just another "nobody won"
+ending that properly notifies whichever kind-specific hook is listening. New `scripts/stale-joint-fight-check.ts`
+(backdates a real fight's `updatedAt` via raw SQL past `STALE_FIGHT_MS`, since it's `@updatedAt`-managed and
+resists a normal update) proves a fresh stale fight now settles its `CanonChallenge` to `"LOST"` and the player
+can immediately open a real new challenge — added to `run-all-checks.mjs`. Zarpe's own already-orphaned row
+(already terminal `JointFight.status: "CANCELLED"`, so replaying `settleJointFight` on it was unnecessary risk)
+was fixed directly in production with one narrow `CanonChallenge.update` to `stage: "LOST"`, matching exactly
+what the code should have done automatically. 1011 tests, `tsc --noEmit` clean — no prompt/schema change.
+
 ## Conventions to keep matching
 
 - All player-facing text is in Spanish (the user writes in Spanish).
