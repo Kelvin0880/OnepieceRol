@@ -1,8 +1,9 @@
 "use client";
 
-import { forwardRef, useState, type ReactNode } from "react";
+import { forwardRef, useEffect, useState, type ReactNode } from "react";
 import { AnimatePresence, m } from "motion/react";
 import { SPRING } from "@/components/motion/presets";
+import { isSpeechSupported, stopSpeech, toggleSpeak, useSpeakingId } from "@/lib/ui/speech";
 
 export interface FeedMessage {
   id: string;
@@ -66,6 +67,24 @@ async function copyText(text: string): Promise<boolean> {
   }
 }
 
+function SpeakButton({ id, text }: { id: string; text: string }) {
+  const speakingId = useSpeakingId();
+  if (!isSpeechSupported()) return null;
+  const speaking = speakingId === id;
+  return (
+    <button
+      type="button"
+      data-testid="speak-message"
+      aria-label={speaking ? "Detener lectura" : "Escuchar mensaje"}
+      title={speaking ? "Detener lectura" : "Escuchar mensaje"}
+      onClick={() => toggleSpeak(id, text)}
+      className={`block text-[10px] uppercase tracking-wider transition-colors ${speaking ? "text-gold" : "text-ink-dim/70 hover:text-gold"}`}
+    >
+      {speaking ? "Detener ⏸" : "Escuchar 🔊"}
+    </button>
+  );
+}
+
 function CopyButton({ text }: { text: string }) {
   const [done, setDone] = useState(false);
   return (
@@ -80,7 +99,7 @@ function CopyButton({ text }: { text: string }) {
           setTimeout(() => setDone(false), 1500);
         }
       }}
-      className="mt-1 ml-auto block text-[10px] uppercase tracking-wider text-ink-dim/70 hover:text-gold transition-colors"
+      className="block text-[10px] uppercase tracking-wider text-ink-dim/70 hover:text-gold transition-colors"
     >
       {done ? "Copiado ✓" : "Copiar"}
     </button>
@@ -92,6 +111,8 @@ const ChatFeed = forwardRef<
   HTMLDivElement,
   { messages: FeedMessage[]; empty?: ReactNode; typing?: string | null; className?: string; testId?: string; children?: ReactNode }
 >(function ChatFeed({ messages, empty, typing, className = "", testId, children }, ref) {
+  // Leaving a scene (panel close, page navigation) shouldn't leave a voice reading over whatever comes next.
+  useEffect(() => stopSpeech, []);
   return (
     <div ref={ref} className={`flex flex-col gap-2.5 overflow-y-auto scrollbar-thin pr-1 ${className}`} data-testid={testId}>
       {messages.length === 0 && empty}
@@ -100,7 +121,10 @@ const ChatFeed = forwardRef<
           <m.div key={msg.id} className={`bubble ${msg.kind === "mine" ? "bubble-mine" : msg.kind === "narrator" ? "bubble-narrator" : "bubble-other"}`} {...enterFor(msg.kind)}>
             {msg.kind !== "mine" && msg.author && <div className="text-[10px] uppercase tracking-wider text-gold/80 mb-0.5 font-display">{msg.author}</div>}
             {msg.text}
-            <CopyButton text={msg.text} />
+            <div className="mt-1 flex items-center justify-end gap-3">
+              {msg.kind === "narrator" && <SpeakButton id={msg.id} text={msg.text} />}
+              <CopyButton text={msg.text} />
+            </div>
           </m.div>
         ))}
       </AnimatePresence>

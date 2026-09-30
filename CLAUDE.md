@@ -1513,6 +1513,26 @@ client-side addition: new `src/three/travel/` module, no schema change, no AI/pr
   schema/Neon push needed (this feature touches no DB data at all); a normal Render code deploy, confirmed
   `live` via the deploy-status API and a `curl` 200 on the production URL.
 
+**Read narrator bubbles aloud — browser TTS, no API (2026-09-30)**: the owner asked for an option to have AI
+messages read aloud, explicitly "lo más humano y calmado normal, no robótica." Given the choice (asked via
+AskUserQuestion: free browser voice vs. a paid neural TTS API needing a new key), the owner picked the free
+option. `src/lib/ui/speech.ts` (+ test for the pure part) wraps `window.speechSynthesis`: `pickVoice` scores the
+browser's installed voice list towards whatever is least likely to sound robotic (non-local/"network" voices,
+anything labelled neural/natural/online, Spanish-tagged over generic) instead of taking voice #0; playback rate
+is a touch under 1 (0.95) for a calmer cadence. `toggleSpeak`/`useSpeakingId` (module-level singleton +
+`useSyncExternalStore`, since `speechSynthesis` only ever plays one utterance app-wide) live outside React so
+every mounted `ChatFeed` shares the same "what's playing" state; clicking a second bubble cuts the first off.
+Wired into `src/components/ui/ChatFeed.tsx` — **the one shared transcript renderer for solo scenes, party
+scenes, duels and joint fights** — as an "Escuchar/Detener" button next to the existing "Copiar" one, shown only
+on `kind === "narrator"` bubbles (never the player's own text or another player's). `ChatFeed` stops any playing
+speech on unmount so leaving a panel/page never leaves a voice reading over what comes next. No schema/AI/prompt
+change; verified with `pickVoice` unit tests, `tsc`/`eslint` clean, and a real-browser check
+(`scripts/speech-ui-check.mjs`, using new `scripts/force-scene-message.ts` to inject a narrator `SceneMessage`
+directly so the check needs zero AI calls) confirming the button appears only on narrator bubbles and toggles
+correctly — added to `run-all-checks.mjs`. Known limit, not a bug: real voice quality depends entirely on what
+the player's OS/browser has installed (Chrome/Edge ship decent Spanish voices; some platforms only have a
+flatter default) — there is no fallback beyond hiding the button when `speechSynthesis` doesn't exist at all.
+
 ## Conventions to keep matching
 
 - All player-facing text is in Spanish (the user writes in Spanish).
