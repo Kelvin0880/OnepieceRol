@@ -1,4 +1,5 @@
 import type { IslandSecret } from "../engine/island-secrets";
+import { KAIROS_SECRETS } from "./islands-kairos";
 
 /**
  * Hand-written discoveries, two per island (one repeatable "common" find, one one-time "rare" find).
@@ -1330,4 +1331,5 @@ export const ISLAND_SECRETS: IslandSecret[] = [
       weapon: { name: "Sable del campo hierro nuevo", kind: "Sable", atkBonus: 20, description: "Un sable de reclutas de élite guardado con esmero: acero sobrio, equilibrio perfecto y ni un solo adorno.", basePrice: 30000 },
     },
   },
+  ...KAIROS_SECRETS
 ];

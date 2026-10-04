@@ -161,8 +161,8 @@ UI for it yet.
 
 ## World content so far
 
-**47 islands** today (single source of truth: `prisma/seed.ts` plus the wave files it imports, e.g.
-`src/lib/game/islands-wave4.ts`). The original East Blue starts (Pueblo Foosha/pirate, Cuartel Marine
+**48 islands** today (single source of truth: `prisma/seed.ts` plus the wave files it imports, e.g.
+`src/lib/game/islands-wave4.ts`, and `islands-kairos.ts` for Isla Kairos). The original East Blue starts (Pueblo Foosha/pirate, Cuartel Marine
 G-5/marine, Isla Baltigo/revolutionary, Isla Gecko/bounty hunter, **Tequila Wolf/CP-0** since 2026-09-25),
 the Paradise chain from Reverse Mountain, and the New World up to Laugh Tale. `Island.minLevelToEnter`
 (checked in `travelCharacter` via `engine/travel.ts`'s `canEnterIsland`) refuses travel below the
@@ -1599,6 +1599,35 @@ for level limits that still let you max out "at a reasonable level", without hur
   bank, level up, training at/below the cap, fight growth for Haki/fruit/style, style training refusal, gift once),
   `scripts/train-focus-ui-check.mjs` (18 browser checks incl. 390 px), and the related existing DB checks (styles,
   ooc-rollback, attributes-inventory, missions, close-fight, joint-fight, duel-resolution) all still pass.
+
+**Isla Kairos — the one place to give a devil fruit back (2026-10-04)**: the owner asked for a special island where
+a fruit user can remove their fruit, for a steep price, the next fruit starting from zero.
+- **The island** (`game/islands-kairos.ts`, one file with everything an island needs): Paradise, danger 6, level 10,
+  routes to Whisky Peak / Little Garden / Isla Drum, built on the largest natural Kairoseki vein; the Order of the
+  Silent Sea runs the "Aguas Quietas" spring. 13 hand-written residents (guards, a Marine scout, a pirate, a
+  smuggler...), a full gazetteer (8 places), 2 secrets and 3 explore stories. They are folded into the SAME shared
+  lists as every other island — `island-npc-data-wave2.ts`, `island-lore-data.ts` and `island-secrets-data.ts` end
+  with `...KAIROS_*`, `seed.ts` adds the island/adjacency/stories — so no consumer special-cases it. Map
+  (`docs/mapa.html`), guide, landing data (48 islands, 807 residents, rebuilt `docs/index.html`) updated. Kairos also
+  sells field kits (`MEDIC_ISLANDS`).
+- **The ritual**: pure rules in `engine/fruit-removal.ts` (+ test: `fruitRemovalPrice` = (150k + 15k x level) x type
+  (Logia/Mythical Zoan 1.5, Ancient Zoan 1.25) x 1.5 for a 1-of-1 fruit x 2 if awakened, rounded to 5k — e.g. ฿285.000
+  at level 9; `fruitRemovalBlockReason`). `game/fruit-removal.ts` (`getFruitRemovalOffer`, `removeDevilFruit`): the
+  exact fruit name must be typed, never at sea or mid-fight (`assertCalm`), and the row is claimed by the observed
+  fruit + balance (`updateMany`), so a double click or a fruit eaten in between can't take the wrong power or charge
+  twice. Effects: fruit, mastery, awakening and the fruit reserve all reset; the DevilFruit row is left unclaimed (its
+  power "returns to the sea": a 1-of-1 can be granted again); news in "Frutas". `eatFruit` now always starts a fruit
+  at mastery 0 (it never mattered before, since nobody could ever eat a second one). Route
+  `api/characters/[id]/fruit-removal` (GET offer / POST `{fruitName}`), UI `play/[id]/FruitRemovalCard.tsx` (only on
+  the island; two deliberate steps).
+- **Production**: no schema change; `scripts/deploy-kairos.ts` adds just the island, its routes (appended both ways,
+  never rewriting other connections), residents and stories to an already-seeded world — idempotent, tested by
+  stripping Kairos from a copy of the dev DB and running it twice.
+- Verified: `fruit-removal.test.ts`, the island data tests (unique names, cast with fighters, gazetteer, secrets
+  validation), `scripts/fruit-removal-check.ts` (16 DB checks: offer, every refusal leaves everything untouched,
+  ritual, no double charge, next fruit from zero), `scripts/fruit-removal-ui-check.mjs` (11 browser checks incl. 390
+  px). `landing-ui-check.mjs` still fails its 2 reduced-motion checks exactly as it did on the previous build (not
+  caused by this change).
 
 **A rival narrated dead never closed the fight; the referee's own structural signal, not just prose, now forces it (2026-09-30)**:
 real case Barbosa vs Novato Finn — the owner reported the fight "ended" (three separate exchanges narrated Finn

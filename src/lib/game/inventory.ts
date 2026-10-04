@@ -98,7 +98,8 @@ export async function eatFruit(characterId: string, userId: string, inventoryIte
   // The delete is the guard against a double click: only the request that removes the row gets to eat it.
   const gone = await prisma.inventoryItem.deleteMany({ where: { id: row.id } });
   if (gone.count === 0) throw new InventoryError("Esa fruta ya no está en tu mochila.");
-  await prisma.character.update({ where: { id: characterId }, data: { devilFruitId: fruit.id } });
+  // A fruit eaten after giving one back at Isla Kairos (game/fruit-removal.ts) starts from zero, never inheriting the old one's mastery.
+  await prisma.character.update({ where: { id: characterId }, data: { devilFruitId: fruit.id, fruitMastery: 0, fruitAwakened: false, bankedFruit: 0 } });
   const message = `Muerdes la ${fruit.name}. Sabe fatal, pero lo sientes: un poder nuevo recorre tu cuerpo. El mar te rechaza para siempre: nunca más podrás nadar.`;
   await prisma.gameLogEntry.create({ data: { characterId, kind: "item", text: message } });
   const { postNews } = await import("./death-resolution");

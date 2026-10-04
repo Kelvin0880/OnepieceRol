@@ -19,7 +19,7 @@ const TAVERN_ISLANDS = new Set([
   "Water 7", "Alabasta", "Archipiélago Sabaody", "Dressrosa", "Whole Cake Island", "Marineford", "Nuevo Marineford", "País de Wano", "Long Ring Long Land", "Thriller Bark",
 ]);
 /** Where a serious medic or a barracks sells field kits. */
-const MEDIC_ISLANDS = new Set(["Cuartel Marine G-5", "Loguetown", "G-8 Navarone", "Marineford", "Nuevo Marineford", "Water 7", "Alabasta", "Isla Drum", "Dressrosa", "Archipiélago Sabaody", "Isla Baltigo", "Reino Kamabakka", "Enies Lobby", "Isla Egghead"]);
+const MEDIC_ISLANDS = new Set(["Cuartel Marine G-5", "Loguetown", "G-8 Navarone", "Marineford", "Nuevo Marineford", "Water 7", "Alabasta", "Isla Drum", "Dressrosa", "Archipiélago Sabaody", "Isla Baltigo", "Reino Kamabakka", "Enies Lobby", "Isla Egghead", "Isla Kairos"]);
 /** The Log Pose is sold where the Grand Line begins or where sailors resupply. */
 const LOGPOSE_ISLANDS = new Set(["Loguetown", "Reverse Mountain", "Jaya", "Water 7", "Archipiélago Sabaody", "Dressrosa"]);
 /** Shady corners: forged papers and treasure maps. */

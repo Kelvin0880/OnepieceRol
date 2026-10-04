@@ -1,6 +1,6 @@
 {
  "counts": {
-  "islands": 47,
+  "islands": 48,
   "fruits": 207,
   "fruitsByType": {
    "PARAMECIA": 103,
@@ -8,7 +8,7 @@
    "ZOAN": 78
   },
   "canon": 252,
-  "residents": 794,
+  "residents": 807,
   "factions": 5,
   "roadPoneglyphs": 4,
   "historyPoneglyphs": 6
@@ -483,6 +483,16 @@
    "faction": "Marina",
    "poneglyph": null,
    "desc": "El antiguo G-1, convertido en el cuartel general de la Marina tras la guerra de Marineford. Desde aquí el Almirante de Flota dirige la justicia absoluta sobre el Nuevo Mundo, a un paso de la Tierra Sagrada."
+  },
+  {
+   "key": "kairos",
+   "name": "Isla Kairos",
+   "sea": "Paradise",
+   "danger": 6,
+   "minLevel": 10,
+   "faction": "Orden del Mar Callado",
+   "poneglyph": null,
+   "desc": "Un islote de roca negra en mitad de Paradise, levantado sobre la mayor veta natural de Kairoseki del mundo. De sus grietas mana el Agua Quieta, un manantial donde el mar parece dormido y ningún poder de fruta resiste. Quien llega aquí suele venir por lo mismo: a arrancarse su Fruta del Diablo. La Orden del Mar Callado lo hace, y cobra caro."
   }
  ],
  "factions": [

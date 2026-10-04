@@ -23,6 +23,8 @@ import DuelPanel from "./DuelPanel";
 import JointFightPanel from "./JointFightPanel";
 import ScenePanel from "./ScenePanel";
 import IslandCard from "./IslandCard";
+import FruitRemovalCard from "./FruitRemovalCard";
+import { FRUIT_REMOVAL_ISLAND } from "@/lib/engine/fruit-removal";
 import CharacterSheet from "./CharacterSheet";
 import TravelCinematic, { type TravelKind } from "@/three/travel/TravelCinematic";
 import { IslandPeoplePanel } from "./IslandPeople";
@@ -391,6 +393,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
           {jointFight && <JointFightPanel jointFight={jointFight} onOoc={openOoc} busy={busy} doAction={doAction} />}
 
           <IslandCard character={character} connectedIslands={connectedIslands} voyage={voyage} busy={busy} onTravel={travelHop} />
+          {!isDead && !isImprisoned && character.currentIsland.name === FRUIT_REMOVAL_ISLAND && <FruitRemovalCard characterId={character.id} fruitName={character.devilFruit?.name ?? null} onChanged={load} />}
           {!isDead && !isImprisoned && <IslandPeoplePanel canon={data.canonHere} cast={data.islandCast ?? []} islandName={character.currentIsland.name} act={doPrisonAction} busy={battleBusy} error={battleError} jointActive={!!jointActive} nakamas={character.companions.filter((n) => n.status === "ALIVE").length} onRecruit={(text) => { setFreeText(text); document.querySelector('[data-testid="composer"]')?.scrollIntoView({ behavior: "smooth", block: "center" }); }} />}
 
           {!isDead && (

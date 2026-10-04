@@ -1,6 +1,13 @@
 # Pendientes y mejoras (lista viva — actualizar en cada sesión)
 
-Última actualización: 2026-09-26. Marca con [x] lo hecho.
+Última actualización: 2026-10-04. Marca con [x] lo hecho.
+
+## Hecho el 2026-10-04
+- [x] Voz del narrador natural (edge-tts, gratis) con la voz del navegador como respaldo automático si Microsoft la bloquea.
+- [x] Elegir qué entrenar (Armadura, Observación, fruta o "lo más atrasado"), con la cuenta atrás en el botón.
+- [x] Tope por nivel para Haki, dominio de fruta y estilos (10 + 4 por nivel; 100 en el nivel 24). Lo que sobraba quedó en reserva y vuelve al subir de nivel. Regalo a todos: +1 nivel, ฿100.000, vida y aguante llenos.
+- [x] Isla Kairos: el único lugar para quitarse la fruta (ritual de las Aguas Quietas, caro y para siempre; la siguiente fruta empieza desde cero).
+- [ ] La comprobación de la portada (`landing-ui-check.mjs`) falla en sus 2 pruebas de "movimiento reducido" en este PC (ya fallaba antes de hoy): revisar.
 
 ## Hecho el 2026-09-26
 - [x] Guerras del mundo declaradas por el propio canon (Revolución, Justicia, Emperadores, Marina contra un Yonko), cada ~4 días, sin que un jugador tenga que ocupar un puesto primero. Los jugadores asaltan o se alistan desde Poder → Guerra.
@@ -47,7 +54,7 @@
 
 ## Mejoras de calidad
 - [ ] Coliseo: convertir el combate del jugador en un duelo en vivo (hoy lo resuelve el juez con hojas de estadísticas).
-- [ ] Barbanegra: soportar dos frutas como dato real (hoy es texto en habilidades; el códice solo muestra una).
+- [x] Barbanegra: dos frutas como dato real (`WorldActor.secondDevilFruitId`, hecho el 2026-09-26).
 - [ ] Rival que recuerda además su "personalidad de combate" entre peleas (memoria de rencor más rica).
 - [ ] Ajustar prompts según los próximos reportes de jugadores (`/admin` → reportes).
 
@@ -68,7 +75,7 @@
 - [x] Desplegar: push del esquema a Neon (6 columnas en Character + tabla War) y resembrado; luego merge de `cloud/claude-nube` a `main`.
 - [ ] Pasar la regresión completa con la clave de OpenRouter (en la nube faltaba, así que las comprobaciones que usan la IA no se pudieron ejecutar). El 2026-09-26 se lanzó `node scripts/run-all-checks.mjs --quick` completo tras el despliegue; revisar `shots/regression.log` cuando termine (tardó más de lo normal).
 - [ ] Guerras: que los Shichibukai puedan ser llamados por el Gobierno a defender una base (hoy solo actúan marines y CP-0).
-- [ ] El Coliseo como duelo en vivo, y Barbanegra con dos frutas como dato real (siguen pendientes).
+- [ ] El Coliseo como duelo en vivo (sigue pendiente; lo de Barbanegra con dos frutas ya está hecho).
 
 
 ## Hecho el 2026-09-26 (tarde)

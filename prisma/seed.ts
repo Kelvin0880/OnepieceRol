@@ -14,6 +14,7 @@ import { ALL_RESIDENTS } from "../src/lib/game/island-residents-all";
 import { assignCanonSeats } from "../src/lib/game/canon-seats";
 import { seedHistoryStones } from "../src/lib/game/history-stones";
 import { WAVE4_ISLANDS, WAVE4_ADJACENCY, WAVE4_STORIES, WAVE4_TERRITORIES } from "../src/lib/game/islands-wave4";
+import { KAIROS_ISLAND, KAIROS_ADJACENCY, KAIROS_STORIES } from "../src/lib/game/islands-kairos";
 import { styleAbilityLines, actorStyleNames } from "../src/lib/engine/actor-styles";
 
 const prisma = new PrismaClient();
@@ -507,7 +508,7 @@ async function main() {
   ];
 
   const islands: Record<string, { id: string }> = {};
-  for (const def of [...islandDefs, ...WAVE4_ISLANDS]) {
+  for (const def of [...islandDefs, ...WAVE4_ISLANDS, KAIROS_ISLAND]) {
     const island = await prisma.island.upsert({
       where: { name: def.name },
       update: {},
@@ -571,7 +572,7 @@ async function main() {
   };
 
   // Later waves only add routes: each new island is linked both ways to the islands it touches.
-  for (const [key, neighbors] of Object.entries(WAVE4_ADJACENCY)) {
+  for (const [key, neighbors] of Object.entries({ ...WAVE4_ADJACENCY, ...KAIROS_ADJACENCY })) {
     adjacency[key] = [...new Set([...(adjacency[key] ?? []), ...neighbors])];
     for (const n of neighbors) adjacency[n] = [...new Set([...(adjacency[n] ?? []), key])];
   }
@@ -2127,7 +2128,7 @@ async function main() {
     { island: "maryGeoise", kind: EventKind.SOCIAL, title: "Los jardines de la Tierra Sagrada", weight: 10, min: 10, max: 10, flavor: "Paseas por jardines tan perfectos que resultan hostiles. Un noble mundial pasa cerca, sin mirarte, sobre la espalda de alguien.", crit: "Escuchas una conversación que ninguno de los dos debía tener en voz alta.", ok: "Pasas inadvertido y oyes lo suficiente para hacerte una idea de lo que se cuece aquí.", fail: "Un guardia te pide la documentación con una amabilidad que da miedo.", critFail: "Tu sola presencia incomoda a alguien poderoso: sales, pero con las piernas temblando.", loot: [900, 3400], xp: [22, 46], hurt: [0, 14] },
     { island: "laughTale", kind: EventKind.EXPLORATION, title: "La isla que ríe", weight: 10, min: 10, max: 10, flavor: "Al pisar la costa, el viento trae una carcajada que no pertenece a nadie. Todo el lugar parece contener la risa esperándote.", crit: "Encuentras una estancia que no aparece en ningún mapa y una inscripción que solo tú puedes leer.", ok: "Recorres la isla con la sensación de estar siendo esperado desde hace mucho.", fail: "La risa se vuelve un murmullo y por un momento no sabes si es contigo o de ti.", critFail: "Un derrumbe te obliga a retroceder, y la risa suena más fuerte, como si algo se divirtiera.", loot: [1000, 4000], xp: [24, 50], hurt: [0, 12] },
   ];
-  for (const st of [...stories, ...WAVE4_STORIES]) {
+  for (const st of [...stories, ...WAVE4_STORIES, ...KAIROS_STORIES]) {
     const outcome = (text: string, extra: object = {}) => ({ text: [text], ...extra });
     await prisma.eventTemplate.create({
       data: {
