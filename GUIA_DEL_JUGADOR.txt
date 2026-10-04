@@ -117,7 +117,12 @@ VIAJAR entre islas también es un botón (eliges destino de una lista).
   tú describiste que hacías.
 
   ENTRENAR — sube estadísticas de forma más predecible que explorar, a
-  cambio de menos recompensa inmediata. Cooldown de 30 minutos reales.
+  cambio de menos recompensa inmediata. Cooldown de 30 minutos reales
+  (el botón te dice cuántos minutos faltan). Al lado del botón eliges
+  QUÉ entrenar: Haki de Armadura, Haki de Observación, el dominio de tu
+  fruta (si tienes una) o "Lo más atrasado", que entrena automáticamente
+  lo que tengas más bajo (y te dice qué eligió). El juego recuerda tu
+  elección. También puedes escribirlo: "entreno mi Haki de Observación".
 
   DESCANSAR — recupera vida. No puedes actuar con un combate pendiente
   sin resolver, así que a veces descansar es la única salida.
@@ -198,6 +203,16 @@ Si otro jugador la tiene, tú no puedes tenerla. Cómprala, gánala, o
 quítasela a quien la lleve.
 
 El Haki se entrena como una estadística más, con su propio progreso.
+
+TOPE POR NIVEL: el Haki de Armadura, el de Observación, el dominio de tu
+fruta y la maestría de tus estilos solo crecen hasta el tope de tu nivel:
+10 en el nivel 1 y cuatro más por cada nivel (nivel 8 → 38, nivel 15 →
+66). El máximo, 100, se abre en el nivel 24, a las puertas del Nuevo
+Mundo. Vale para todo: entrenar, y también lo que subes usándolo en
+peleas. Si alguna vez tienes más de lo que tu nivel permite (por ejemplo,
+tras un rollback a un nivel anterior), lo que sobra NO se pierde: queda
+"en reserva" (lo ves en tu ficha) y vuelve solo a medida que subes de
+nivel.
 
 -----------------------------------------------------------
 7. REPUTACIÓN: EL MUNDO TE RECONOCE

@@ -17,6 +17,7 @@ import { Combatant } from "../engine/combat";
 import { applyVerdict, extractCombatMarker, NO_VERDICT_TEXT } from "../engine/referee";
 import { trainHaki, conquerorsHakiAwakens } from "../engine/haki";
 import { trainFruitMastery, canAwaken, FRUIT_PHASE_LABELS, fruitPhase } from "../engine/fruit-mastery";
+import { capGain, isLevelCapped, resolveTrainingFocus, trainingCeiling, TRAINING_COOLDOWN_MS, TRAIN_STAMINA_COST, TRAINING_FOCUS_LABELS, type TrainingChoice } from "../engine/training";
 import { TechniqueId, TECHNIQUE_LABELS } from "../engine/techniques";
 import { buildSceneEnemy, tierXp, EnemyTier } from "../engine/scene-enemy";
 import { FATIGUE_LABELS, fatigueLevel, restStamina, spendStamina } from "../engine/stamina";
@@ -59,9 +60,7 @@ import { hasCaptives, moveCaptivesWith } from "./custody";
 import { recordConsequence, rollConsequenceForExplore } from "./consequences";
 import { ONE_PIECE_TRUTH, ONE_PIECE_TRUTH_TITLE, truthNewsBody } from "./endgame-lore";
 
-const TRAINING_COOLDOWN_MS = 30 * 60 * 1000;
 const EXPLORE_STAMINA_COST = 8;
-const TRAIN_STAMINA_COST = 20;
 const MIN_STAMINA_TO_ADVENTURE = 8;
 
 export class GameActionError extends Error {}
@@ -1253,7 +1252,7 @@ export async function assertCalm(characterId: string, userId: string, what: "usa
   await assertSafeToRecover(await loadCharacterOrThrow(characterId, userId), what);
 }
 
-async function trainCharacterInner(characterId: string, userId: string, focus: "armament" | "observation" | "fruit" | "auto" = "auto"): Promise<ActionResult> {
+async function trainCharacterInner(characterId: string, userId: string, focus: TrainingChoice = "auto"): Promise<ActionResult> {
   await tickWorldIfDue();
   const character = await loadCharacterOrThrow(characterId, userId);
   assertNotAtSea(character);
@@ -1273,21 +1272,20 @@ async function trainCharacterInner(characterId: string, userId: string, focus: "
     throw new GameActionError("Estás demasiado agotado para entrenar en serio. Descansa primero.");
   }
 
-  const hasFruit = !!character.devilFruitId;
-  // "auto" trains whatever is furthest behind, so a fruit user's mastery
-  // isn't neglected in favour of haki (and vice versa).
-  let chosen: "armament" | "observation" | "fruit";
-  if (focus === "fruit" && !hasFruit) {
-    chosen = character.armamentHaki <= character.observationHaki ? "armament" : "observation";
-  } else if (focus !== "auto") {
-    chosen = focus;
-  } else if (hasFruit && character.fruitMastery < Math.min(character.armamentHaki, character.observationHaki)) {
-    chosen = "fruit";
-  } else {
-    chosen = character.armamentHaki <= character.observationHaki ? "armament" : "observation";
-  }
+  const trainingState = {
+    level: character.level,
+    armamentHaki: character.armamentHaki,
+    observationHaki: character.observationHaki,
+    fruitMastery: character.fruitMastery,
+    hasFruit: !!character.devilFruitId,
+  };
+  const chosen = resolveTrainingFocus(focus, trainingState);
+  const ceiling = trainingCeiling(chosen, trainingState);
+  const capLine = `Has llegado al tope que tu nivel permite en ${TRAINING_FOCUS_LABELS[chosen]} (${ceiling}). Sube de nivel para seguir creciendo.`;
+  const reachedCapLine = (after: number) => (after >= ceiling && ceiling < 100 ? [`Llegas al tope de tu nivel (${ceiling}): para ir más allá tendrás que subir de nivel.`] : []);
 
-  const log: string[] = [];
+  // Say what "auto" picked, so "only my fruit goes up" never reads like a bug again.
+  const log: string[] = focus === "auto" ? [`Entrenas lo que más se te ha quedado atrás: ${TRAINING_FOCUS_LABELS[chosen]}.`] : [];
   const data: {
     armamentHaki?: number;
     observationHaki?: number;
@@ -1303,25 +1301,35 @@ async function trainCharacterInner(characterId: string, userId: string, focus: "
 
   if (chosen === "fruit") {
     const result = trainFruitMastery(character.fruitMastery, character.intellect);
-    if (result.gained === 0) {
-      log.push(character.fruitMastery >= 100 ? "Tu dominio de la fruta ya no puede crecer con simple práctica: solo un momento límite lo llevará más allá." : "Practicas con tu fruta hasta el agotamiento, pero hoy no notas ningún avance real.");
+    const gained = capGain(character.fruitMastery, result.gained, ceiling);
+    if (gained === 0) {
+      log.push(
+        isLevelCapped("fruit", trainingState)
+          ? capLine
+          : character.fruitMastery >= 100
+            ? "Tu dominio de la fruta ya no puede crecer con simple práctica: solo un momento límite lo llevará más allá."
+            : "Practicas con tu fruta hasta el agotamiento, pero hoy no notas ningún avance real.",
+      );
     } else {
       const before = fruitPhase(character.fruitMastery, character.fruitAwakened);
-      data.fruitMastery = character.fruitMastery + result.gained;
+      data.fruitMastery = character.fruitMastery + gained;
       const after = fruitPhase(data.fruitMastery, character.fruitAwakened);
-      log.push(result.breakthrough ? `¡Un gran avance! Comprendes tu fruta como nunca (+${result.gained} de dominio).` : `Afinas el control de tu fruta (+${result.gained} de dominio).`);
+      log.push(result.breakthrough && gained === result.gained ? `¡Un gran avance! Comprendes tu fruta como nunca (+${gained} de dominio).` : `Afinas el control de tu fruta (+${gained} de dominio).`);
       if (before !== after) log.push(`Tu dominio entra en la ${FRUIT_PHASE_LABELS[after]}: nuevas variantes y menos desgaste.`);
+      log.push(...reachedCapLine(data.fruitMastery));
     }
   } else {
     const level = chosen === "armament" ? character.armamentHaki : character.observationHaki;
-    const label = chosen === "armament" ? "Haki de Armadura" : "Haki de Observación";
+    const label = TRAINING_FOCUS_LABELS[chosen];
     const result = trainHaki(level, character.willpower);
-    if (result.gained === 0) {
-      log.push("Entrenas duro, pero hoy no notas ningún avance real.");
+    const gained = capGain(level, result.gained, ceiling);
+    if (gained === 0) {
+      log.push(isLevelCapped(chosen, trainingState) ? capLine : "Entrenas duro, pero hoy no notas ningún avance real.");
     } else {
-      if (chosen === "armament") data.armamentHaki = level + result.gained;
-      else data.observationHaki = level + result.gained;
-      log.push(result.breakthrough ? `¡Un gran avance! Tu dominio de ${label} crece notablemente (+${result.gained}).` : `Terminas la sesión con tu ${label} un poco más afilado (+${result.gained}).`);
+      if (chosen === "armament") data.armamentHaki = level + gained;
+      else data.observationHaki = level + gained;
+      log.push(result.breakthrough && gained === result.gained ? `¡Un gran avance! Tu dominio de ${label} crece notablemente (+${gained}).` : `Terminas la sesión con tu ${label} un poco más afilado (+${gained}).`);
+      log.push(...reachedCapLine(level + gained));
     }
   }
 
@@ -2158,7 +2166,7 @@ export async function resolveMercyChoice(characterId: string, userId: string, sp
   return withMissions(characterId, await resolveMercyChoiceInner(characterId, userId, spare), spare ? [{ kind: "win" }, { kind: "spare" }] : [{ kind: "win" }]);
 }
 
-export async function trainCharacter(characterId: string, userId: string, focus: "armament" | "observation" | "fruit" | "auto" = "auto"): Promise<ActionResult> {
+export async function trainCharacter(characterId: string, userId: string, focus: TrainingChoice = "auto"): Promise<ActionResult> {
   return withMissions(characterId, await trainCharacterInner(characterId, userId, focus), [{ kind: "train" }]);
 }
 

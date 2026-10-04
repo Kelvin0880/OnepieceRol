@@ -4,6 +4,7 @@ import { parseFruitEffects, fruitCombatModifier } from "../engine/fruits";
 import { regenStamina, fatigueLevel, FATIGUE_MULTIPLIERS, spendStamina, FatigueLevel, EffortLevel, DEFAULT_COMBAT_EFFORT, effortStaminaCost, staminaLossFromDamage, overexertionHpLoss } from "../engine/stamina";
 import { resolveTechnique, TechniqueEffect, TechniqueId, hakiGrowthFromUse } from "../engine/techniques";
 import { masteryGainFromUse } from "../engine/fruit-mastery";
+import { capGain, levelCap } from "../engine/training";
 import { staminaCostAtLevel } from "../engine/resilience";
 import { describeCapabilities } from "../engine/capabilities";
 import { toCombatant, characterFruitPhase, wieldedWeapons, CharacterWithGear } from "./derive";
@@ -88,20 +89,22 @@ export function combatProgressData(character: Character, prepared: PreparedFight
     staminaUpdatedAt: new Date(),
   };
   const used = prepared.effect.used;
+  // Growth from use respects the same level ceiling as training (engine/training.ts levelCap).
+  const ceiling = levelCap(character.level);
   if (used === "fruit") {
-    const gain = masteryGainFromUse(character.fruitMastery, character.intellect);
+    const gain = capGain(character.fruitMastery, masteryGainFromUse(character.fruitMastery, character.intellect), ceiling);
     if (gain > 0) data.fruitMastery = character.fruitMastery + gain;
   }
   if (used === "style" && prepared.effect.styleUse && styleGrowthFromUse(styleMasteryNow(character, prepared.effect.styleUse.styleId)) > 0) {
     // Fire-and-forget: mastery from use is a bonus and must never block or break the fight that earned it.
-    void bumpStyleMastery(character.id, prepared.effect.styleUse.styleId);
+    void bumpStyleMastery(character.id, prepared.effect.styleUse.styleId, ceiling);
   }
   if (used === "armament") {
-    const gain = hakiGrowthFromUse(used, character.armamentHaki);
+    const gain = capGain(character.armamentHaki, hakiGrowthFromUse(used, character.armamentHaki), ceiling);
     if (gain > 0) data.armamentHaki = character.armamentHaki + gain;
   }
   if (used === "observation") {
-    const gain = hakiGrowthFromUse(used, character.observationHaki);
+    const gain = capGain(character.observationHaki, hakiGrowthFromUse(used, character.observationHaki), ceiling);
     if (gain > 0) data.observationHaki = character.observationHaki + gain;
   }
   return data;
@@ -111,9 +114,9 @@ function styleMasteryNow(character: Character & { styles?: { styleId: string; ma
   return character.styles?.find((s) => s.styleId === styleId)?.mastery ?? 100;
 }
 
-async function bumpStyleMastery(characterId: string, styleId: string): Promise<void> {
+async function bumpStyleMastery(characterId: string, styleId: string, ceiling: number): Promise<void> {
   try {
-    await prisma.characterStyle.updateMany({ where: { characterId, styleId, mastery: { lt: 100 } }, data: { mastery: { increment: 1 } } });
+    await prisma.characterStyle.updateMany({ where: { characterId, styleId, mastery: { lt: Math.min(100, ceiling) } }, data: { mastery: { increment: 1 } } });
   } catch {
     // best effort
   }

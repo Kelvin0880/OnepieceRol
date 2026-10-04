@@ -5,6 +5,7 @@ import { logError } from "@/lib/log-error";
 import { getCompanionViews } from "@/lib/game/companions";
 import { settleErrands } from "@/lib/game/empire";
 import { syncAttributePoints } from "@/lib/game/attributes";
+import { syncProgressionCaps } from "@/lib/game/progression-caps";
 import { getColiseumState } from "@/lib/game/coliseum";
 import { getVoyageView, settleVoyage } from "@/lib/game/voyage";
 import { getWorldEventForCharacter } from "@/lib/game/world-arcs";
@@ -41,6 +42,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     await settleVoyage(id);
     await syncPartyForCharacter(id);
     await syncAttributePoints(id);
+    await syncProgressionCaps(id);
 
     const character = await prisma.character.findUnique({
       where: { id },

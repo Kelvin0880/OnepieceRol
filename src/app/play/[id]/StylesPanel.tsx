@@ -16,6 +16,7 @@ interface Known {
   applies: boolean;
   techniques: { name: string; note: string; cost: number; minMastery: number; unlocked: boolean }[];
   trainReadyInMs: number;
+  levelCap?: number;
 }
 interface View {
   islandName: string;
@@ -153,8 +154,17 @@ export default function StylesPanel({ characterId, onClose, onChanged }: { chara
                   ))}
                 </ul>
                 <div className="flex gap-2 flex-wrap">
-                  <button className="btn-gold px-3 py-1 text-xs" disabled={busy || k.mastery >= 100 || k.trainReadyInMs > 0} onClick={() => act({ op: "train", styleId: k.id })} data-testid={`style-train-${k.id}`}>
-                    {k.trainReadyInMs > 0 ? `Entrenar (en ${Math.ceil(k.trainReadyInMs / 60000)} min)` : "Entrenar"}
+                  <button
+                    className="btn-gold px-3 py-1 text-xs"
+                    disabled={busy || k.mastery >= Math.min(100, k.levelCap ?? 100) || k.trainReadyInMs > 0}
+                    onClick={() => act({ op: "train", styleId: k.id })}
+                    data-testid={`style-train-${k.id}`}
+                  >
+                    {k.mastery < 100 && k.levelCap !== undefined && k.mastery >= k.levelCap
+                      ? `Tope de tu nivel (${k.levelCap})`
+                      : k.trainReadyInMs > 0
+                        ? `Entrenar (en ${Math.ceil(k.trainReadyInMs / 60000)} min)`
+                        : "Entrenar"}
                   </button>
                   <button className="btn-ghost px-3 py-1 text-xs" disabled={busy} onClick={() => act({ op: "focus", styleId: view.focusId === k.id ? null : k.id })}>
                     {view.focusId === k.id ? "Quitar como principal" : "Usar como principal"}

@@ -304,6 +304,10 @@ export interface Character {
   fruitMastery: number;
   fruitAwakened: boolean;
   fruitPhase: string | null;
+  lastTrainedAt?: string | null;
+  bankedArmament?: number;
+  bankedObservation?: number;
+  bankedFruit?: number;
   title?: string | null;
   poneglyphsRead: string;
   poneglyphHeat: number;

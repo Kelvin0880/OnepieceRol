@@ -43,6 +43,9 @@ export interface CharacterSnapshot {
   intellect: number;
   observationHaki: number;
   armamentHaki: number;
+  /** Haki kept above the level cap (engine/training.ts). Absent on snapshots older than the cap: then 0, and the next sync re-banks whatever the restored values exceed — never counted twice. */
+  bankedArmament?: number;
+  bankedObservation?: number;
   currentIslandId: string;
   /** What the narrator remembered at that moment (null = nothing). A rollback restores it so the discarded timeline is forgotten. Absent on very old snapshots: then memory is cleared. */
   memorySummary?: string | null;
@@ -92,6 +95,8 @@ export function planRollback(snap: CharacterSnapshot, currentGearSignature: stri
       intellect: snap.intellect,
       observationHaki: snap.observationHaki,
       armamentHaki: snap.armamentHaki,
+      bankedObservation: snap.bankedObservation ?? 0,
+      bankedArmament: snap.bankedArmament ?? 0,
       currentIslandId: snap.currentIslandId,
       berries: berriesRestored ? snap.berries : currentBerries,
     },

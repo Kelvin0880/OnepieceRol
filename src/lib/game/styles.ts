@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { capGain, levelCap } from "../engine/training";
 import {
   STYLES,
   STARTING_MASTERY,
@@ -48,6 +49,7 @@ export async function getStylesView(characterId: string, userId: string) {
         applies: wielded >= def.weapons.min && wielded <= def.weapons.max,
         techniques: def.techniques.map((t) => ({ name: t.name, note: t.note, cost: t.cost, minMastery: t.minMastery, unlocked: t.minMastery <= s.mastery })),
         trainReadyInMs: s.lastTrainedAt ? Math.max(0, s.lastTrainedAt.getTime() + TRAIN_COOLDOWN_MS - now) : 0,
+        levelCap: levelCap(c.level),
       };
     }),
     teachable: STYLES.filter((d) => d.learn && d.learn.islands.includes(c.currentIsland.name) && !known.some((k) => k.id === d.id)).map((d) => {
@@ -98,11 +100,13 @@ export async function trainStyle(characterId: string, userId: string, styleId: s
     throw new StyleError("No es momento de entrenar: hay una situación sin resolver a tu alrededor.");
   });
   if (row.mastery >= 100) throw new StyleError(`Ya dominas ${def.name} por completo.`);
+  const ceiling = levelCap(c.level);
+  if (row.mastery >= ceiling) throw new StyleError(`Has llegado al tope que tu nivel permite en ${def.name} (${ceiling}). Sube de nivel para seguir creciendo.`);
   const wait = row.lastTrainedAt ? row.lastTrainedAt.getTime() + TRAIN_COOLDOWN_MS - Date.now() : 0;
   if (wait > 0) throw new StyleError(`Sigues agotado del último entrenamiento: espera ${Math.ceil(wait / 60000)} min.`);
   if (c.stamina < 15) throw new StyleError("No te queda aliento para entrenar: descansa primero.");
   const before = styleTier(row.mastery);
-  const gain = trainStyleMastery(row.mastery, c.willpower, c.level);
+  const gain = capGain(row.mastery, trainStyleMastery(row.mastery, c.willpower, c.level), ceiling);
   // Claiming the row by its old mastery: two simultaneous requests cannot both train.
   const res = await prisma.characterStyle.updateMany({ where: { id: row.id, mastery: row.mastery }, data: { mastery: row.mastery + gain, lastTrainedAt: new Date() } });
   if (res.count === 0) throw new StyleError("Ya estabas entrenando: inténtalo de nuevo.");

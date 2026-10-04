@@ -2,11 +2,12 @@
 
 import { useEffect, useRef, useState } from "react";
 import { m } from "motion/react";
-import { BedDouble, Dumbbell, Feather, Send, Swords } from "lucide-react";
+import { BedDouble, Feather, Send, Swords } from "lucide-react";
 import ChatFeed, { type FeedMessage } from "@/components/ui/ChatFeed";
 import StatBar from "@/components/ui/StatBar";
 import { SPRING } from "@/components/motion/presets";
 import { ASSESSMENT_LABEL } from "./labels";
+import TrainControl from "./TrainControl";
 import type { Character, JointFightState, PartyState } from "./types";
 
 function placeholderFor(character: Character, jointFight: JointFightState | null, duelActive: boolean, partyBlocksInput: boolean): string {
@@ -254,14 +255,7 @@ export default function ScenePanel({
           {!enc && (
             <div className="flex flex-wrap items-center gap-2 mt-3">
               <span className="text-xs text-ink-dim">O, para lo simple:</span>
-              <button
-                className="btn-ghost px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
-                disabled={busy || partyBlocksInput}
-                onClick={() => (party ? doAction({ freeText: "Me pongo a entrenar un rato." }) : doAction({ action: "train" }))}
-              >
-                <Dumbbell className="w-3.5 h-3.5" />
-                Entrenar
-              </button>
+              <TrainControl character={character} inParty={!!party} disabled={busy || partyBlocksInput} doAction={doAction} />
               <button
                 className="btn-ghost px-3 py-1.5 text-xs inline-flex items-center gap-1.5"
                 disabled={busy || partyBlocksInput}

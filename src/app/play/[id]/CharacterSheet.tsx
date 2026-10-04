@@ -8,6 +8,7 @@ import AttributesCard from "./AttributesCard";
 import PortraitEditor from "./PortraitEditor";
 import { characterCondition, conditionLabel } from "@/lib/engine/condition";
 import { xpToNextLevel } from "@/lib/engine/economy";
+import { FULL_MASTERY_LEVEL, levelCap } from "@/lib/engine/training";
 import { rankProgress, type FactionKey } from "@/lib/engine/progression";
 import { crewNounForFaction } from "@/lib/engine/crew-noun";
 import { formatBerries, formatNumber } from "@/lib/ui/format";
@@ -136,6 +137,13 @@ export default function CharacterSheet({
         <div className="mt-3 pt-3 border-t border-line flex flex-col gap-2">
           <StatBar label="Haki de Observación" value={character.observationHaki} max={100} color="var(--gold)" />
           <StatBar label="Haki de Armadura" value={character.armamentHaki} max={100} color="var(--gold)" />
+          <CapNote
+            level={character.level}
+            banked={[
+              ["Observación", character.bankedObservation ?? 0],
+              ["Armadura", character.bankedArmament ?? 0],
+            ]}
+          />
           {character.conquerorsHaki && <p className="text-xs text-gold-bright mt-1">✦ Portador del Haki del Rey Supremo</p>}
         </div>
       </section>
@@ -152,6 +160,7 @@ export default function CharacterSheet({
             <p className="text-xs text-blood mt-1">✦ No puede nadar — el mar es su debilidad de por vida.</p>
             <div className="mt-2">
               <StatBar label={`Dominio: ${character.fruitPhase ?? ""}`} value={character.fruitMastery} max={100} color="var(--fruit)" />
+              <CapNote level={character.level} banked={[["Dominio", character.bankedFruit ?? 0]]} />
               <p className="text-[11px] text-ink-dim mt-1">
                 {character.fruitAwakened
                   ? "Tu fruta ha despertado: su poder es total."
@@ -233,5 +242,22 @@ export default function CharacterSheet({
         )}
       </section>
     </div>
+  );
+}
+
+// Haki and fruit mastery only grow as far as the level allows; anything above that was kept, not erased.
+function CapNote({ level, banked }: { level: number; banked: [string, number][] }) {
+  const cap = levelCap(level);
+  const reserve = banked.filter(([, n]) => n > 0);
+  return (
+    <p className="text-[11px] text-ink-dim" data-testid="level-cap-note">
+      {cap < 100 ? `Tope a tu nivel: ${cap}/100 (el máximo se abre en el nivel ${FULL_MASTERY_LEVEL}).` : "Tu nivel ya permite el máximo."}
+      {reserve.length > 0 && (
+        <span className="text-gold-bright" data-testid="level-cap-reserve">
+          {" "}
+          En reserva: {reserve.map(([label, n]) => `${label} +${n}`).join(", ")} — vuelve solo al subir de nivel.
+        </span>
+      )}
+    </p>
   );
 }

@@ -42,7 +42,7 @@ function snapshotOf(c: Owned, missions: { id: string; progress: number; status: 
     level: c.level, experience: c.experience, hp: c.hp, maxHp: c.maxHp, stamina: c.stamina, maxStamina: c.maxStamina,
     berries: c.berries, bounty: c.bounty, notoriety: c.notoriety,
     strength: c.strength, agility: c.agility, durability: c.durability, willpower: c.willpower, intellect: c.intellect,
-    observationHaki: c.observationHaki, armamentHaki: c.armamentHaki, currentIslandId: c.currentIslandId,
+    observationHaki: c.observationHaki, armamentHaki: c.armamentHaki, bankedObservation: c.bankedObservation, bankedArmament: c.bankedArmament, currentIslandId: c.currentIslandId,
     memorySummary: c.memorySummary ?? null,
     sceneCompactedUntil: c.sceneCompactedUntil ? c.sceneCompactedUntil.toISOString() : null,
     missions,

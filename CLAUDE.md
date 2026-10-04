@@ -1564,6 +1564,42 @@ there too, confirming the new dependency (`ws`/`isomorphic-ws`-based WebSocket c
 runtime, not just that it compiles. No schema change. New prod dependency: `edge-tts-universal` (already in
 `dependencies`, so Render's existing `npm install --include=dev` picks it up with no build-command change).
 
+**Choose what to train; Haki / fruit / style mastery capped by level; apology gift (2026-10-04)**: the owner noticed
+"Entrenar" only raised Barbosa's fruit (normal: "auto" trains whatever is furthest behind — 38 vs Haki 41/42) and asked
+for a real choice; then, after the production data showed Sebastian at level 7 with Haki 71/71 and fruit 72, asked
+for level limits that still let you max out "at a reasonable level", without hurting current players, plus a gift.
+- **Pure rules in `engine/training.ts`** (+ test): `resolveTrainingFocus`/`autoTrainingFocus` (moved out of
+  `perform-action.ts`, same tie-breaks as before, now skips anything at its ceiling), `levelCap(level)` =
+  `min(100, 10 + 4*(level-1))` (level 8 → 38, the full 100 at `FULL_MASTERY_LEVEL` 24 — the New World gate, chosen
+  against the island level map: East Blue 1, Paradise 8-27, New World 22-50), `capGain`, and `settleBank` (anything
+  above the ceiling moves to a reserve and comes back as the ceiling rises — never loses a point, idempotent).
+  `TRAINING_COOLDOWN_MS`/`TRAIN_STAMINA_COST` live there now (the UI imports them).
+- **Every writer respects the cap** (swept with grep, the owner asked for exactly this): training
+  (`trainCharacterInner`, explains a level cap in its log and says what "auto" picked), growth from use in every
+  fight kind (`combatProgressData`, the one function solo/joint/duel fights all write through), styles (`trainStyle`
+  refuses at the cap with the reason; `bumpStyleMastery` won't pass it). Attributes untouched (owner: they already
+  grow per level).
+- **The reserve**: additive `Character.bankedArmament/bankedObservation/bankedFruit`. `syncProgressionCaps`
+  (`game/progression-caps.ts`) runs lazily in the character GET next to `syncAttributePoints`, claiming the row by the
+  values it read (a concurrent training session is never overwritten); it self-heals any path that leaves a stat over
+  the ceiling (the rollout itself, a rollback to a lower level, an admin level change). Rollback snapshots now carry
+  the Haki reserve (`engine/ooc.ts`; an older snapshot restores reserve 0 and the next sync re-banks, so nothing is
+  counted twice). Styles have no reserve column: no production style was over its cap, so only growth is capped.
+- **UI**: `play/[id]/TrainControl.tsx` (button + select: "Lo más atrasado (X)", each stat with its value and
+  "(tope nv. N)"/"(máx.)", remembered per character in localStorage, the 30-min countdown on the button, a hint when
+  everything is capped); in a party the button sends a free-text phrase the classifier already maps to
+  `trainFocus`. `CharacterSheet` shows "Tope a tu nivel" and "En reserva" under the Haki and fruit bars; the Styles
+  panel shows "Tope de tu nivel (N)". API: `{action:"train", focus?}`.
+- **Rollout + gift**: `scripts/level-caps-rollout.ts` (idempotent; run once against production after the Neon push)
+  caps everyone and pays `grantCapRolloutGift` to every non-dead character: one full level (progress kept), ฿ 100.000,
+  full life and stamina, and a Bitácora entry explaining their reserve (marker `GameLogEntry.kind = "gift-level-caps"`
+  so it never pays twice), plus one "Anuncios" news item. Production impact at rollout: only Sebastian (34 + reserve
+  37/37/38 at level 7; 38 after the gift level) and Barbosa (gets everything back with the gift level).
+- Verified: `training.test.ts` (Sebastian's and Barbosa's real numbers), `scripts/level-caps-check.ts` (20 DB checks:
+  bank, level up, training at/below the cap, fight growth for Haki/fruit/style, style training refusal, gift once),
+  `scripts/train-focus-ui-check.mjs` (18 browser checks incl. 390 px), and the related existing DB checks (styles,
+  ooc-rollback, attributes-inventory, missions, close-fight, joint-fight, duel-resolution) all still pass.
+
 **A rival narrated dead never closed the fight; the referee's own structural signal, not just prose, now forces it (2026-09-30)**:
 real case Barbosa vs Novato Finn — the owner reported the fight "ended" (three separate exchanges narrated Finn
 dead: "sin aliento ni pulso", "la luz se apagara por completo", "inmóvil") but `PendingEncounter` stayed in

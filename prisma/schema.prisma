@@ -163,6 +163,12 @@ model Character {
   fruitMastery  Int     @default(0)
   fruitAwakened Boolean @default(false)
 
+  // Haki / fruit mastery above what the level allows (engine/training.ts levelCap). Never lost: it comes back on
+  // its own as the level rises (game/progression-caps.ts syncProgressionCaps).
+  bankedArmament    Int @default(0)
+  bankedObservation Int @default(0)
+  bankedFruit       Int @default(0)
+
   // Multiplayer party presence — see Party below. null = not currently
   // sharing a live scene with crewmates. isSeparatedFromParty is an
   // explicit "I stepped away" flag so a character who's still physically

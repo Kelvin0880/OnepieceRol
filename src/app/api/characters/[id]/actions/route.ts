@@ -24,7 +24,7 @@ import { runOncePerCharacter, ActionInFlightError } from "@/lib/idempotency";
 
 const actionSchema = z.discriminatedUnion("action", [
   z.object({ action: z.literal("explore") }),
-  z.object({ action: z.literal("train") }),
+  z.object({ action: z.literal("train"), focus: z.enum(["auto", "armament", "observation", "fruit"]).optional() }),
   z.object({ action: z.literal("rest") }),
   z.object({ action: z.literal("travel"), targetIslandId: z.string() }),
   z.object({ action: z.literal("engage") }),
@@ -95,7 +95,7 @@ async function dispatch(
     case "explore":
       return await exploreCharacter(id, userId);
     case "train":
-      return await trainCharacter(id, userId);
+      return await trainCharacter(id, userId, data.focus ?? "auto");
     case "rest":
       return await restCharacter(id, userId);
     case "travel":
