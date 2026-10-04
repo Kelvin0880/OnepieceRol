@@ -1529,9 +1529,40 @@ speech on unmount so leaving a panel/page never leaves a voice reading over what
 change; verified with `pickVoice` unit tests, `tsc`/`eslint` clean, and a real-browser check
 (`scripts/speech-ui-check.mjs`, using new `scripts/force-scene-message.ts` to inject a narrator `SceneMessage`
 directly so the check needs zero AI calls) confirming the button appears only on narrator bubbles and toggles
-correctly — added to `run-all-checks.mjs`. Known limit, not a bug: real voice quality depends entirely on what
-the player's OS/browser has installed (Chrome/Edge ship decent Spanish voices; some platforms only have a
-flatter default) — there is no fallback beyond hiding the button when `speechSynthesis` doesn't exist at all.
+correctly — added to `run-all-checks.mjs`. **Superseded 2026-10-04**: this is now only the fallback voice, see
+the entry below — real quality depending on what the player's OS/browser has installed was exactly the
+limitation that prompted the follow-up.
+
+**Natural narrator voice — edge-tts, with the browser voice as its fallback (2026-10-04)**: the owner found the
+browser `speechSynthesis` voice (above) still "se mira que me dijo una ia" and asked for the most natural voice
+possible. Given the choice (AskUserQuestion: free-but-unofficial edge-tts vs. a paid official neural API vs.
+staying with the browser voice), the owner picked edge-tts. `src/lib/tts/edge-tts.ts` wraps
+`edge-tts-universal` (a Node/TS port of Microsoft Edge's own "Read aloud" service — real neural voices, zero
+API key, not an official contract) behind `synthesizeNarration(text)`: voice `es-MX-JorgeNeural`,
+`rate: "-5%"`/`pitch: "-2Hz"` for a calmer cadence, a 20 s timeout, and a short-lived circuit breaker (4
+consecutive failures opens it for 5 min) so a bad stretch fails fast instead of piling up slow requests against
+our own server. `src/app/api/tts/route.ts` (`export const runtime = "nodejs"` — this needs a real WebSocket
+client, not the edge runtime) is a thin authenticated POST (`requireUserId`, 1-4000 char body) returning
+`audio/mpeg` bytes; an `EdgeTtsUnavailableError` is answered as a plain 503 and deliberately never logged to
+`ErrorLog` (that's an expected, recoverable condition, not a bug — logging every failed click during a real
+Microsoft-side outage would flood the table). **The actual "if Microsoft blocks it, it must not affect us" plan
+B, per the owner's explicit ask**: `src/lib/ui/speech.ts`'s `toggleSpeak` now tries this edge-tts path first and,
+on ANY failure at any stage (network error, non-2xx, timeout, decode/play failure) — not a special case, just
+the ordinary catch path — falls through transparently to the exact same browser `speechSynthesis` flow the
+2026-09-30 entry above already built and verified; the player never sees an error, just a quieter voice for that
+one line. No change to the fallback's own code. Verified: `src/lib/tts/edge-tts.test.ts` (mocks the
+`edge-tts-universal` module — a real success, a wrapped failure, empty-audio treated as a failure, the circuit
+opening after repeated failures and short-circuiting without calling the library again, and a success resetting
+the failure count) — 1016 tests total, `tsc --noEmit`/`eslint` clean. Confirmed against the REAL service, not
+mocked: a direct Node call produced a real 40 KB MP3; `scripts/speech-ui-check.mjs` (extended) drives the actual
+"Escuchar" button in a real browser and confirms the real `/api/tts` network call succeeds, then makes a second
+direct authenticated request with the same session cookie to confirm real audio bytes came back (needed because
+Playwright/CDP can't re-read a streamed response body the page's own `fetch` already consumed — a tooling
+quirk, not a bug, confirmed by curling the same route directly and getting the same real bytes). Also ran a full
+`next build && next start` and hit `/api/tts` against the production build directly — real audio came back
+there too, confirming the new dependency (`ws`/`isomorphic-ws`-based WebSocket client) actually works at
+runtime, not just that it compiles. No schema change. New prod dependency: `edge-tts-universal` (already in
+`dependencies`, so Render's existing `npm install --include=dev` picks it up with no build-command change).
 
 **A rival narrated dead never closed the fight; the referee's own structural signal, not just prose, now forces it (2026-09-30)**:
 real case Barbosa vs Novato Finn — the owner reported the fight "ended" (three separate exchanges narrated Finn

@@ -21,6 +21,7 @@
     "@prisma/client": "^6.19.3",
     "@react-three/fiber": "^9.8.1",
     "bcryptjs": "^3.0.3",
+    "edge-tts-universal": "^1.4.0",
     "iron-session": "^9.0.1",
     "lucide-react": "^1.48.0",
     "motion": "^12.43.0",

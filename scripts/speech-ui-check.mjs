@@ -56,10 +56,31 @@ try {
   // The button's CSS renders it all-caps (text-transform: uppercase); compare case-insensitively.
   check("starts as 'Escuchar'", /escuchar/i.test(await btn.innerText()));
 
+  // Real edge-tts narration (2026-10-04): confirm the actual network call succeeds, not just that the button
+  // toggles — a mocked/offline check would miss a broken server-side synthesis path. (The browser's own fetch
+  // in src/lib/ui/speech.ts consumes the response stream to play it, so the response body is no longer
+  // bufferable from here by the time it resolves — Playwright/CDP can't re-read an already-drained streamed
+  // body. Byte-level proof of real audio is done separately below with a fresh request using the same session.)
+  const ttsResponse = page.waitForResponse((r) => r.url().includes("/api/tts"), { timeout: 15000 });
   await btn.click();
   await page.waitForTimeout(300);
   check("toggles to 'Detener' after clicking", /detener/i.test(await btn.innerText()));
   await shot(page, "speech-02-speaking.png");
+  try {
+    const res = await ttsResponse;
+    check("edge-tts request succeeded", res.status() === 200 && res.headers()["content-type"] === "audio/mpeg");
+  } catch (e) {
+    check(`edge-tts request observed (${e})`, false);
+  }
+
+  const cookieHeader = (await page.context().cookies()).map((c) => `${c.name}=${c.value}`).join("; ");
+  const directTts = await fetch("http://localhost:3000/api/tts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json", Cookie: cookieHeader },
+    body: JSON.stringify({ text: "El viento sopla desde el este sobre el muelle." }),
+  });
+  const directBytes = Buffer.from(await directTts.arrayBuffer());
+  check("edge-tts response is real audio (>1000 bytes, same session)", directTts.ok && directBytes.length > 1000);
 
   await btn.click();
   await page.waitForTimeout(300);

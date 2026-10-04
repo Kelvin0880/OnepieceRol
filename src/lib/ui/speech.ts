@@ -1,18 +1,31 @@
-// Reads AI-narrated bubbles aloud with the browser's own text-to-speech (no API, no cost). The browser's voice
-// list loads asynchronously and varies wildly in quality, so `pickVoice` scores it towards whichever installed
-// voice is least likely to sound robotic, instead of just taking voice #0.
+// Reads AI-narrated bubbles aloud. Primary voice (2026-10-04): a server-rendered edge-tts narration (see
+// src/lib/tts/edge-tts.ts and /api/tts) — far more natural than any installed browser voice. edge-tts is
+// Microsoft's own unofficial "Read aloud" service, not a stable API contract, so it can be throttled or
+// changed without notice; every failure (network, timeout, blocked, decode) falls back transparently to the
+// browser's own speechSynthesis below, which stays exactly as it was. `pickVoice` is that fallback's own voice
+// scoring, towards whichever installed voice is least likely to sound robotic, instead of just taking voice #0.
 "use client";
 
 import { useSyncExternalStore } from "react";
 
 let currentId: string | null = null;
+let currentAudio: HTMLAudioElement | null = null;
+let currentAudioUrl: string | null = null;
+let currentController: AbortController | null = null;
 const listeners = new Set<() => void>();
 
 function notify(): void {
   for (const l of listeners) l();
 }
 
+// Audio-element playback (the edge-tts path) needs nothing special and works in every browser; speechSynthesis
+// is only this module's fallback. Kept as a named export since ChatFeed uses it to decide whether to show the
+// button at all — true everywhere a DOM exists.
 export function isSpeechSupported(): boolean {
+  return typeof window !== "undefined";
+}
+
+function hasSpeechSynthesis(): boolean {
   return typeof window !== "undefined" && "speechSynthesis" in window;
 }
 
@@ -54,6 +67,66 @@ function getVoicesAsync(): Promise<SpeechSynthesisVoice[]> {
   });
 }
 
+async function playEdgeTts(id: string, text: string): Promise<void> {
+  const controller = new AbortController();
+  currentController = controller;
+  const timeout = setTimeout(() => controller.abort(), 25000);
+  let res: Response;
+  try {
+    res = await fetch("/api/tts", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ text }),
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
+  if (!res.ok) throw new Error(`tts http ${res.status}`);
+  const blob = await res.blob();
+  if (currentId !== id) return; // toggled off, or superseded by another bubble, while the request was in flight
+  const url = URL.createObjectURL(blob);
+  const audio = new Audio(url);
+  const release = () => {
+    if (currentAudioUrl === url) {
+      URL.revokeObjectURL(url);
+      currentAudioUrl = null;
+    }
+    if (currentAudio === audio) currentAudio = null;
+  };
+  audio.onended = () => {
+    release();
+    if (currentId === id) {
+      currentId = null;
+      notify();
+    }
+  };
+  audio.onerror = () => {
+    release();
+    if (currentId === id) {
+      currentId = null;
+      notify();
+    }
+  };
+  currentAudio = audio;
+  currentAudioUrl = url;
+  try {
+    await audio.play();
+  } catch (err) {
+    release();
+    throw err; // caller falls back to speechSynthesis; currentId is left untouched so the fallback still claims it
+  }
+}
+
+async function playNarration(id: string, text: string): Promise<void> {
+  try {
+    await playEdgeTts(id, text);
+  } catch {
+    if (currentId !== id) return; // already toggled off or superseded — don't speak stale text
+    await playUtterance(id, text);
+  }
+}
+
 async function playUtterance(id: string, text: string): Promise<void> {
   const synth = window.speechSynthesis;
   const voices = await getVoicesAsync();
@@ -80,9 +153,24 @@ async function playUtterance(id: string, text: string): Promise<void> {
   synth.speak(utter);
 }
 
+function stopAll(): void {
+  currentController?.abort();
+  currentController = null;
+  if (currentAudio) {
+    currentAudio.onended = null;
+    currentAudio.onerror = null;
+    currentAudio.pause();
+    currentAudio = null;
+  }
+  if (currentAudioUrl) {
+    URL.revokeObjectURL(currentAudioUrl);
+    currentAudioUrl = null;
+  }
+  if (hasSpeechSynthesis()) window.speechSynthesis.cancel();
+}
+
 export function stopSpeech(): void {
-  if (!isSpeechSupported()) return;
-  window.speechSynthesis.cancel();
+  stopAll();
   if (currentId !== null) {
     currentId = null;
     notify();
@@ -90,12 +178,11 @@ export function stopSpeech(): void {
 }
 
 // Clicking the same message again stops it; clicking another one cuts the first off and starts the new one —
-// speechSynthesis is a single shared voice, never two bubbles at once.
+// only ever one voice/clip playing at a time, same as before.
 export function toggleSpeak(id: string, text: string): void {
   if (!isSpeechSupported()) return;
-  const synth = window.speechSynthesis;
   const wasPlaying = currentId === id;
-  synth.cancel();
+  stopAll();
   if (wasPlaying) {
     currentId = null;
     notify();
@@ -103,7 +190,7 @@ export function toggleSpeak(id: string, text: string): void {
   }
   currentId = id;
   notify();
-  void playUtterance(id, text);
+  void playNarration(id, text);
 }
 
 function subscribe(cb: () => void): () => void {
