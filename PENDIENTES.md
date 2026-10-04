@@ -7,7 +7,7 @@
 - [x] Elegir qué entrenar (Armadura, Observación, fruta o "lo más atrasado"), con la cuenta atrás en el botón.
 - [x] Tope por nivel para Haki, dominio de fruta y estilos (10 + 4 por nivel; 100 en el nivel 24). Lo que sobraba quedó en reserva y vuelve al subir de nivel. Regalo a todos: +1 nivel, ฿100.000, vida y aguante llenos.
 - [x] Isla Kairos: el único lugar para quitarse la fruta (ritual de las Aguas Quietas, caro y para siempre; la siguiente fruta empieza desde cero).
-- [ ] La comprobación de la portada (`landing-ui-check.mjs`) falla en sus 2 pruebas de "movimiento reducido" en este PC (ya fallaba antes de hoy): revisar.
+- [x] Comprobación de la portada arreglada: sus 2 pruebas de "movimiento reducido" seguían esperando el comportamiento antiguo (sin 3D); desde el 28/09 la portada mantiene el 3D con el mar más lento.
 
 ## Hecho el 2026-09-26
 - [x] Guerras del mundo declaradas por el propio canon (Revolución, Justicia, Emperadores, Marina contra un Yonko), cada ~4 días, sin que un jugador tenga que ocupar un puesto primero. Los jugadores asaltan o se alistan desde Poder → Guerra.

@@ -203,8 +203,10 @@ try {
     const { ctx, page, errors } = await newPage({ width: 1280, height: 800 }, { reducedMotion: "reduce" });
     await page.goto(url, { waitUntil: "load" });
     await page.waitForTimeout(1500);
-    check("reduced motion: no 3D, the painted sky instead", (await page.getAttribute("[data-scene]", "data-scene")) === "none");
-    check("reduced motion: no WebGL canvas at all", (await page.locator("[data-scene] canvas").count()) === 0);
+    // Since 46d3677 (2026-09-28) reduced motion keeps the 3D and only slows the sea (World.tsx TIME_SCALE); the
+    // painted sky is for no-WebGL only. This check used to assert the old fallback and had been failing since.
+    check("reduced motion: the 3D scene still loads (calmed, not removed)", (await page.getAttribute("[data-scene]", "data-scene")) !== "none");
+    check("reduced motion: the painted sky stays underneath as a safety net", (await page.locator("[data-scene] > div").count()) >= 1);
     check("reduced motion: the title is there at once", await page.locator("h1").isVisible());
     await shot(page, "reduced-hero");
     check("reduced motion: no page errors", errors.length === 0, errors.join(" | "));
