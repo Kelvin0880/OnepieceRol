@@ -41,7 +41,7 @@ export interface PathInput {
   isEmperor: boolean;
   isWarlord: boolean;
   bounty: number;
-  openWorldWars: { label: string; mySide: boolean; canEnlist: boolean }[];
+  openWorldWars: { label: string; mySide: boolean; canEnlist: boolean; governmentCall?: boolean }[];
   openEvents: number;
 }
 
@@ -85,7 +85,7 @@ export function pathSteps(p: PathInput): PathStep[] {
 
   for (const w of p.openWorldWars) {
     if (w.mySide) steps.push({ id: `war-${w.label}`, title: `Lucha en la guerra: ${w.label}`, detail: "Cada asalto ganado suma un golpe decisivo y refuerza a tu bando en los frentes.", panel: "power" });
-    else if (w.canEnlist) steps.push({ id: `war-${w.label}`, title: `Hay una guerra: ${w.label}`, detail: "Puedes alistarte en un bando desde Poder → Guerra.", panel: "power" });
+    else if (w.canEnlist) steps.push({ id: `war-${w.label}`, title: w.governmentCall ? `El Gobierno te llama a la guerra: ${w.label}` : `Hay una guerra: ${w.label}`, detail: w.governmentCall ? "Como Shichibukai debes acudir a su lado: alístate desde Poder → Guerra." : "Puedes alistarte en un bando desde Poder → Guerra.", panel: "power" });
   }
 
   if (p.rubbings > 0) steps.push({ id: "rubbings", title: `Descifra tus ${p.rubbings} calco(s)`, detail: p.script >= 25 ? "Ya sabes algo de lengua antigua: prueba a descifrarlos." : "Aprende la lengua antigua en Ohara o dáselos a un compañero que sepa leer.", panel: "route" });

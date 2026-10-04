@@ -69,9 +69,29 @@ export function automaticSide(kind: CanonWarKind, faction: FactionKey): WarSide 
   return null;
 }
 
-/** Sides a player may freely enlist on (pirates choosing their Emperor; revolutionaries helping anyone against the Marines). */
-export function enlistableSides(kind: CanonWarKind, faction: FactionKey): WarSide[] {
+/** The side the World Government and the Marines take in a war (null when it is Emperor against Emperor). */
+export function governmentSide(kind: CanonWarKind): WarSide | null {
+  if (kind === "JUSTICE") return "attacker";
+  if (kind === "REVOLUTION" || kind === "MARINE") return "defender";
+  return null;
+}
+
+/** True when enlisting on `side` would mean fighting the Government: a Shichibukai may never do it, nor apply while doing it. */
+export function fightsTheGovernment(kind: CanonWarKind, side: WarSide): boolean {
+  const gov = governmentSide(kind);
+  return gov !== null && side !== gov;
+}
+
+/**
+ * Sides a player may freely enlist on (pirates choosing their Emperor; revolutionaries helping anyone against the Marines).
+ * A Shichibukai answers to the Government: it may only take the Government's side, and is free to choose between two Emperors.
+ */
+export function enlistableSides(kind: CanonWarKind, faction: FactionKey, warlord = false): WarSide[] {
   if (automaticSide(kind, faction)) return [];
+  if (warlord && faction === "PIRATE") {
+    const gov = governmentSide(kind);
+    return gov ? [gov] : ["attacker", "defender"];
+  }
   if (faction === "PIRATE") return kind === "EMPEROR" ? ["attacker", "defender"] : kind === "MARINE" ? ["attacker"] : kind === "JUSTICE" ? ["defender"] : [];
   if (faction === "BOUNTY_HUNTER") return kind === "JUSTICE" || kind === "MARINE" ? ["attacker", "defender"] : [];
   return [];
@@ -92,6 +112,17 @@ export const WAR_KIND_LABEL: Record<CanonWarKind, string> = {
   EMPEROR: "Guerra entre Emperadores",
   MARINE: "Un Emperador contra la Marina",
 };
+
+/** The Government's summons to its Shichibukai, or null when the war has no Government side (Emperor against Emperor). */
+export function warlordCallText(p: CanonWarPlan): { headline: string; body: string } | null {
+  const gov = governmentSide(p.kind);
+  if (!gov) return null;
+  const task = gov === "attacker" ? `marchar contra ${p.defenderName}` : p.kind === "REVOLUTION" ? "defender las bases del Gobierno frente a la Revolución" : `defender las bases de la Marina frente a ${p.attacker.name}`;
+  return {
+    headline: "El Gobierno Mundial convoca a los Shichibukai",
+    body: `Con la guerra en marcha, el Gobierno exige a sus Siete Señores de la Guerra cumplir su parte del trato: ${task}. Quien acuda a la llamada se alista desde Poder → Guerra; quien luche contra el Gobierno perderá su patente.`,
+  };
+}
 
 export function warDeclarationText(p: CanonWarPlan): { headline: string; body: string } {
   switch (p.kind) {

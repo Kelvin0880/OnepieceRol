@@ -32,7 +32,7 @@ import { factionTitle, type FactionKey } from "../engine/progression";
 import { ARC_TOTAL_STAGES } from "../engine/world-arcs";
 import { isRevolutionBase, isSeatId, seatWarBlockReason, seatWarKind, SEATS, type SeatId } from "../engine/faction-seats";
 import { GARRISON_MAX } from "../engine/territory";
-import { automaticSide, enlistableSides, WAR_KIND_LABEL, type CanonWarKind, type WarSide } from "../engine/world-wars";
+import { automaticSide, enlistableSides, fightsTheGovernment, WAR_KIND_LABEL, type CanonWarKind, type WarSide } from "../engine/world-wars";
 import { enlistInWar, isCanonWar, settleCanonWarIfDone } from "./world-wars";
 import { postNews } from "./death-resolution";
 import { recordGrudgeIncident } from "./grudges";
@@ -221,7 +221,7 @@ export async function getSovereigntyState(characterId: string, userId: string) {
 }
 
 /** Every running canon war and where this character stands in it (automatic side, chosen side, or free to enlist). */
-export async function worldWarsFor(c: Pick<Character, "id" | "faction">) {
+export async function worldWarsFor(c: Pick<Character, "id" | "faction" | "warlordSince">) {
   const wars = await prisma.war.findMany({ where: { status: "ACTIVE", attackerKind: "canon" }, orderBy: { startedAt: "desc" } });
   return wars.map((w) => {
     const side = sideInWar(w, c);
@@ -234,7 +234,8 @@ export async function worldWarsFor(c: Pick<Character, "id" | "faction">) {
       defenderScore: w.defenderScore,
       endsAt: new Date(w.startedAt.getTime() + WAR_DURATION_MS),
       mySide: side,
-      canEnlist: side ? [] : enlistableSides(w.kind as CanonWarKind, c.faction as FactionKey),
+      canEnlist: side ? [] : enlistableSides(w.kind as CanonWarKind, c.faction as FactionKey, isWarlord(c)),
+      governmentCall: isWarlord(c) && !side && enlistableSides(w.kind as CanonWarKind, c.faction as FactionKey, true).length === 1,
       log: parse<string[]>(w.logJson, []).slice(-4),
     };
   });
@@ -247,11 +248,14 @@ export async function enlistInCanonWar(characterId: string, userId: string, warI
   if (!w || w.status !== "ACTIVE" || !isCanonWar(w)) throw new SovereigntyError("Esa guerra ya no está en marcha.");
   if (!side) throw new SovereigntyError("Elige un bando.");
   if (sideInWar(w, c)) throw new SovereigntyError("Ya luchas en esta guerra.");
-  if (!enlistableSides(w.kind as CanonWarKind, c.faction as FactionKey).includes(side)) throw new SovereigntyError("Tu facción no puede alistarse en ese bando.");
+  if (!enlistableSides(w.kind as CanonWarKind, c.faction as FactionKey, isWarlord(c)).includes(side)) {
+    throw new SovereigntyError(isWarlord(c) && fightsTheGovernment(w.kind as CanonWarKind, side) ? "Eres Shichibukai: no puedes alzarte contra el Gobierno que te dio la patente." : "Tu facción no puede alistarse en ese bando.");
+  }
   const other = await warFor(c);
   if (other) throw new SovereigntyError("Ya luchas en otra guerra: termina esa primero.");
   await enlistInWar(c.id, w.id, side);
   const leader = side === "attacker" ? w.attackerName : w.defenderName;
+  if (isWarlord(c) && w.kind !== "EMPEROR") return { log: [`Respondes a la llamada del Gobierno Mundial y te alistas con ${leader}. Asalta los dominios del bando contrario desde la pestaña Guerra; cada victoria suma un golpe decisivo.`] };
   return { log: [`Te alistas con ${leader}. Asalta los dominios del bando contrario (o las bases de la Marina) desde la pestaña Guerra; cada victoria suma un golpe decisivo.`] };
 }
 
@@ -384,12 +388,22 @@ async function handOver(t: Territory, winner: Character, title: string): Promise
 
 // ---------------------------------------------------------------- Shichibukai
 
+/** True while this character is enlisted, in a running canon war, on the side opposed to the Government. */
+async function fightsGovernmentNow(characterId: string): Promise<boolean> {
+  const wars = await prisma.war.findMany({ where: { status: "ACTIVE", attackerKind: "canon" } });
+  return wars.some((w) => {
+    const side = parse<Record<string, "attacker" | "defender">>(w.enlistedJson, {})[characterId];
+    return !!side && fightsTheGovernment(w.kind as CanonWarKind, side);
+  });
+}
+
 export async function applyForWarlord(characterId: string, userId: string) {
   const c = await loadMine(characterId, userId);
   const jailed = await prisma.imprisonment.findUnique({ where: { characterId: c.id } });
   const req = warlordRequirements({ faction: c.faction as FactionKey, alive: c.status === CharacterStatus.ALIVE, imprisoned: !!jailed && !jailed.releasedAt, level: c.level, bounty: c.bounty, isEmperor: isEmperor(c), isWarlord: isWarlord(c), seatsTaken: await warlordSeatsTaken(), revokedAt: c.warlordRevokedAt, now: new Date() });
   if (isWarlord(c)) throw new SovereigntyError("Ya eres un Shichibukai.");
   if (!req.ok) throw new SovereigntyError(`El Gobierno rechaza tu solicitud: ${req.checks.filter((x) => !x.met).map((x) => x.detail).join(" · ")}`);
+  if (await fightsGovernmentNow(c.id)) throw new SovereigntyError("El Gobierno rechaza tu solicitud: hoy luchas contra él en una guerra abierta. Termina esa guerra primero.");
   await prisma.character.update({ where: { id: c.id }, data: { warlordSince: new Date(), warlordTributeDueAt: new Date(Date.now() + WARLORD_TRIBUTE_PERIOD_MS), ...(c.title ? {} : { title: WARLORD_TITLE }) } });
   await postNews(
     `${c.name}, nuevo Shichibukai`,

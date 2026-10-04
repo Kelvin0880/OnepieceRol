@@ -42,7 +42,7 @@ interface State {
   warTargets: { id: string; name: string }[];
   here: { islandName: string; isMarineBase: boolean; isRevolutionBase: boolean; territoryOwner: string | null; territoryOwnerName: string | null };
   canAssaultHere: boolean;
-  worldWars: { id: string; label: string; attackerName: string; defenderName: string; attackerScore: number; defenderScore: number; endsAt: string; mySide: "attacker" | "defender" | null; canEnlist: ("attacker" | "defender")[]; log: string[] }[];
+  worldWars: { id: string; label: string; attackerName: string; defenderName: string; attackerScore: number; defenderScore: number; endsAt: string; mySide: "attacker" | "defender" | null; canEnlist: ("attacker" | "defender")[]; governmentCall?: boolean; log: string[] }[];
 }
 
 type Tab = "yonko" | "warlord" | "seats" | "war";
@@ -262,10 +262,12 @@ export default function SovereigntyPanel({ characterId, onClose, onChanged }: { 
                   {w.mySide ? (
                     <p className="text-xs text-jade">Luchas en el bando de {w.mySide === "attacker" ? w.attackerName : w.defenderName}. Tus victorias en asaltos suman golpes y refuerzan a vuestros campeones en los frentes.</p>
                   ) : w.canEnlist.length > 0 ? (
-                    <div className="flex flex-wrap gap-2">
+                    <div className="flex flex-wrap gap-2 items-center">
+                      {w.governmentCall && <p className="text-xs text-gold-bright basis-full" data-testid="war-government-call">El Gobierno Mundial reclama a sus Shichibukai en esta guerra. Quien lo desafíe perdería su patente.</p>}
                       {w.canEnlist.map((side) => (
                         <button key={side} className="btn-gold px-3 py-1 text-xs" disabled={busy} onClick={() => op({ op: "enlist", warId: w.id, side })} data-testid="war-enlist">
-                          Alistarse con {side === "attacker" ? w.attackerName : w.defenderName}
+                          {w.governmentCall ? "Acudir a la llamada del Gobierno: " : "Alistarse con "}
+                          {side === "attacker" ? w.attackerName : w.defenderName}
                         </button>
                       ))}
                     </div>

@@ -209,8 +209,12 @@ export function isEntryAspirant(seatId: SeatId, actor: { factionType: string; ro
 /** Stable pick without dice: the same seed always chooses the same element. */
 export function pickBySeed<T>(list: T[], seed: string): T | null {
   if (list.length === 0) return null;
-  let h = 0;
-  for (let i = 0; i < seed.length; i++) h = (h * 31 + seed.charCodeAt(i)) >>> 0;
+  // FNV-1a plus a final avalanche: with a plain `h*31 + c` hash and a list of 31 entries the pick depended only on the seed's last character.
+  let h = 2166136261;
+  for (let i = 0; i < seed.length; i++) h = Math.imul(h ^ seed.charCodeAt(i), 16777619) >>> 0;
+  h = Math.imul(h ^ (h >>> 16), 2246822507) >>> 0;
+  h = Math.imul(h ^ (h >>> 13), 3266489909) >>> 0;
+  h = (h ^ (h >>> 16)) >>> 0;
   return list[h % list.length];
 }
 

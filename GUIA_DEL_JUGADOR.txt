@@ -807,6 +807,13 @@ PODER: YONKO, SHICHIBUKAI Y GUERRAS (botón "Poder")
   bases (a veces con un almirante dentro) y los marines contraatacan tus
   islas. Contra otro Yonko jugador, cada isla suya que tomas pasa a tu
   bandera. Gana quien sume 3 golpes decisivos en 7 días.
+- SHICHIBUKAI EN LAS GUERRAS: cuando estalla una guerra en la que el Gobierno
+  tiene un bando (la Revolución, una guerra de justicia o un Yonko contra la
+  Marina), el Gobierno Mundial convoca a sus Shichibukai en las noticias. Un
+  Shichibukai solo puede alistarse del lado del Gobierno ("Acudir a la
+  llamada del Gobierno", en Poder -> Guerra), nunca contra él; en una guerra
+  entre dos Yonko elige libremente. Un pirata que ya luche contra el
+  Gobierno no puede pedir la patente hasta que esa guerra termine.
 - FIGURAS DEL MUNDO: los Yonko, los Shichibukai, los puestos de mando y los
   rangos más altos de cada facción salen en las noticias cuando desembarcan
   en algún sitio.

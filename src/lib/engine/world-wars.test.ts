@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { automaticSide, canonWarCandidates, enlistableSides, frontDue, frontPower, pickCanonWar, warDeclarationText, type WarActor } from "./world-wars";
+import { automaticSide, canonWarCandidates, enlistableSides, fightsTheGovernment, frontDue, frontPower, governmentSide, pickCanonWar, warDeclarationText, warlordCallText, type WarActor } from "./world-wars";
 
 const a = (id: string, role: string, seat: string | null = null, powerLevel = 90, status = "ACTIVE"): WarActor => ({ id, name: id, role, factionType: "X", seat, powerLevel, status });
 const world = [a("Dragon", "REVOLUTIONARY_COMMANDER", "REV_LEADER"), a("Sakazuki", "ADMIRAL", "FLEET_ADMIRAL"), a("Shanks", "YONKO"), a("Teach", "YONKO"), a("Dead", "YONKO", null, 99, "DECEASED")];
@@ -26,6 +26,19 @@ describe("canon war candidates", () => {
   });
 });
 
+describe("picking a war", () => {
+  it("over many hours every kind comes up, and the weighted Revolution/justice wars are not starved", () => {
+    const c = canonWarCandidates([...world, a("Kuma", "REVOLUTIONARY_COMMANDER", "REV_COMMANDER"), a("Big", "YONKO"), a("Kaido", "YONKO")]);
+    const counts: Record<string, number> = {};
+    for (let h = 480000; h < 480400; h++) {
+      const p = pickCanonWar(c, new Set(), `war:${h}`)!;
+      counts[p.kind] = (counts[p.kind] ?? 0) + 1;
+    }
+    for (const kind of ["REVOLUTION", "JUSTICE", "MARINE", "EMPEROR"]) expect(counts[kind] ?? 0).toBeGreaterThan(10);
+    expect(counts.EMPEROR).toBeLessThan(300);
+  });
+});
+
 describe("sides", () => {
   it("the Government defends against the Revolution and the Revolution attacks", () => {
     expect(automaticSide("REVOLUTION", "MARINE")).toBe("defender");
@@ -43,6 +56,35 @@ describe("sides", () => {
     expect(enlistableSides("JUSTICE", "PIRATE")).toEqual(["defender"]);
     expect(enlistableSides("REVOLUTION", "PIRATE")).toEqual([]);
     expect(enlistableSides("REVOLUTION", "MARINE")).toEqual([]);
+  });
+});
+
+describe("Shichibukai answer to the Government", () => {
+  it("a warlord may only take the Government's side, and chooses freely between two Emperors", () => {
+    expect(enlistableSides("MARINE", "PIRATE", true)).toEqual(["defender"]);
+    expect(enlistableSides("REVOLUTION", "PIRATE", true)).toEqual(["defender"]);
+    expect(enlistableSides("JUSTICE", "PIRATE", true)).toEqual(["attacker"]);
+    expect(enlistableSides("EMPEROR", "PIRATE", true)).toEqual(["attacker", "defender"]);
+  });
+  it("an ordinary pirate keeps the old options", () => {
+    expect(enlistableSides("MARINE", "PIRATE", false)).toEqual(["attacker"]);
+    expect(enlistableSides("JUSTICE", "PIRATE")).toEqual(["defender"]);
+  });
+  it("knows which side is against the Government", () => {
+    expect(governmentSide("EMPEROR")).toBeNull();
+    expect(fightsTheGovernment("MARINE", "attacker")).toBe(true);
+    expect(fightsTheGovernment("MARINE", "defender")).toBe(false);
+    expect(fightsTheGovernment("JUSTICE", "defender")).toBe(true);
+    expect(fightsTheGovernment("JUSTICE", "attacker")).toBe(false);
+    expect(fightsTheGovernment("EMPEROR", "attacker")).toBe(false);
+  });
+  it("the summons exists only for wars with a Government side", () => {
+    const plans = canonWarCandidates(world);
+    const by = (k: string) => plans.find((p) => p.kind === k)!;
+    expect(warlordCallText(by("EMPEROR"))).toBeNull();
+    expect(warlordCallText(by("REVOLUTION"))?.body).toContain("Revolución");
+    expect(warlordCallText(by("JUSTICE"))?.body).toContain("Shanks");
+    expect(warlordCallText(by("MARINE"))?.headline).toContain("Shichibukai");
   });
 });
 

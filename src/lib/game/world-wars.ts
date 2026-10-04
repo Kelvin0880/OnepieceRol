@@ -1,6 +1,6 @@
 import { prisma } from "../db";
 import type { War, WorldActor } from "@prisma/client";
-import { canonWarCandidates, CANON_WAR_GAP_MS, frontDue, frontPower, FRONT_INTERVAL_MS, pickCanonWar, warDeclarationText, WAR_KIND_LABEL, type CanonWarKind, type WarSide } from "../engine/world-wars";
+import { canonWarCandidates, CANON_WAR_GAP_MS, frontDue, frontPower, FRONT_INTERVAL_MS, pickCanonWar, warDeclarationText, warlordCallText, WAR_KIND_LABEL, type CanonWarKind, type WarSide } from "../engine/world-wars";
 import { isRevolutionBase, pickBySeed } from "../engine/faction-seats";
 import { isMarineBase, warOutcome } from "../engine/sovereignty";
 import { judgeMatch } from "../ai/judge";
@@ -194,6 +194,9 @@ export async function startCanonWar(now = new Date()): Promise<War | null> {
     },
   });
   await postNews(text.headline, text.body, "Guerra", undefined, "major");
+  // The Government calls in its Shichibukai, but only when a player actually holds a licence and the war has a Government side.
+  const call = warlordCallText(plan);
+  if (call && (await prisma.character.count({ where: { warlordSince: { not: null }, status: "ALIVE" } })) > 0) await postNews(call.headline, call.body, "Gobierno Mundial", undefined, "major");
   invalidateWorldState();
   return war;
 }

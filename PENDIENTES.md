@@ -3,6 +3,7 @@
 Última actualización: 2026-10-04. Marca con [x] lo hecho.
 
 ## Hecho el 2026-10-04
+- [x] Los Shichibukai ya responden a la llamada del Gobierno en las guerras, y se arregló el sorteo de guerras del mundo: salían casi siempre "Emperador contra Emperador" por un hash que solo miraba el último carácter.
 - [x] Voz del narrador natural (edge-tts, gratis) con la voz del navegador como respaldo automático si Microsoft la bloquea.
 - [x] Elegir qué entrenar (Armadura, Observación, fruta o "lo más atrasado"), con la cuenta atrás en el botón.
 - [x] Tope por nivel para Haki, dominio de fruta y estilos (10 + 4 por nivel; 100 en el nivel 24). Lo que sobraba quedó en reserva y vuelve al subir de nivel. Regalo a todos: +1 nivel, ฿100.000, vida y aguante llenos.
@@ -74,7 +75,7 @@
 ## Próximos pasos (2026-09-25, la mayoría hecha el 26)
 - [x] Desplegar: push del esquema a Neon (6 columnas en Character + tabla War) y resembrado; luego merge de `cloud/claude-nube` a `main`.
 - [ ] Pasar la regresión completa con la clave de OpenRouter (en la nube faltaba, así que las comprobaciones que usan la IA no se pudieron ejecutar). El 2026-09-26 se lanzó `node scripts/run-all-checks.mjs --quick` completo tras el despliegue; revisar `shots/regression.log` cuando termine (tardó más de lo normal).
-- [ ] Guerras: que los Shichibukai puedan ser llamados por el Gobierno a defender una base (hoy solo actúan marines y CP-0).
+- [x] Guerras: el Gobierno llama a sus Shichibukai (noticia al declararse la guerra, botón "Acudir a la llamada del Gobierno"); solo pueden alistarse de su lado, nunca contra él, ni pedir la patente luchando contra el Gobierno (2026-10-04).
 - [ ] El Coliseo como duelo en vivo (sigue pendiente; lo de Barbanegra con dos frutas ya está hecho).
 
 

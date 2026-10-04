@@ -53,7 +53,7 @@ export async function getPathState(characterId: string, userId: string) {
     isEmperor: isEmperor(c),
     isWarlord: isWarlord(c),
     bounty: c.bounty,
-    openWorldWars: wars.map((w) => ({ label: w.label, mySide: !!w.mySide, canEnlist: w.canEnlist.length > 0 })),
+    openWorldWars: wars.map((w) => ({ label: w.label, mySide: !!w.mySide, canEnlist: w.canEnlist.length > 0, governmentCall: w.governmentCall })),
     openEvents,
   });
   return { rank: { title: seat ? SEATS[seat].title : rank.title, next: rank.nextTitle, metric: rank.metric, remaining: rank.remaining, fraction: rank.fraction }, steps };

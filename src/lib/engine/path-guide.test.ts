@@ -9,6 +9,10 @@ const base: PathInput = {
 };
 
 describe("Mi camino", () => {
+  it("tells a Shichibukai the Government is calling", () => {
+    const s = pathSteps({ ...base, faction: "PIRATE", isWarlord: true, openWorldWars: [{ label: "Un Emperador contra la Marina", mySide: false, canEnlist: true, governmentCall: true }] });
+    expect(s.find((x) => x.id.startsWith("war-"))?.title).toContain("Gobierno te llama");
+  });
   it("a new marine is told to do the island's jobs and how to climb", () => {
     const s = pathSteps(base);
     expect(s[0].id).toBe("missions");
