@@ -17,3 +17,5 @@ services:
         generateValue: true
       - key: NODE_ENV
         value: production
+      - key: NEXT_PUBLIC_ADSENSE_CLIENT
+        value: ca-pub-1952398982375580

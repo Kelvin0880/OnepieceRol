@@ -36,6 +36,7 @@ import { ToastStack, useToasts } from "@/components/ui/Toasts";
 import { diffVitals, type VitalsSnapshot } from "@/lib/ui/format";
 import { crewNounForFaction } from "@/lib/engine/crew-noun";
 import { factionTitle, type FactionKey } from "@/lib/engine/progression";
+import AdSense from "@/components/ui/AdSense";
 import type { StateResponse } from "./types";
 
 function snapshot(d: StateResponse): VitalsSnapshot {
@@ -289,6 +290,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
     <main className="flex-1 w-full max-w-6xl mx-auto px-4 md:px-6 pb-16 flex flex-col gap-4">
       {cinematic && <TravelCinematic kind={cinematic.kind} island={cinematic.island} holdFor={cinematic.holdFor} onDone={() => setCinematic(null)} />}
       <PlayHeader data={data} badges={badges} markSeen={markSeen} onOpen={(p) => (p === "ooc" ? openOoc() : setPanel(p))} />
+      <AdSense slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_PLAY} />
       <ToastStack toasts={toasts} />
       {!isDead && <HitVignette hp={character.hp} maxHp={character.maxHp} />}
       {(character.pendingSeatChallenges ?? 0) > 0 && (

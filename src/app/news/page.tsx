@@ -5,6 +5,7 @@ import Link from "next/link";
 import BackToCharacter from "@/components/ui/BackToCharacter";
 import TabBar from "@/components/motion/TabBar";
 import Collapsible, { ToggleHeader, useOpenState } from "@/components/ui/Collapsible";
+import AdSense from "@/components/ui/AdSense";
 
 interface NewsItem {
   id: string;
@@ -241,6 +242,7 @@ export default function NewsPage() {
       <p className="text-ink-dim text-sm mb-4">
         El mundo se mueve incluso cuando tú no lo haces. Estas son las noticias que corren de isla en isla.
       </p>
+      <AdSense slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_NEWS} className="mb-6" />
 
       {events.length > 0 && !category && (
         <div className="mb-6" data-testid="world-events">

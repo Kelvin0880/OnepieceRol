@@ -12,6 +12,7 @@ import Compass3D from "@/components/motion/Compass3D";
 import TabBar from "@/components/motion/TabBar";
 import TiltCard from "@/components/motion/TiltCard";
 import { SPRING } from "@/components/motion/presets";
+import AdSense from "@/components/ui/AdSense";
 
 type FactionId = FactionKey;
 
@@ -212,6 +213,7 @@ export default function HomePage() {
               </a>
             </div>
           </m.div>
+          <AdSense slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_HOME} className="lg:col-span-2 mt-2" />
         </div>
       </main>
     );

@@ -81,6 +81,7 @@ const CELLS = [
 /** Every canon prisoner by Impel Down level, with the level needed to attempt a rescue raid. */
 import ResidentsSection from "./ResidentsSection";
 import TabBar from "@/components/motion/TabBar";
+import AdSense from "@/components/ui/AdSense";
 
 function PrisonSection({ actors }: { actors: Actor[] }) {
   const held = actors.filter((a) => a.status === "CAPTURED");
@@ -272,6 +273,7 @@ export default function CodexPage() {
 
   return (
     <main className="flex-1 max-w-6xl w-full mx-auto p-6 flex flex-col gap-4">
+      <AdSense slot={process.env.NEXT_PUBLIC_ADSENSE_SLOT_CODEX} />
       <div className="flex flex-wrap items-center justify-between gap-3">
         <h1 className="font-display text-2xl text-gold-bright">Códice del mundo</h1>
         <div className="flex flex-wrap gap-2">
