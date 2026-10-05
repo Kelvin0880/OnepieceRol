@@ -21,6 +21,9 @@ const ADSENSE_CLIENT = process.env.NEXT_PUBLIC_ADSENSE_CLIENT ?? "ca-pub-1952398
 export const metadata: Metadata = {
   title: "Grand Line RPG — Un rol de texto de One Piece",
   description: "Crea tu personaje, zarpa hacia el Grand Line y escribe tu propia leyenda.",
+  other: {
+    "google-adsense-account": ADSENSE_CLIENT,
+  },
 };
 
 export const viewport: Viewport = {
