@@ -36,7 +36,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
         <Script
           id="google-adsense"
           async
-          strategy="afterInteractive"
+          strategy="beforeInteractive"
           crossOrigin="anonymous"
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
         />
