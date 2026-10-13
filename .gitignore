@@ -63,3 +63,6 @@ env.txt
 *.env.txt
 /prisma/schema.deploy.prisma
 /.prod-client
+
+# graphify knowledge graph (local, regenerable)
+graphify-out/
