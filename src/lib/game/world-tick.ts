@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { isPaused } from "./pause";
 import { varietyRng } from "../engine/rng";
 import { runWorldTick } from "../engine/world";
 import { narrateNews, narrateBountyDigest } from "../ai/narrate";
@@ -182,7 +183,7 @@ let tickRunning = false;
 let digestRunning = false;
 
 export async function tickWorldIfDue(): Promise<void> {
-  if (tickRunning) return;
+  if (tickRunning || (await isPaused())) return;
   tickRunning = true;
   try {
     await tickWorldIfDueInner();
@@ -192,7 +193,7 @@ export async function tickWorldIfDue(): Promise<void> {
 }
 
 export async function tickBountyDigestIfDue(): Promise<void> {
-  if (digestRunning) return;
+  if (digestRunning || (await isPaused())) return;
   digestRunning = true;
   try {
     await tickBountyDigestIfDueInner();

@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { isPaused } from "./pause";
 import { varietyRng } from "../engine/rng";
 import {
   ARC_TOTAL_STAGES,
@@ -218,7 +219,7 @@ async function runArcBeat(arcId: string): Promise<void> {
  * the player whose request happens to trigger it never waits on the AI.
  */
 export async function tickWorldArcs(now = new Date()): Promise<void> {
-  if (inFlight.has("tick")) return;
+  if (inFlight.has("tick") || (await isPaused())) return;
   inFlight.add("tick");
   try {
     const open = await prisma.worldArc.findFirst({ where: { status: { in: OPEN_STATUSES }, kind: { not: "player_verdict" } }, orderBy: { createdAt: "desc" } });

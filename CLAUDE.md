@@ -1694,6 +1694,8 @@ can immediately open a real new challenge — added to `run-all-checks.mjs`. Zar
 was fixed directly in production with one narrow `CanonChallenge.update` to `stage: "LOST"`, matching exactly
 what the code should have done automatically. 1011 tests, `tsc --noEmit` clean — no prompt/schema change.
 
+**Owner pause switch (2026-10-19)**: `node scripts/game-pause.mjs status|on|off [--dev]` (full guide in `PAUSA.md`; asks for the Neon URL or reads `GAME_DATABASE_URL`, builds a throwaway `.prod-client`, never stores anything). State = additive `WorldClock.pausedAt` (the server adds the column on boot in `src/instrumentation.ts`, no manual Neon push). While paused: `callOpenRouter` refuses (the one AI choke point), `tickWorldIfDue`/`tickBountyDigestIfDue`/`tickWorldArcs`/`tickColiseum` return at once, and `src/proxy.ts` answers 503 to every write and every `/api/characters/<id>...` read (`blockedWhilePaused`, pure in `engine/pause.ts`; login/logout, news, codex, ping, portraits stay open); `PauseBanner` shows a bar on every page (`GET /api/pause`). `resumeGame` (`game/pause.ts`) shifts every live clock forward by the paused time in ONE transaction (`PAUSE_SHIFT` in `engine/pause.ts`), so nothing catches up or expires; `pause.test.ts` fails if a new `DateTime` column is not classified in `PAUSE_SHIFT`/`PAUSE_IGNORE`. Check: `scripts/pause-check.ts` (DB, in `run-all-checks`). Gotcha: Next 16 `proxy.ts` (not `middleware.ts`) and its docs say not to rely on shared globals, so proxy and handlers each read the flag through their own 5 s cache.
+
 ## Conventions to keep matching
 
 - All player-facing text is in Spanish (the user writes in Spanish).

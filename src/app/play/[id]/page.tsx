@@ -37,6 +37,7 @@ import { diffVitals, type VitalsSnapshot } from "@/lib/ui/format";
 import { crewNounForFaction } from "@/lib/engine/crew-noun";
 import { factionTitle, type FactionKey } from "@/lib/engine/progression";
 import AdSense from "@/components/ui/AdSense";
+import { PAUSED_MESSAGE } from "@/lib/engine/pause";
 import type { StateResponse } from "./types";
 
 function snapshot(d: StateResponse): VitalsSnapshot {
@@ -73,6 +74,7 @@ export default function PlayPage({ params }: { params: Promise<{ id: string }> }
       setError(d.error ?? "No se pudo cargar el personaje.");
       return;
     }
+    setError((e) => (e === PAUSED_MESSAGE ? null : e));
     const v = snapshot(d);
     const prev = lastVitals.current?.id === id ? lastVitals.current.v : null;
     push(diffVitals(prev, v));

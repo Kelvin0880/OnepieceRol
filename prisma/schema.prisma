@@ -921,6 +921,9 @@ model WorldClock {
   lastTournamentAt DateTime?
   // The world's current age. Flips to "Nueva Era" when a final raid topples the hidden ruler (game/raid.ts).
   era          String    @default("Era del Olvido")
+  // Owner pause switch (PAUSA.md): set = the game is frozen since this instant. Production gets the column from
+  // src/instrumentation.ts on boot, so a deploy never waits for a manual schema push.
+  pausedAt     DateTime?
 }
 
 // Durable record of unexpected server-side errors — survives restarts and

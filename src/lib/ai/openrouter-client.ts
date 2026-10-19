@@ -3,6 +3,8 @@
  * endpoint. No SDK — it's a plain REST call, matching this project's
  * minimal-dependency convention (custom auth, no NextAuth, etc.).
  */
+import { isPaused } from "../game/pause";
+
 export class AiUnavailableError extends Error {}
 
 const ENDPOINT = "https://openrouter.ai/api/v1/chat/completions";
@@ -145,6 +147,8 @@ function raceModels(
 export async function callOpenRouter(system: string, user: string, options: CallOpenRouterOptions): Promise<string> {
   const { models, timeoutMs = 10_000, jsonMode = false, temperature = 0.9, maxTokens, validate, hedgeDelayMs = DEFAULT_HEDGE_DELAY_MS } = options;
   if (models.length === 0) throw new AiUnavailableError("No models configured.");
+  // Owner pause (PAUSA.md): the one choke point every AI call passes through, so a paused game spends nothing.
+  if (await isPaused()) throw new AiUnavailableError("The game is paused.");
 
   // Collect every model's failure, not just the last — a single "Last error"
   // hid which of the earlier models 429'd vs. timed out vs. returned junk,

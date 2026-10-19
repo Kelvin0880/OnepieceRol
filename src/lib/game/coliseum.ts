@@ -1,4 +1,5 @@
 import { prisma } from "../db";
+import { isPaused } from "./pause";
 import { varietyRng } from "../engine/rng";
 import { judgeMatch } from "../ai/judge";
 import {
@@ -56,7 +57,7 @@ let ticking = false;
 
 /** The lazy calendar tick: announces, opens, advances and closes tournaments. One at a time per process; never throws. */
 export async function tickColiseum(): Promise<void> {
-  if (ticking) return;
+  if (ticking || (await isPaused())) return;
   ticking = true;
   try {
     for (let guard = 0; guard < 8; guard++) {

@@ -4,6 +4,7 @@ import Script from "next/script";
 import "./globals.css";
 import SeaBackground from "@/components/ui/SeaBackground";
 import MotionProvider from "@/components/motion/MotionProvider";
+import PauseBanner from "@/components/ui/PauseBanner";
 
 const cinzel = Cinzel({
   variable: "--font-display",
@@ -44,6 +45,7 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
           src={`https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=${ADSENSE_CLIENT}`}
         />
         <SeaBackground />
+        <PauseBanner />
         <MotionProvider>
           <div className="relative z-10 flex-1 flex flex-col">{children}</div>
         </MotionProvider>
