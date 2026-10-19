@@ -66,3 +66,6 @@ env.txt
 
 # graphify knowledge graph (local, regenerable)
 graphify-out/
+
+# owner pause switch: holds the production DB connection, never commit
+/.env.pause

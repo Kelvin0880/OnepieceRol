@@ -14,6 +14,14 @@ if (!["status", "on", "off"].includes(action ?? "")) {
 }
 const dev = flags.includes("--dev");
 
+// Connection saved once in .env.pause (gitignored) so the switch runs with no questions.
+if (!process.env.GAME_DATABASE_URL) {
+  try {
+    const line = readFileSync(join(root, ".env.pause"), "utf8").split(/\r?\n/).find((l) => l.startsWith("GAME_DATABASE_URL="));
+    if (line) process.env.GAME_DATABASE_URL = line.slice("GAME_DATABASE_URL=".length).trim();
+  } catch {}
+}
+
 function askHidden(question) {
   return new Promise((resolve) => {
     process.stdout.write(question);

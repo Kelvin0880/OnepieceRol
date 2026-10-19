@@ -2,27 +2,17 @@
 
 Un interruptor para dejar todo quieto sin apagar la página (AdSense, la portada, noticias y códice siguen visibles).
 
-## Comandos
+## Cómo se usa (un clic)
 
-```bash
-node scripts/game-pause.mjs status   # ¿está en pausa?
-node scripts/game-pause.mjs on       # PAUSAR todo
-node scripts/game-pause.mjs off      # REANUDAR todo
-```
+Haz doble clic en el archivo de la carpeta del proyecto:
 
-Sin `--dev` el script habla con **producción**. Te pide la conexión de Neon (la escribes y **no se guarda en ningún sitio**),
-o la pones antes en una variable de la terminal y no pregunta:
+- **pausar.cmd** → PAUSA todo
+- **reanudar.cmd** → REANUDA todo
+- **estado-pausa.cmd** → dice si está pausado
 
-```powershell
-$env:GAME_DATABASE_URL = "postgresql://..."   # solo vale para esa terminal
-node scripts/game-pause.mjs on
-```
-
-Tarda ~20 s (genera un cliente temporal de Postgres y lo borra al terminar). El cambio se nota en la web en unos 5 segundos.
-Para probar en tu base local: añade `--dev`.
-
-**Orden recomendado la primera vez:** sube este cambio a GitHub (Render lo despliega) y *después* ejecuta `on`. El script
-también funciona antes del despliegue, pero hasta que se despliegue la web nueva no hace efecto.
+La conexión de Neon está guardada en `.env.pause` (ignorado por Git, nunca se sube; si cambias la contraseña de Neon, edita ahí
+la línea `GAME_DATABASE_URL=`). También funciona por terminal: `node scripts/game-pause.mjs on|off|status` (con `--dev` usa la base local).
+Tarda ~20 s y en la web se nota en unos 5 s.
 
 ## Qué hace la pausa
 
