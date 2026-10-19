@@ -1,0 +1,120 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Panel de pausa — Grand Line RPG</title>
+<style>
+  :root { --bg:#0b1520; --card:#12202f; --line:#243a50; --text:#e8e2d0; --muted:#8fa3b5; --gold:#d4a84b; --ok:#3fae6a; --pause:#e0a030; --bad:#d9534f; }
+  * { box-sizing:border-box; }
+  body { margin:0; min-height:100vh; background:var(--bg); color:var(--text); font-family:Georgia,"Times New Roman",serif; display:flex; justify-content:center; padding:24px 16px; }
+  main { width:100%; max-width:560px; }
+  h1 { font-size:1.4rem; letter-spacing:.06em; color:var(--gold); text-align:center; margin:8px 0 4px; }
+  .sub { text-align:center; color:var(--muted); margin:0 0 22px; font-size:.95rem; }
+  .status { background:var(--card); border:2px solid var(--line); border-radius:16px; padding:26px 18px; text-align:center; transition:border-color .3s; }
+  .status.run { border-color:var(--ok); }
+  .status.paused { border-color:var(--pause); }
+  .status.err { border-color:var(--bad); }
+  .dot { font-size:3rem; line-height:1; }
+  .big { font-size:1.6rem; margin:8px 0 4px; font-weight:bold; }
+  .small { color:var(--muted); font-size:.95rem; min-height:1.3em; }
+  .buttons { display:grid; grid-template-columns:1fr 1fr; gap:14px; margin:18px 0; }
+  button { font:inherit; font-size:1.1rem; padding:18px 10px; border-radius:12px; border:2px solid var(--line); background:var(--card); color:var(--text); cursor:pointer; }
+  button:hover:not(:disabled) { filter:brightness(1.2); }
+  button:disabled { opacity:.35; cursor:not-allowed; }
+  #pause { border-color:var(--pause); color:var(--pause); }
+  #resume { border-color:var(--ok); color:var(--ok); }
+  .busy { text-align:center; color:var(--gold); min-height:1.4em; margin-bottom:6px; }
+  details { background:var(--card); border:1px solid var(--line); border-radius:12px; padding:10px 14px; color:var(--muted); font-size:.9rem; }
+  summary { cursor:pointer; }
+  pre { white-space:pre-wrap; word-break:break-word; margin:10px 0 0; color:var(--text); font-size:.85rem; max-height:220px; overflow:auto; }
+  ul { margin:8px 0 0; padding-left:20px; line-height:1.5; }
+  @media (max-width:420px) { .buttons { grid-template-columns:1fr; } }
+</style>
+</head>
+<body>
+<main>
+  <h1>GRAND LINE RPG</h1>
+  <p class="sub">Panel de pausa</p>
+
+  <section id="status" class="status">
+    <div class="dot" id="dot">…</div>
+    <div class="big" id="big">Comprobando…</div>
+    <div class="small" id="small"></div>
+  </section>
+
+  <div class="buttons">
+    <button id="pause">⏸ Pausar el juego</button>
+    <button id="resume">▶ Reanudar el juego</button>
+  </div>
+  <div class="busy" id="busy"></div>
+
+  <details>
+    <summary>¿Qué hace cada botón?</summary>
+    <ul>
+      <li><b>Pausar:</b> nadie puede jugar, no se gasta IA y el mundo se queda quieto. La web sigue visible.</li>
+      <li><b>Reanudar:</b> todo vuelve a funcionar y los relojes del mundo avanzan lo mismo que duró la pausa, para que nada se ponga al día de golpe.</li>
+      <li>Cada acción tarda unos segundos. En la web se nota en unos 5 segundos más.</li>
+    </ul>
+  </details>
+  <details style="margin-top:10px">
+    <summary>Registro</summary>
+    <pre id="log">—</pre>
+  </details>
+</main>
+
+<script>
+  const $ = (id) => document.getElementById(id);
+  let since = null;
+  let working = false;
+
+  function fmt(ms) {
+    const m = Math.floor(ms / 60000);
+    const d = Math.floor(m / 1440), h = Math.floor((m % 1440) / 60), mm = m % 60;
+    return (d ? d + " d " : "") + (h ? h + " h " : "") + mm + " min";
+  }
+  function render(state) {
+    const box = $("status");
+    box.className = "status " + (state.error ? "err" : state.paused ? "paused" : "run");
+    if (state.error) {
+      $("dot").textContent = "⚠️"; $("big").textContent = "No pude consultar el juego"; $("small").textContent = state.error;
+    } else if (state.paused) {
+      since = new Date(state.since);
+      $("dot").textContent = "⏸"; $("big").textContent = "El juego está PAUSADO"; tick();
+    } else {
+      since = null;
+      $("dot").textContent = "▶"; $("big").textContent = "El juego está en MARCHA"; $("small").textContent = "Todo funciona con normalidad.";
+    }
+    $("pause").disabled = working || !!state.paused || !!state.error;
+    $("resume").disabled = working || !state.paused;
+  }
+  function tick() {
+    if (since) $("small").textContent = "Pausado desde hace " + fmt(Date.now() - since.getTime()) + " (" + since.toLocaleString() + ")";
+  }
+  setInterval(tick, 30000);
+
+  async function call(path, method) {
+    const r = await fetch(path, { method, headers: { "X-Panel": "1" } });
+    return r.json();
+  }
+  async function refresh() {
+    if (working) return;
+    try { const s = await call("/api/state", "GET"); render(s); if (s.log) $("log").textContent = s.log; }
+    catch (e) { render({ error: "El panel no responde. ¿Cerraste la ventana negra?" }); }
+  }
+  async function act(kind, label, confirmText) {
+    if (!confirm(confirmText)) return;
+    working = true; $("pause").disabled = true; $("resume").disabled = true;
+    $("busy").textContent = label + " (unos segundos)…";
+    try {
+      const s = await call("/api/" + kind, "POST");
+      working = false; render(s); if (s.log) $("log").textContent = s.log;
+      $("busy").textContent = s.error ? "" : kind === "pause" ? "Listo: el juego quedó pausado." : "Listo: el juego volvió a funcionar.";
+    } catch (e) { working = false; render({ error: String(e) }); $("busy").textContent = ""; }
+  }
+  $("pause").onclick = () => act("pause", "Pausando", "¿Pausar el juego? Nadie podrá jugar hasta que lo reanudes.");
+  $("resume").onclick = () => act("resume", "Reanudando", "¿Reanudar el juego? Volverá a funcionar para todos.");
+  refresh(); setInterval(refresh, 20000);
+</script>
+</body>
+</html>

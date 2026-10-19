@@ -4,6 +4,12 @@ Un interruptor para dejar todo quieto sin apagar la página (AdSense, la portada
 
 ## Cómo se usa (un clic)
 
+**Panel con botones (lo más fácil):** doble clic en **panel-pausa.cmd**. Se abre una página en tu navegador
+(`http://127.0.0.1:4747`) que muestra si el juego está en marcha o pausado, desde cuándo, y tiene los botones
+«Pausar» y «Reanudar». Deja la ventana negra abierta mientras lo uses; al cerrarla se apaga el panel. Solo funciona en tu PC.
+
+O, sin panel:
+
 Haz doble clic en el archivo de la carpeta del proyecto:
 
 - **pausar.cmd** → PAUSA todo
